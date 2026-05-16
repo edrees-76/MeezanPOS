@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>تسجيل الدخول - ميزان</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#0b1c30",
+                        "inverse-surface": "#213145",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary": "#000000",
+                        "surface-container": "#e5eeff",
+                        "tertiary-container": "#001e2f",
+                        "on-error": "#ffffff",
+                        "background": "#f8f9ff",
+                        "secondary-container": "#fdd755",
+                        "on-surface-variant": "#45464d",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#ffe081",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#725c00",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#735d00",
+                        "surface-dim": "#cbdbf5",
+                        "surface": "#f8f9ff",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary-fixed": "#c9e6ff",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#89ceff",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary-fixed-variant": "#564500",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#008cc7",
+                        "on-secondary-fixed": "#231b00",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#131b2e",
+                        "surface-variant": "#d3e4fe",
+                        "inverse-primary": "#bec6e0",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline": "#76777d",
+                        "secondary-fixed-dim": "#e8c344",
+                        "on-primary-container": "#7c839b",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-tint": "#565e74"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "40px",
+                        "container-margin": "32px",
+                        "base": "8px",
+                        "card-padding": "24px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-mono": ["Inter"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-bold": ["12px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "data-mono": ["15px", { "lineHeight": "1", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-primary-container min-h-screen flex items-center justify-center relative overflow-hidden" style="background: radial-gradient(circle at 50% 50%, #131b2e 0%, #0b1c30 100%);">
+<!-- Decorative background elements for premium feel -->
+<div aria-hidden="true" class="absolute inset-0 pointer-events-none">
+<div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-secondary-fixed/10 blur-[100px]"></div>
+<div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-surface-container-high/5 blur-[120px]"></div>
+</div>
+<!-- Login Card Container -->
+<main class="relative z-10 w-full max-w-md px-container-margin md:px-0">
+<!-- Glassmorphism Card -->
+<div class="bg-surface-container-lowest/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden" style="box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);">
+<!-- Card Header -->
+<div class="p-card-padding flex flex-col items-center border-b border-surface-container">
+<!-- Logo -->
+<div class="w-24 h-24 mb-6 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center p-2 border border-surface-container">
+<img alt="شعار ميزان" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALP0DuxyaqeJL-tggWuO5hwXNqpSTC84neMmgnHfVlZYW9z5N8e5erfqQETFIij2dNPu8jEx4s40txRSLvC1yZSAO5QlIzK8PzUn8XsVrUVMHMmR2D9z7NamPBRJQjzhvOQ6tpMFKWGtCuG8pXwOpoCcBQXM0PAZOmBb9flq4ckaTcjxdBFNs4LBvRRlP9jc3nQzO5-7Hg9maDvm933VJUEP0MCMg7TCk750ic3k6IxQVX6i7vVnZxL12Rh4bBoMX00tBDktSIglw"/>
+</div>
+<!-- Typography -->
+<div class="text-center w-full">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-2">مرحباً بك في ميزان</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">أدخل بياناتك للمتابعة</p>
+</div>
+</div>
+<!-- Form Body -->
+<form action="#" class="p-card-padding flex flex-col gap-gutter" method="POST">
+<!-- Input Group: Username -->
+<div class="flex flex-col gap-base">
+<label class="font-label-bold text-label-bold text-on-surface" for="username">اسم المستخدم أو البريد الإلكتروني</label>
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute right-3 text-outline group-focus-within:text-primary transition-colors duration-200" data-icon="person" style="font-variation-settings: 'FILL' 0;">person</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-3 pl-4 pr-10 font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 placeholder-outline-variant" id="username" name="username" placeholder="user@example.com" required="" type="text"/>
+</div>
+</div>
+<!-- Input Group: Password -->
+<div class="flex flex-col gap-base">
+<div class="flex justify-between items-center w-full">
+<label class="font-label-bold text-label-bold text-on-surface" for="password">كلمة المرور</label>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors duration-200 underline decoration-surface-variant hover:decoration-primary underline-offset-4" href="#">نسيت كلمة المرور؟</a>
+</div>
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute right-3 text-outline group-focus-within:text-primary transition-colors duration-200" data-icon="lock" style="font-variation-settings: 'FILL' 0;">lock</span>
+<input class="w-full bg-surface border border-outline-variant rounded-lg py-3 pl-12 pr-10 font-body-lg text-body-lg text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all duration-200 placeholder-outline-variant" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button aria-label="إظهار كلمة المرور" class="absolute left-3 text-outline hover:text-on-surface transition-colors duration-200 focus:outline-none" type="button">
+<span class="material-symbols-outlined" data-icon="visibility" style="font-variation-settings: 'FILL' 0;">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me Checkbox -->
+<div class="flex items-center gap-2 mt-2">
+<input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary focus:ring-offset-0 bg-surface cursor-pointer" id="remember" name="remember" type="checkbox"/>
+<label class="font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none" for="remember">تذكرني على هذا الجهاز</label>
+</div>
+<!-- Submit Button -->
+<button class="mt-4 w-full bg-primary hover:bg-on-surface text-on-primary font-title-md text-title-md py-4 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 relative overflow-hidden group" type="submit">
+<span class="relative z-10">تسجيل الدخول</span>
+<span class="material-symbols-outlined relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" data-icon="arrow_forward" style="font-variation-settings: 'FILL' 0;">arrow_forward</span>
+<!-- Emerald Accent Highlight on Hover -->
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-[rgba(16,185,129,0.2)] to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+</button>
+</form>
+<!-- Card Footer -->
+<div class="bg-surface py-4 text-center border-t border-surface-container">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                    ليس لديك حساب؟ <a class="font-title-md text-title-md text-primary hover:text-on-surface transition-colors duration-200" href="#">تواصل مع الدعم</a>
+</p>
+</div>
+</div>
+<!-- Environment Indicator (Optional, fits corporate theme) -->
+<div class="text-center mt-6">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest/10 backdrop-blur-sm border border-surface-container-lowest/20 font-label-bold text-label-bold text-inverse-primary">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span>
+                بيئة الإنتاج الآمنة
+            </span>
+</div>
+</main>
+</body></html>

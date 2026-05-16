@@ -1,0 +1,414 @@
+<!DOCTYPE html><html dir="rtl" lang="ar"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Scales Finance - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#0b1c30",
+                        "inverse-surface": "#213145",
+                        "inverse-on-surface": "#eaf1ff",
+                        "primary": "#000000",
+                        "surface-container": "#e5eeff",
+                        "tertiary-container": "#001e2f",
+                        "on-error": "#ffffff",
+                        "background": "#f8f9ff",
+                        "secondary-container": "#fdd755",
+                        "on-surface-variant": "#45464d",
+                        "surface-bright": "#f8f9ff",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary-fixed": "#ffe081",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary": "#725c00",
+                        "surface-container-high": "#dce9ff",
+                        "on-secondary-container": "#735d00",
+                        "surface-dim": "#cbdbf5",
+                        "surface": "#f8f9ff",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary-fixed": "#c9e6ff",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#89ceff",
+                        "surface-container-low": "#eff4ff",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary-fixed-variant": "#564500",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#008cc7",
+                        "on-secondary-fixed": "#231b00",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#131b2e",
+                        "surface-variant": "#d3e4fe",
+                        "inverse-primary": "#bec6e0",
+                        "primary-fixed-dim": "#bec6e0",
+                        "outline": "#76777d",
+                        "secondary-fixed-dim": "#e8c344",
+                        "on-primary-container": "#7c839b",
+                        "on-background": "#0b1c30",
+                        "on-primary-fixed": "#131b2e",
+                        "surface-tint": "#565e74"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "40px",
+                        "container-margin": "32px",
+                        "base": "8px",
+                        "card-padding": "24px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Cairo", "Inter", "sans-serif"],
+                        "body-sm": ["Cairo", "Inter", "sans-serif"],
+                        "body-lg": ["Cairo", "Inter", "sans-serif"],
+                        "label-bold": ["Cairo", "Inter", "sans-serif"],
+                        "display-lg": ["Cairo", "Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Cairo", "Inter", "sans-serif"],
+                        "headline-lg": ["Cairo", "Inter", "sans-serif"],
+                        "data-mono": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "body-sm": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-bold": ["12px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "data-mono": ["15px", { "lineHeight": "1", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Cairo', 'Inter', sans-serif; }
+        .data-mono { font-family: 'Inter', sans-serif; }
+    </style>
+<style data-stitch-cursor=""></style><style data-stitch-scroll-lock=""></style></head>
+<body class="bg-surface-bright text-on-surface flex min-h-screen">
+<!-- SideNavBar -->
+<nav class="fixed top-0 right-0 h-screen w-64 bg-on-surface dark:bg-tertiary-container border-l border-outline-variant/10 shadow-xl flex flex-col py-base z-50 text-right">
+<!-- Header -->
+<div class="px-4 mb-8 mt-4 flex items-center gap-4 flex-row-reverse">
+<img alt="Restaurant Logo" class="w-12 h-12 rounded-full object-cover" data-alt="A sophisticated, minimalist circular logo for a premium bistro, featuring a stylized silver fork and knife on a deep navy background. The lighting is soft and luxurious, emphasizing the high-end corporate identity of the restaurant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-atGOKzXowwbFlZ2fSTkRsbt-LzkHpyuf3RPGKgv-s90OVH9omStSlyrc5KqpYxMBdg5cRJyTEvddecGSrSTfDllCNUNxygfPvvFJBHJYCDMTzkZtOrkhTUNDpp5VDis30mheBZSn7aQxYNMjBO9CTDgqzs6G28oKCPuYCATF8Lm6PjYrXUt1QeS2Qz46wlLRlXTVwM8K5q8cAWELrqHFjzUIKZuqyx9eLtXT--abktNYYsyaqTt2fm-LnshN8o6azgSmvtmRr1A">
+<div>
+<h2 class="font-title-md text-title-md text-secondary-fixed">The Grand Bistro</h2>
+<p class="font-body-sm text-body-sm text-inverse-on-surface/70">Premium Management</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto">
+<ul class="space-y-2">
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base bg-surface-container-highest/10 text-secondary-fixed border-r-4 border-secondary-fixed py-3 px-4 translate-x-[-4px] transition-transform duration-200" href="#">
+<span class="material-symbols-outlined ml-3 text-secondary-fixed">dashboard</span>
+<span class="font-label-bold text-label-bold">لوحة التحكم</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-3 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">payments</span>
+<span class="font-label-bold text-label-bold">الإيرادات</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-3 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">inventory_2</span>
+<span class="font-label-bold text-label-bold">المخزون</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-3 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">groups</span>
+<span class="font-label-bold text-label-bold">تكاليف العمالة</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-3 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">local_shipping</span>
+<span class="font-label-bold text-label-bold">الموردين</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-3 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">analytics</span>
+<span class="font-label-bold text-label-bold">التقارير</span>
+</a>
+</li>
+</ul>
+</div>
+<!-- Footer -->
+<div class="mt-auto px-4 pt-4">
+<button class="w-full bg-secondary-fixed text-on-secondary-fixed font-label-bold text-label-bold py-3 rounded-lg mb-4 hover:opacity-90 transition-opacity">تصدير البيان الشهري</button>
+<ul class="space-y-2">
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-2 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">help</span>
+<span class="font-label-bold text-label-bold">مركز المساعدة</span>
+</a>
+</li>
+<li class="">
+<a class="flex flex-row-reverse items-center gap-base text-inverse-on-surface/70 hover:text-inverse-on-surface py-2 px-4 hover:bg-surface-container-highest/5 transition-all duration-300" href="#">
+<span class="material-symbols-outlined ml-3">logout</span>
+<span class="font-label-bold text-label-bold">تسجيل الخروج</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 mr-64 flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-surface-bright dark:bg-inverse-surface shadow-sm dark:shadow-none w-full h-20 px-container-margin flex flex-row-reverse justify-between items-center z-40 sticky top-0">
+<!-- Brand & Title (Right aligned in RTL) -->
+<div class="flex items-center flex-row-reverse gap-4">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary dark:text-inverse-primary">ميزان للمالية</h1>
+</div>
+<!-- Actions (Left aligned in RTL) -->
+<div class="flex items-center gap-6">
+<!-- Search -->
+<div class="relative">
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="pl-4 pr-10 py-2 bg-surface-container-low border border-outline-variant rounded-full text-body-sm font-body-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-secondary-fixed w-64 text-right" placeholder="بحث..." type="text">
+</div>
+<!-- Icons -->
+<div class="flex items-center gap-4 text-on-surface-variant dark:text-outline-variant">
+<button class="hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-primary dark:hover:text-secondary-fixed transition-colors duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<!-- Primary Action -->
+<div class="px-4 py-2 bg-primary-container text-primary-fixed-dim rounded-lg font-label-bold text-label-bold flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span>
+                    Shift Status: Active
+                </div>
+<!-- Profile -->
+<img alt="User Profile Avatar" class="w-10 h-10 rounded-full border-2 border-surface-container-highest cursor-pointer" data-alt="A professional headshot of a mature male executive wearing a tailored dark suit. He has a warm, confident smile. The background is a clean, bright, out-of-focus modern office interior with subtle light reflections, conveying trust and premium corporate status." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfrnrUr1qreMyXZVwytzQY9kfl8BdJnTJrHCp3gvCdaD0GoKzC1efxtMvkO8drI0cs48H6s-TyukWT25cMFC04DDlGINFKlYJJHbFLDOxU5q8oi3fWkmxjRNQSYWOWnC5C0gTtGTGs-CpXdhn4wHcVuNwazXiiKxzODzJ-UFi1CaiW_F4BE-yQE-O-Rrwjwbn-21PW2PWQbDZHaJI9TxGfGAX5vXUPnMdvqVSvgUTCb-wy2uw0AxMak-5WXT1lX9GrgYYvKojEUoM">
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 p-container-margin space-y-section-gap">
+<!-- Page Header -->
+<div class="flex justify-between items-center">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary mb-1">نظرة عامة على الأداء</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">ملخص مالي ليوم 24 أكتوبر 2023</p>
+</div>
+<div class="flex gap-4">
+<button class="px-4 py-2 bg-surface-container border border-outline-variant rounded-lg font-label-bold text-label-bold text-on-surface flex items-center gap-2 hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+                        اليوم
+                    </button>
+</div>
+</div>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-card-padding relative overflow-hidden" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-[#10b981]"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-[#10b981]/10 rounded-lg">
+<span class="material-symbols-outlined text-[#10b981]" style="font-variation-settings: &quot;FILL&quot; 1;">payments</span>
+</div>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-1">مبيعات نقدي</p>
+<h3 class="font-display-lg text-display-lg text-primary data-mono">14,250</h3>
+<div class="mt-4 flex items-center gap-1 text-sm text-[#10b981]">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="font-body-sm text-body-sm">+5.2%</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-card-padding relative overflow-hidden" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-[#3b82f6]"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-[#3b82f6]/10 rounded-lg">
+<span class="material-symbols-outlined text-[#3b82f6]" style="font-variation-settings: &quot;FILL&quot; 1;">credit_card</span>
+</div>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-1">مبيعات شبكة</p>
+<h3 class="font-display-lg text-display-lg text-primary data-mono">38,900</h3>
+<div class="mt-4 flex items-center gap-1 text-sm text-[#10b981]">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="font-body-sm text-body-sm">+12.4%</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-card-padding relative overflow-hidden" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-[#ef4444]"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-[#ef4444]/10 rounded-lg">
+<span class="material-symbols-outlined text-[#ef4444]" style="font-variation-settings: &quot;FILL&quot; 1;">receipt_long</span>
+</div>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-1">إجمالي المصروفات</p>
+<h3 class="font-display-lg text-display-lg text-primary data-mono">18,400</h3>
+<div class="mt-4 flex items-center gap-1 text-sm text-[#ef4444]">
+<span class="material-symbols-outlined text-sm">trending_down</span>
+<span class="font-body-sm text-body-sm">-2.1%</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-card-padding relative overflow-hidden" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="absolute right-0 top-0 bottom-0 w-1 bg-secondary-fixed-dim"></div>
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-secondary-container/30 rounded-lg">
+<span class="material-symbols-outlined text-on-secondary-container" style="font-variation-settings: &quot;FILL&quot; 1;">account_balance_wallet</span>
+</div>
+</div>
+<p class="font-label-bold text-label-bold text-on-surface-variant mb-1">صافي الربح</p>
+<h3 class="font-display-lg text-display-lg text-primary data-mono">34,750</h3>
+<div class="mt-4 flex items-center gap-1 text-sm text-[#10b981]">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="font-body-sm text-body-sm">+8.7%</span>
+</div>
+</div>
+</div>
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Line Chart Area -->
+<div class="lg:col-span-2 bg-surface-container-lowest rounded-xl p-card-padding" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-md text-title-md text-primary">تحليل المبيعات</h3>
+<button class="material-symbols-outlined text-on-surface-variant">more_vert</button>
+</div>
+<!-- Placeholder for Chart -->
+<div class="w-full h-64 bg-surface rounded-lg flex items-center justify-center border border-outline-variant/20 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container to-transparent opacity-50"></div>
+<div class="absolute bottom-0 w-full h-1/2 flex items-end px-4 gap-2">
+<div class="w-1/12 bg-primary/20 h-1/4 rounded-t-sm"></div>
+<div class="w-1/12 bg-primary/40 h-2/4 rounded-t-sm"></div>
+<div class="w-1/12 bg-primary/30 h-1/3 rounded-t-sm"></div>
+<div class="w-1/12 bg-primary/60 h-3/4 rounded-t-sm"></div>
+<div class="w-1/12 bg-primary/50 h-2/3 rounded-t-sm"></div>
+<div class="w-1/12 bg-secondary-fixed-dim/80 h-full rounded-t-sm"></div>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant relative z-10">منطقة الرسم البياني (Trend Line)</span>
+</div>
+</div>
+<!-- Donut Chart Area -->
+<div class="bg-surface-container-lowest rounded-xl p-card-padding" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-title-md text-title-md text-primary">توزيع المصروفات</h3>
+<button class="material-symbols-outlined text-on-surface-variant">more_vert</button>
+</div>
+<!-- Placeholder for Chart -->
+<div class="w-full h-64 flex flex-col items-center justify-center relative">
+<div class="w-40 h-40 rounded-full border-[16px] border-surface-container-low border-t-primary border-r-secondary-fixed border-b-[#ef4444] border-l-[#3b82f6] rotate-45"></div>
+<div class="absolute flex flex-col items-center justify-center">
+<span class="font-body-sm text-body-sm text-on-surface-variant">الإجمالي</span>
+<span class="font-title-md text-title-md text-primary data-mono">18.4K</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Table Section -->
+<div class="bg-surface-container-lowest rounded-xl" style="box-shadow: 0 10px 15px -3px rgba(11, 28, 48, 0.05), 0 4px 6px -2px rgba(11, 28, 48, 0.02);">
+<div class="p-card-padding border-b border-outline-variant/20 flex justify-between items-center">
+<h3 class="font-title-md text-title-md text-primary">أحدث المبيعات اليومية</h3>
+<button class="font-label-bold text-label-bold text-primary flex items-center gap-1 hover:text-secondary-fixed-dim transition-colors">
+                        عرض الكل
+                        <span class="material-symbols-outlined text-sm">arrow_left</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-right">
+<thead class="bg-surface text-on-surface-variant border-b border-outline-variant/20">
+<tr>
+<th class="py-3 px-6 font-label-bold text-label-bold">رقم الفاتورة</th>
+<th class="py-3 px-6 font-label-bold text-label-bold">التاريخ والوقت</th>
+<th class="py-3 px-6 font-label-bold text-label-bold">المبلغ</th>
+<th class="py-3 px-6 font-label-bold text-label-bold">طريقة الدفع</th>
+<th class="py-3 px-6 font-label-bold text-label-bold text-center">إجراءات</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-6 font-body-sm text-body-sm text-primary data-mono">#INV-001</td>
+<td class="py-4 px-6 font-body-sm text-body-sm text-on-surface-variant data-mono">24/10/2023 - 14:30</td>
+<td class="py-4 px-6 font-title-md text-title-md text-primary data-mono">450.00</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#10b981]/10 text-[#10b981]">
+                                        نقدي
+                                    </span>
+</td>
+<td class="py-4 px-6 text-center">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-6 font-body-sm text-body-sm text-primary data-mono">#INV-002</td>
+<td class="py-4 px-6 font-body-sm text-body-sm text-on-surface-variant data-mono">24/10/2023 - 15:15</td>
+<td class="py-4 px-6 font-title-md text-title-md text-primary data-mono">1,200.50</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#3b82f6]/10 text-[#3b82f6]">
+                                        شبكة
+                                    </span>
+</td>
+<td class="py-4 px-6 text-center">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-6 font-body-sm text-body-sm text-primary data-mono">#INV-003</td>
+<td class="py-4 px-6 font-body-sm text-body-sm text-on-surface-variant data-mono">24/10/2023 - 16:00</td>
+<td class="py-4 px-6 font-title-md text-title-md text-primary data-mono">85.00</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#10b981]/10 text-[#10b981]">
+                                        نقدي
+                                    </span>
+</td>
+<td class="py-4 px-6 text-center">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-4 px-6 font-body-sm text-body-sm text-primary data-mono">#INV-004</td>
+<td class="py-4 px-6 font-body-sm text-body-sm text-on-surface-variant data-mono">24/10/2023 - 16:45</td>
+<td class="py-4 px-6 font-title-md text-title-md text-primary data-mono">3,450.00</td>
+<td class="py-4 px-6">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#3b82f6]/10 text-[#3b82f6]">
+                                        شبكة
+                                    </span>
+</td>
+<td class="py-4 px-6 text-center">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</main>
+</div>
+
+
+</body></html>
