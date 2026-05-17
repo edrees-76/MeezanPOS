@@ -37,6 +37,12 @@ public class DailyJournal : BaseEntity
     public decimal ActualCash { get; set; }            // النقد الفعلي المستلم
     public decimal Difference => ActualCash - ExpectedCash;  // الفرق (عجز أو زيادة)
 
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string DifferenceText => Difference < 0 ? $"عجز {Math.Abs(Difference):N2}" : Difference > 0 ? $"زيادة {Difference:N2}" : "لا يوجد";
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string DifferenceColor => Difference < 0 ? "#ef4444" : Difference > 0 ? "#000000" : "#10b981";
+
     // تفاصيل المصروفات
     public ICollection<DailyExpenseItem> ExpenseItems { get; set; } = new List<DailyExpenseItem>();
     

@@ -4,9 +4,16 @@ using MeezanPOS.Domain.Enums;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using QuestPDF.Fluent;
+using Microsoft.EntityFrameworkCore;
 
 namespace MeezanPOS.Application.ViewModels;
+
+/// <summary>
+/// نموذج بيانات لعرض خيارات الورديات في القائمة المنسدلة
+/// </summary>
+public record ShiftOption(ShiftType Type, string DisplayName);
 
 public partial class OrderAdjustmentItemViewModel : ObservableObject
 {
@@ -159,7 +166,27 @@ public partial class DailyJournalViewModel : ObservableObject
     private DateTime journalDate = DateTime.Today;
 
     [ObservableProperty]
-    private int selectedShiftIndex = 0; // 0=أولى, 1=ثانية, 2=يوم كامل
+    private ShiftType selectedShiftType = ShiftType.FirstShift;
+
+    private CancellationTokenSource? _shiftCts;
+
+    partial void OnJournalDateChanged(DateTime value)
+    {
+        _shiftCts?.Cancel();
+        _shiftCts = new CancellationTokenSource();
+        _ = UpdateAvailableShiftsAsync(value, _shiftCts.Token);
+    }
+
+    /// <summary>
+    /// تحويل نوع الوردية إلى اسم عرض موحّد
+    /// </summary>
+    public static string GetShiftDisplayName(ShiftType type) => type switch
+    {
+        ShiftType.FirstShift  => "الوردية الأولى",
+        ShiftType.SecondShift => "الوردية الثانية",
+        ShiftType.FullDay     => "يوم كامل",
+        _ => ""
+    };
 
     [ObservableProperty]
     private string employeeName = string.Empty;
@@ -227,6 +254,16 @@ public partial class DailyJournalViewModel : ObservableObject
         }
     }
 
+    public string BankingDifferenceColor
+    {
+        get
+        {
+            if (BankingDifference == 0) return "#10b981";
+            if (BankingDifference > 0) return "#000000";
+            return "#ef4444";
+        }
+    }
+
     public string BankingSectionTitle => HasBankingSalesInput
         ? "تفاصيل الخدمات المصرفية (مطابقة مع الكاشير)"
         : "تفاصيل الخدمات المصرفية (من الدفتر)";
@@ -241,12 +278,22 @@ public partial class DailyJournalViewModel : ObservableObject
         }
     }
 
+    public string DifferenceColor
+    {
+        get
+        {
+            if (Difference == 0) return "#10b981";
+            if (Difference > 0) return "#000000";
+            return "#ef4444";
+        }
+    }
+
     // --- القوائم ---
     public ObservableCollection<ExpenseItemViewModel> ExpenseItems { get; } = new();
     public ObservableCollection<BankingItemViewModel> BankingItems { get; } = new();
 
     // --- أنواع الورديات ---
-    public string[] ShiftTypes { get; } = { "الوردية الأولى", "الوردية الثانية", "يوم كامل" };
+    public ObservableCollection<ShiftOption> ShiftTypes { get; } = new();
 
     // --- قائمة المصارف الليبية ---
     public string[] BankNames { get; } = {
@@ -284,6 +331,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         AddExpenseItem();
         AddBankingItem();
+        _ = UpdateAvailableShiftsAsync(JournalDate);
     }
 
     // --- إعادة حساب تلقائية عند تغيير أي قيمة ---
@@ -317,6 +365,8 @@ public partial class DailyJournalViewModel : ObservableObject
         OnPropertyChanged(nameof(ExpectedCash));
         OnPropertyChanged(nameof(Difference));
         OnPropertyChanged(nameof(DifferenceStatus));
+        OnPropertyChanged(nameof(DifferenceColor));
+        OnPropertyChanged(nameof(BankingDifferenceColor));
     }
 
     // --- أوامر المصروفات ---
@@ -408,6 +458,67 @@ public partial class DailyJournalViewModel : ObservableObject
         }
     }
 
+    private int? editingJournalId;
+    private ShiftType? editingJournalShift;
+
+    private async System.Threading.Tasks.Task UpdateAvailableShiftsAsync(DateTime date, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+            var targetDate = date.Date;
+            var registeredShifts = await context.DailyJournals
+                .Where(j => j.JournalDate.Year == targetDate.Year && j.JournalDate.Month == targetDate.Month && j.JournalDate.Day == targetDate.Day)
+                .Select(j => j.ShiftType)
+                .ToListAsync(cancellationToken);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (editingJournalId.HasValue && editingJournalShift.HasValue)
+            {
+                registeredShifts.Remove(editingJournalShift.Value);
+            }
+
+            var allShifts = new[] { ShiftType.FirstShift, ShiftType.SecondShift, ShiftType.FullDay };
+            var availableShifts = allShifts
+                .Where(s => !registeredShifts.Contains(s))
+                .Select(s => new ShiftOption(s, GetShiftDisplayName(s)))
+                .ToList();
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                ShiftTypes.Clear();
+                foreach (var shift in availableShifts)
+                {
+                    ShiftTypes.Add(shift);
+                }
+
+                if (!availableShifts.Any(s => s.Type == SelectedShiftType) && availableShifts.Any())
+                {
+                    SelectedShiftType = availableShifts.First().Type;
+                }
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            // تم إلغاء العملية بسبب تغيير التاريخ — سلوك طبيعي
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"خطأ في تحديث الورديات المتاحة: {ex.Message}");
+            // احتياطي: عرض جميع الورديات عند فشل الاستعلام
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                if (ShiftTypes.Count == 0)
+                {
+                    ShiftTypes.Add(new ShiftOption(ShiftType.FirstShift, GetShiftDisplayName(ShiftType.FirstShift)));
+                    ShiftTypes.Add(new ShiftOption(ShiftType.SecondShift, GetShiftDisplayName(ShiftType.SecondShift)));
+                    ShiftTypes.Add(new ShiftOption(ShiftType.FullDay, GetShiftDisplayName(ShiftType.FullDay)));
+                }
+            });
+        }
+    }
+
     // --- حفظ الحركة اليومية ---
     [RelayCommand]
     private async System.Threading.Tasks.Task SaveJournalAsync()
@@ -427,21 +538,78 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
             
-            var journal = new MeezanPOS.Domain.Entities.DailyJournal
+            // Check for duplicate shifts on the same day
+            var targetDate = JournalDate.Date;
+            var selectedShift = SelectedShiftType;
+            
+            bool isDuplicate = context.DailyJournals.Any(j => 
+                j.JournalDate.Year == targetDate.Year && 
+                j.JournalDate.Month == targetDate.Month && 
+                j.JournalDate.Day == targetDate.Day &&
+                j.ShiftType == selectedShift &&
+                (!editingJournalId.HasValue || j.Id != editingJournalId.Value));
+
+            if (isDuplicate)
             {
-                JournalDate = JournalDate,
-                ShiftType = (MeezanPOS.Domain.Enums.ShiftType)SelectedShiftIndex,
-                EmployeeName = EmployeeName,
-                Notes = Notes,
-                CashFloat = CashFloat ?? 0m,
-                TotalSales = TotalSales,
-                BankingTotal = EffectiveBankingTotal,
-                TotalExpenses = TotalExpenses,
-                ReturnsTotal = ReturnsAmount,
-                FreeOrdersTotal = FreeOrdersAmount,
-                ActualCash = ActualCash ?? 0m,
-                CreatedAt = System.DateTime.Now
-            };
+                StatusMessage = $"عذراً، تم تسجيل الوردية {GetShiftDisplayName(selectedShift)} مسبقاً في هذا اليوم ولا يمكن تكرارها.";
+                return;
+            }
+
+            MeezanPOS.Domain.Entities.DailyJournal? journal;
+            if (editingJournalId.HasValue)
+            {
+                journal = context.DailyJournals
+                    .Include(j => j.ExpenseItems)
+                    .Include(j => j.BankingItems)
+                    .Include(j => j.Adjustments)
+                    .FirstOrDefault(j => j.Id == editingJournalId.Value);
+
+                if (journal == null)
+                {
+                    StatusMessage = "خطأ: لم يتم العثور على السجل لتعديله.";
+                    return;
+                }
+
+                journal.JournalDate = JournalDate;
+                journal.ShiftType = SelectedShiftType;
+                journal.EmployeeName = EmployeeName;
+                journal.Notes = Notes;
+                journal.CashFloat = CashFloat ?? 0m;
+                journal.TotalSales = TotalSales;
+                journal.BankingTotal = EffectiveBankingTotal;
+                journal.TotalExpenses = TotalExpenses;
+                journal.ReturnsTotal = ReturnsAmount;
+                journal.FreeOrdersTotal = FreeOrdersAmount;
+                journal.ActualCash = ActualCash ?? 0m;
+                journal.UpdatedAt = System.DateTime.Now;
+
+                // حذف العناصر القديمة صراحة لأن قاعدة البيانات تمنع Cascade Delete
+                context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
+                context.BankingItems.RemoveRange(journal.BankingItems);
+                context.OrderAdjustmentItems.RemoveRange(journal.Adjustments);
+                
+                journal.ExpenseItems.Clear();
+                journal.BankingItems.Clear();
+                journal.Adjustments.Clear();
+            }
+            else
+            {
+                journal = new MeezanPOS.Domain.Entities.DailyJournal
+                {
+                    JournalDate = JournalDate,
+                    ShiftType = SelectedShiftType,
+                    EmployeeName = EmployeeName,
+                    Notes = Notes,
+                    CashFloat = CashFloat ?? 0m,
+                    TotalSales = TotalSales,
+                    BankingTotal = EffectiveBankingTotal,
+                    TotalExpenses = TotalExpenses,
+                    ReturnsTotal = ReturnsAmount,
+                    FreeOrdersTotal = FreeOrdersAmount,
+                    ActualCash = ActualCash ?? 0m,
+                    CreatedAt = System.DateTime.Now
+                };
+            }
 
             // إضافة المصروفات
             foreach (var exp in ExpenseItems)
@@ -544,11 +712,17 @@ public partial class DailyJournalViewModel : ObservableObject
                 }
             }
 
-            context.DailyJournals.Add(journal);
+            if (!editingJournalId.HasValue)
+            {
+                context.DailyJournals.Add(journal);
+            }
             await context.SaveChangesAsync();
 
             StatusMessage = "تم حفظ الحركة اليومية بنجاح ✓";
             IsSaved = true;
+            
+            // إغلاق النافذة والعودة بعد الحفظ
+            CloseForm();
         }
         catch (System.Exception ex)
         {
@@ -558,6 +732,9 @@ public partial class DailyJournalViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isViewingMode = false;
+
+    [ObservableProperty]
+    private string saveButtonText = "حفظ وترحيل";
 
     partial void OnIsViewingModeChanged(bool value)
     {
@@ -571,6 +748,9 @@ public partial class DailyJournalViewModel : ObservableObject
     private void ClearForm()
     {
         IsViewingMode = false;
+        SaveButtonText = "حفظ وترحيل";
+        editingJournalId = null;
+        editingJournalShift = null;
         EmployeeName = string.Empty;
         Notes = string.Empty;
         CashFloat = null;
@@ -591,6 +771,7 @@ public partial class DailyJournalViewModel : ObservableObject
         StatusMessage = string.Empty;
         IsSaved = false;
         RefreshCalculations();
+        _ = UpdateAvailableShiftsAsync(JournalDate);
     }
 
     public System.Action? OnClose { get; set; }
@@ -607,7 +788,9 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             var report = new MeezanPOS.Application.Services.DailyJournalPdfReport(this);
-            var filePath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), $"تقرير_حركة_يومية_{JournalDate:yyyyMMdd}_{System.Guid.NewGuid().ToString().Substring(0, 4)}.pdf");
+            string shiftName = GetShiftDisplayName(SelectedShiftType);
+            string fileName = $"حركة يومية - {JournalDate:yyyy-MM-dd} - الوردية {shiftName}.pdf";
+            var filePath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), fileName);
             
             // Generate PDF
             report.GeneratePdf(filePath);
@@ -624,11 +807,26 @@ public partial class DailyJournalViewModel : ObservableObject
     public void LoadJournalForViewing(MeezanPOS.Domain.Entities.DailyJournal journal)
     {
         IsViewingMode = true;
+        editingJournalId = null;
+        editingJournalShift = null;
+        LoadJournalData(journal);
         StatusMessage = "وضع العرض - لا يمكن تعديل حركة سابقة";
-        
+    }
+
+    public void LoadJournalForEditing(MeezanPOS.Domain.Entities.DailyJournal journal)
+    {
+        IsViewingMode = false;
+        editingJournalId = journal.Id;
+        editingJournalShift = journal.ShiftType;
+        LoadJournalData(journal);
+        SaveButtonText = "حفظ";
+        StatusMessage = "وضع التعديل - يمكنك تعديل البيانات ثم الضغط على حفظ";
+    }
+
+    private void LoadJournalData(MeezanPOS.Domain.Entities.DailyJournal journal)
+    {
         JournalDate = journal.JournalDate;
-        SelectedShiftIndex = journal.ShiftType == ShiftType.FirstShift ? 0 :
-                             journal.ShiftType == ShiftType.SecondShift ? 1 : 2;
+        SelectedShiftType = journal.ShiftType;
         EmployeeName = journal.EmployeeName;
         Notes = journal.Notes ?? "";
         CashFloat = journal.CashFloat;

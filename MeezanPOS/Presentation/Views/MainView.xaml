@@ -142,20 +142,7 @@
 
                     <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
 
-                    <!-- Search -->
-                    <Border Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" 
-                            Background="#eff4ff" CornerRadius="20" Width="300" Height="40" Padding="16,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <materialDesign:PackIcon Grid.Column="0" Kind="Magnify" Foreground="#76777d" VerticalAlignment="Center"/>
-                            <TextBox Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center" 
-                                     materialDesign:HintAssist.Hint="بحث..." 
-                                     BorderThickness="0" Background="Transparent"/>
-                        </Grid>
-                    </Border>
+                    <!-- Search Removed -->
 
                     <!-- Actions -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -164,10 +151,10 @@
                                 Background="#10b981" BorderThickness="0" Padding="12,4" Margin="0,0,16,0" materialDesign:ButtonAssist.CornerRadius="8">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                    <Setter Property="Visibility" Value="Visible" />
+                                    <Setter Property="Visibility" Value="Collapsed" />
                                     <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Title}" Value="ميزان للمالية - عرض تفاصيل الحركة اليومية">
-                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        <DataTrigger Binding="{Binding Title}" Value="ميزان للمالية - لوحة التحكم">
+                                            <Setter Property="Visibility" Value="Visible" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -178,9 +165,7 @@
                             </StackPanel>
                         </Button>
 
-                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#76777d" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="BellOutline" Width="24" Height="24"/>
-                        </Button>
+                        <!-- Bell removed -->
                         <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#76777d" Margin="0,0,16,0">
                             <materialDesign:PackIcon Kind="CogOutline" Width="24" Height="24"/>
                         </Button>

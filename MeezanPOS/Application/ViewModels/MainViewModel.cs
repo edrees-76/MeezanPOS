@@ -38,11 +38,14 @@ public partial class MainViewModel : ObservableObject
         {
             case "Dashboard":
                 Title = "ميزان للمالية - لوحة التحكم";
+                SelectedNavIndex = 0;
                 CurrentViewModel = new DashboardViewModel();
                 break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";
-                CurrentViewModel = new DailyJournalViewModel();
+                var journalVM = new DailyJournalViewModel();
+                journalVM.OnClose = () => Navigate("Dashboard");
+                CurrentViewModel = journalVM;
                 break;
             case "Sales":
                 Title = "ميزان للمالية - الإيرادات";
