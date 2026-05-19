@@ -63,11 +63,11 @@ public partial class ExpenseItemViewModel : ObservableObject
 
 
     // --- حقول الإظهار/الإخفاء حسب النوع ---
-    // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري، وأجرة عامل (مبلغ + وصف فقط)
+    // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري، ويومية عامل (مبلغ + وصف فقط)
     public bool IsSimpleExpense => !string.IsNullOrEmpty(ExpenseType) && !IsPurchase && !IsInvoicePayment && !IsSupplierPayment && !IsGas && !IsCoal && !IsBread;
     public bool IsPurchase => ExpenseType == "مشتريات";
     public bool IsInvoicePayment => ExpenseType == "دفعة فاتورة";
-    public bool IsWorkerWage => ExpenseType == "أجرة عامل";
+    public bool IsWorkerWage => ExpenseType == "أجرة عامل" || ExpenseType == "يومية عامل";
     public bool IsSupplierPayment => ExpenseType == "دفعة مورد";
     public bool IsGas => ExpenseType == "غاز";
     public bool IsCoal => ExpenseType == "فحم";
@@ -183,7 +183,7 @@ public partial class DailyJournalViewModel : ObservableObject
     public decimal BankingDifference => (BankingSalesInput ?? 0) - BankingItemsTotal;
     public decimal TotalExpenses => ExpenseItems.Sum(e => e.Amount ?? 0);
     public decimal PurchasesTotal => ExpenseItems.Where(e => e.ExpenseType == "مشتريات").Sum(e => e.Amount ?? 0);
-    public decimal WorkerWagesTotal => ExpenseItems.Where(e => e.ExpenseType == "أجرة عامل").Sum(e => e.Amount ?? 0);
+    public decimal WorkerWagesTotal => ExpenseItems.Where(e => e.ExpenseType == "أجرة عامل" || e.ExpenseType == "يومية عامل").Sum(e => e.Amount ?? 0);
     public decimal SupplierPaymentsTotal => ExpenseItems.Where(e => e.ExpenseType == "دفعة مورد").Sum(e => e.Amount ?? 0);
     public decimal InvoicePaymentsTotal => ExpenseItems.Where(e => e.ExpenseType == "دفعة فاتورة").Sum(e => e.Amount ?? 0);
     public decimal GasTotal => ExpenseItems.Where(e => e.ExpenseType == "غاز").Sum(e => e.Amount ?? 0);
@@ -281,7 +281,7 @@ public partial class DailyJournalViewModel : ObservableObject
     public System.Collections.ObjectModel.ObservableCollection<string> ExpenseTypes { get; } = new(new[] {
         "مشتريات",
         "الخبزة",
-        "أجرة عامل",
+        "يومية عامل",
         "دفعة مورد",
         "دفعة فاتورة",
         "غاز",

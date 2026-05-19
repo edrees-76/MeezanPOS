@@ -474,7 +474,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <!-- الأنواع البسيطة وأجرة العامل: وصف نصي -->
+                                            <!-- الأنواع البسيطة ويومية العامل: وصف نصي -->
                                             <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="البيان أو اسم العامل" Visibility="{Binding IsSimpleExpense, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
                                             
                                             <!-- أنواع المورد (مشتريات/دفعات): قائمة الموردين -->
@@ -534,7 +534,7 @@
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="مشتريات:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PurchasesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="أجور عمال:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="يومية عمال:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                             <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding WorkerWagesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="دفعات موردين:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasSupplierPayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
