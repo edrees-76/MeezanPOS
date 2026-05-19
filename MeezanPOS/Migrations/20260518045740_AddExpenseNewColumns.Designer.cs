@@ -3,6 +3,7 @@ using System;
 using MeezanPOS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MeezanPOS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518045740_AddExpenseNewColumns")]
+    partial class AddExpenseNewColumns
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -566,9 +569,6 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime>("InvoiceDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("InvoiceNumber")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
@@ -614,12 +614,6 @@ namespace MeezanPOS.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ReceiptNumber")
-                        .HasColumnType("TEXT");
 
                     b.Property<int>("SourceId")
                         .HasColumnType("INTEGER");

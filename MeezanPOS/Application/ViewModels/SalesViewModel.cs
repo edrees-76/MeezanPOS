@@ -32,10 +32,16 @@ public partial class SalesViewModel : ObservableObject
     private bool isLoading;
 
     [ObservableProperty]
-    private string searchText = string.Empty;
+    private ObservableCollection<string> cashierNames = new() { "الكل" };
 
     [ObservableProperty]
-    private System.DateTime? filterDate;
+    private string selectedCashier = "الكل";
+
+    [ObservableProperty]
+    private System.DateTime? filterStartDate;
+
+    [ObservableProperty]
+    private System.DateTime? filterEndDate;
 
     [ObservableProperty]
     private string filterShiftType = "الكل";
@@ -65,9 +71,26 @@ public partial class SalesViewModel : ObservableObject
                 .Include(j => j.ExpenseItems)
                 .Include(j => j.BankingItems)
                 .Include(j => j.Adjustments)
-                .OrderByDescending(j => j.JournalDate)
-                .ThenByDescending(j => j.Id)
+                .OrderBy(j => j.JournalDate)
+                .ThenBy(j => j.Id)
                 .ToListAsync();
+
+            // Populate CashierNames
+            var uniqueCashiers = _allJournals
+                .Where(j => !string.IsNullOrWhiteSpace(j.EmployeeName))
+                .Select(j => j.EmployeeName.Trim())
+                .Distinct()
+                .OrderBy(name => name)
+                .ToList();
+            
+            CashierNames.Clear();
+            CashierNames.Add("الكل");
+            foreach (var name in uniqueCashiers)
+            {
+                CashierNames.Add(name);
+            }
+            if (!CashierNames.Contains(SelectedCashier))
+                SelectedCashier = "الكل";
 
             ApplyFilters();
         }
@@ -82,18 +105,33 @@ public partial class SalesViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void ClearFilters()
+    {
+        SelectedCashier = "الكل";
+        FilterShiftType = "الكل";
+        FilterStartDate = null;
+        FilterEndDate = null;
+        ApplyFilters();
+    }
+
+    [RelayCommand]
     public void ApplyFilters()
     {
         var filtered = _allJournals.AsEnumerable();
 
-        if (!string.IsNullOrWhiteSpace(SearchText))
+        if (!string.IsNullOrWhiteSpace(SelectedCashier) && SelectedCashier != "الكل")
         {
-            filtered = filtered.Where(j => j.EmployeeName.Contains(SearchText, System.StringComparison.OrdinalIgnoreCase));
+            filtered = filtered.Where(j => j.EmployeeName.Equals(SelectedCashier, System.StringComparison.OrdinalIgnoreCase));
         }
 
-        if (FilterDate.HasValue)
+        if (FilterStartDate.HasValue)
         {
-            filtered = filtered.Where(j => j.JournalDate.Date == FilterDate.Value.Date);
+            filtered = filtered.Where(j => j.JournalDate.Date >= FilterStartDate.Value.Date);
+        }
+
+        if (FilterEndDate.HasValue)
+        {
+            filtered = filtered.Where(j => j.JournalDate.Date <= FilterEndDate.Value.Date);
         }
 
         if (FilterShiftType != "الكل")
@@ -202,8 +240,40 @@ public partial class SalesViewModel : ObservableObject
         {
             row.RelativeItem().Column(column =>
             {
-                column.Item().Text("تقرير المبيعات والإيرادات - منظومة ميزان").FontSize(20).SemiBold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
-                column.Item().Text($"تاريخ الإصدار: {System.DateTime.Now:dd/MM/yyyy HH:mm}");
+                column.Item().Text("تقرير المبيعات والإيرادات").FontSize(20).SemiBold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
+                
+                // بناء سطر معلومات التصفية
+                var filterParts = new System.Collections.Generic.List<string>();
+
+                // الكاشير
+                if (!string.IsNullOrWhiteSpace(SelectedCashier) && SelectedCashier != "الكل")
+                    filterParts.Add($"الكاشير: {SelectedCashier}");
+
+                // نوع الوردية
+                if (!string.IsNullOrWhiteSpace(FilterShiftType) && FilterShiftType != "الكل")
+                    filterParts.Add($"الوردية: {FilterShiftType}");
+
+                // التاريخ من - إلى
+                System.DateTime? startDate = FilterStartDate;
+                System.DateTime? endDate = FilterEndDate;
+
+                if (Journals != null && Journals.Count > 0)
+                {
+                    if (!startDate.HasValue)
+                        startDate = Journals.Min(j => j.JournalDate);
+                    if (!endDate.HasValue)
+                        endDate = Journals.Max(j => j.JournalDate);
+                }
+
+                if (startDate.HasValue && endDate.HasValue)
+                    filterParts.Add($"من {startDate.Value:yyyy/MM/dd} إلى {endDate.Value:yyyy/MM/dd}");
+                else if (startDate.HasValue)
+                    filterParts.Add($"من {startDate.Value:yyyy/MM/dd}");
+                else if (endDate.HasValue)
+                    filterParts.Add($"حتى {endDate.Value:yyyy/MM/dd}");
+
+                if (filterParts.Count > 0)
+                    column.Item().Text(string.Join("  |  ", filterParts)).FontSize(10).FontColor(QuestPDF.Helpers.Colors.Grey.Darken1);
             });
         });
     }
@@ -303,12 +373,16 @@ public partial class SalesViewModel : ObservableObject
 
     private void ComposeFooter(QuestPDF.Infrastructure.IContainer container)
     {
-        container.AlignCenter().Text(x =>
+        container.Row(row =>
         {
-            x.Span("صفحة ");
-            x.CurrentPageNumber();
-            x.Span(" من ");
-            x.TotalPages();
+            row.RelativeItem().AlignRight().Text(x =>
+            {
+                x.Span("صفحة ");
+                x.CurrentPageNumber();
+                x.Span(" من ");
+                x.TotalPages();
+            });
+            row.RelativeItem().AlignLeft().Text("منظومة ميزان").FontSize(12).SemiBold().FontColor(QuestPDF.Helpers.Colors.Grey.Medium);
         });
     }
 }

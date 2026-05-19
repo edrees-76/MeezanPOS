@@ -17,14 +17,24 @@
         <vm:MainViewModel />
     </Window.DataContext>
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260" /> <!-- Sidebar -->
+            <ColumnDefinition Width="Auto" /> <!-- Sidebar -->
             <ColumnDefinition Width="*" /> <!-- Main Content -->
         </Grid.ColumnDefinitions>
 
         <!-- Sidebar -->
-        <Border Grid.Column="0" Background="#0b1c30" BorderBrush="#1Affffff" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Width="260" Visibility="{Binding IsSidebarVisible, Converter={StaticResource BooleanToVisibilityConverter}}" BorderBrush="#1Affffff" BorderThickness="0,0,1,0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                    <GradientStop Color="#0F172A" Offset="0"/> <!-- Slate 900 -->
+                    <GradientStop Color="#172554" Offset="1"/> <!-- Blue 950 -->
+                </LinearGradientBrush>
+            </Border.Background>
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -48,31 +58,31 @@
                          SelectedIndex="{Binding SelectedNavIndex}">
                     <ListBox.Resources>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="#eaf1ff"/>
+                            <Setter Property="Foreground" Value="#cbd5e1"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" Value="True">
-                                    <Setter Property="Foreground" Value="#ffe081"/>
+                                    <Setter Property="Foreground" Value="#fbbf24"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                         <Style TargetType="materialDesign:PackIcon">
-                            <Setter Property="Foreground" Value="#eaf1ff"/>
+                            <Setter Property="Foreground" Value="#cbd5e1"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" Value="True">
-                                    <Setter Property="Foreground" Value="#ffe081"/>
+                                    <Setter Property="Foreground" Value="#fbbf24"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                         <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="16,12"/>
-                            <Setter Property="Margin" Value="0,2"/>
-                            <Setter Property="Foreground" Value="#eaf1ff"/>
-                            <Setter Property="Opacity" Value="0.7"/>
+                            <Setter Property="Padding" Value="16,14"/>
+                            <Setter Property="Margin" Value="0,4"/>
+                            <Setter Property="Foreground" Value="#cbd5e1"/>
+                            <Setter Property="Opacity" Value="0.75"/>
                             <Setter Property="Cursor" Value="Hand"/>
                             <Setter Property="Template">
                                 <Setter.Value>
                                     <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="0,20,20,0" Margin="0,0,16,0">
+                                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="0,24,24,0" Margin="0,0,16,0">
                                             <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
                                         </Border>
                                         <ControlTemplate.Triggers>
@@ -81,10 +91,10 @@
                                                 <Setter Property="Opacity" Value="1"/>
                                             </Trigger>
                                             <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#1Affe081" />
-                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#ffe081"/>
+                                                <Setter TargetName="Bd" Property="Background" Value="#1Afbbf24" />
+                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#fbbf24"/>
                                                 <Setter TargetName="Bd" Property="BorderThickness" Value="4,0,0,0"/>
-                                                <Setter Property="Foreground" Value="#ffe081"/>
+                                                <Setter Property="Foreground" Value="#fbbf24"/>
                                                 <Setter Property="Opacity" Value="1"/>
                                             </Trigger>
                                         </ControlTemplate.Triggers>
@@ -105,6 +115,18 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CashRegister" Width="24" Height="24" Margin="0,0,16,0"/>
                             <TextBlock Text="المبيعات والإيرادات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountTie" Width="24" Height="24" Margin="0,0,16,0"/>
+                            <TextBlock Text="إدارة الموردين" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Margin="0,0,16,0"/>
+                            <TextBlock Text="إدارة المصروفات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                 </ListBox>
@@ -136,16 +158,21 @@
                 <Grid Margin="32,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                    <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="#0b1c30" Margin="0,0,16,0" ToolTip="إظهار / إخفاء القائمة">
+                        <materialDesign:PackIcon Kind="Menu" Width="28" Height="28"/>
+                    </Button>
+
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
 
                     <!-- Search Removed -->
 
                     <!-- Actions -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                         <!-- Quick Add Action -->
                         <Button Command="{Binding NavigateCommand}" CommandParameter="AddJournal" 
                                 Background="#10b981" BorderThickness="0" Padding="12,4" Margin="0,0,16,0" materialDesign:ButtonAssist.CornerRadius="8">

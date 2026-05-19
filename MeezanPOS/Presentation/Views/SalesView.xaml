@@ -94,19 +94,27 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="16"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="16"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBox Grid.Column="0" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="بحث باسم الكاشير..." Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="50" VerticalContentAlignment="Center"/>
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" materialDesign:HintAssist.Hint="اختر اسم الكاشير..." Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="50" VerticalContentAlignment="Center"/>
                             
-                            <DatePicker Grid.Column="2" SelectedDate="{Binding FilterDate}" materialDesign:HintAssist.Hint="تصفية بالتاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="50" VerticalContentAlignment="Center"/>
+                            <DatePicker Grid.Column="2" SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="50" VerticalContentAlignment="Center"/>
+                            <DatePicker Grid.Column="4" SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="50" VerticalContentAlignment="Center"/>
                             
-                            <ComboBox Grid.Column="4" ItemsSource="{Binding ShiftTypes}" SelectedItem="{Binding FilterShiftType}" materialDesign:HintAssist.Hint="نوع الوردية" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="50" VerticalContentAlignment="Center"/>
+                            <ComboBox Grid.Column="6" ItemsSource="{Binding ShiftTypes}" SelectedItem="{Binding FilterShiftType}" materialDesign:HintAssist.Hint="نوع الوردية" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="50" VerticalContentAlignment="Center"/>
                             
-                            <Button Grid.Column="6" Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="50"/>
+                            <StackPanel Grid.Column="8" Orientation="Horizontal">
+                                <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="50" Width="100" Margin="0,0,8,0"/>
+                                <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="50" Width="50" Padding="0">
+                                    <materialDesign:PackIcon Kind="FilterRemove" Width="24" Height="24"/>
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </Grid>
                 </Border>
@@ -120,6 +128,7 @@
                           CanUserDeleteRows="False"
                           CanUserResizeColumns="False"
                           CanUserReorderColumns="False"
+                          CanUserSortColumns="False"
                           IsReadOnly="True"
                           HeadersVisibility="Column"
                           Background="Transparent"

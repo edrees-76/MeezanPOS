@@ -12,6 +12,15 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableObject? currentViewModel;
 
+    [ObservableProperty]
+    private bool isSidebarVisible = true;
+
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsSidebarVisible = !IsSidebarVisible;
+    }
+
     public MainViewModel()
     {
         CurrentViewModel = new DashboardViewModel();
@@ -27,6 +36,8 @@ public partial class MainViewModel : ObservableObject
             {
                 if (value == 0) Navigate("Dashboard");
                 else if (value == 1) Navigate("Sales");
+                else if (value == 2) Navigate("Suppliers");
+                else if (value == 3) Navigate("Expenses");
             }
         }
     }
@@ -41,15 +52,43 @@ public partial class MainViewModel : ObservableObject
                 SelectedNavIndex = 0;
                 CurrentViewModel = new DashboardViewModel();
                 break;
+            case "Sales":
+                Title = "ميزان للمالية - المبيعات والإيرادات";
+                SelectedNavIndex = 1;
+                CurrentViewModel = new SalesViewModel();
+                break;
+            case "Suppliers":
+                Title = "ميزان للمالية - إدارة الموردين";
+                SelectedNavIndex = 2;
+                var supplierVM = new SupplierListViewModel();
+                supplierVM.OnViewSupplierDetails = (supplier) => 
+                {
+                    Title = $"مورد: {supplier.Name} - الفواتير وكشف الحساب";
+                    var detailsVM = new SupplierDetailsViewModel(supplier.Id, supplier.Name);
+                    detailsVM.OnBack = () => Navigate("Suppliers");
+                    CurrentViewModel = detailsVM;
+                };
+                CurrentViewModel = supplierVM;
+                break;
+            case "Expenses":
+                Title = "ميزان للمالية - إدارة المصروفات";
+                SelectedNavIndex = 3;
+                var expenseVM = new ExpenseManagementViewModel();
+                expenseVM.OnBack = () => Navigate("Dashboard");
+                expenseVM.OnEditJournal = (journalId) => 
+                {
+                    Title = "ميزان للمالية - تعديل حركة يومية";
+                    var journalVM = new DailyJournalViewModel(journalId);
+                    journalVM.OnClose = () => Navigate("Expenses");
+                    CurrentViewModel = journalVM;
+                };
+                CurrentViewModel = expenseVM;
+                break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";
                 var journalVM = new DailyJournalViewModel();
                 journalVM.OnClose = () => Navigate("Dashboard");
                 CurrentViewModel = journalVM;
-                break;
-            case "Sales":
-                Title = "ميزان للمالية - الإيرادات";
-                CurrentViewModel = new SalesViewModel();
                 break;
         }
     }

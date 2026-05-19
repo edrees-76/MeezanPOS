@@ -30,11 +30,16 @@ public class DailyJournalPdfReport : IDocument
 
                 page.Header().Element(ComposeHeader);
                 page.Content().Element(ComposeContent);
-                page.Footer().AlignCenter().Text(x =>
+                page.Footer().Row(row =>
                 {
-                    x.CurrentPageNumber();
-                    x.Span(" / ");
-                    x.TotalPages();
+                    row.RelativeItem().AlignRight().Text(x =>
+                    {
+                        x.Span("صفحة ");
+                        x.CurrentPageNumber();
+                        x.Span(" من ");
+                        x.TotalPages();
+                    });
+                    row.RelativeItem().AlignLeft().Text("منظومة ميزان").FontSize(12).SemiBold().FontColor(Colors.Grey.Medium);
                 });
             });
     }
@@ -43,7 +48,7 @@ public class DailyJournalPdfReport : IDocument
     {
         container.PaddingBottom(15).Row(row =>
         {
-            row.RelativeItem().AlignCenter().Text("ميزان للمالية - تقرير الحركة اليومية").FontSize(20).SemiBold().FontColor(Colors.Black);
+            row.RelativeItem().AlignCenter().Text("تقرير الحركة اليومية").FontSize(20).SemiBold().FontColor(Colors.Black);
         });
     }
 
@@ -96,7 +101,7 @@ public class DailyJournalPdfReport : IDocument
                             table.Header(h => { 
                                 h.Cell().Border(1).BorderColor(Colors.Black).Background("#f8fafc").Padding(4).Text("المبلغ").SemiBold(); 
                                 h.Cell().Border(1).BorderColor(Colors.Black).Background("#f8fafc").Padding(4).Text("المصرف").SemiBold(); 
-                                h.Cell().Border(1).BorderColor(Colors.Black).Background("#f8fafc").Padding(4).Text("آخر 4 أرقام").SemiBold(); 
+                                h.Cell().Border(1).BorderColor(Colors.Black).Background("#f8fafc").Padding(4).Text("رقم التحويل اخر 4 ارقام").SemiBold(); 
                             });
                             foreach (var item in _vm.BankingItems)
                             {

@@ -75,9 +75,18 @@ public class DailyExpenseItem : BaseEntity
     public int DailyJournalId { get; set; }
     public DailyJournal? DailyJournal { get; set; }
 
+    public int SequenceNumber { get; set; }
     public string Description { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public string? Category { get; set; }
+    public string? CategoryName { get; set; }  // اسم النوع بالعربي (مشتريات، غاز...)
+
+    public ExpenseType Type { get; set; } 
+    public int? SupplierId { get; set; }
+    public Supplier? Supplier { get; set; }
+    public string? SupplierName { get; set; }  // اسم المورد (للموردين غير المسجلين)
+    public string? Notes { get; set; }
+    public string? InvoiceNumber { get; set; }
 }
 
 /// <summary>

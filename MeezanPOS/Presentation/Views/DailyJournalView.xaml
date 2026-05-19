@@ -8,7 +8,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         
-        <Style x:Key="ReadOnlySectionStyle" TargetType="Border">
+        <Style x:Key="ReadOnlySectionStyle" TargetType="materialDesign:Card">
             <Setter Property="KeyboardNavigation.TabNavigation" Value="Local"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsNotViewingMode}" Value="False">
@@ -57,11 +57,9 @@
             </Grid.RowDefinitions>
 
             <!-- ═══════════ القسم 1: معلومات الوردية ═══════════ -->
-            <Border Grid.Row="0" Background="White" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#e5eeff" BorderThickness="1" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06"/>
-                </Border.Effect>
+            <materialDesign:Card Grid.Row="0" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,24"
+                                 Background="White" materialDesign:ElevationAssist.Elevation="Dp2"
+                                 IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                         <materialDesign:PackIcon Kind="CalendarClock" Width="28" Height="28" Foreground="#0b1c30" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -117,14 +115,12 @@
                         </StackPanel>
                     </Grid>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════════ القسم 2: المبيعات ═══════════ -->
-            <Border Grid.Row="1" Background="White" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#e5eeff" BorderThickness="1" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06"/>
-                </Border.Effect>
+            <materialDesign:Card Grid.Row="1" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,24"
+                                 Background="White" materialDesign:ElevationAssist.Elevation="Dp2"
+                                 IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
                         <materialDesign:PackIcon Kind="CashRegister" Width="28" Height="28" Foreground="#10b981" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -169,14 +165,11 @@
                         </Grid>
                     </Border>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════════ القسم 3: الخدمات المصرفية (مطابقة الدفتر) ═══════════ -->
-            <Border Grid.Row="2" Background="White" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#e5eeff" BorderThickness="1" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06"/>
-                </Border.Effect>
+            <materialDesign:Card Grid.Row="2" Background="White" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,16"
+                                 materialDesign:ElevationAssist.Elevation="Dp2" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
                 <StackPanel>
                     <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
@@ -244,8 +237,8 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- آخر 4 أرقام -->
-                            <DataGridTemplateColumn Header="آخر 4 أرقام" Width="110">
+                            <!-- رقم التحويل اخر 4 ارقام -->
+                            <DataGridTemplateColumn Header="رقم التحويل اخر 4 ارقام" Width="160">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBox Text="{Binding Last4Digits, UpdateSourceTrigger=PropertyChanged}" MaxLength="4" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="8" FontSize="14"/>
@@ -289,14 +282,12 @@
                         </StackPanel>
                     </Border>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════ قسم المرتجعات والطلبات المجانية ═══════ -->
-            <Border Grid.Row="3" Background="White" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#e5eeff" BorderThickness="1" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06"/>
-                </Border.Effect>
+            <materialDesign:Card Grid.Row="3" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,24"
+                                 Background="White" materialDesign:ElevationAssist.Elevation="Dp2"
+                                 IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <materialDesign:PackIcon Kind="SwapHorizontal" Width="28" Height="28" Foreground="#ef4444" Margin="0,0,12,0" VerticalAlignment="Center"/>
@@ -413,14 +404,12 @@
                         </Border>
                     </Grid>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════ قسم المصروفات النثرية ═══════ -->
-            <Border Grid.Row="4" Background="White" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#e5eeff" BorderThickness="1" IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.06"/>
-                </Border.Effect>
+            <materialDesign:Card Grid.Row="4" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,24"
+                                 Background="White" materialDesign:ElevationAssist.Elevation="Dp2"
+                                 IsHitTestVisible="{Binding IsNotViewingMode}" Style="{StaticResource ReadOnlySectionStyle}">
                 <StackPanel>
                     <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
@@ -441,8 +430,7 @@
                     <DataGrid ItemsSource="{Binding ExpenseItems}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1" BorderBrush="Black"
                               HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" Background="White" RowBackground="White" AlternatingRowBackground="#fffbeb" Margin="0,0,0,8"
-                              materialDesign:DataGridAssist.CellPadding="6" materialDesign:DataGridAssist.ColumnHeaderPadding="6"
-                              RowDetailsVisibilityMode="VisibleWhenSelected">
+                              materialDesign:DataGridAssist.CellPadding="6" materialDesign:DataGridAssist.ColumnHeaderPadding="6">
                         <DataGrid.Columns>
                             <!-- حذف -->
                             <DataGridTemplateColumn Width="Auto">
@@ -465,6 +453,7 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <ComboBox ItemsSource="{Binding DataContext.ExpenseTypes, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedItem="{Binding ExpenseType, UpdateSourceTrigger=PropertyChanged}"
                                                   Text="{Binding ExpenseType, UpdateSourceTrigger=PropertyChanged}" IsEditable="True"
                                                   BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
                                     </DataTemplate>
@@ -480,31 +469,30 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- البيان / المورد -->
-                            <DataGridTemplateColumn Header="البيان / المورد" Width="*">
+                            <!-- البيان / المستفيد -->
+                            <DataGridTemplateColumn Header="البيان / المستفيد" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="الوصف" Visibility="{Binding IsSimpleExpense, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            <TextBox Text="{Binding SupplierName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="اسم المورد" Visibility="{Binding IsPurchase, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            <TextBox Text="{Binding SupplierName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="اسم المورد" Visibility="{Binding IsInvoicePayment, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsWorkerWage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                                <CheckBox Content="تفصيل العمال" IsChecked="{Binding IsDetailedWage}" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="13"/>
-                                                <TextBlock Text="(الإجمالي يُحسب تلقائياً)" VerticalAlignment="Center" FontSize="12" Foreground="#999" Visibility="{Binding IsDetailedWage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            </StackPanel>
+                                            <!-- الأنواع البسيطة وأجرة العامل: وصف نصي -->
+                                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="البيان أو اسم العامل" Visibility="{Binding IsSimpleExpense, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
+                                            
+                                            <!-- أنواع المورد (مشتريات/دفعات): قائمة الموردين -->
+                                            <ComboBox ItemsSource="{Binding DataContext.Suppliers, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                      DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{Binding SelectedSupplierId, UpdateSourceTrigger=PropertyChanged}"
+                                                      materialDesign:HintAssist.Hint="اختر المورد"
+                                                      Visibility="{Binding HasSupplier, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                      BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- التفاصيل / الفاتورة -->
-                            <DataGridTemplateColumn Header="التفاصيل / الفاتورة" Width="*">
+                            <!-- رقم الفاتورة -->
+                            <DataGridTemplateColumn Header="رقم الفاتورة" Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Grid>
-                                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="الوصف" Visibility="{Binding IsPurchase, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            <TextBox Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="رقم الفاتورة" Visibility="{Binding IsInvoicePayment, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                        </Grid>
+                                        <TextBox Text="{Binding InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="رقم الفاتورة" Visibility="{Binding HasInvoiceNumber, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
@@ -514,61 +502,22 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات" Visibility="{Binding IsPurchase, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات" Visibility="{Binding IsInvoicePayment, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
+                                            <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات" Visibility="{Binding HasNotes, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
-
-                        <DataGrid.RowDetailsTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="32,4,0,8" Visibility="{Binding IsDetailedWage, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <DataGrid ItemsSource="{Binding Workers}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" 
-                                              HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1" BorderBrush="Black" 
-                                              HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" Background="#fffbeb" RowBackground="#fffbeb" AlternatingRowBackground="#fffbeb"
-                                              materialDesign:DataGridAssist.CellPadding="6" materialDesign:DataGridAssist.ColumnHeaderPadding="6">
-                                        <DataGrid.Columns>
-                                            <DataGridTemplateColumn Width="Auto">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <Button Command="{Binding DataContext.RemoveWorkerCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                                CommandParameter="{Binding}" Style="{StaticResource MaterialDesignToolButton}" Foreground="#ef4444" Width="28" Height="28">
-                                                            <materialDesign:PackIcon Kind="Close" Width="16" Height="16"/>
-                                                        </Button>
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                            <DataGridTextColumn Header="#" Binding="{Binding SequenceNumber}" IsReadOnly="True"/>
-                                            <DataGridTemplateColumn Header="اسم العامل" Width="*">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="14"/>
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                            <DataGridTemplateColumn Header="الأجر" Width="130">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <TextBox Text="{Binding Wage, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="14"/>
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                    <Button Content="+ إضافة عامل" Command="{Binding AddWorkerCommand}"
-                                            Style="{StaticResource MaterialDesignFlatButton}"
-                                            Foreground="#f59e0b" FontSize="12" HorizontalAlignment="Right" Padding="8,2" Margin="0,4,0,0"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGrid.RowDetailsTemplate>
                     </DataGrid>
 
                     <!-- ملخص المصروفات حسب النوع -->
                     <Border Background="#fff8f0" CornerRadius="8" Padding="16,12" Margin="0,8,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
                                 <RowDefinition/>
                                 <RowDefinition/>
                                 <RowDefinition/>
@@ -582,46 +531,55 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="مصاريف عادية:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasRegularExpenses, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding RegularExpensesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasRegularExpenses, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="مشتريات:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PurchasesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="مشتريات:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PurchasesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPurchases, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="أجور عمال:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding WorkerWagesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="دفعات فواتير:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasInvoicePayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding InvoicePaymentsTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasInvoicePayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="دفعات موردين:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasSupplierPayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SupplierPaymentsTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasSupplierPayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="3" Grid.Column="0" Text="أجور عمال:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding WorkerWagesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasWorkerWages, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="دفعات فواتير:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasInvoicePayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding InvoicePaymentsTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasInvoicePayments, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="4" Grid.Column="0" Text="أخرى:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasOtherExpenses, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding OtherExpensesTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasOtherExpenses, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="غاز:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasGas, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding GasTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasGas, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <Separator Grid.Row="5" Grid.ColumnSpan="2" Margin="0,4" Background="#f59e0b" Opacity="0.3"/>
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="نظافة:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasCleaning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CleaningTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasCleaning, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                            <TextBlock Grid.Row="6" Grid.Column="0" Text="إجمالي المصروفات:" FontWeight="Bold" FontSize="15" Foreground="#f59e0b" Margin="0,2"/>
-                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding TotalExpenses, StringFormat=N2}" FontWeight="Bold" FontSize="15" Foreground="#f59e0b" Margin="0,2"/>
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="صيانة:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasMaintenance, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding MaintenanceTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasMaintenance, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="مواصلات:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasTransport, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding TransportTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasTransport, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="مصروف نثري:" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPettyCash, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding PettyCashTotal, StringFormat=N2}" FontSize="13" Foreground="#606060" Margin="0,2" Visibility="{Binding HasPettyCash, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <Separator Grid.Row="9" Grid.ColumnSpan="2" Margin="0,4" Background="#f59e0b" Opacity="0.3"/>
+
+                            <TextBlock Grid.Row="10" Grid.Column="0" Text="إجمالي المصروفات:" FontWeight="Bold" FontSize="15" Foreground="#f59e0b" Margin="0,2"/>
+                            <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding TotalExpenses, StringFormat=N2}" FontWeight="Bold" FontSize="15" Foreground="#f59e0b" Margin="0,2"/>
                         </Grid>
                     </Border>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════════ القسم 5: المطابقة والتسليم ═══════════ -->
-            <Border Grid.Row="5" CornerRadius="16" Padding="28,24" Margin="0,0,0,16"
-                    BorderBrush="#10b981" BorderThickness="2" IsEnabled="{Binding IsNotViewingMode}">
-                <Border.Background>
+            <materialDesign:Card Grid.Row="5" UniformCornerRadius="16" Padding="28,24" Margin="0,0,0,16"
+                                 materialDesign:ElevationAssist.Elevation="Dp4" IsEnabled="{Binding IsNotViewingMode}">
+                <materialDesign:Card.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#f0fdf4" Offset="0"/>
-                        <GradientStop Color="#ffffff" Offset="1"/>
+                        <GradientStop Color="#F8FAFC" Offset="0"/> <!-- Light Slate -->
+                        <GradientStop Color="#FFFFFF" Offset="1"/> <!-- White -->
                     </LinearGradientBrush>
-                </Border.Background>
-                <Border.Effect>
-                    <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.08"/>
-                </Border.Effect>
+                </materialDesign:Card.Background>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                        <materialDesign:PackIcon Kind="Calculator" Width="28" Height="28" Foreground="#10b981" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="المطابقة والتسليم" FontSize="20" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="Calculator" Width="28" Height="28" Foreground="#10B981" Margin="0,0,12,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="المطابقة والتسليم" FontSize="20" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <Grid>
@@ -723,7 +681,7 @@
                         </StackPanel>
                     </Grid>
                 </StackPanel>
-            </Border>
+            </materialDesign:Card>
 
             <!-- ═══════════ القسم 6: أزرار الإجراء ═══════════ -->
             <Grid Grid.Row="6" Margin="0,0,0,32">

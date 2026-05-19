@@ -9,7 +9,7 @@
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="BlueGrey" SecondaryColor="Amber" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" />
+                <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="Indigo" SecondaryColor="Amber" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
             
@@ -22,11 +22,24 @@
             <DataTemplate DataType="{x:Type vm:SalesViewModel}">
                 <views:SalesView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SupplierListViewModel}">
+                <views:SupplierListView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:SupplierDetailsViewModel}">
+                <views:SupplierDetailsView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ExpenseManagementViewModel}">
+                <views:ExpenseManagementView />
+            </DataTemplate>
             
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
             <converters:NumberToBooleanConverter x:Key="NumberToBooleanConverter"/>
             
+            <!-- Global Style to disable sorting on all DataGrids -->
+            <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="CanUserSortColumns" Value="False"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

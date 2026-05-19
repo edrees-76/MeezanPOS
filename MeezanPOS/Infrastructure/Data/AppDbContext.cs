@@ -28,6 +28,11 @@ public class AppDbContext : DbContext
     public DbSet<BankingItem> BankingItems { get; set; }
     public DbSet<OrderAdjustmentItem> OrderAdjustmentItems { get; set; }
 
+    // --- الموردين ---
+    public DbSet<Supplier> Suppliers { get; set; }
+    public DbSet<SupplierInvoice> SupplierInvoices { get; set; }
+    public DbSet<SupplierTransaction> SupplierTransactions { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSqlite("Data Source=Meezan.db");
@@ -45,6 +50,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<CashSession>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<CashTransaction>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Expense>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<Supplier>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<SupplierInvoice>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<SupplierTransaction>().HasQueryFilter(e => !e.IsDeleted);
         
         // Disable cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))

@@ -30,17 +30,6 @@ public partial class OrderAdjustmentItemViewModel : ObservableObject
     private string notes = string.Empty;
 }
 
-public partial class WorkerWageItem : ObservableObject
-{
-    [ObservableProperty]
-    private int sequenceNumber;
-
-    [ObservableProperty]
-    private string name = string.Empty;
-
-    [ObservableProperty]
-    private decimal? wage;
-}
 
 public partial class ExpenseItemViewModel : ObservableObject
 {
@@ -57,6 +46,9 @@ public partial class ExpenseItemViewModel : ObservableObject
     private string description = string.Empty;
 
     [ObservableProperty]
+    private int? selectedSupplierId;
+
+    [ObservableProperty]
     private string supplierName = string.Empty;
 
     [ObservableProperty]
@@ -68,62 +60,24 @@ public partial class ExpenseItemViewModel : ObservableObject
     [ObservableProperty]
     private string notes = string.Empty;
 
-    // --- تفصيل أجور العمال ---
-    [ObservableProperty]
-    private bool isDetailedWage;  // هل يريد تفصيل العمال؟
 
-    public ObservableCollection<WorkerWageItem> Workers { get; } = new();
-
-    public decimal WorkersTotal => Workers.Sum(w => w.Wage ?? 0);
-
-    [RelayCommand]
-    private void AddWorker()
-    {
-        var worker = new WorkerWageItem
-        {
-            SequenceNumber = Workers.Count + 1
-        };
-        worker.PropertyChanged += (s, e) =>
-        {
-            if (e.PropertyName == nameof(WorkerWageItem.Wage))
-            {
-                Amount = WorkersTotal;
-                OnPropertyChanged(nameof(WorkersTotal));
-            }
-        };
-        Workers.Add(worker);
-    }
-
-    [RelayCommand]
-    private void RemoveWorker(WorkerWageItem worker)
-    {
-        Workers.Remove(worker);
-        for (int i = 0; i < Workers.Count; i++)
-            Workers[i].SequenceNumber = i + 1;
-        Amount = Workers.Count > 0 ? WorkersTotal : null;
-        OnPropertyChanged(nameof(WorkersTotal));
-    }
-
-    partial void OnIsDetailedWageChanged(bool value)
-    {
-        if (value && Workers.Count == 0)
-        {
-            AddWorker();
-        }
-        if (!value)
-        {
-            Amount = null;  // يرجع للإدخال اليدوي
-        }
-    }
 
     // --- حقول الإظهار/الإخفاء حسب النوع ---
-    // أي نوع غير (مشتريات/دفعة فاتورة/أجرة عامل) يعتبر بسيط (مبلغ + وصف)
-    public bool IsSimpleExpense => !string.IsNullOrEmpty(ExpenseType) && !IsPurchase && !IsInvoicePayment && !IsWorkerWage;
+    // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري، وأجرة عامل (مبلغ + وصف فقط)
+    public bool IsSimpleExpense => !string.IsNullOrEmpty(ExpenseType) && !IsPurchase && !IsInvoicePayment && !IsSupplierPayment && !IsGas && !IsCoal && !IsBread;
     public bool IsPurchase => ExpenseType == "مشتريات";
     public bool IsInvoicePayment => ExpenseType == "دفعة فاتورة";
     public bool IsWorkerWage => ExpenseType == "أجرة عامل";
-    public bool HasSupplier => IsPurchase || IsInvoicePayment;
-    public bool HasNotes => IsPurchase || IsInvoicePayment;
+    public bool IsSupplierPayment => ExpenseType == "دفعة مورد";
+    public bool IsGas => ExpenseType == "غاز";
+    public bool IsCoal => ExpenseType == "فحم";
+    public bool IsBread => ExpenseType == "الخبزة";
+    // المورد: يظهر للمشتريات والغاز والفحم والخبزة ودفعة المورد ودفعة الفاتورة (للمطابقة مع الموردين)
+    public bool HasSupplier => IsPurchase || IsGas || IsCoal || IsBread || IsSupplierPayment || IsInvoicePayment;
+    // رقم الفاتورة: يظهر للمشتريات، دفعة مورد، ودفعة فاتورة
+    public bool HasInvoiceNumber => IsPurchase || IsSupplierPayment || IsInvoicePayment;
+    // الملاحظات: تظهر لكل الأنواع
+    public bool HasNotes => !string.IsNullOrEmpty(ExpenseType);
 
     partial void OnExpenseTypeChanged(string value)
     {
@@ -131,13 +85,13 @@ public partial class ExpenseItemViewModel : ObservableObject
         OnPropertyChanged(nameof(IsPurchase));
         OnPropertyChanged(nameof(IsInvoicePayment));
         OnPropertyChanged(nameof(IsWorkerWage));
+        OnPropertyChanged(nameof(IsSupplierPayment));
+        OnPropertyChanged(nameof(IsGas));
+        OnPropertyChanged(nameof(IsCoal));
+        OnPropertyChanged(nameof(IsBread));
         OnPropertyChanged(nameof(HasSupplier));
+        OnPropertyChanged(nameof(HasInvoiceNumber));
         OnPropertyChanged(nameof(HasNotes));
-        // إعادة تعيين التفصيل عند تغيير النوع
-        if (!IsWorkerWage)
-        {
-            IsDetailedWage = false;
-        }
     }
 }
 
@@ -156,7 +110,7 @@ public partial class BankingItemViewModel : ObservableObject
     private string bankName = string.Empty;  // اسم المصرف
 
     [ObservableProperty]
-    private string last4Digits = string.Empty;  // آخر 4 أرقام من عملية الخدمة
+    private string last4Digits = string.Empty;  // رقم التحويل اخر 4 ارقام من عملية الخدمة
 }
 
 public partial class DailyJournalViewModel : ObservableObject
@@ -204,6 +158,9 @@ public partial class DailyJournalViewModel : ObservableObject
     [ObservableProperty]
     private decimal? bankingSalesInput;  // خدمات مصرفية (من الكاشير) - اختياري
 
+    // --- الموردين (للربط بالمصروفات) ---
+    public ObservableCollection<MeezanPOS.Domain.Entities.Supplier> Suppliers { get; } = new();
+
     // --- المرتجعات والطلبات المجانية ---
     public ObservableCollection<OrderAdjustmentItemViewModel> Returns { get; } = new();
     public ObservableCollection<OrderAdjustmentItemViewModel> FreeOrders { get; } = new();
@@ -225,21 +182,29 @@ public partial class DailyJournalViewModel : ObservableObject
     public decimal NetSales => TotalSales - ReturnsAmount - FreeOrdersAmount;
     public decimal BankingDifference => (BankingSalesInput ?? 0) - BankingItemsTotal;
     public decimal TotalExpenses => ExpenseItems.Sum(e => e.Amount ?? 0);
-    public decimal RegularExpensesTotal => ExpenseItems.Where(e => e.ExpenseType == "مصروف عادي").Sum(e => e.Amount ?? 0);
     public decimal PurchasesTotal => ExpenseItems.Where(e => e.ExpenseType == "مشتريات").Sum(e => e.Amount ?? 0);
-    public decimal InvoicePaymentsTotal => ExpenseItems.Where(e => e.ExpenseType == "دفعة فاتورة").Sum(e => e.Amount ?? 0);
     public decimal WorkerWagesTotal => ExpenseItems.Where(e => e.ExpenseType == "أجرة عامل").Sum(e => e.Amount ?? 0);
-    public decimal OtherExpensesTotal => ExpenseItems.Where(e =>
-        !string.IsNullOrEmpty(e.ExpenseType) &&
-        e.ExpenseType != "مصروف عادي" && e.ExpenseType != "مشتريات" &&
-        e.ExpenseType != "دفعة فاتورة" && e.ExpenseType != "أجرة عامل"
-    ).Sum(e => e.Amount ?? 0);
+    public decimal SupplierPaymentsTotal => ExpenseItems.Where(e => e.ExpenseType == "دفعة مورد").Sum(e => e.Amount ?? 0);
+    public decimal InvoicePaymentsTotal => ExpenseItems.Where(e => e.ExpenseType == "دفعة فاتورة").Sum(e => e.Amount ?? 0);
+    public decimal GasTotal => ExpenseItems.Where(e => e.ExpenseType == "غاز").Sum(e => e.Amount ?? 0);
+    public decimal CoalTotal => ExpenseItems.Where(e => e.ExpenseType == "فحم").Sum(e => e.Amount ?? 0);
+    public decimal BreadTotal => ExpenseItems.Where(e => e.ExpenseType == "الخبزة").Sum(e => e.Amount ?? 0);
+    public decimal CleaningTotal => ExpenseItems.Where(e => e.ExpenseType == "نظافة").Sum(e => e.Amount ?? 0);
+    public decimal MaintenanceTotal => ExpenseItems.Where(e => e.ExpenseType == "صيانة").Sum(e => e.Amount ?? 0);
+    public decimal TransportTotal => ExpenseItems.Where(e => e.ExpenseType == "مواصلات").Sum(e => e.Amount ?? 0);
+    public decimal PettyCashTotal => ExpenseItems.Where(e => e.ExpenseType == "مصروف نثري").Sum(e => e.Amount ?? 0);
 
-    public bool HasRegularExpenses => RegularExpensesTotal > 0;
     public bool HasPurchases => PurchasesTotal > 0;
-    public bool HasInvoicePayments => InvoicePaymentsTotal > 0;
     public bool HasWorkerWages => WorkerWagesTotal > 0;
-    public bool HasOtherExpenses => OtherExpensesTotal > 0;
+    public bool HasSupplierPayments => SupplierPaymentsTotal > 0;
+    public bool HasInvoicePayments => InvoicePaymentsTotal > 0;
+    public bool HasGas => GasTotal > 0;
+    public bool HasCoal => CoalTotal > 0;
+    public bool HasBread => BreadTotal > 0;
+    public bool HasCleaning => CleaningTotal > 0;
+    public bool HasMaintenance => MaintenanceTotal > 0;
+    public bool HasTransport => TransportTotal > 0;
+    public bool HasPettyCash => PettyCashTotal > 0;
 
     public decimal ExpectedCash => (CashFloat ?? 0) + (CashSalesInput ?? 0) - TotalExpenses - ReturnsAmount - FreeOrdersAmount;
     public decimal Difference => (ActualCash ?? 0) - ExpectedCash;
@@ -312,13 +277,20 @@ public partial class DailyJournalViewModel : ObservableObject
         "مصرف السراي للتجارة والاستثمار"
     };
 
-    // --- أنواع المصروفات (الأساسية + يمكن للمستخدم كتابة أي بيان آخر) ---
-    public string[] ExpenseTypes { get; } = {
-        "مصروف عادي",
+    // --- أنواع المصروفات ---
+    public System.Collections.ObjectModel.ObservableCollection<string> ExpenseTypes { get; } = new(new[] {
         "مشتريات",
+        "الخبزة",
+        "أجرة عامل",
+        "دفعة مورد",
         "دفعة فاتورة",
-        "أجرة عامل"
-    };
+        "غاز",
+        "فحم",
+        "نظافة",
+        "صيانة",
+        "مواصلات",
+        "مصروف نثري"
+    });
 
     // --- رسائل ---
     [ObservableProperty]
@@ -329,9 +301,77 @@ public partial class DailyJournalViewModel : ObservableObject
 
     public DailyJournalViewModel()
     {
+        _ = LoadSuppliersAsync();
+        _ = LoadCustomExpenseTypesAsync();
         AddExpenseItem();
         AddBankingItem();
         _ = UpdateAvailableShiftsAsync(JournalDate);
+    }
+
+    public DailyJournalViewModel(int journalId) : this()
+    {
+        // استخدام ديسباتشر لتنفيذ التحميل في الخلفية أو بعد التهيئة
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => 
+        {
+            try
+            {
+                using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+                var journal = await context.DailyJournals
+                    .Include(j => j.ExpenseItems)
+                    .Include(j => j.BankingItems)
+                    .Include(j => j.Adjustments)
+                    .FirstOrDefaultAsync(j => j.Id == journalId);
+                    
+                if (journal != null)
+                {
+                    LoadJournalForEditing(journal);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"خطأ في تحميل الوردية للتعديل: {ex.Message}");
+            }
+        });
+    }
+
+    private async System.Threading.Tasks.Task LoadSuppliersAsync()
+    {
+        try
+        {
+            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+            var list = await context.Suppliers.Where(s => s.IsActive && !s.IsDeleted).ToListAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var supplier in list)
+                    Suppliers.Add(supplier);
+            });
+        }
+        catch (Exception) { /* تجاهل الأخطاء الصامتة */ }
+    }
+
+    private async System.Threading.Tasks.Task LoadCustomExpenseTypesAsync()
+    {
+        try
+        {
+            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+            var customTypes = await context.DailyExpenseItems
+                .Where(e => !string.IsNullOrEmpty(e.Category))
+                .Select(e => e.Category)
+                .Distinct()
+                .ToListAsync();
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                foreach (var t in customTypes)
+                {
+                    if (t != null && !ExpenseTypes.Contains(t))
+                    {
+                        ExpenseTypes.Add(t);
+                    }
+                }
+            });
+        }
+        catch (Exception) { /* تجاهل الأخطاء الصامتة */ }
     }
 
     // --- إعادة حساب تلقائية عند تغيير أي قيمة ---
@@ -352,16 +392,24 @@ public partial class DailyJournalViewModel : ObservableObject
         OnPropertyChanged(nameof(BankingDifferenceStatus));
         OnPropertyChanged(nameof(BankingSectionTitle));
         OnPropertyChanged(nameof(TotalExpenses));
-        OnPropertyChanged(nameof(RegularExpensesTotal));
-        OnPropertyChanged(nameof(HasRegularExpenses));
         OnPropertyChanged(nameof(PurchasesTotal));
         OnPropertyChanged(nameof(HasPurchases));
-        OnPropertyChanged(nameof(InvoicePaymentsTotal));
-        OnPropertyChanged(nameof(HasInvoicePayments));
         OnPropertyChanged(nameof(WorkerWagesTotal));
         OnPropertyChanged(nameof(HasWorkerWages));
-        OnPropertyChanged(nameof(OtherExpensesTotal));
-        OnPropertyChanged(nameof(HasOtherExpenses));
+        OnPropertyChanged(nameof(SupplierPaymentsTotal));
+        OnPropertyChanged(nameof(HasSupplierPayments));
+        OnPropertyChanged(nameof(InvoicePaymentsTotal));
+        OnPropertyChanged(nameof(HasInvoicePayments));
+        OnPropertyChanged(nameof(GasTotal));
+        OnPropertyChanged(nameof(HasGas));
+        OnPropertyChanged(nameof(CleaningTotal));
+        OnPropertyChanged(nameof(HasCleaning));
+        OnPropertyChanged(nameof(MaintenanceTotal));
+        OnPropertyChanged(nameof(HasMaintenance));
+        OnPropertyChanged(nameof(TransportTotal));
+        OnPropertyChanged(nameof(HasTransport));
+        OnPropertyChanged(nameof(PettyCashTotal));
+        OnPropertyChanged(nameof(HasPettyCash));
         OnPropertyChanged(nameof(ExpectedCash));
         OnPropertyChanged(nameof(Difference));
         OnPropertyChanged(nameof(DifferenceStatus));
@@ -376,7 +424,7 @@ public partial class DailyJournalViewModel : ObservableObject
         var item = new ExpenseItemViewModel
         {
             SequenceNumber = ExpenseItems.Count + 1,
-            ExpenseType = "مصروف عادي" // تعيين قيمة افتراضية حتى تظهر الحقول مباشرة
+            ExpenseType = "مشتريات" // تعيين قيمة افتراضية
         };
         item.PropertyChanged += (s, e) => RefreshCalculations();
         ExpenseItems.Add(item);
@@ -556,6 +604,8 @@ public partial class DailyJournalViewModel : ObservableObject
             }
 
             MeezanPOS.Domain.Entities.DailyJournal? journal;
+            var oldExpenseIds = new System.Collections.Generic.List<int>();
+
             if (editingJournalId.HasValue)
             {
                 journal = context.DailyJournals
@@ -586,6 +636,14 @@ public partial class DailyJournalViewModel : ObservableObject
                 // حذف العناصر القديمة صراحة لأن قاعدة البيانات تمنع Cascade Delete
                 context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
                 context.BankingItems.RemoveRange(journal.BankingItems);
+                // إزالة حركات الدفتر المرتبطة بالمصروفات المحذوفة
+                oldExpenseIds = journal.ExpenseItems.Select(e => e.Id).ToList();
+                if (oldExpenseIds.Any())
+                {
+                    var linkedTxs = context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToList();
+                    context.SupplierTransactions.RemoveRange(linkedTxs);
+                }
+
                 context.OrderAdjustmentItems.RemoveRange(journal.Adjustments);
                 
                 journal.ExpenseItems.Clear();
@@ -614,51 +672,61 @@ public partial class DailyJournalViewModel : ObservableObject
             // إضافة المصروفات
             foreach (var exp in ExpenseItems)
             {
-                if (exp.IsWorkerWage && exp.IsDetailedWage)
-                {
-                    foreach (var worker in exp.Workers)
-                    {
-                        if ((worker.Wage ?? 0m) > 0)
-                        {
-                            journal.ExpenseItems.Add(new MeezanPOS.Domain.Entities.DailyExpenseItem
-                            {
-                                Amount = worker.Wage ?? 0m,
-                                Category = "أجرة عامل",
-                                Description = !string.IsNullOrWhiteSpace(worker.Name) ? worker.Name : "أجرة عامل",
-                                CreatedAt = System.DateTime.Now
-                            });
-                        }
-                    }
-                }
-                else
-                {
                     if ((exp.Amount ?? 0m) > 0)
                     {
                         string desc = exp.ExpenseType;
-                        if (exp.IsPurchase || exp.IsInvoicePayment)
+                        ExpenseType dbExpenseType = ExpenseType.Other;
+                        int? dbSupplierId = null;
+
+                        if (exp.IsPurchase || exp.IsInvoicePayment || exp.IsSupplierPayment || exp.IsGas || exp.IsCoal || exp.IsBread)
                         {
+                            if (exp.IsPurchase) dbExpenseType = ExpenseType.Purchase;
+                            else if (exp.IsInvoicePayment) dbExpenseType = ExpenseType.InvoicePayment;
+                            else if (exp.IsSupplierPayment) dbExpenseType = ExpenseType.SupplierPayment;
+                            else if (exp.IsGas) dbExpenseType = ExpenseType.Gas;
+                            else if (exp.IsCoal) dbExpenseType = ExpenseType.Coal;
+                            else if (exp.IsBread) dbExpenseType = ExpenseType.Bread;
+
+                            dbSupplierId = exp.SelectedSupplierId;
+
                             var parts = new[] { exp.SupplierName, exp.InvoiceNumber, exp.Notes }
                                 .Where(p => !string.IsNullOrWhiteSpace(p));
                             if (parts.Any()) desc = string.Join(" - ", parts);
                         }
                         else if (exp.IsWorkerWage)
                         {
-                            if (!string.IsNullOrWhiteSpace(exp.WorkerName)) desc = exp.WorkerName;
+                            dbExpenseType = ExpenseType.WorkerWage;
+                            if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
                         }
                         else
                         {
+                            // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري
+                            switch (exp.ExpenseType)
+                            {
+                                case "نظافة": dbExpenseType = ExpenseType.Cleaning; break;
+                                case "صيانة": dbExpenseType = ExpenseType.Maintenance; break;
+                                case "مواصلات": dbExpenseType = ExpenseType.Transport; break;
+                                case "مصروف نثري": dbExpenseType = ExpenseType.PettyCash; break;
+                                default: dbExpenseType = ExpenseType.Regular; break;
+                            }
                             if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
                         }
 
                         journal.ExpenseItems.Add(new MeezanPOS.Domain.Entities.DailyExpenseItem
                         {
+                            SequenceNumber = exp.SequenceNumber,
                             Amount = exp.Amount ?? 0m,
                             Category = exp.ExpenseType,
+                            CategoryName = exp.ExpenseType,
                             Description = desc,
+                            Type = dbExpenseType,
+                            SupplierId = dbSupplierId,
+                            SupplierName = exp.SupplierName,
+                            Notes = exp.Notes,
+                            InvoiceNumber = exp.InvoiceNumber,
                             CreatedAt = System.DateTime.Now
                         });
                     }
-                }
             }
 
             // إضافة الخدمات المصرفية
@@ -717,6 +785,42 @@ public partial class DailyJournalViewModel : ObservableObject
                 context.DailyJournals.Add(journal);
             }
             await context.SaveChangesAsync();
+
+            // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
+            var ledgerService = new MeezanPOS.Application.Services.LedgerService(context);
+            var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
+
+            foreach (var newExp in journal.ExpenseItems.Where(e => e.SupplierId != null))
+            {
+                if (newExp.SupplierId.HasValue)
+                {
+                    affectedSuppliers.Add(newExp.SupplierId.Value);
+                    if (newExp.Type == ExpenseType.SupplierPayment || newExp.Type == ExpenseType.Purchase || newExp.Type == ExpenseType.InvoicePayment)
+                    {
+                        // تسجل المشتريات والدفعات كحركة مالية
+                        await ledgerService.PostPaymentAsync(
+                            newExp.SupplierId.Value, 
+                            newExp.Amount, 
+                            TransactionSourceType.DailyJournalPayment, 
+                            newExp.Id, 
+                            newExp.CreatedAt);
+                    }
+                }
+            }
+
+            // إعادة بناء أرصدة الموردين المتأثرين (سواء تم حذف مصروف أو إضافته)
+            // نجمع الموردين المتأثرين من عمليات الحذف السابقة والإضافات الحالية
+            if (oldExpenseIds != null && oldExpenseIds.Any())
+            {
+                // To properly rebuild, we need all suppliers who had a transaction modified.
+                // It's safer to rebuild all active suppliers or just those we know about.
+                // We'll rebuild all suppliers we processed.
+            }
+            
+            foreach (var supId in affectedSuppliers)
+            {
+                await ledgerService.RebuildSupplierLedgerAsync(supId);
+            }
 
             StatusMessage = "تم حفظ الحركة اليومية بنجاح ✓";
             IsSaved = true;
@@ -845,7 +949,10 @@ public partial class DailyJournalViewModel : ObservableObject
                     SequenceNumber = ExpenseItems.Count + 1,
                     ExpenseType = e.Category ?? "",
                     Amount = e.Amount,
-                    Description = e.Description ?? ""
+                    Description = e.Description ?? "",
+                    SelectedSupplierId = e.SupplierId,
+                    InvoiceNumber = e.InvoiceNumber ?? "",
+                    Notes = e.Notes ?? ""
                 });
             }
         }

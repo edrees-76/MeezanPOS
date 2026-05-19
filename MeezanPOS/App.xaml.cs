@@ -9,6 +9,22 @@ namespace MeezanPOS;
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    public App()
+    {
+        this.DispatcherUnhandledException += (s, e) => 
+        {
+            var fullError = e.Exception.Message;
+            var inner = e.Exception.InnerException;
+            while (inner != null)
+            {
+                fullError += $"\n---\n{inner.Message}";
+                inner = inner.InnerException;
+            }
+            MessageBox.Show($"خطأ غير متوقع:\n{fullError}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+            e.Handled = true;
+        };
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -48,22 +64,44 @@ public partial class App : System.Windows.Application
         // 2. تفعيل زر Esc للعودة أو الإغلاق 
         else if (e.Key == System.Windows.Input.Key.Escape)
         {
-            // البحث عن زر الإغلاق أو الإلغاء وتنفيذ الأمر الخاص به
-            // في نمط MVVM، يفضل استدعاء الـ CloseCommand إذا كان موجوداً
-            if (System.Windows.Application.Current.MainWindow?.DataContext is MeezanPOS.Application.ViewModels.MainViewModel mainVM)
+            // 1. إغلاق نوافذ MaterialDesign المنبثقة إن وجدت
+            try 
             {
-                var currentVM = mainVM.CurrentViewModel;
-                if (currentVM != null)
+                if (MaterialDesignThemes.Wpf.DialogHost.IsDialogOpen(null))
                 {
-                    // محاولة استدعاء CloseFormCommand من الـ ViewModel الحالي
-                    var closeCommandProp = currentVM.GetType().GetProperty("CloseFormCommand");
-                    if (closeCommandProp != null)
+                    MaterialDesignThemes.Wpf.DialogHost.CloseDialogCommand.Execute(null, null);
+                    e.Handled = true;
+                    return;
+                }
+            }
+            catch { }
+
+            // 2. محاولة إيجاد أمر التراجع أو الإغلاق في الواجهة الحالية
+            var window = System.Windows.Window.GetWindow(element);
+            if (window != null)
+            {
+                object dataContext = window.DataContext;
+
+                // إذا كنا في النافذة الرئيسية، نستهدف الـ ViewModel المعروض حالياً
+                if (dataContext is MeezanPOS.Application.ViewModels.MainViewModel mainVM && mainVM.CurrentViewModel != null)
+                {
+                    dataContext = mainVM.CurrentViewModel;
+                }
+
+                if (dataContext != null)
+                {
+                    string[] possibleCommands = { "CloseFormCommand", "GoBackCommand", "CancelCommand" };
+                    foreach (var cmdName in possibleCommands)
                     {
-                        var command = closeCommandProp.GetValue(currentVM) as System.Windows.Input.ICommand;
-                        if (command != null && command.CanExecute(null))
+                        var prop = dataContext.GetType().GetProperty(cmdName);
+                        if (prop != null)
                         {
-                            command.Execute(null);
-                            e.Handled = true;
+                            if (prop.GetValue(dataContext) is System.Windows.Input.ICommand command && command.CanExecute(null))
+                            {
+                                command.Execute(null);
+                                e.Handled = true;
+                                return;
+                            }
                         }
                     }
                 }
