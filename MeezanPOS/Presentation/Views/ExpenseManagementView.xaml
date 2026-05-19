@@ -25,6 +25,23 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Tab Button Style for Segmented Control -->
+        <Style x:Key="SleekTabButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="24,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#64748b"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="20"/>
+                </Style>
+            </Style.Resources>
+        </Style>
     </UserControl.Resources>
 
     <TabControl materialDesign:ColorZoneAssist.Mode="PrimaryLight" Style="{StaticResource MaterialDesignFilledTabControl}" FontSize="14">
@@ -57,6 +74,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
@@ -66,8 +84,79 @@
                     <TextBlock Text="إدارة المصروفات اليومية" FontSize="28" FontWeight="ExtraBold" Foreground="#1E1B4B" VerticalAlignment="Center"/>
                 </StackPanel>
 
+                <!-- Gorgeous Segmented Control for switching modes -->
+                <Border Grid.Column="1" Background="#E2E8F0" CornerRadius="22" Padding="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsViewingDetails}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <!-- المصاريف المفتوحة -->
+                        <Button Command="{Binding SetShowPostedArchiveCommand}" CommandParameter="False">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Setter Property="Foreground" Value="#1E1B4B"/>
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="18"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FolderOpenOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="المصاريف المفتوحة" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- الأرشيف المرحّل -->
+                        <Button Command="{Binding SetShowPostedArchiveCommand}" CommandParameter="True">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Setter Property="Foreground" Value="#1E1B4B"/>
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="18"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ArchiveOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الأرشيف المرحّل" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
                 <!-- زر الرجوع (يظهر فقط في شاشة التفاصيل) -->
-                <Button Grid.Column="1" Command="{Binding GoBackCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
+                <Button Grid.Column="2" Command="{Binding GoBackCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
                         Foreground="#1E1B4B" BorderBrush="#1E1B4B" Padding="16,8" Height="40"
                         materialDesign:ButtonAssist.CornerRadius="10"
                         Visibility="{Binding IsViewingDetails, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -81,147 +170,412 @@
 
         <!-- ═══════════ شاشة 1: الفلاتر والجدول الرئيسي ═══════════ -->
         <Grid Grid.Row="2" Style="{StaticResource InverseBooleanToVisibilityConverter}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
 
-            <!-- الفلاتر -->
-            <materialDesign:Card Grid.Row="0" UniformCornerRadius="16" Padding="24,20" Margin="0,0,0,24"
-                                 Background="White" materialDesign:ElevationAssist.Elevation="Dp2">
-                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" ItemHeight="50">
-                    <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                        <TextBlock Text="من تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
-                        <DatePicker SelectedDate="{Binding DateFrom}" Width="130" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
+            <!-- 🔓 1. OPEN EXPENSES PANEL (Visible when ShowPostedArchive is False) -->
+            <Grid x:Name="OpenExpensesPanel">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                        <TextBlock Text="إلى تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
-                        <DatePicker SelectedDate="{Binding DateTo}" Width="130" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
+                <!-- الفلاتر -->
+                <materialDesign:Card Grid.Row="0" UniformCornerRadius="16" Padding="24,20" Margin="0,0,0,24"
+                                     Background="White" materialDesign:ElevationAssist.Elevation="Dp2">
+                    <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" ItemHeight="50">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                            <TextBlock Text="من تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <DatePicker SelectedDate="{Binding DateFrom}" Width="130" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                        <TextBlock Text="الوردية:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
-                        <ComboBox ItemsSource="{Binding Shifts}" SelectedValuePath="Value" DisplayMemberPath="Name" 
-                                  SelectedValue="{Binding SelectedShiftType}" Width="130" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                            <TextBlock Text="إلى تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <DatePicker SelectedDate="{Binding DateTo}" Width="130" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                        <TextBlock Text="الكاشير:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
-                        <ComboBox ItemsSource="{Binding Cashiers}" SelectedItem="{Binding SelectedCashierName}" 
-                                  Width="140" FontSize="14" VerticalAlignment="Center"/>
-                    </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                            <TextBlock Text="الوردية:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <ComboBox ItemsSource="{Binding Shifts}" SelectedValuePath="Value" DisplayMemberPath="Name" 
+                                      SelectedValue="{Binding SelectedShiftType}" Width="130" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Command="{Binding LoadExpensesCommand}" 
-                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                Background="#4F46E5" BorderBrush="#4F46E5" Foreground="White" Padding="20,8"
-                                materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0" Height="40">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Filter" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="تصفية" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Command="{Binding ResetFiltersCommand}" 
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Foreground="#64748B" BorderBrush="#CBD5E1" Padding="16,8" Height="40"
-                                materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="إعادة ضبط" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Command="{Binding PrintDailySummariesCommand}" 
-                                Style="{StaticResource MaterialDesignOutlinedButton}"
-                                Foreground="#E11D48" BorderBrush="#FDA4AF" Padding="16,8" Height="40"
-                                materialDesign:ButtonAssist.CornerRadius="10" ToolTip="طباعة التقرير (PDF)">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Printer" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="طباعة PDF" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </WrapPanel>
-            </materialDesign:Card>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
+                            <TextBlock Text="الكاشير:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <ComboBox ItemsSource="{Binding Cashiers}" SelectedItem="{Binding SelectedCashierName}" 
+                                      Width="140" FontSize="14" VerticalAlignment="Center"/>
+                        </StackPanel>
 
-            <!-- الجدول الرئيسي -->
-            <Border Grid.Row="1" CornerRadius="16" Background="White" Padding="0" Margin="0,0,0,0"
-                    BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
-                <DataGrid ItemsSource="{Binding DailySummaries}" AutoGenerateColumns="False"
-                          CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
-                          CanUserSortColumns="False"
-                          HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                          HorizontalGridLinesBrush="#F1F5F9"
-                          Background="White" RowBackground="White" AlternatingRowBackground="#F8FAFC"
-                          FontSize="15" BorderThickness="0"
-                          materialDesign:DataGridAssist.CellPadding="16,16"
-                          materialDesign:DataGridAssist.ColumnHeaderPadding="16,14">
-                    <DataGrid.Resources>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="#475569"/>
-                            <Setter Property="FontSize" Value="15"/>
-                        </Style>
-                    </DataGrid.Resources>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="100"/>
-                        <DataGridTextColumn Header="اليوم (التاريخ)" Binding="{Binding DateDisplay}" Width="250">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Foreground" Value="#1E1B4B"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="إجمالي المصاريف" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" Width="*">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="FontWeight" Value="ExtraBold"/>
-                                    <Setter Property="Foreground" Value="#EA580C"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTemplateColumn Header="إجراءات" Width="150">
-                            <DataGridTemplateColumn.CellTemplate>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Command="{Binding LoadExpensesCommand}" 
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#4F46E5" BorderBrush="#4F46E5" Foreground="White" Padding="20,8"
+                                    materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0" Height="40">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Filter" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="تصفية" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ResetFiltersCommand}" 
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="#64748B" BorderBrush="#CBD5E1" Padding="16,8" Height="40"
+                                    materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="إعادة ضبط" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding PrintDailySummariesCommand}" 
+                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                    Foreground="#E11D48" BorderBrush="#FDA4AF" Padding="16,8" Height="40"
+                                    materialDesign:ButtonAssist.CornerRadius="10" ToolTip="طباعة التقرير (PDF)">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Printer" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="طباعة PDF" VerticalAlignment="Center" FontSize="14" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </WrapPanel>
+                </materialDesign:Card>
+
+                <!-- الجدول الرئيسي -->
+                <Border Grid.Row="1" CornerRadius="16" Background="White" Padding="0" Margin="0,0,0,0"
+                        BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                    <DataGrid ItemsSource="{Binding DailySummaries}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#F1F5F9"
+                              Background="White" RowBackground="White" AlternatingRowBackground="#F8FAFC"
+                              FontSize="15" BorderThickness="0"
+                              materialDesign:DataGridAssist.CellPadding="16,16"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="16,14">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="FontSize" Value="15"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="100"/>
+                            <DataGridTextColumn Header="اليوم (التاريخ)" Binding="{Binding DateDisplay}" Width="250">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#1E1B4B"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="إجمالي المصاريف" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="ExtraBold"/>
+                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="إجراءات" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ViewDayDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding Date}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#4F46E5" BorderBrush="#4F46E5"
+                                                materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="مشاهدة" VerticalAlignment="Center" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <!-- الإجمالي العام للشاشة الرئيسية -->
+                <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,24,0,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1E1B4B" Offset="0"/> 
+                            <GradientStop Color="#312E81" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="إجمالي المصروفات المعروضة:" FontSize="20" FontWeight="SemiBold" 
+                                   Foreground="#E0E7FF" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding TotalFilteredExpensesAmount, StringFormat='{}{0:N2} د.ل'}" 
+                                   FontSize="32" FontWeight="ExtraBold" Foreground="#FBBF24" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- 🗂️ 2. ARCHIVED MONTHS PANEL (Visible when ShowPostedArchive is True and ArchiveLevel == 0) -->
+            <Grid x:Name="ArchivedMonthsPanel">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                    <Condition Binding="{Binding ArchiveLevel}" Value="0"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Title Bar -->
+                        <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="أرشيف الترحيل الشهري للمصروفات" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الأرشيف" Command="{Binding LoadArchivedMonthsCommand}" Height="32"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Months List -->
+                        <ItemsControl ItemsSource="{Binding ArchivedMonths}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Vertical"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.ViewDayDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                            CommandParameter="{Binding Date}"
-                                            Style="{StaticResource MaterialDesignOutlinedButton}"
-                                            Foreground="#4F46E5" BorderBrush="#4F46E5"
-                                            materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32">
-                                        <StackPanel Orientation="Horizontal">
-                                            <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                            <TextBlock Text="مشاهدة" VerticalAlignment="Center" FontWeight="Bold"/>
-                                        </StackPanel>
-                                    </Button>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-            </Border>
+                                    <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,12" Margin="0,0,0,12">
+                                        <Border.Effect>
+                                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
+                                        </Border.Effect>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <!-- Month Name + Badge -->
+                                                <ColumnDefinition Width="240"/>
+                                                <!-- Sales -->
+                                                <ColumnDefinition Width="160"/>
+                                                <!-- Expenses -->
+                                                <ColumnDefinition Width="160"/>
+                                                <!-- Profit -->
+                                                <ColumnDefinition Width="180"/>
+                                                <!-- Days Count -->
+                                                <ColumnDefinition Width="130"/>
+                                                <!-- Spacer -->
+                                                <ColumnDefinition Width="*"/>
+                                                <!-- Actions -->
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
 
-            <!-- الإجمالي العام للشاشة الرئيسية -->
-            <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,24,0,0">
-                <Border.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#1E1B4B" Offset="0"/> 
-                        <GradientStop Color="#312E81" Offset="1"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    
-                    <TextBlock Grid.Column="0" Text="إجمالي المصروفات المعروضة:" FontSize="20" FontWeight="SemiBold" 
-                               Foreground="#E0E7FF" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="{Binding TotalFilteredExpensesAmount, StringFormat='{}{0:N2} د.ل'}" 
-                               FontSize="32" FontWeight="ExtraBold" Foreground="#FBBF24" VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
+                                            <!-- Month Name + Badge -->
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#8b5cf6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <Border Background="{Binding StatusColor}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                </Border>
+                                            </StackPanel>
+
+                                            <!-- Sales -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="المبيعات: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#10b981" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- Expenses -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="المصاريف: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#ef4444" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- Profit -->
+                                            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- Days Count -->
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="الأيام: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="#64748b" FontWeight="Bold" VerticalAlignment="Center"/>
+                                            </StackPanel>
+
+                                            <!-- Action Button -->
+                                            <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="عرض كشف التفاصيل" 
+                                                        Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignRaisedButton}" 
+                                                        Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Cursor="Hand" Margin="0,0,10,0">
+                                                    <Button.Resources>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="CornerRadius" Value="8"/>
+                                                        </Style>
+                                                    </Button.Resources>
+                                                </Button>
+
+                                                <!-- Padlock/Lock icon as status -->
+                                                <Border Width="36" Height="36" Background="#EEF2FF" CornerRadius="18" Padding="6" ToolTip="حالة ترحيل الشهر">
+                                                    <materialDesign:PackIcon Kind="Lock" Width="20" Height="20" Foreground="#10b981" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- 🗂️ 3. ARCHIVED MONTH DAYS PANEL (Visible when ShowPostedArchive is True and ArchiveLevel == 1) -->
+            <Grid x:Name="ArchivedMonthDaysPanel">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                    <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header with back button & month name -->
+                <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,12" Margin="0,0,0,16">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Go Back Button -->
+                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3b82f6" Height="36" Padding="8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ArrowRight" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="العودة لقائمة الأشهر" VerticalAlignment="Center" FontWeight="Bold"/>
+                            </StackPanel>
+                        </Button>
+
+                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف مصروفات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Days DataGrid -->
+                <Border Grid.Row="1" CornerRadius="16" Background="White" Padding="0" Margin="0"
+                        BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                    <DataGrid ItemsSource="{Binding DailySummaries}" AutoGenerateColumns="False"
+                              CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
+                              CanUserSortColumns="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#F1F5F9"
+                              Background="White" RowBackground="White" AlternatingRowBackground="#F8FAFC"
+                              FontSize="15" BorderThickness="0"
+                              materialDesign:DataGridAssist.CellPadding="16,16"
+                              materialDesign:DataGridAssist.ColumnHeaderPadding="16,14">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="FontSize" Value="15"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="100"/>
+                            <DataGridTextColumn Header="اليوم (التاريخ)" Binding="{Binding DateDisplay}" Width="250">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="Bold"/>
+                                        <Setter Property="Foreground" Value="#1E1B4B"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="إجمالي المصاريف" Binding="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="FontWeight" Value="ExtraBold"/>
+                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTemplateColumn Header="إجراءات" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Command="{Binding DataContext.ViewDayDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding Date}"
+                                                Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                Foreground="#4F46E5" BorderBrush="#4F46E5"
+                                                materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="مشاهدة" VerticalAlignment="Center" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Border>
+
+                <!-- Total Border -->
+                <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,16,0,0">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#1E1B4B" Offset="0"/> 
+                            <GradientStop Color="#312E81" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="إجمالي مصروفات الشهر المرحّلة:" FontSize="20" FontWeight="SemiBold" 
+                                   Foreground="#E0E7FF" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="1" Text="{Binding TotalFilteredExpensesAmount, StringFormat='{}{0:N2} د.ل'}" 
+                                   FontSize="32" FontWeight="ExtraBold" Foreground="#FBBF24" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- ═══════════ شاشة 2: تفاصيل يوم محدد ═══════════ -->
@@ -240,7 +594,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" FontSize="20" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center">
-                        <Run Text="تفاصيل مصاريف يوم: "/>
+                        <Run Text="{Binding SelectedDateDetailsTitle, Mode=OneWay}"/>
                         <Run Text="{Binding SelectedDateDetailsDisplay, Mode=OneWay}" Foreground="#4F46E5"/>
                     </TextBlock>
                     <Button Grid.Column="1" Command="{Binding PrintDayExpensesCommand}"
@@ -292,16 +646,41 @@
                                                 <TextBlock Text="{Binding ShiftTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="ExtraBold" Foreground="#EA580C" VerticalAlignment="Center"/>
                                             </StackPanel>
 
-                                            <!-- زر التعديل -->
+                                            <!-- زر التعديل / العرض -->
                                             <Button Grid.Column="3" Command="{Binding DataContext.EditShiftExpenseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding JournalId}"
-                                                    Style="{StaticResource MaterialDesignRaisedButton}"
-                                                    Background="#F59E0B" BorderBrush="#F59E0B" Foreground="White"
                                                     materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="36">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Text="تعديل الوردية" VerticalAlignment="Center" FontWeight="Bold"/>
-                                                </StackPanel>
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                                        <!-- الافتراضي: تعديل الوردية (الوضع المفتوح) -->
+                                                        <Setter Property="Background" Value="#F59E0B"/>
+                                                        <Setter Property="BorderBrush" Value="#F59E0B"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="تعديل الوردية" VerticalAlignment="Center" FontWeight="Bold"/>
+                                                                </StackPanel>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding DataContext.ShowPostedArchive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                                                <!-- عند تشغيل وضع الأرشيف المرحل: عرض الوردية -->
+                                                                <Setter Property="Background" Value="#3B82F6"/>
+                                                                <Setter Property="BorderBrush" Value="#3B82F6"/>
+                                                                <Setter Property="Content">
+                                                                    <Setter.Value>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="عرض الوردية" VerticalAlignment="Center" FontWeight="Bold"/>
+                                                                        </StackPanel>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
                                             </Button>
                                         </Grid>
                                     </Border>

@@ -134,16 +134,50 @@
                     <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat=N2}" Width="*"/>
                     <DataGridTextColumn Header="تاريخ الدفع" Binding="{Binding PaymentDateDisplay}" Width="*"/>
                     <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethodName}" Width="*"/>
-                    <DataGridTextColumn Header="الوصف" Binding="{Binding Description}" Width="2*"/>
-                    <DataGridTemplateColumn Header="إجراءات" Width="120">
+                    
+                    <DataGridTemplateColumn Header="الحالة" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Command="{Binding DataContext.EditExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1a56db" Padding="4" ToolTip="تعديل">
+                                <Border Background="{Binding FinancialStatusColor, StringFormat={}{0}1A}" 
+                                        BorderBrush="{Binding FinancialStatusColor}" BorderThickness="1" 
+                                        CornerRadius="12" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="{Binding FinancialStatusIcon}" Foreground="{Binding FinancialStatusColor}" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <TextBlock Text="{Binding FinancialStatusName}" Foreground="{Binding FinancialStatusColor}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="الوصف" Binding="{Binding Description}" Width="2*"/>
+                    
+                    <DataGridTemplateColumn Header="إجراءات" Width="180">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <!-- أزرار التعديل والحذف - تظهر فقط إذا لم تكن مرحلة -->
+                                    <Button Command="{Binding DataContext.EditExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1a56db" Padding="4" ToolTip="تعديل">
                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"/>
                                     </Button>
-                                    <Button Command="{Binding DataContext.DeleteExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" Padding="4" ToolTip="حذف">
+                                    <Button Command="{Binding DataContext.DeleteExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" Padding="4" ToolTip="حذف">
                                         <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
+                                    </Button>
+                                    
+                                    <!-- أزرار الترحيل وفك الترحيل -->
+                                    <Button Command="{Binding DataContext.PostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#10b981" Padding="4" ToolTip="ترحيل مالي">
+                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="18" Height="18"/>
+                                    </Button>
+                                    <Button Command="{Binding DataContext.UnpostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}" Visibility="{Binding IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#f59e0b" Padding="4" ToolTip="فك الترحيل (يتطلب الصلاحية)">
+                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18"/>
                                     </Button>
                                 </StackPanel>
                             </DataTemplate>

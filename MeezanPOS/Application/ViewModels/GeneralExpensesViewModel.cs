@@ -25,6 +25,35 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
     public PaymentMethodType PaymentMethod { get; set; }
     public string PaymentMethodName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+
+    // --- Posting System Properties ---
+    public FinancialStatus FinancialStatus { get; set; }
+    public string FinancialStatusName => FinancialStatus switch
+    {
+        FinancialStatus.Draft => "مفتوح",
+        FinancialStatus.Reviewed => "مراجَع",
+        FinancialStatus.Posted => "مرحّل",
+        FinancialStatus.Archived => "مؤرشف",
+        _ => "غير معروف"
+    };
+    public string FinancialStatusColor => FinancialStatus switch
+    {
+        FinancialStatus.Draft => "#10b981", // Green
+        FinancialStatus.Reviewed => "#f59e0b", // Amber
+        FinancialStatus.Posted => "#6b7280", // Gray
+        FinancialStatus.Archived => "#374151", // Dark Gray
+        _ => "#000000"
+    };
+    public string FinancialStatusIcon => FinancialStatus switch
+    {
+        FinancialStatus.Draft => "LockOpenVariantOutline",
+        FinancialStatus.Reviewed => "EyeCheckOutline",
+        FinancialStatus.Posted => "Lock",
+        FinancialStatus.Archived => "Archive",
+        _ => "HelpCircleOutline"
+    };
+    public bool IsDraft => FinancialStatus == FinancialStatus.Draft;
+    public bool IsPosted => FinancialStatus == FinancialStatus.Posted;
 }
 
 public partial class GeneralExpensesViewModel : ObservableObject
@@ -159,7 +188,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     PaymentDate = item.PaymentDate,
                     PaymentMethod = item.PaymentMethod,
                     PaymentMethodName = GetPaymentMethodName(item.PaymentMethod),
-                    Description = item.Description
+                    Description = item.Description,
+                    FinancialStatus = item.FinancialStatus
                 });
             }
 
@@ -224,6 +254,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 var existing = db.GeneralExpenses.Find(EditingId.Value);
                 if (existing != null)
                 {
+                    if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
+                    {
+                        MessageBox.Show("لا يمكن تعديل مصروف مرحّل مالياً.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
                     existing.ExpenseType = SelectedExpenseType;
                     existing.Amount = InputAmount.Value;
                     existing.PaymentDate = InputPaymentDate;
@@ -297,6 +333,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var existing = db.GeneralExpenses.Find(item.Id);
             if (existing != null)
             {
+                if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
+                {
+                    MessageBox.Show("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
                 existing.IsDeleted = true;
                 existing.UpdatedAt = DateTime.Now;
                 db.SaveChanges();
@@ -306,6 +348,60 @@ public partial class GeneralExpensesViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show($"خطأ في حذف المصروف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PostExpense(GeneralExpenseDisplayItem item)
+    {
+        if (item == null || item.IsPosted) return;
+
+        var result = MessageBox.Show(
+            $"هل أنت متأكد من ترحيل المصروف بقيمة {item.Amount:N2}؟\nلن تتمكن من تعديله أو حذفه بعد الترحيل.",
+            "تأكيد الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            
+        if (result != MessageBoxResult.Yes) return;
+
+        try
+        {
+            using var db = new AppDbContext();
+            var postingService = new Services.PostingService(db);
+            await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, "Admin"); // مستقبلا سيتم وضع اسم المستخدم الحالي
+            
+            MessageBox.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            LoadExpenses();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ في الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task UnpostExpense(GeneralExpenseDisplayItem item)
+    {
+        if (item == null || !item.IsPosted) return;
+
+        var reason = "طلب فك ترحيل للمراجعة وتصحيح الخطأ"; // في الواقع يتم فتح نافذة صغيرة لطلب السبب
+
+        var result = MessageBox.Show(
+            $"هل أنت متأكد من فك ترحيل المصروف؟\nهذا الإجراء سيتم تسجيله في سجل التدقيق (Audit Log) باسمك.",
+            "تأكيد فك الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            
+        if (result != MessageBoxResult.Yes) return;
+
+        try
+        {
+            using var db = new AppDbContext();
+            var postingService = new Services.PostingService(db);
+            await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, "Admin");
+            
+            MessageBox.Show("تم فك الترحيل بنجاح وتم تسجيل العملية في سجل التدقيق.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            LoadExpenses();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ في فك الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

@@ -3,6 +3,7 @@ using System;
 using MeezanPOS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MeezanPOS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260519062130_AddFinancialPostingSystem")]
+    partial class AddFinancialPostingSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
@@ -274,15 +277,17 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("PostingSessionId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("PostingSessionId")
+                        .HasColumnType("TEXT");
 
                     b.Property<decimal>("ReturnsTotal")
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("RowVersion")
+                    b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<int>("ShiftType")
                         .HasColumnType("INTEGER");
@@ -411,12 +416,14 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("PostingSessionId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("PostingSessionId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("RowVersion")
+                    b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -490,11 +497,6 @@ namespace MeezanPOS.Migrations
                     b.Property<Guid>("SessionId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("TotalAffectedRows")
                         .HasColumnType("INTEGER");
 
@@ -520,8 +522,8 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("EntityId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("EntityType")
                         .IsRequired()
@@ -531,7 +533,10 @@ namespace MeezanPOS.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PostingSessionId")
+                    b.Property<Guid>("PostingSessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PostingSessionId1")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -539,7 +544,7 @@ namespace MeezanPOS.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PostingSessionId");
+                    b.HasIndex("PostingSessionId1");
 
                     b.ToTable("PostingSessionDetails");
                 });
@@ -611,12 +616,14 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime?>("PostedDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("PostingSessionId")
-                        .HasColumnType("INTEGER");
+                    b.Property<Guid?>("PostingSessionId")
+                        .HasColumnType("TEXT");
 
-                    b.Property<long>("RowVersion")
+                    b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("BLOB");
 
                     b.Property<decimal>("ServiceCharge")
                         .HasColumnType("TEXT");
@@ -995,9 +1002,8 @@ namespace MeezanPOS.Migrations
                 {
                     b.HasOne("MeezanPOS.Domain.Entities.PostingSession", "PostingSession")
                         .WithMany("Details")
-                        .HasForeignKey("PostingSessionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("PostingSessionId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PostingSession");
                 });

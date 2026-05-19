@@ -1,10 +1,12 @@
 using MeezanPOS.Domain.Enums;
+using MeezanPOS.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace MeezanPOS.Domain.Entities;
 
-public class SaleHeader : BaseEntity
+public class SaleHeader : BaseEntity, IPostableEntity
 {
     public string InvoiceNumber { get; set; } = string.Empty;
     public decimal SubTotal { get; set; }
@@ -23,6 +25,15 @@ public class SaleHeader : BaseEntity
     public CashSession? CashSession { get; set; }
 
     public ICollection<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
+
+    // IPostableEntity Implementation
+    public FinancialStatus FinancialStatus { get; set; } = FinancialStatus.Draft;
+    public DateTime? PostedDate { get; set; }
+    public string? PostedByUserId { get; set; }
+    public int? PostingSessionId { get; set; }
+    
+    [ConcurrencyCheck]
+    public long RowVersion { get; set; }
 }
 
 public class SaleItem : BaseEntity

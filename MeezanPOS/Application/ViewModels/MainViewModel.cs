@@ -77,7 +77,23 @@ public partial class MainViewModel : ObservableObject
                 expenseVM.OnBack = () => Navigate("Dashboard");
                 expenseVM.OnEditJournal = (journalId) => 
                 {
-                    Title = "ميزان للمالية - تعديل حركة يومية";
+                    try
+                    {
+                        using var db = new MeezanPOS.Infrastructure.Data.AppDbContext();
+                        var journal = db.DailyJournals.FirstOrDefault(j => j.Id == journalId);
+                        if (journal != null && (journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Posted || journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Archived))
+                        {
+                            Title = "ميزان للمالية - عرض حركة يومية مرحّلة";
+                        }
+                        else
+                        {
+                            Title = "ميزان للمالية - تعديل حركة يومية";
+                        }
+                    }
+                    catch
+                    {
+                        Title = "ميزان للمالية - تعديل حركة يومية";
+                    }
                     var journalVM = new DailyJournalViewModel(journalId);
                     journalVM.OnClose = () => Navigate("Expenses");
                     CurrentViewModel = journalVM;

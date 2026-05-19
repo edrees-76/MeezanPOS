@@ -324,12 +324,19 @@ public partial class DailyJournalViewModel : ObservableObject
                     
                 if (journal != null)
                 {
-                    LoadJournalForEditing(journal);
+                    if (journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Posted || journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Archived)
+                    {
+                        LoadJournalForViewing(journal);
+                    }
+                    else
+                    {
+                        LoadJournalForEditing(journal);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"خطأ في تحميل الوردية للتعديل: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"خطأ في تحميل الوردية للتعديل أو العرض: {ex.Message}");
             }
         });
     }

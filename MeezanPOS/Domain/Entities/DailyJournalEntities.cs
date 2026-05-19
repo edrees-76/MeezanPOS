@@ -1,13 +1,15 @@
 using MeezanPOS.Domain.Enums;
+using MeezanPOS.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace MeezanPOS.Domain.Entities;
 
 /// <summary>
 /// الحركة اليومية - تسجيل ملخص يوم عمل كامل أو وردية
 /// </summary>
-public class DailyJournal : BaseEntity
+public class DailyJournal : BaseEntity, IPostableEntity
 {
     public DateTime JournalDate { get; set; }
     public ShiftType ShiftType { get; set; }
@@ -51,6 +53,15 @@ public class DailyJournal : BaseEntity
 
     // تفاصيل المرتجعات والمجانية
     public ICollection<OrderAdjustmentItem> Adjustments { get; set; } = new List<OrderAdjustmentItem>();
+
+    // IPostableEntity Implementation
+    public FinancialStatus FinancialStatus { get; set; } = FinancialStatus.Draft;
+    public DateTime? PostedDate { get; set; }
+    public string? PostedByUserId { get; set; }
+    public int? PostingSessionId { get; set; }
+    
+    [ConcurrencyCheck]
+    public long RowVersion { get; set; }
 }
 
 /// <summary>

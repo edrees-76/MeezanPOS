@@ -58,6 +58,45 @@ public partial class ExpenseManagementViewModel : ObservableObject
     [ObservableProperty]
     private bool isViewingDetails = false;
 
+    [ObservableProperty]
+    private bool showPostedArchive = false;
+
+    [ObservableProperty]
+    private string selectedDateDetailsTitle = "تفاصيل مصاريف يوم: ";
+
+    // --- مستويات الأرشيف الهرمي الجديد ---
+    [ObservableProperty]
+    private int archiveLevel = 0; // 0 = الأشهر, 1 = الأيام داخل الشهر المحدد
+
+    [ObservableProperty]
+    private MonthSummaryCard? selectedArchivedMonth;
+
+    [ObservableProperty]
+    private ObservableCollection<MonthSummaryCard> archivedMonths = new();
+
+    partial void OnShowPostedArchiveChanged(bool value)
+    {
+        ArchiveLevel = 0;
+        SelectedArchivedMonth = null;
+        if (value)
+        {
+            LoadArchivedMonths();
+        }
+        else
+        {
+            LoadExpenses();
+        }
+    }
+
+    [RelayCommand]
+    private void SetShowPostedArchive(string value)
+    {
+        if (bool.TryParse(value, out bool result))
+        {
+            ShowPostedArchive = result;
+        }
+    }
+
     // --- فلاتر البحث ---
     [ObservableProperty]
     private DateTime dateFrom = DateTime.Today.AddMonths(-1);
@@ -144,9 +183,21 @@ public partial class ExpenseManagementViewModel : ObservableObject
         {
             using var db = new AppDbContext();
 
-            // 1) جلب كل الأيام التي فيها مصاريف لبناء تسلسل ثابت عالمي
-            var allDays = db.DailyJournals
+            // 1) جلب كل الأيام التي فيها مصاريف لبناء تسلسل ثابت عالمي للتبويب النشط
+            var journalsForSeq = db.DailyJournals
                 .Include(j => j.ExpenseItems)
+                .AsNoTracking();
+
+            if (ShowPostedArchive)
+            {
+                journalsForSeq = journalsForSeq.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+            }
+            else
+            {
+                journalsForSeq = journalsForSeq.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
+            }
+
+            var allDays = journalsForSeq
                 .ToList()
                 .GroupBy(j => j.JournalDate.Date)
                 .Where(g => g.Sum(j => j.ExpenseItems.Sum(e => e.Amount)) > 0)
@@ -155,9 +206,27 @@ public partial class ExpenseManagementViewModel : ObservableObject
                 .ToDictionary(x => x.Date, x => x.Sequence);
 
             // 2) تطبيق الفلاتر على البيانات
+            DateTime startFilter = DateFrom.Date;
+            DateTime endFilter = DateTo.Date;
+
+            if (ShowPostedArchive && ArchiveLevel == 1 && SelectedArchivedMonth != null)
+            {
+                startFilter = new DateTime(SelectedArchivedMonth.Year, SelectedArchivedMonth.Month, 1);
+                endFilter = startFilter.AddMonths(1).AddDays(-1);
+            }
+
             var query = db.DailyJournals
                 .Include(j => j.ExpenseItems)
-                .Where(j => j.JournalDate >= DateFrom.Date && j.JournalDate <= DateTo.Date);
+                .Where(j => j.JournalDate >= startFilter && j.JournalDate <= endFilter);
+
+            if (ShowPostedArchive)
+            {
+                query = query.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+            }
+            else
+            {
+                query = query.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
+            }
 
             if (SelectedShiftType.HasValue)
             {
@@ -221,10 +290,30 @@ public partial class ExpenseManagementViewModel : ObservableObject
         try
         {
             using var db = new AppDbContext();
+            
+            // تحديث العنوان بناءً على حالة الأرشيف
+            if (ShowPostedArchive)
+            {
+                SelectedDateDetailsTitle = "تفاصيل مصاريف يوم (مرحّل): ";
+            }
+            else
+            {
+                SelectedDateDetailsTitle = "تفاصيل مصاريف يوم: ";
+            }
+
             var query = db.DailyJournals
                 .Include(j => j.ExpenseItems)
                 .ThenInclude(e => e.Supplier)
                 .Where(j => j.JournalDate.Date == date.Date);
+
+            if (ShowPostedArchive)
+            {
+                query = query.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+            }
+            else
+            {
+                query = query.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
+            }
 
             if (SelectedShiftType.HasValue)
             {
@@ -304,9 +393,100 @@ public partial class ExpenseManagementViewModel : ObservableObject
         {
             CloseDetails();
         }
+        else if (ShowPostedArchive && ArchiveLevel == 1)
+        {
+            GoBackToMonths();
+        }
         else
         {
             OnBack?.Invoke();
+        }
+    }
+
+    [RelayCommand]
+    private void SelectMonth(MonthSummaryCard month)
+    {
+        SelectedArchivedMonth = month;
+        ArchiveLevel = 1;
+        LoadExpenses();
+    }
+
+    [RelayCommand]
+    private void GoBackToMonths()
+    {
+        ArchiveLevel = 0;
+        SelectedArchivedMonth = null;
+        LoadArchivedMonths();
+    }
+
+    public static string GetArabicMonthName(int month) => month switch
+    {
+        1 => "يناير",
+        2 => "فبراير",
+        3 => "مارس",
+        4 => "أبريل",
+        5 => "مايو",
+        6 => "يونيو",
+        7 => "يوليو",
+        8 => "أغسطس",
+        9 => "سبتمبر",
+        10 => "أكتوبر",
+        11 => "نوفمبر",
+        12 => "ديسمبر",
+        _ => ""
+    };
+
+    [RelayCommand]
+    public void LoadArchivedMonths()
+    {
+        try
+        {
+            using var db = new AppDbContext();
+            
+            var journals = db.DailyJournals
+                .Include(j => j.ExpenseItems)
+                .Include(j => j.BankingItems)
+                .Include(j => j.Adjustments)
+                .Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)
+                .OrderBy(j => j.JournalDate)
+                .ToList();
+
+            var grouped = journals
+                .GroupBy(j => new { j.JournalDate.Year, j.JournalDate.Month })
+                .Select(g => {
+                    var year = g.Key.Year;
+                    var month = g.Key.Month;
+                    var isPosted = g.All(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+                    return new MonthSummaryCard
+                    {
+                        Year = year,
+                        Month = month,
+                        MonthName = $"{GetArabicMonthName(month)} {year}",
+                        TotalSales = g.Sum(j => j.TotalSales),
+                        TotalCashSales = g.Sum(j => j.CashSales),
+                        TotalBankingSales = g.Sum(j => j.BankingTotal),
+                        TotalExpenses = g.Sum(j => j.TotalExpenses),
+                        DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),
+                        IsPosted = isPosted
+                    };
+                })
+                .OrderByDescending(m => m.Year)
+                .ThenByDescending(m => m.Month)
+                .Select((m, idx) => {
+                    m.Sequence = idx + 1;
+                    return m;
+                })
+                .ToList();
+
+            ArchivedMonths.Clear();
+            foreach (var m in grouped)
+            {
+                ArchivedMonths.Add(m);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"خطأ في تحميل كروت أشهر الأرشيف: {ex.Message}");
         }
     }
 
