@@ -1,0 +1,259 @@
+<UserControl x:Class="MeezanPOS.Presentation.Views.PartnerDebtsDashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             FlowDirection="RightToLeft">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>  <!-- العنوان والبحث -->
+            <RowDefinition Height="Auto"/>  <!-- كروت الإحصاء الرئيسية -->
+            <RowDefinition Height="*"/>     <!-- كروت الشركاء -->
+        </Grid.RowDefinitions>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- 1. شريط العنوان والبحث -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="AccountGroupOutline" Width="28" Height="28" Foreground="#3b82f6" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="لوحة متابعة ذمم الشركاء" FontSize="20" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- أزرار الإضافة السريعة -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Command="{Binding RecordSettlementCommand}" 
+                        Style="{StaticResource MaterialDesignPaperButton}"
+                        Background="#dc2626" Foreground="White"
+                        Height="40" Padding="12,0" materialDesign:ButtonAssist.CornerRadius="8"
+                        Margin="0,0,12,0">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="MinusCircle" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="تسجيل سحب / تسوية" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Command="{Binding RecordDebtCommand}" 
+                        Style="{StaticResource MaterialDesignPaperButton}"
+                        Background="#16a34a" Foreground="White"
+                        Height="40" Padding="12,0" materialDesign:ButtonAssist.CornerRadius="8">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="PlusCircle" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="تسجيل إيداع / تمويل" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- مربع البحث -->
+            <Border Grid.Column="2" Background="#f1f5f9" CornerRadius="10" Padding="12,0" Height="42">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20" Foreground="#94a3b8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox Grid.Column="1" 
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="ابحث باسم الشريك..."
+                             BorderThickness="0" Background="Transparent" FontSize="14"
+                             VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- 2. كروت الإحصاء الرئيسية (3 كروت) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,20">
+            <!-- كرت إجمالي الديون -->
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="0,0,10,0" BorderBrush="#fecaca" BorderThickness="1.5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="#fef2f2" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingUp" Width="20" Height="20" Foreground="#ef4444"/>
+                        </Border>
+                        <TextBlock Text="إجمالي تمويل الشركاء" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding TotalDebtsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#dc2626"/>
+                </StackPanel>
+            </Border>
+
+            <!-- كرت إجمالي التسويات -->
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="5,0" BorderBrush="#bbf7d0" BorderThickness="1.5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="#f0fdf4" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingDown" Width="20" Height="20" Foreground="#22c55e"/>
+                        </Border>
+                        <TextBlock Text="إجمالي التسويات" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding TotalSettlementsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#16a34a"/>
+                </StackPanel>
+            </Border>
+
+            <!-- كرت الصافي -->
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="10,0,0,0" BorderBrush="#bfdbfe" BorderThickness="1.5">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
+                </Border.Effect>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Background="#eff6ff" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="#3b82f6"/>
+                        </Border>
+                        <TextBlock Text="صافي الذمم المستحقة" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding NetBalanceAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#2563eb"/>
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- 3. كروت الشركاء (Cards Grid) -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding FilteredPartners}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="White" CornerRadius="14" Padding="20,16" Margin="0,0,12,12" Width="280" Cursor="Hand"
+                                MouseLeftButtonUp="PartnerCard_Click">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="10" ShadowDepth="2" Color="#0f172a" Opacity="0.07"/>
+                            </Border.Effect>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="BorderBrush" Value="#3b82f6"/>
+                                            <Setter Property="BorderThickness" Value="1.5"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- اسم الشريك مع أيقونة الحالة -->
+                                <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,12">
+                                    <Border CornerRadius="20" Width="36" Height="36" Margin="0,0,10,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#f1f5f9"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
+                                                        <Setter Property="Background" Value="#fef2f2"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
+                                                        <Setter Property="Background" Value="#f0fdf4"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <materialDesign:PackIcon Kind="AccountOutline" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon.Style>
+                                                <Style TargetType="materialDesign:PackIcon">
+                                                    <Setter Property="Foreground" Value="#64748b"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
+                                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
+                                                            <Setter Property="Foreground" Value="#22c55e"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </materialDesign:PackIcon.Style>
+                                        </materialDesign:PackIcon>
+                                    </Border>
+                                    <TextBlock Text="{Binding PartnerName}" FontSize="15" FontWeight="Bold" Foreground="#1e293b" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- الرصيد -->
+                                <StackPanel Grid.Row="1" Margin="0,0,0,8">
+                                    <TextBlock Text="الرصيد الصافي" FontSize="11.5" Foreground="#94a3b8" Margin="0,0,0,2"/>
+                                    <TextBlock Text="{Binding NetBalance, StringFormat=N2}" FontSize="20" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#64748b"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
+                                                        <Setter Property="Foreground" Value="#dc2626"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
+                                                        <Setter Property="Foreground" Value="#16a34a"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- حالة اتجاه الرصيد -->
+                                <Border Grid.Row="2" CornerRadius="6" Padding="8,4" HorizontalAlignment="Right">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#f1f5f9"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
+                                                    <Setter Property="Background" Value="#fef2f2"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
+                                                    <Setter Property="Background" Value="#f0fdf4"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding BalanceDirectionText}" FontSize="11" FontWeight="SemiBold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#64748b"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
+                                                        <Setter Property="Foreground" Value="#dc2626"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
+                                                        <Setter Property="Foreground" Value="#16a34a"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- حالة التحميل -->
+        <ProgressBar Grid.Row="2"
+                     Style="{StaticResource MaterialDesignCircularProgressBar}"
+                     IsIndeterminate="True"
+                     Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                     Width="40" Height="40"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </Grid>
+</UserControl>

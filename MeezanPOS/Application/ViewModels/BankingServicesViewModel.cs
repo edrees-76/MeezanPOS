@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MeezanPOS.Application.Interfaces;
 using MeezanPOS.Application.Services;
 using MeezanPOS.Domain.Entities;
@@ -118,7 +119,8 @@ public partial class BankingServicesViewModel : ObservableObject
         "سحب نقدي",
         "سداد مورد",
         "مصروف عام",
-        "تحويل داخلي"
+        "تحويل داخلي",
+        "تحويل مصرفي"
     };
 
     [ObservableProperty]
@@ -183,6 +185,9 @@ public partial class BankingServicesViewModel : ObservableObject
     [ObservableProperty]
     private decimal netOwnerBalance;
 
+    [ObservableProperty]
+    private PartnerDebtsDashboardViewModel partnerDebtsDashboard;
+
     // نموذج تسوية ديون المالك
     [ObservableProperty]
     private bool isSettlementFormOpen;
@@ -208,11 +213,44 @@ public partial class BankingServicesViewModel : ObservableObject
     [ObservableProperty]
     private DateTime settlementDate = DateTime.Now;
 
+    // نموذج تسجيل تمويل جديد (Debt)
+    [ObservableProperty]
+    private bool isDebtFormOpen;
+
+    [ObservableProperty]
+    private string debtPartnerName = string.Empty;
+
+    [ObservableProperty]
+    private decimal debtAmount;
+
+    [ObservableProperty]
+    private int selectedDebtDestinationIndex = 0; // 0=CashRegister, 1=Bank, 2=PettyCash
+
+    [ObservableProperty]
+    private BankAccount? debtBankAccount;
+
+    [ObservableProperty]
+    private string debtNotes = string.Empty;
+
+    [ObservableProperty]
+    private string debtTransferReference = string.Empty;
+
+    [ObservableProperty]
+    private int selectedDebtPaymentMethodIndex = 0; // 0=نقدي، 1=تحويل مصرفي
+
+    [ObservableProperty]
+    private DateTime debtDate = DateTime.Now;
+
     public BankingServicesViewModel()
     {
         _context = new AppDbContext();
         _bankService = new BankService(_context);
         _ownerDebtService = new OwnerDebtService(_context, _bankService);
+
+        PartnerDebtsDashboard = new PartnerDebtsDashboardViewModel(_ownerDebtService);
+
+        WeakReferenceMessenger.Default.Register<OpenPartnerDebtFormMessage>(this, (r, m) => OpenDebtForm());
+        WeakReferenceMessenger.Default.Register<OpenPartnerSettlementFormMessage>(this, (r, m) => OpenSettlementForm());
 
         _ = LoadDataAsync();
     }
@@ -247,6 +285,9 @@ public partial class BankingServicesViewModel : ObservableObject
 
             // 5. جلب ديون وتسويات المالك
             await LoadOwnerDebtDataAsync();
+
+            // 6. تحديث لوحة الشركاء الجديدة
+            await PartnerDebtsDashboard.LoadDashboardAsync();
         }
         catch (Exception ex)
         {
@@ -322,7 +363,6 @@ public partial class BankingServicesViewModel : ObservableObject
         {
             FriendlyName = string.Empty,
             LegalOwnerName = string.Empty,
-            BankName = LibyanBanks[0],
             AccountNumber = string.Empty,
             AccountType = BankAccountType.Commercial,
             OpeningBalance = 0,
@@ -346,7 +386,6 @@ public partial class BankingServicesViewModel : ObservableObject
             Id = SelectedAccount.Id,
             FriendlyName = SelectedAccount.FriendlyName,
             LegalOwnerName = SelectedAccount.LegalOwnerName,
-            BankName = SelectedAccount.BankName ?? LibyanBanks[0],
             AccountNumber = SelectedAccount.AccountNumber,
             AccountType = SelectedAccount.AccountType,
             OpeningBalance = SelectedAccount.OpeningBalance,
@@ -367,7 +406,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(EditingAccount.FriendlyName))
         {
-            MessageBox.Show("يجب إدخال اسم تعريفي للحساب البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("يجب إدخال اسم المصرف والفرع.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -676,6 +715,106 @@ public partial class BankingServicesViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public void OpenDebtForm()
+    {
+        DebtPartnerName = PartnerNames.FirstOrDefault() ?? string.Empty;
+        DebtAmount = 0;
+        SelectedDebtDestinationIndex = 0; // النقدية المباشرة
+        DebtBankAccount = BankAccounts.FirstOrDefault(a => a.IsActive);
+        DebtNotes = "تمويل تشغيلي جديد";
+        DebtTransferReference = string.Empty;
+        SelectedDebtPaymentMethodIndex = 0; // نقدي افتراضياً
+        DebtDate = DateTime.Now;
+        IsDebtFormOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseDebtForm()
+    {
+        IsDebtFormOpen = false;
+    }
+
+    [RelayCommand]
+    public async Task SaveDebtAsync()
+    {
+        if (string.IsNullOrWhiteSpace(DebtPartnerName) || DebtAmount <= 0)
+        {
+            MessageBox.Show("يرجى إدخال اسم الشريك والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        bool isBankDestination = (SelectedDebtDestinationIndex == 1);
+
+        if (isBankDestination && DebtBankAccount == null)
+        {
+            MessageBox.Show("يجب تحديد الحساب البنكي المستلم للتمويل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        IsLoading = true;
+        try
+        {
+            // 1. تسجيل الدين في سجل الشركاء
+            var debt = await _ownerDebtService.RecordDebtAsync(
+                DebtPartnerName,
+                DebtAmount,
+                "تمويل تشغيلي",
+                DebtNotes,
+                DebtDate,
+                isBankDestination ? "Bank" : "Cash",
+                isBankDestination ? DebtBankAccount?.Id : null,
+                SelectedDebtPaymentMethodIndex == 1 ? "Transfer" : "Cash",
+                SelectedDebtPaymentMethodIndex == 1 ? DebtTransferReference : null);
+
+            // 2. إذا كانت الوجهة هي البنك، نسجل حركة إيداع في المصرف
+            if (isBankDestination && DebtBankAccount != null)
+            {
+                bool isBankTransfer = (SelectedDebtPaymentMethodIndex == 1);
+
+                // التحقق من إدخال أخر 4 أرقام عند التحويل المصرفي
+                if (isBankTransfer && string.IsNullOrWhiteSpace(DebtTransferReference))
+                {
+                    MessageBox.Show("يرجى إدخال أخر 4 أرقام من عملية التحويل المصرفي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var bankNotes = $"تمويل من الشريك: {DebtPartnerName}";
+                if (isBankTransfer && !string.IsNullOrWhiteSpace(DebtTransferReference))
+                    bankNotes += $" | رقم العملية: {DebtTransferReference}";
+                if (!string.IsNullOrEmpty(DebtNotes)) bankNotes += $" | {DebtNotes}";
+
+                // المرجع: أرقام التحويل أو "تمويل شريك" للنقدي
+                string reference = isBankTransfer ? DebtTransferReference : "تمويل شريك";
+
+                // SourceType يميّز نوع الدفع: OwnerDebt_Transfer أو OwnerDebt_Cash
+                string sourceType = isBankTransfer ? "OwnerDebt_Transfer" : "OwnerDebt_Cash";
+
+                await _bankService.RecordTransactionAsync(
+                    DebtBankAccount.Id,
+                    BankTransactionType.Deposit,
+                    DebtAmount,
+                    reference,
+                    bankNotes,
+                    sourceType,
+                    debt.Id,
+                    DebtDate);
+            }
+
+            MessageBox.Show("تم حفظ بيانات تمويل الشريك بنجاح.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
+            IsDebtFormOpen = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء تسجيل التمويل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
     public void CloseSettlementForm()
     {
         IsSettlementFormOpen = false;
@@ -746,6 +885,15 @@ public partial class BankingServicesViewModel : ObservableObject
         IsLoading = true;
         try
         {
+            // حذف الحركة البنكية المرتبطة إن وجدت
+            if (debt.SourceType == "Bank")
+            {
+                // نحاول حذف جميع احتمالات SourceType لضمان التنظيف الكامل
+                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt", debt.Id);
+                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt_Transfer", debt.Id);
+                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt_Cash", debt.Id);
+            }
+
             await _ownerDebtService.DeleteDebtAsync(debt.Id);
             MessageBox.Show("تم حذف قيد الدين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             await LoadDataAsync();
@@ -838,11 +986,12 @@ public partial class BankingServicesViewModel : ObservableObject
                 StatementAccount.Id, StatementStartDate, StatementEndDate);
 
             // 3. تصفية الحسابات المختلطة (الخيار ب المعتمد)
+            // ملاحظة: نسمح بظهور الإيداع والسحب اليدوي إذا كان مرتبطاً ببيان (SourceType) مثل تمويل الشريك
             if (IsStatementAccountMixed && !ShowPersonalTransactions)
             {
                 allTx = allTx.Where(t =>
-                    t.Type != BankTransactionType.Deposit &&
-                    t.Type != BankTransactionType.Withdrawal)
+                    (t.Type != BankTransactionType.Deposit && t.Type != BankTransactionType.Withdrawal) ||
+                    !string.IsNullOrEmpty(t.SourceType))
                     .ToList();
             }
 

@@ -127,6 +127,10 @@ public partial class App : System.Windows.Application
                 context.Database.ExecuteSqlRaw("ALTER TABLE BankingItems ADD COLUMN IsReconciled INTEGER NOT NULL DEFAULT 0;");
             }
             catch { /* العمود موجود مسبقاً */ }
+
+            // إضافة حقول طريقة الدفع ومرجع التحويل لجدول ديون الشركاء
+            try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;"); } catch { }
+            try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;"); } catch { }
         }
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));

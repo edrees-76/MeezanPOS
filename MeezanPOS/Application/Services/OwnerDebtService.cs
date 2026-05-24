@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using MeezanPOS.Application.Interfaces;
 using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
+using MeezanPOS.Application.ViewModels;
 using MeezanPOS.Infrastructure.Data;
 
 namespace MeezanPOS.Application.Services;
@@ -41,7 +42,7 @@ public class OwnerDebtService : IOwnerDebtService
             .ToListAsync();
     }
 
-    public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null)
+    public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null)
     {
         var debt = new OwnerDebt
         {
@@ -52,7 +53,9 @@ public class OwnerDebtService : IOwnerDebtService
             TransactionDate = date,
             Status = OwnerDebtStatus.Unpaid,
             SourceType = sourceType,
-            SourceId = sourceId
+            SourceId = sourceId,
+            PaymentMethod = paymentMethod,
+            TransferReference = transferReference
         };
 
         _context.OwnerDebts.Add(debt);
@@ -242,5 +245,148 @@ public class OwnerDebtService : IOwnerDebtService
             .Where(p => !string.IsNullOrEmpty(p))
             .OrderBy(p => p)
             .ToList();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // لوحة المتابعة المالية - كروت الشركاء
+    // ────────────────────────────────────────────────────────────────
+    public async Task<List<PartnerSummaryDto>> GetPartnersSummaryAsync()
+    {
+        var partnerNames = await GetPartnerNamesAsync();
+        var summaries = new List<PartnerSummaryDto>();
+
+        foreach (var name in partnerNames)
+        {
+            var debtsTotal = await GetTotalOwnerDebtsAsync(name);
+            var settlementsTotal = await GetTotalOwnerSettlementsAsync(name);
+            var net = debtsTotal - settlementsTotal;
+
+            var direction = net > 0
+                ? PartnerBalanceDirection.RestaurantOwesPartner
+                : net < 0
+                    ? PartnerBalanceDirection.PartnerOwesRestaurant
+                    : PartnerBalanceDirection.Settled;
+
+            var directionText = direction switch
+            {
+                PartnerBalanceDirection.PartnerOwesRestaurant => "الشريك مدين للمطعم",
+                PartnerBalanceDirection.RestaurantOwesPartner => "المطعم مدين للشريك",
+                _ => "تمت التسوية"
+            };
+
+            summaries.Add(new PartnerSummaryDto
+            {
+                PartnerName = name,
+                DebtsTotal = debtsTotal,
+                SettlementsTotal = settlementsTotal,
+                NetBalance = Math.Abs(net),
+                BalanceDirection = direction,
+                BalanceDirectionText = directionText
+            });
+        }
+
+        return summaries.OrderBy(s => s.PartnerName).ToList();
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // كشف حساب الشريك مع الرصيد التراكمي الحي
+    // ────────────────────────────────────────────────────────────────
+    public async Task<List<PartnerStatementEntryDto>> GetPartnerStatementAsync(string partnerName)
+    {
+        // 1. جلب كل الديون
+        var debts = await _context.OwnerDebts
+            .Where(d => !d.IsDeleted && d.PartnerName == partnerName)
+            .Select(d => new PartnerStatementEntryDto
+            {
+                TransactionDate = d.TransactionDate,
+                TransactionType = "دين على المطعم",
+                Description = GenerateDebtDescription(d.SourceType, d.ExpenseCategory, d.Notes),
+                Amount = d.Amount,
+                IsSettlement = false,
+                SourceType = d.SourceType ?? "OwnerDebt",
+                SourceId = d.Id,
+                ReferenceNumber = d.TransferReference ?? d.Id.ToString(),
+                PaymentMethod = d.PaymentMethod == "Transfer" ? "تحويل مصرفي" : (d.PaymentMethod == "Cash" ? "نقدي" : "-"),
+                TransferReference = d.TransferReference,
+                CanDelete = d.SourceType == null // فقط الديون اليدوية يمكن حذفها
+            })
+            .ToListAsync();
+
+        // 2. جلب كل التسويات
+        var settlements = await _context.OwnerDebtSettlements
+            .Include(s => s.BankAccount)
+            .Where(s => !s.IsDeleted && s.PartnerName == partnerName)
+            .Select(s => new PartnerStatementEntryDto
+            {
+                TransactionDate = s.SettlementDate,
+                TransactionType = "تسوية ذمة",
+                Description = GenerateSettlementDescription(s.SettlementSource, s.BankAccount != null ? s.BankAccount.FriendlyName : null, s.Notes),
+                Amount = s.Amount,
+                IsSettlement = true,
+                SourceType = "OwnerDebtSettlement",
+                SourceId = s.Id,
+                ReferenceNumber = s.Id.ToString(),
+                CanDelete = true
+            })
+            .ToListAsync();
+        var allEntriesList = debts.Concat(settlements)
+            .OrderBy(e => e.TransactionDate)
+            .ThenBy(e => e.IsSettlement)
+            .ToList();
+
+        // 4. حساب الرصيد التراكمي (Running Balance Engine)
+        decimal runningBalance = 0;
+        for (int i = 0; i < allEntriesList.Count; i++)
+        {
+            allEntriesList[i].SequenceNumber = i + 1;
+
+            if (allEntriesList[i].IsSettlement)
+                runningBalance -= allEntriesList[i].Amount;
+            else
+                runningBalance += allEntriesList[i].Amount;
+
+            allEntriesList[i].RunningBalance = Math.Abs(runningBalance);
+            allEntriesList[i].BalanceDirection = runningBalance > 0
+                ? PartnerBalanceDirection.RestaurantOwesPartner
+                : runningBalance < 0
+                    ? PartnerBalanceDirection.PartnerOwesRestaurant
+                    : PartnerBalanceDirection.Settled;
+
+            allEntriesList[i].BalanceDirectionText = allEntriesList[i].BalanceDirection switch
+            {
+                PartnerBalanceDirection.RestaurantOwesPartner => "على المطعم",
+                PartnerBalanceDirection.PartnerOwesRestaurant => "على الشريك",
+                _ => "مسوّى"
+            };
+        }
+
+        return allEntriesList;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // محرك توليد الأوصاف الذكية (Smart Description Engine)
+    // ────────────────────────────────────────────────────────────────
+    private static string GenerateDebtDescription(string? sourceType, string? expenseCategory, string? notes)
+    {
+        if (sourceType == "SupplierPayment")
+            return $"سداد فاتورة مورد مدفوعة شخصياً{(string.IsNullOrEmpty(notes) ? "" : $" - {notes}")}";
+
+        if (sourceType == "GeneralExpense")
+            return $"مصروف تشغيلي ({expenseCategory ?? "عام"}) مدفوع بواسطة الشريك";
+
+        return string.IsNullOrEmpty(notes) ? "دين مسجل يدوياً" : notes;
+    }
+
+    private static string GenerateSettlementDescription(OwnerDebtSettlementSource source, string? bankName, string? notes)
+    {
+        var sourceText = source switch
+        {
+            OwnerDebtSettlementSource.CashRegister => "صندوق الكاشير",
+            OwnerDebtSettlementSource.Bank => bankName ?? "الحساب البنكي",
+            OwnerDebtSettlementSource.PettyCash => "الخزينة",
+            _ => "غير محدد"
+        };
+
+        return $"تسوية ذمة مالية عبر {sourceText}{(string.IsNullOrEmpty(notes) ? "" : $" - {notes}")}";
     }
 }

@@ -252,7 +252,7 @@
                         </DataGridTextColumn>
 
                         <!-- نوع العملية -->
-                        <DataGridTextColumn Header="نوع العملية" Binding="{Binding Type, Converter={StaticResource TransactionTypeToNameConverter}}" Width="130">
+                        <DataGridTextColumn Header="نوع العملية" Binding="{Binding TransactionTypeDisplayName}" Width="130">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="Foreground" Value="#64748b"/>

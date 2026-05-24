@@ -106,4 +106,30 @@ public class AppDbContext : DbContext
             relationship.DeleteBehavior = DeleteBehavior.Restrict;
         }
     }
+
+    /// <summary>
+    /// ترحيل تلقائي: إضافة الأعمدة الجديدة لقاعدة البيانات إن لم تكن موجودة
+    /// </summary>
+    public static void MigrateDatabase()
+    {
+        using var context = new AppDbContext();
+        var conn = context.Database.GetDbConnection();
+        conn.Open();
+        var alterCommands = new[]
+        {
+            "ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;",
+            "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;"
+        };
+        foreach (var sql in alterCommands)
+        {
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+            }
+            catch { /* العمود موجود بالفعل */ }
+        }
+        conn.Close();
+    }
 }

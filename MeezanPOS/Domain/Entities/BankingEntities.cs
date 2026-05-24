@@ -14,10 +14,8 @@ public class BankAccount : BaseEntity
     [MaxLength(255)]
     public string? LegalOwnerName { get; set; }
 
-    [NotMapped]
-    public string DisplayName => !string.IsNullOrWhiteSpace(BankName)
-        ? $"{BankName} - {FriendlyName}"
-        : FriendlyName;
+        [NotMapped]
+        public string DisplayName => FriendlyName;
 
     public BankAccountType AccountType { get; set; } = BankAccountType.Commercial;
 
@@ -52,6 +50,38 @@ public class BankTransaction : BaseEntity
 
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    [NotMapped]
+    public string TransactionTypeDisplayName
+    {
+        get
+        {
+            if (Type == BankTransactionType.Deposit && SourceType == "OwnerDebt_Transfer")
+                return "تحويل مصرفي";
+            if (Type == BankTransactionType.Deposit && SourceType == "OwnerDebt_Cash")
+                return "إيداع نقدي";
+            // للتوافق مع البيانات القديمة
+            if (Type == BankTransactionType.Deposit && SourceType == "OwnerDebt")
+            {
+                if (!string.IsNullOrWhiteSpace(ReferenceNumber) && ReferenceNumber != "تمويل شريك")
+                    return "تحويل مصرفي";
+                return "إيداع نقدي";
+            }
+
+            return Type switch
+            {
+                BankTransactionType.CardSalesDeposit => "خدمات مصرفية",
+                BankTransactionType.Deposit => "إيداع نقدي",
+                BankTransactionType.Withdrawal => "سحب نقدي",
+                BankTransactionType.InternalTransfer => "تحويل داخلي",
+                BankTransactionType.SupplierPayment => "سداد مورد",
+                BankTransactionType.ExpensePayment => "مصروف عام",
+                BankTransactionType.OwnerDebtSettlement => "تسوية مالك",
+                BankTransactionType.ExchangeDifference => "فروقات",
+                _ => "أخرى"
+            };
+        }
+    }
 
     [NotMapped]
     public string DisplayNotes
@@ -128,6 +158,12 @@ public class OwnerDebt : BaseEntity
     public string? SourceType { get; set; }
 
     public int? SourceId { get; set; }
+
+    [MaxLength(50)]
+    public string? PaymentMethod { get; set; } // "Cash", "Transfer"
+
+    [MaxLength(50)]
+    public string? TransferReference { get; set; }
 }
 
 public class OwnerDebtSettlement : BaseEntity

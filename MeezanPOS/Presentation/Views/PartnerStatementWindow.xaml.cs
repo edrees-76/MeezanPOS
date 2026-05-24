@@ -1,0 +1,66 @@
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using MeezanPOS.Application.Interfaces;
+using MeezanPOS.Application.Services;
+using MeezanPOS.Application.ViewModels;
+using MeezanPOS.Infrastructure.Data;
+
+namespace MeezanPOS.Presentation.Views;
+
+public partial class PartnerStatementWindow : Window
+{
+    private readonly PartnerStatementViewModel _vm;
+
+    public PartnerStatementWindow(string partnerName)
+    {
+        InitializeComponent();
+
+        // إنشاء الخدمات والـ ViewModel
+        var dbContext = new AppDbContext();
+        var bankService = new BankService(dbContext);
+        var ownerDebtService = new OwnerDebtService(dbContext, bankService);
+        _vm = new PartnerStatementViewModel(ownerDebtService);
+
+        DataContext = _vm;
+
+        Loaded += async (s, e) => await _vm.LoadStatementAsync(partnerName);
+    }
+
+    private void DragWindow(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
+        {
+            try { DragMove(); } catch { }
+        }
+    }
+
+    private void Close_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+
+
+    /// <summary>
+    /// النقر المزدوج لفتح المستند المصدر (فاتورة مورد أو مصروف عام)
+    /// </summary>
+    private void StatementGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGrid dataGrid) return;
+        if (dataGrid.SelectedItem is not PartnerStatementEntryDto entry) return;
+
+        if (entry.SourceType == null || !entry.SourceId.HasValue)
+            return;
+
+        if (!entry.CanDelete && entry.SourceType != "OwnerDebtSettlement")
+        {
+            // فتح نافذة تفاصيل العملية المالية
+            var detailsWindow = new TransactionDetailsViewWindow(entry.SourceType, entry.SourceId.Value)
+            {
+                Owner = this
+            };
+            detailsWindow.ShowDialog();
+        }
+    }
+}
