@@ -35,12 +35,12 @@ graph TD
     * `BankingEntities.cs`: (BankAccount, BankTransaction, CardPaymentReconciliation, OwnerDebt, OwnerDebtSettlement)
     * `CashEntities.cs` و `SupplierEntities.cs` و `GeneralExpenseEntities.cs`
     * `BaseEntity.cs`: الكائن الأب الذي يحتوي على الحقول المشتركة (Id, CreatedAt, UpdatedAt, IsDeleted).
-  * `Enums/`: التعدادات الهامة للنظام (مثل `BankTransactionType` و `BankAccountType`).
+  * `Enums/`: التعدادات الهامة للنظام (مثل `BankTransactionType`, `BankAccountType`, `OwnerDebtStatus`).
   * `Interfaces/`: عقود الخدمات والواجهات الخاصة بالنطاق.
 
 * **`Application` (منطق الأعمال والخدمات)**:
   * `Interfaces/`: واجهات الخدمات مثل `IPostingService`.
-  * `Services/`: منطق العمل الفعلي والخدمات (مثل `BankService.cs`, `LedgerService.cs`, `PostingService.cs`, `WagesService.cs`).
+  * `Services/`: منطق العمل الفعلي والخدمات (مثل `BankService.cs`, `LedgerService.cs`, `PostingService.cs`, `WagesService.cs`, `OwnerDebtService.cs`).
   * `ViewModels/`: النماذج البرمجية للواجهات (مثل `BankingServicesViewModel.cs` و `SalesViewModel.cs` و `DailyJournalViewModel.cs`).
   * `Services/Reports/`: تقارير الـ PDF المبنية باستخدام QuestPDF (مثل `BankStatementPdfReport.cs`, `DailyJournalPdfReport.cs`).
 
