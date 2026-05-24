@@ -30,9 +30,73 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         // التأكد من تطبيق كل التحديثات على قاعدة البيانات عند بدء التشغيل
+        // استخدام المسار الموحد من AppDbContext لضمان عدم ضياع البيانات
+        var dbPath = MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath();
+        if (System.IO.File.Exists(dbPath))
+        {
+            try
+            {
+                var backupDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dbPath)!, "Backups");
+                if (!System.IO.Directory.Exists(backupDir))
+                {
+                    System.IO.Directory.CreateDirectory(backupDir);
+                }
+                var backupPath = System.IO.Path.Combine(backupDir, $"Meezan_backup_{System.DateTime.Now:yyyyMMdd_HHmmss}.db");
+                System.IO.File.Copy(dbPath, backupPath, true);
+
+                // الاحتفاظ بآخر 10 نسخ احتياطية فقط وحذف الأقدم
+                var oldBackups = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
+                    .Select(f => new System.IO.FileInfo(f))
+                    .OrderByDescending(f => f.CreationTime)
+                    .Skip(10);
+                foreach (var file in oldBackups)
+                {
+                    file.Delete();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات: {ex.Message}");
+            }
+        }
+
         using (var context = new MeezanPOS.Infrastructure.Data.AppDbContext())
         {
-            context.Database.Migrate();
+            try
+            {
+                context.Database.Migrate();
+            }
+            catch (System.Exception ex)
+            {
+                var backupDir = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Backups");
+                var latestBackup = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
+                    .Select(f => new System.IO.FileInfo(f))
+                    .OrderByDescending(f => f.CreationTime)
+                    .FirstOrDefault();
+
+                string restoreMessage = "";
+                if (latestBackup != null)
+                {
+                    try
+                    {
+                        System.IO.File.Copy(latestBackup.FullName, dbPath, true);
+                        restoreMessage = "\nتم استعادة آخر نسخة احتياطية سليمة لقاعدة البيانات تلقائياً.";
+                    }
+                    catch (System.Exception restoreEx)
+                    {
+                        restoreMessage = $"\nفشلت محاولة الاستعادة التلقائية: {restoreEx.Message}";
+                    }
+                }
+
+                MessageBox.Show(
+                    $"خطأ فادح أثناء ترقية قاعدة البيانات:\n{ex.Message}{restoreMessage}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                    "خطأ ترقية قاعدة البيانات",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
 
             // تسريع أداء قاعدة بيانات SQLite وتفعيل نمط WAL للوصول المتوازي دون إقفال الملف
             try
@@ -56,6 +120,13 @@ public partial class App : System.Windows.Application
             {
                 System.Diagnostics.Debug.WriteLine($"خطأ أثناء تصحيح حقول RowVersion: {ex.Message}");
             }
+
+            // إضافة حقل المطابقة لجدول العمليات البنكية في الحركة اليومية إن لم يكن موجوداً
+            try
+            {
+                context.Database.ExecuteSqlRaw("ALTER TABLE BankingItems ADD COLUMN IsReconciled INTEGER NOT NULL DEFAULT 0;");
+            }
+            catch { /* العمود موجود مسبقاً */ }
         }
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));

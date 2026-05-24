@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
+using MeezanPOS.Infrastructure.Data;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -58,7 +60,18 @@ public partial class ExpenseItemViewModel : ObservableObject
     private string workerName = string.Empty;
 
     [ObservableProperty]
+    private bool isDetailedWage = false;
+
+    [ObservableProperty]
     private string notes = string.Empty;
+
+    partial void OnIsDetailedWageChanged(bool value)
+    {
+        if (!value)
+        {
+            WorkerName = string.Empty;
+        }
+    }
 
 
 
@@ -111,6 +124,24 @@ public partial class BankingItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string last4Digits = string.Empty;  // رقم التحويل اخر 4 ارقام من عملية الخدمة
+
+    [ObservableProperty]
+    private int? bankAccountId;
+}
+
+public partial class BankSaleInputViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private int bankAccountId;
+
+    [ObservableProperty]
+    private string bankFriendlyName = string.Empty;
+
+    [ObservableProperty]
+    private string bankName = string.Empty;
+
+    [ObservableProperty]
+    private decimal? amount;
 }
 
 public partial class DailyJournalViewModel : ObservableObject
@@ -164,6 +195,10 @@ public partial class DailyJournalViewModel : ObservableObject
     // --- المرتجعات والطلبات المجانية ---
     public ObservableCollection<OrderAdjustmentItemViewModel> Returns { get; } = new();
     public ObservableCollection<OrderAdjustmentItemViewModel> FreeOrders { get; } = new();
+
+    // --- تقسيم مبيعات المصارف ---
+    public ObservableCollection<BankAccount> ActiveBankAccounts { get; } = new();
+    public ObservableCollection<BankSaleInputViewModel> BankSalesInputs { get; } = new();
 
     public decimal ReturnsAmount => Returns.Sum(r => r.Amount ?? 0);
     public decimal FreeOrdersAmount => FreeOrders.Sum(f => f.Amount ?? 0);
@@ -255,6 +290,28 @@ public partial class DailyJournalViewModel : ObservableObject
 
     // --- القوائم ---
     public ObservableCollection<ExpenseItemViewModel> ExpenseItems { get; } = new();
+    public ObservableCollection<string> AvailableWorkerNames { get; } = new();
+
+    private async System.Threading.Tasks.Task LoadWorkerNamesAsync()
+    {
+        try
+        {
+            var service = new Services.WagesService(new AppDbContext());
+            var names = await service.GetUniqueWorkerNamesAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                AvailableWorkerNames.Clear();
+                foreach (var name in names)
+                {
+                    AvailableWorkerNames.Add(name);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading worker names: {ex.Message}");
+        }
+    }
     public ObservableCollection<BankingItemViewModel> BankingItems { get; } = new();
 
     // --- أنواع الورديات ---
@@ -303,9 +360,57 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         _ = LoadSuppliersAsync();
         _ = LoadCustomExpenseTypesAsync();
+        _ = LoadWorkerNamesAsync();
+        _ = LoadBankAccountsAsync();
         AddExpenseItem();
         AddBankingItem();
         _ = UpdateAvailableShiftsAsync(JournalDate);
+    }
+
+    private async System.Threading.Tasks.Task LoadBankAccountsAsync()
+    {
+        try
+        {
+            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+            var list = await context.BankAccounts.Where(b => b.IsActive && !b.IsDeleted).ToListAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                ActiveBankAccounts.Clear();
+                BankSalesInputs.Clear();
+                foreach (var bank in list)
+                {
+                    ActiveBankAccounts.Add(bank);
+                    var input = new BankSaleInputViewModel
+                    {
+                        BankAccountId = bank.Id,
+                        BankFriendlyName = bank.DisplayName,
+                        BankName = bank.BankName ?? bank.FriendlyName,
+                        Amount = null
+                    };
+                    input.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(BankSaleInputViewModel.Amount))
+                        {
+                            UpdateBankingSalesInput();
+                        }
+                    };
+                    BankSalesInputs.Add(input);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading bank accounts: {ex.Message}");
+        }
+    }
+
+    private void UpdateBankingSalesInput()
+    {
+        var hasAnyPerBankInput = BankSalesInputs.Any(b => b.Amount.HasValue && b.Amount.Value > 0);
+        if (hasAnyPerBankInput)
+        {
+            BankingSalesInput = BankSalesInputs.Sum(b => b.Amount ?? 0m);
+        }
     }
 
     public DailyJournalViewModel(int journalId) : this()
@@ -316,14 +421,45 @@ public partial class DailyJournalViewModel : ObservableObject
             try
             {
                 using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+                
+                // تحميل جميع الحسابات البنكية النشطة أولاً لبناء الحقول
+                var activeBanks = await context.BankAccounts.Where(b => b.IsActive && !b.IsDeleted).ToListAsync();
+                
                 var journal = await context.DailyJournals
                     .Include(j => j.ExpenseItems)
                     .Include(j => j.BankingItems)
                     .Include(j => j.Adjustments)
+                    .Include(j => j.BankSales)
                     .FirstOrDefaultAsync(j => j.Id == journalId);
                     
                 if (journal != null)
                 {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        ActiveBankAccounts.Clear();
+                        BankSalesInputs.Clear();
+                        foreach (var bank in activeBanks)
+                        {
+                            ActiveBankAccounts.Add(bank);
+                            var savedSale = journal.BankSales?.FirstOrDefault(s => s.BankAccountId == bank.Id);
+                            var input = new BankSaleInputViewModel
+                            {
+                                BankAccountId = bank.Id,
+                                BankFriendlyName = bank.DisplayName,
+                                BankName = bank.BankName ?? bank.FriendlyName,
+                                Amount = savedSale?.Amount > 0 ? savedSale.Amount : null
+                            };
+                            input.PropertyChanged += (s, e) =>
+                            {
+                                if (e.PropertyName == nameof(BankSaleInputViewModel.Amount))
+                                {
+                                    UpdateBankingSalesInput();
+                                }
+                            };
+                            BankSalesInputs.Add(input);
+                        }
+                    });
+
                     if (journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Posted || journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Archived)
                     {
                         LoadJournalForViewing(journal);
@@ -493,7 +629,19 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             SequenceNumber = BankingItems.Count + 1
         };
-        item.PropertyChanged += (s, e) => RefreshCalculations();
+        item.PropertyChanged += (s, e) =>
+        {
+            // تحديث اسم المصرف تلقائياً عند اختيار مصرف من القائمة المنسدلة
+            if (e.PropertyName == nameof(BankingItemViewModel.BankAccountId) && s is BankingItemViewModel bankItem && bankItem.BankAccountId.HasValue)
+            {
+                var bank = ActiveBankAccounts.FirstOrDefault(b => b.Id == bankItem.BankAccountId.Value);
+                if (bank != null)
+                {
+                    bankItem.BankName = bank.DisplayName;
+                }
+            }
+            RefreshCalculations();
+        };
         BankingItems.Add(item);
     }
 
@@ -592,6 +740,7 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
+            var bankService = new MeezanPOS.Application.Services.BankService(context);
             
             // Check for duplicate shifts on the same day
             var targetDate = JournalDate.Date;
@@ -643,6 +792,19 @@ public partial class DailyJournalViewModel : ObservableObject
                 // حذف العناصر القديمة صراحة لأن قاعدة البيانات تمنع Cascade Delete
                 context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
                 context.BankingItems.RemoveRange(journal.BankingItems);
+                
+                var oldBankSales = context.DailyJournalBankSales.Where(s => s.DailyJournalId == journal.Id).ToList();
+                context.DailyJournalBankSales.RemoveRange(oldBankSales);
+
+                // إزالة المطابقات البنكية التابعة لهذه الوردية
+                var oldCardRecons = context.CardPaymentReconciliations
+                    .Where(r => r.DailyJournalId == journal.Id)
+                    .ToList();
+                context.CardPaymentReconciliations.RemoveRange(oldCardRecons);
+
+                // إزالة الحركات البنكية المباشرة القديمة المرتبطة بهذه الوردية وإعادة بناء أرصدتها
+                await bankService.DeleteTransactionBySourceAsync("DailyJournal", journal.Id);
+
                 // إزالة حركات الدفتر المرتبطة بالمصروفات المحذوفة
                 oldExpenseIds = journal.ExpenseItems.Select(e => e.Id).ToList();
                 if (oldExpenseIds.Any())
@@ -731,6 +893,7 @@ public partial class DailyJournalViewModel : ObservableObject
                             SupplierName = exp.SupplierName,
                             Notes = exp.Notes,
                             InvoiceNumber = exp.InvoiceNumber,
+                            WorkerName = (exp.IsWorkerWage && exp.IsDetailedWage) ? exp.WorkerName?.Trim() : null,
                             CreatedAt = System.DateTime.Now
                         });
                     }
@@ -741,15 +904,27 @@ public partial class DailyJournalViewModel : ObservableObject
             {
                 if ((bank.Amount ?? 0m) > 0)
                 {
-                    string bankDesc = bank.BankName;
-                    if (!string.IsNullOrWhiteSpace(bank.Last4Digits))
-                    {
-                        bankDesc += " - " + bank.Last4Digits;
-                    }
                     journal.BankingItems.Add(new MeezanPOS.Domain.Entities.BankingItem
                     {
                         Amount = bank.Amount ?? 0m,
-                        Description = bankDesc,
+                        Description = bank.InvoiceNumber?.Trim(),
+                        BankAccountId = bank.BankAccountId,
+                        ReferenceNumber = bank.Last4Digits?.Trim(),
+                        CreatedAt = System.DateTime.Now
+                    });
+                }
+            }
+
+            // إضافة تقسيم مبيعات الخدمات المصرفية
+            foreach (var bSale in BankSalesInputs)
+            {
+                if ((bSale.Amount ?? 0m) > 0)
+                {
+                    journal.BankSales.Add(new DailyJournalBankSale
+                    {
+                        BankAccountId = bSale.BankAccountId,
+                        BankName = bSale.BankFriendlyName,
+                        Amount = bSale.Amount ?? 0m,
                         CreatedAt = System.DateTime.Now
                     });
                 }
@@ -792,6 +967,53 @@ public partial class DailyJournalViewModel : ObservableObject
                 context.DailyJournals.Add(journal);
             }
             await context.SaveChangesAsync();
+
+            // تسجيل الدفعات المصرفية مباشرة في الحسابات البنكية المحددة
+            if (journal.BankingItems.Any())
+            {
+                foreach (var bItem in journal.BankingItems)
+                {
+                    if (bItem.BankAccountId.HasValue)
+                    {
+                        string notes = $"مبيعات إلكترونية - {journal.ShiftName}";
+                        if (!string.IsNullOrWhiteSpace(bItem.Description))
+                        {
+                            notes += $" - {bItem.Description}";
+                        }
+                        
+                        await bankService.RecordTransactionAsync(
+                            bankAccountId: bItem.BankAccountId.Value,
+                            type: MeezanPOS.Domain.Enums.BankTransactionType.CardSalesDeposit,
+                            amount: bItem.Amount,
+                            referenceNumber: bItem.ReferenceNumber,
+                            notes: notes,
+                            sourceType: "DailyJournal",
+                            sourceId: journal.Id,
+                            transactionDate: journal.JournalDate
+                        );
+                    }
+                }
+            }
+            else
+            {
+                // إذا لم يتم إدخال تفاصيل الدفتر، نسجل حركة إيداع مباشرة لكل مصرف تم إدخال مبيعاته
+                foreach (var bSale in journal.BankSales)
+                {
+                    if (bSale.BankAccountId.HasValue)
+                    {
+                        await bankService.RecordTransactionAsync(
+                            bankAccountId: bSale.BankAccountId.Value,
+                            type: MeezanPOS.Domain.Enums.BankTransactionType.CardSalesDeposit,
+                            amount: bSale.Amount,
+                            referenceNumber: null,
+                            notes: $"إجمالي مبيعات إلكترونية - {bSale.BankName} - {journal.ShiftName}",
+                            sourceType: "DailyJournal",
+                            sourceId: journal.Id,
+                            transactionDate: journal.JournalDate
+                        );
+                    }
+                }
+            }
 
             // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
             var ledgerService = new MeezanPOS.Application.Services.LedgerService(context);
@@ -868,6 +1090,11 @@ public partial class DailyJournalViewModel : ObservableObject
         CashSalesInput = null;
         BankingSalesInput = null;
         ActualCash = null;
+        
+        foreach (var input in BankSalesInputs)
+        {
+            input.Amount = null;
+        }
         
         ExpenseItems.Clear();
         BankingItems.Clear();
@@ -951,7 +1178,7 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             foreach (var e in journal.ExpenseItems)
             {
-                ExpenseItems.Add(new ExpenseItemViewModel
+                var item = new ExpenseItemViewModel
                 {
                     SequenceNumber = ExpenseItems.Count + 1,
                     ExpenseType = e.Category ?? "",
@@ -959,8 +1186,12 @@ public partial class DailyJournalViewModel : ObservableObject
                     Description = e.Description ?? "",
                     SelectedSupplierId = e.SupplierId,
                     InvoiceNumber = e.InvoiceNumber ?? "",
-                    Notes = e.Notes ?? ""
-                });
+                    Notes = e.Notes ?? "",
+                    WorkerName = e.WorkerName ?? "",
+                    IsDetailedWage = !string.IsNullOrEmpty(e.WorkerName)
+                };
+                item.PropertyChanged += (s, e) => RefreshCalculations();
+                ExpenseItems.Add(item);
             }
         }
 
@@ -976,6 +1207,7 @@ public partial class DailyJournalViewModel : ObservableObject
                     InvoiceNumber = a.InvoiceNumber ?? "",
                     Notes = a.Notes ?? ""
                 };
+                item.PropertyChanged += (s, e) => RefreshCalculations();
                 if (a.IsFreeOrder)
                 {
                     item.SequenceNumber = FreeOrders.Count + 1;
@@ -994,23 +1226,70 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             foreach (var b in journal.BankingItems)
             {
-                string bankName = b.Description ?? "";
-                string last4 = "";
-                if (bankName.Contains(" - "))
+                string invoiceNo = "";
+                string last4 = b.ReferenceNumber ?? "";
+                string bankName = "";
+
+                var activeBank = ActiveBankAccounts.FirstOrDefault(x => x.Id == b.BankAccountId);
+                if (activeBank != null)
                 {
-                    var parts = bankName.Split(new[] { " - " }, 2, StringSplitOptions.None);
-                    bankName = parts[0];
-                    last4 = parts[1];
+                    bankName = activeBank.DisplayName;
                 }
 
-                BankingItems.Add(new BankingItemViewModel
+                string desc = b.Description ?? "";
+                bool isLegacy = false;
+                if (!string.IsNullOrEmpty(desc))
+                {
+                    foreach (var acc in ActiveBankAccounts)
+                    {
+                        if (desc.Contains(acc.DisplayName))
+                        {
+                            isLegacy = true;
+                            break;
+                        }
+                    }
+                    if (!isLegacy && desc.Contains(" - "))
+                    {
+                        isLegacy = true;
+                    }
+                }
+
+                if (isLegacy)
+                {
+                    invoiceNo = "";
+                    if (string.IsNullOrEmpty(last4) && desc.Contains(" - "))
+                    {
+                        var parts = desc.Split(new[] { " - " }, StringSplitOptions.None);
+                        last4 = parts[parts.Length - 1];
+                    }
+                }
+                else
+                {
+                    invoiceNo = desc;
+                }
+
+                var vmItem = new BankingItemViewModel
                 {
                     SequenceNumber = BankingItems.Count + 1,
                     Amount = b.Amount,
                     BankName = bankName,
-                    InvoiceNumber = "",
-                    Last4Digits = last4
-                });
+                    InvoiceNumber = invoiceNo,
+                    Last4Digits = last4,
+                    BankAccountId = b.BankAccountId
+                };
+                vmItem.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(BankingItemViewModel.BankAccountId) && s is BankingItemViewModel bankItem && bankItem.BankAccountId.HasValue)
+                    {
+                        var bank = ActiveBankAccounts.FirstOrDefault(x => x.Id == bankItem.BankAccountId.Value);
+                        if (bank != null)
+                        {
+                            bankItem.BankName = bank.DisplayName;
+                        }
+                    }
+                    RefreshCalculations();
+                };
+                BankingItems.Add(vmItem);
             }
         }
 

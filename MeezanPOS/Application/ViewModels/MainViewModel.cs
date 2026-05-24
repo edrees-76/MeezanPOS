@@ -38,9 +38,12 @@ public partial class MainViewModel : ObservableObject
                 else if (value == 1) Navigate("Sales");
                 else if (value == 2) Navigate("Suppliers");
                 else if (value == 3) Navigate("Expenses");
+                else if (value == 4) Navigate("Wages");
+                else if (value == 5) Navigate("Banking");
             }
         }
     }
+
 
     [RelayCommand]
     private void Navigate(string viewName)
@@ -100,11 +103,21 @@ public partial class MainViewModel : ObservableObject
                 };
                 CurrentViewModel = expenseVM;
                 break;
+            case "Wages":
+                Title = "ميزان للمالية - أجور ومستحقات العمال";
+                SelectedNavIndex = 4;
+                CurrentViewModel = new WagesManagementViewModel();
+                break;
+            case "Banking":
+                Title = "ميزان للمالية - الخدمات المصرفية والبنكية";
+                SelectedNavIndex = 5;
+                CurrentViewModel = new BankingServicesViewModel();
+                break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";
-                var journalVM = new DailyJournalViewModel();
-                journalVM.OnClose = () => Navigate("Dashboard");
-                CurrentViewModel = journalVM;
+                var journalVM2 = new DailyJournalViewModel();
+                journalVM2.OnClose = () => Navigate("Dashboard");
+                CurrentViewModel = journalVM2;
                 break;
         }
     }

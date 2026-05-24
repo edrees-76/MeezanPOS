@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <ApplicationIcon>..\mizan_3d_icon_final_transparent.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +30,75 @@
     <Resource Include="..\mizan_chef_scale-removebg-preview.png">
       <Link>Assets\Images\mizan_chef_scale-removebg-preview.png</Link>
     </Resource>
+    <Resource Include="..\restaurant_bg.jpg">
+      <Link>Assets\Images\restaurant_bg.jpg</Link>
+    </Resource>
+    <Resource Include="..\mizan_3d_icon_final_transparent.png">
+      <Link>Assets\Images\mizan_3d_icon_final_transparent.png</Link>
+    </Resource>
+    <Resource Include="..\perfect_login_bg.png">
+      <Link>Assets\Images\perfect_login_bg.png</Link>
+    </Resource>
   </ItemGroup>
+
+  <Target Name="CopyIconBeforeBuild" BeforeTargets="PrepareForBuild">
+    <Copy SourceFiles="C:\Users\DELL\Downloads\mizan_3d_icon_final_transparent.png" 
+          DestinationFiles="..\mizan_3d_icon_final_transparent.png" 
+          SkipUnchangedFiles="true" 
+          Condition="Exists('C:\Users\DELL\Downloads\mizan_3d_icon_final_transparent.png')" />
+    <Copy SourceFiles="C:\Users\DELL\Downloads\perfect_login_bg.png" 
+          DestinationFiles="..\perfect_login_bg.png" 
+          SkipUnchangedFiles="true" 
+          Condition="Exists('C:\Users\DELL\Downloads\perfect_login_bg.png')" />
+  </Target>
+
+  <UsingTask TaskName="PngToIco" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <PngPath ParameterType="System.String" Required="true" />
+      <IcoPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          if (File.Exists(PngPath))
+          {
+              byte[] pngBytes = File.ReadAllBytes(PngPath);
+              int pngSize = pngBytes.Length;
+              
+              byte[] icoHeader = new byte[22];
+              icoHeader[0] = 0; icoHeader[1] = 0;
+              icoHeader[2] = 1; icoHeader[3] = 0;
+              icoHeader[4] = 1; icoHeader[5] = 0;
+              icoHeader[6] = 0;
+              icoHeader[7] = 0;
+              icoHeader[8] = 0;
+              icoHeader[9] = 0;
+              icoHeader[10] = 1; icoHeader[11] = 0;
+              icoHeader[12] = 32; icoHeader[13] = 0;
+              
+              icoHeader[14] = (byte)(pngSize & 0xFF);
+              icoHeader[15] = (byte)((pngSize >> 8) & 0xFF);
+              icoHeader[16] = (byte)((pngSize >> 16) & 0xFF);
+              icoHeader[17] = (byte)((pngSize >> 24) & 0xFF);
+              
+              icoHeader[18] = 22; icoHeader[19] = 0; icoHeader[20] = 0; icoHeader[21] = 0;
+              
+              byte[] icoBytes = new byte[22 + pngSize];
+              System.Buffer.BlockCopy(icoHeader, 0, icoBytes, 0, 22);
+              System.Buffer.BlockCopy(pngBytes, 0, icoBytes, 22, pngSize);
+              
+              File.WriteAllBytes(IcoPath, icoBytes);
+          }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="ConvertPngToIco" BeforeTargets="PrepareForBuild" DependsOnTargets="CopyIconBeforeBuild">
+    <PngToIco PngPath="..\mizan_3d_icon_final_transparent.png" 
+              IcoPath="..\mizan_3d_icon_final_transparent.ico" 
+              Condition="Exists('..\mizan_3d_icon_final_transparent.png')" />
+  </Target>
 
 </Project>

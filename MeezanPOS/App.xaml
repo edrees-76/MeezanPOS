@@ -31,6 +31,12 @@
             <DataTemplate DataType="{x:Type vm:ExpenseManagementViewModel}">
                 <views:ExpenseManagementView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:WagesManagementViewModel}">
+                <views:WagesManagementView />
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:BankingServicesViewModel}">
+                <views:BankingServicesView />
+            </DataTemplate>
             
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>

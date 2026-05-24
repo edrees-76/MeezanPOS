@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
 using MeezanPOS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,9 @@ namespace MeezanPOS.Application.ViewModels;
 /// </summary>
 public partial class GeneralExpenseDisplayItem : ObservableObject
 {
+    [ObservableProperty]
+    private bool isSelected;
+
     public int Sequence { get; set; }
     public int Id { get; set; }
     public GeneralExpenseType ExpenseType { get; set; }
@@ -25,6 +29,8 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
     public PaymentMethodType PaymentMethod { get; set; }
     public string PaymentMethodName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? WorkerName { get; set; }
+    public int? BankAccountId { get; set; }
 
     // --- Posting System Properties ---
     public FinancialStatus FinancialStatus { get; set; }
@@ -58,6 +64,21 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
 
 public partial class GeneralExpensesViewModel : ObservableObject
 {
+    // --- خصائص التحديد والترحيل الجماعي ---
+    [ObservableProperty]
+    private bool isAllSelected;
+
+    [ObservableProperty]
+    private bool hasSelectedExpenses;
+
+    [ObservableProperty]
+    private decimal runningSelectedExpensesTotal;
+
+    [ObservableProperty]
+    private int runningSelectedCount;
+
+    private bool _isUpdatingSelection;
+
     // --- فلاتر البحث ---
     [ObservableProperty]
     private DateTime dateFrom = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -68,9 +89,46 @@ public partial class GeneralExpensesViewModel : ObservableObject
     [ObservableProperty]
     private GeneralExpenseType? selectedFilterType;
 
+    [ObservableProperty]
+    private PaymentMethodType? selectedFilterPaymentMethod;
+
+    [ObservableProperty]
+    private bool showPostedArchive = false;
+
+    [ObservableProperty]
+    private int archiveLevel = 0; // 0 = الأشهر, 1 = التفاصيل داخل الشهر المحدد
+
+    [ObservableProperty]
+    private GeneralExpenseMonthCard? selectedArchivedMonth;
+
+    public ObservableCollection<GeneralExpenseMonthCard> ArchivedMonths { get; } = new();
+
+    partial void OnShowPostedArchiveChanged(bool value)
+    {
+        if (value)
+        {
+            ArchiveLevel = 0;
+            SelectedArchivedMonth = null;
+            LoadArchivedMonths();
+        }
+        else
+        {
+            LoadExpenses();
+        }
+    }
+
+    [RelayCommand]
+    private void SetShowPostedArchive(string value)
+    {
+        if (bool.TryParse(value, out bool result))
+        {
+            ShowPostedArchive = result;
+        }
+    }
+
     // --- بيانات العرض ---
     public ObservableCollection<GeneralExpenseDisplayItem> Expenses { get; } = new();
-
+    
     // --- ملخصات ---
     [ObservableProperty]
     private decimal totalAmount;
@@ -81,6 +139,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
     // --- نموذج الإضافة/التعديل ---
     [ObservableProperty]
     private bool isEditing = false;
+
+    [ObservableProperty]
+    private bool isViewingMode = false;
 
     [ObservableProperty]
     private int? editingId = null;
@@ -100,10 +161,103 @@ public partial class GeneralExpensesViewModel : ObservableObject
     [ObservableProperty]
     private string inputDescription = string.Empty;
 
+    [ObservableProperty]
+    private bool isDetailedWage = false;
+
+    [ObservableProperty]
+    private string inputWorkerName = string.Empty;
+
+    public ObservableCollection<string> AvailableWorkerNames { get; } = new();
+
+    public ObservableCollection<BankAccount> BankAccounts { get; } = new();
+
+    [ObservableProperty]
+    private BankAccount? selectedBankAccountForExpense;
+
+    [ObservableProperty]
+    private string inputReferenceNumber = string.Empty;
+
+    [ObservableProperty]
+    private string inputPartnerName = string.Empty;
+
+    public ObservableCollection<string> PartnerNames { get; } = new();
+
+    private async System.Threading.Tasks.Task LoadBankAccountsAsync()
+    {
+        try
+        {
+            using var db = new AppDbContext();
+            var bankService = new Services.BankService(db);
+            var accountsList = await bankService.GetAllAccountsAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                BankAccounts.Clear();
+                foreach (var account in accountsList.Where(a => a.IsActive))
+                {
+                    BankAccounts.Add(account);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading bank accounts: {ex.Message}");
+        }
+    }
+
+    private async System.Threading.Tasks.Task LoadPartnerNamesAsync()
+    {
+        try
+        {
+            using var db = new AppDbContext();
+            var bankService = new Services.BankService(db);
+            var ownerDebtService = new Services.OwnerDebtService(db, bankService);
+            var names = await ownerDebtService.GetPartnerNamesAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                PartnerNames.Clear();
+                foreach (var name in names)
+                {
+                    PartnerNames.Add(name);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading partner names: {ex.Message}");
+        }
+    }
+
+    private async System.Threading.Tasks.Task LoadWorkerNamesAsync()
+    {
+        try
+        {
+            var service = new Services.WagesService(new AppDbContext());
+            var names = await service.GetUniqueWorkerNamesAsync();
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                AvailableWorkerNames.Clear();
+                foreach (var name in names)
+                {
+                    AvailableWorkerNames.Add(name);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading worker names: {ex.Message}");
+        }
+    }
+
+    // --- نافذة الإضافة ---
+    [ObservableProperty]
+    private string dialogTitle = "إضافة مصروف عام";
+
+
     // --- القوائم ---
     public ObservableCollection<ExpenseTypeItem> ExpenseTypes { get; } = new();
     public ObservableCollection<ExpenseTypeItem> FilterExpenseTypes { get; } = new();
     public ObservableCollection<PaymentMethodItem> PaymentMethods { get; } = new();
+    public ObservableCollection<PaymentMethodItem> FilterPaymentMethods { get; } = new();
 
     // --- ملخصات حسب النوع ---
     public ObservableCollection<TypeSummaryItem> TypeSummaries { get; } = new();
@@ -112,6 +266,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         InitializeLists();
         LoadExpenses();
+        _ = LoadBankAccountsAsync();
+        _ = LoadPartnerNamesAsync();
     }
 
     private void InitializeLists()
@@ -125,6 +281,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         ExpenseTypes.Add(new ExpenseTypeItem { Name = "صيانة", Value = GeneralExpenseType.Maintenance });
         ExpenseTypes.Add(new ExpenseTypeItem { Name = "تأمين", Value = GeneralExpenseType.Insurance });
         ExpenseTypes.Add(new ExpenseTypeItem { Name = "ضرائب/رسوم", Value = GeneralExpenseType.Taxes });
+        ExpenseTypes.Add(new ExpenseTypeItem { Name = "تسديد قيمة", Value = GeneralExpenseType.SupplierPayment });
         ExpenseTypes.Add(new ExpenseTypeItem { Name = "أخرى", Value = GeneralExpenseType.Other });
 
         // فلتر الأنواع (مع خيار الكل)
@@ -132,10 +289,16 @@ public partial class GeneralExpensesViewModel : ObservableObject
         foreach (var item in ExpenseTypes)
             FilterExpenseTypes.Add(item);
 
-        // طرق الدفع
+        // طرق الدفع (للإضافة - بدون شيك)
         PaymentMethods.Add(new PaymentMethodItem { Name = "نقدي", Value = PaymentMethodType.Cash });
-        PaymentMethods.Add(new PaymentMethodItem { Name = "تحويل بنكي", Value = PaymentMethodType.BankTransfer });
-        PaymentMethods.Add(new PaymentMethodItem { Name = "شيك", Value = PaymentMethodType.Cheque });
+        PaymentMethods.Add(new PaymentMethodItem { Name = "تحويل", Value = PaymentMethodType.BankTransfer });
+        PaymentMethods.Add(new PaymentMethodItem { Name = "شخصي (شريك)", Value = PaymentMethodType.PersonalPartner });
+
+        // فلتر طرق الدفع (للبحث - مع خيار الكل والشيك للبيانات القديمة)
+        FilterPaymentMethods.Add(new PaymentMethodItem { Name = "الكل", Value = null });
+        FilterPaymentMethods.Add(new PaymentMethodItem { Name = "نقدي", Value = PaymentMethodType.Cash });
+        FilterPaymentMethods.Add(new PaymentMethodItem { Name = "تحويل", Value = PaymentMethodType.BankTransfer });
+        FilterPaymentMethods.Add(new PaymentMethodItem { Name = "شخصي (شريك)", Value = PaymentMethodType.PersonalPartner });
     }
 
     public static string GetExpenseTypeName(GeneralExpenseType type) => type switch
@@ -148,6 +311,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         GeneralExpenseType.Maintenance => "صيانة",
         GeneralExpenseType.Insurance => "تأمين",
         GeneralExpenseType.Taxes => "ضرائب/رسوم",
+        GeneralExpenseType.SupplierPayment => "تسديد قيمة",
         GeneralExpenseType.Other => "أخرى",
         _ => "غير معروف"
     };
@@ -155,8 +319,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
     public static string GetPaymentMethodName(PaymentMethodType method) => method switch
     {
         PaymentMethodType.Cash => "نقدي",
-        PaymentMethodType.BankTransfer => "تحويل بنكي",
+        PaymentMethodType.BankTransfer => "تحويل",
         PaymentMethodType.Cheque => "شيك",
+        PaymentMethodType.PersonalPartner => "شخصي (شريك)",
         _ => "غير معروف"
     };
 
@@ -166,19 +331,54 @@ public partial class GeneralExpensesViewModel : ObservableObject
         try
         {
             using var db = new AppDbContext();
-            var query = db.GeneralExpenses
-                .Where(e => e.PaymentDate.Date >= DateFrom.Date && e.PaymentDate.Date <= DateTo.Date);
+            IQueryable<Domain.Entities.GeneralExpense> query;
+
+            if (ShowPostedArchive)
+            {
+                if (ArchiveLevel == 1 && SelectedArchivedMonth != null)
+                {
+                    var startFilter = new DateTime(SelectedArchivedMonth.Year, SelectedArchivedMonth.Month, 1);
+                    var endFilter = startFilter.AddMonths(1).AddDays(-1);
+                    query = db.GeneralExpenses
+                        .Where(e => !e.IsDeleted && e.PaymentDate.Date >= startFilter && e.PaymentDate.Date <= endFilter &&
+                                   (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived));
+                }
+                else
+                {
+                    query = db.GeneralExpenses
+                        .Where(e => !e.IsDeleted && e.PaymentDate.Date >= DateFrom.Date && e.PaymentDate.Date <= DateTo.Date &&
+                                   (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived));
+                }
+            }
+            else
+            {
+                query = db.GeneralExpenses
+                    .Where(e => !e.IsDeleted && e.PaymentDate.Date >= DateFrom.Date && e.PaymentDate.Date <= DateTo.Date &&
+                               e.FinancialStatus != FinancialStatus.Posted && e.FinancialStatus != FinancialStatus.Archived);
+            }
 
             if (SelectedFilterType.HasValue)
                 query = query.Where(e => e.ExpenseType == SelectedFilterType.Value);
 
+            if (SelectedFilterPaymentMethod.HasValue)
+                query = query.Where(e => e.PaymentMethod == SelectedFilterPaymentMethod.Value);
+
             var data = query.OrderByDescending(e => e.PaymentDate).ToList();
+
+            foreach (var item in Expenses)
+            {
+                if (item != null)
+                {
+                    item.PropertyChanged -= Item_PropertyChanged;
+                }
+            }
 
             Expenses.Clear();
             int seq = 1;
+
             foreach (var item in data)
             {
-                Expenses.Add(new GeneralExpenseDisplayItem
+                var displayItem = new GeneralExpenseDisplayItem
                 {
                     Sequence = seq++,
                     Id = item.Id,
@@ -189,13 +389,18 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     PaymentMethod = item.PaymentMethod,
                     PaymentMethodName = GetPaymentMethodName(item.PaymentMethod),
                     Description = item.Description,
+                    WorkerName = item.WorkerName,
+                    BankAccountId = item.BankAccountId,
                     FinancialStatus = item.FinancialStatus
-                });
+                };
+                displayItem.PropertyChanged += Item_PropertyChanged;
+                Expenses.Add(displayItem);
             }
 
             TotalAmount = Expenses.Sum(e => e.Amount);
             TotalCount = Expenses.Count;
             UpdateTypeSummaries();
+            RecalculateTotals();
         }
         catch (Exception ex)
         {
@@ -225,11 +430,26 @@ public partial class GeneralExpensesViewModel : ObservableObject
         DateFrom = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         DateTo = DateTime.Today;
         SelectedFilterType = null;
+        SelectedFilterPaymentMethod = null;
         LoadExpenses();
     }
 
     [RelayCommand]
-    private void SaveExpense()
+    private void OpenAddExpenseDialog()
+    {
+        ClearForm();
+        DialogTitle = "إضافة مصروف عام";
+        _ = LoadWorkerNamesAsync();
+        _ = LoadPartnerNamesAsync();
+        var dialog = new Presentation.Views.AddGeneralExpenseDialog
+        {
+            DataContext = this
+        };
+        dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task SaveExpenseAsync(System.Windows.Window window)
     {
         // --- Validation ---
         if (!InputAmount.HasValue || InputAmount.Value <= 0)
@@ -244,9 +464,29 @@ public partial class GeneralExpensesViewModel : ObservableObject
             return;
         }
 
+        if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && string.IsNullOrWhiteSpace(InputWorkerName))
+        {
+            MessageBox.Show("يرجى إدخال اسم العامل للمصروف التفصيلي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense == null)
+        {
+            MessageBox.Show("يرجى اختيار الحساب البنكي للدفع عن طريق التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && string.IsNullOrWhiteSpace(InputPartnerName))
+        {
+            MessageBox.Show("يرجى إدخال أو تحديد اسم الشريك الممول للمصروف الشخصي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         try
         {
             using var db = new AppDbContext();
+            var bankService = new Services.BankService(db);
+            var ownerDebtService = new Services.OwnerDebtService(db, bankService);
 
             if (EditingId.HasValue)
             {
@@ -260,13 +500,64 @@ public partial class GeneralExpensesViewModel : ObservableObject
                         return;
                     }
 
+                    // إدارة الحركة البنكية القديمة (حذفها أولاً وإعادة بنائها إذا تطلب الأمر)
+                    await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
+
+                    // حذف ديون المالك القديمة المرتبطة بهذا المصروف
+                    var oldDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
+                    foreach (var debt in oldDebts)
+                    {
+                        await ownerDebtService.DeleteDebtAsync(debt.Id);
+                    }
+
                     existing.ExpenseType = SelectedExpenseType;
                     existing.Amount = InputAmount.Value;
                     existing.PaymentDate = InputPaymentDate;
                     existing.PaymentMethod = SelectedPaymentMethod;
                     existing.Description = InputDescription;
+                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? InputWorkerName.Trim() : null;
+                    
+                    if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
+                    {
+                        existing.BankAccountId = SelectedBankAccountForExpense.Id;
+                    }
+                    else
+                    {
+                        existing.BankAccountId = null;
+                    }
+
                     existing.UpdatedAt = DateTime.Now;
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
+
+                    // تسجيل الحركة البنكية الجديدة
+                    if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
+                    {
+                        var notes = $"مصروف عام: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                        await bankService.RecordTransactionAsync(
+                            SelectedBankAccountForExpense.Id,
+                            BankTransactionType.ExpensePayment,
+                            InputAmount.Value,
+                            InputReferenceNumber,
+                            notes,
+                            "GeneralExpense",
+                            existing.Id,
+                            InputPaymentDate
+                        );
+                    }
+                    else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
+                    {
+                        var notes = $"مصروف عام شخصي: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                        await ownerDebtService.RecordDebtAsync(
+                            InputPartnerName.Trim(),
+                            InputAmount.Value,
+                            SelectedExpenseType.ToString(),
+                            notes,
+                            InputPaymentDate,
+                            "GeneralExpense",
+                            existing.Id
+                        );
+                    }
+
                     MessageBox.Show("تم تعديل المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -279,15 +570,53 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     Amount = InputAmount.Value,
                     PaymentDate = InputPaymentDate,
                     PaymentMethod = SelectedPaymentMethod,
-                    Description = InputDescription
+                    Description = InputDescription,
+                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? InputWorkerName.Trim() : null,
+                    BankAccountId = (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null) ? SelectedBankAccountForExpense.Id : null
                 };
                 db.GeneralExpenses.Add(expense);
-                db.SaveChanges();
+                await db.SaveChangesAsync();
+
+                // تسجيل الحركة البنكية
+                if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
+                {
+                    var notes = $"مصروف عام: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                    await bankService.RecordTransactionAsync(
+                        SelectedBankAccountForExpense.Id,
+                        BankTransactionType.ExpensePayment,
+                        InputAmount.Value,
+                        InputReferenceNumber,
+                        notes,
+                        "GeneralExpense",
+                        expense.Id,
+                        InputPaymentDate
+                    );
+                }
+                else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
+                {
+                    var notes = $"مصروف عام شخصي: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                    await ownerDebtService.RecordDebtAsync(
+                        InputPartnerName.Trim(),
+                        InputAmount.Value,
+                        SelectedExpenseType.ToString(),
+                        notes,
+                        InputPaymentDate,
+                        "GeneralExpense",
+                        expense.Id
+                    );
+                }
+
                 MessageBox.Show("تم إضافة المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             ClearForm();
             LoadExpenses();
+
+            // إغلاق النافذة إذا تم التمرير بنجاح
+            if (window != null)
+            {
+                window.Close();
+            }
         }
         catch (Exception ex)
         {
@@ -296,16 +625,188 @@ public partial class GeneralExpensesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void EditExpense(GeneralExpenseDisplayItem item)
+    private async System.Threading.Tasks.Task EditExpense(GeneralExpenseDisplayItem item)
     {
         if (item == null) return;
+        if (item.ExpenseType == GeneralExpenseType.SupplierPayment)
+        {
+            MessageBox.Show("لا يمكن تعديل مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
         IsEditing = true;
+        IsViewingMode = false;
         EditingId = item.Id;
+        DialogTitle = "تعديل مصروف عام";
         SelectedExpenseType = item.ExpenseType;
         InputAmount = item.Amount;
         InputPaymentDate = item.PaymentDate;
         SelectedPaymentMethod = item.PaymentMethod;
+        SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
         InputDescription = item.Description;
+        IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
+        InputWorkerName = item.WorkerName ?? string.Empty;
+
+        InputReferenceNumber = string.Empty;
+        InputPartnerName = string.Empty;
+
+        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+        {
+            using var db = new AppDbContext();
+            var bankTx = await db.BankTransactions.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+            if (bankTx != null)
+            {
+                InputReferenceNumber = bankTx.ReferenceNumber ?? string.Empty;
+            }
+        }
+        else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
+        {
+            using var db = new AppDbContext();
+            var debt = await db.OwnerDebts.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+            if (debt != null)
+            {
+                InputPartnerName = debt.PartnerName;
+            }
+        }
+
+        _ = LoadWorkerNamesAsync();
+        _ = LoadPartnerNamesAsync();
+
+        var dialog = new Presentation.Views.AddGeneralExpenseDialog
+        {
+            DataContext = this
+        };
+        dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task ViewExpense(GeneralExpenseDisplayItem item)
+    {
+        if (item == null) return;
+        IsEditing = false;
+        IsViewingMode = true;
+        EditingId = null;
+        DialogTitle = "عرض تفاصيل المصروف";
+        SelectedExpenseType = item.ExpenseType;
+        InputAmount = item.Amount;
+        InputPaymentDate = item.PaymentDate;
+        SelectedPaymentMethod = item.PaymentMethod;
+        SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
+        InputDescription = item.Description;
+        IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
+        InputWorkerName = item.WorkerName ?? string.Empty;
+
+        InputReferenceNumber = string.Empty;
+        InputPartnerName = string.Empty;
+
+        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+        {
+            using var db = new AppDbContext();
+            var bankTx = await db.BankTransactions.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+            if (bankTx != null)
+            {
+                InputReferenceNumber = bankTx.ReferenceNumber ?? string.Empty;
+            }
+        }
+        else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
+        {
+            using var db = new AppDbContext();
+            var debt = await db.OwnerDebts.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+            if (debt != null)
+            {
+                InputPartnerName = debt.PartnerName;
+            }
+        }
+
+        _ = LoadWorkerNamesAsync();
+        _ = LoadPartnerNamesAsync();
+
+        var dialog = new Presentation.Views.AddGeneralExpenseDialog
+        {
+            DataContext = this
+        };
+        dialog.ShowDialog();
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task ShowExpenseDetailsAsync(GeneralExpenseDisplayItem item)
+    {
+        if (item == null) return;
+
+        try
+        {
+            string bankDetails = "";
+            
+            if (item.PaymentMethod == PaymentMethodType.BankTransfer)
+            {
+                using var db = new AppDbContext();
+                var bankTx = await db.BankTransactions
+                    .Include(t => t.BankAccount)
+                    .FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+
+                if (bankTx == null && item.ExpenseType == GeneralExpenseType.SupplierPayment)
+                {
+                    var supplierTx = await db.SupplierTransactions
+                        .FirstOrDefaultAsync(t => t.SourceType == TransactionSourceType.ExternalPayment && t.SourceId == item.Id && !t.IsDeleted);
+                    
+                    if (supplierTx != null)
+                    {
+                        bankTx = await db.BankTransactions
+                            .Include(t => t.BankAccount)
+                            .FirstOrDefaultAsync(t => t.SourceType == "SupplierTransaction" && t.SourceId == supplierTx.Id && !t.IsDeleted);
+                    }
+                }
+
+                if (bankTx != null)
+                {
+                    string bankName = bankTx.BankAccount != null ? $"{bankTx.BankAccount.BankName} - {bankTx.BankAccount.FriendlyName}" : "غير محدد";
+                    string last4 = bankTx.ReferenceNumber ?? "----";
+                    bankDetails = $"\n🏦 الحساب البنكي: {bankName}\n🔢 رقم التحويل اخر 4 ارقام: {last4}\n";
+                }
+                else if (item.BankAccountId.HasValue)
+                {
+                    var bankAcc = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId.Value);
+                    if (bankAcc != null)
+                    {
+                        bankDetails = $"\n🏦 الحساب البنكي: {bankAcc.BankName} - {bankAcc.FriendlyName}\n🔢 رقم التحويل اخر 4 ارقام: ----\n";
+                    }
+                }
+            }
+            else if (item.PaymentMethod == PaymentMethodType.PersonalPartner)
+            {
+                using var db = new AppDbContext();
+                var debt = await db.OwnerDebts
+                    .FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
+                if (debt != null)
+                {
+                    bankDetails = $"\n👤 الشريك الممول: {debt.PartnerName}\n";
+                }
+            }
+
+            string details = $"🧾 تفاصيل المصروف:\n" +
+                             $"------------------------------------------------------\n" +
+                             $"📌 النوع: {item.ExpenseTypeName}\n" +
+                             $"💰 المبلغ: {item.Amount:N2} د.ل\n" +
+                             $"📅 التاريخ: {item.PaymentDate:yyyy/MM/dd}\n" +
+                             $"💳 طريقة الدفع: {item.PaymentMethodName}\n";
+
+            if (!string.IsNullOrEmpty(bankDetails))
+            {
+                details += bankDetails;
+            }
+
+            if (!string.IsNullOrEmpty(item.WorkerName))
+            {
+                details += $"\n👤 اسم العامل: {item.WorkerName}\n";
+            }
+
+            details += $"\n📝 الوصف: {(string.IsNullOrEmpty(item.Description) ? "لا يوجد" : item.Description)}";
+
+            MessageBox.Show(details, "تفاصيل المصروف العام", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء جلب التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 
     [RelayCommand]
@@ -315,9 +816,15 @@ public partial class GeneralExpensesViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void DeleteExpense(GeneralExpenseDisplayItem item)
+    private async System.Threading.Tasks.Task DeleteExpenseAsync(GeneralExpenseDisplayItem item)
     {
         if (item == null) return;
+
+        if (item.ExpenseType == GeneralExpenseType.SupplierPayment)
+        {
+            MessageBox.Show("لا يمكن حذف مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
 
         var result = MessageBox.Show(
             $"هل تريد حذف مصروف ({item.ExpenseTypeName}) بمبلغ {item.Amount:N2}؟",
@@ -339,9 +846,21 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     return;
                 }
 
+                // حذف الحركة البنكية المرتبطة
+                var bankService = new Services.BankService(db);
+                await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
+
+                // حذف ديون المالك المرتبطة
+                var ownerDebtService = new Services.OwnerDebtService(db, bankService);
+                var relatedDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
+                foreach (var debt in relatedDebts)
+                {
+                    await ownerDebtService.DeleteDebtAsync(debt.Id);
+                }
+
                 existing.IsDeleted = true;
                 existing.UpdatedAt = DateTime.Now;
-                db.SaveChanges();
+                await db.SaveChangesAsync();
             }
             LoadExpenses();
         }
@@ -418,25 +937,17 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             var report = new Services.GeneralExpensePdfReport(this);
             var filePath = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                System.IO.Path.GetTempPath(),
                 $"تقرير_المصاريف_العامة_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
             report.GeneratePdf(filePath);
 
-            var openResult = MessageBox.Show(
-                "تم إنشاء التقرير بنجاح. هل تريد فتحه؟",
-                "نجاح",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Information);
-
-            if (openResult == MessageBoxResult.Yes)
+            // فتح الملف مباشرة من المجلد المؤقت
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = filePath,
-                    UseShellExecute = true
-                });
-            }
+                FileName = filePath,
+                UseShellExecute = true
+            });
         }
         catch (Exception ex)
         {
@@ -447,12 +958,314 @@ public partial class GeneralExpensesViewModel : ObservableObject
     private void ClearForm()
     {
         IsEditing = false;
+        IsViewingMode = false;
         EditingId = null;
         SelectedExpenseType = GeneralExpenseType.Rent;
         InputAmount = null;
         InputPaymentDate = DateTime.Today;
         SelectedPaymentMethod = PaymentMethodType.Cash;
         InputDescription = string.Empty;
+        IsDetailedWage = false;
+        InputWorkerName = string.Empty;
+        SelectedBankAccountForExpense = BankAccounts.FirstOrDefault();
+        InputReferenceNumber = string.Empty;
+        InputPartnerName = string.Empty;
+    }
+
+    partial void OnIsAllSelectedChanged(bool value)
+    {
+        if (_isUpdatingSelection) return;
+
+        _isUpdatingSelection = true;
+        try
+        {
+            foreach (var item in Expenses)
+            {
+                if (item.IsDraft)
+                {
+                    item.IsSelected = value;
+                }
+                else
+                {
+                    item.IsSelected = false;
+                }
+            }
+            RecalculateTotals();
+        }
+        finally
+        {
+            _isUpdatingSelection = false;
+        }
+    }
+
+    private void Item_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(GeneralExpenseDisplayItem.IsSelected))
+        {
+            if (_isUpdatingSelection) return;
+
+            if (sender is GeneralExpenseDisplayItem item)
+            {
+                if (item.IsSelected)
+                {
+                    RunningSelectedExpensesTotal += item.Amount;
+                    RunningSelectedCount++;
+                }
+                else
+                {
+                    RunningSelectedExpensesTotal -= item.Amount;
+                    RunningSelectedCount--;
+                }
+
+                if (RunningSelectedExpensesTotal < 0) RunningSelectedExpensesTotal = 0;
+                if (RunningSelectedCount < 0) RunningSelectedCount = 0;
+
+                HasSelectedExpenses = RunningSelectedCount > 0;
+
+                _isUpdatingSelection = true;
+                try
+                {
+                    var draftCount = Expenses.Count(x => x.IsDraft);
+                    IsAllSelected = draftCount > 0 && RunningSelectedCount == draftCount;
+                }
+                finally
+                {
+                    _isUpdatingSelection = false;
+                }
+            }
+        }
+    }
+
+    private void RecalculateTotals()
+    {
+        decimal expensesTotal = 0;
+        int count = 0;
+
+        foreach (var item in Expenses)
+        {
+            if (item.IsSelected && item.IsDraft)
+            {
+                expensesTotal += item.Amount;
+                count++;
+            }
+        }
+
+        RunningSelectedExpensesTotal = expensesTotal;
+        RunningSelectedCount = count;
+        HasSelectedExpenses = count > 0;
+
+        _isUpdatingSelection = true;
+        try
+        {
+            var draftCount = Expenses.Count(x => x.IsDraft);
+            IsAllSelected = draftCount > 0 && count == draftCount;
+        }
+        finally
+        {
+            _isUpdatingSelection = false;
+        }
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PostSelectedExpensesAsync()
+    {
+        var selectedIds = Expenses.Where(e => e.IsSelected && e.IsDraft).Select(e => e.Id).ToList();
+        if (!selectedIds.Any())
+        {
+            MessageBox.Show("يرجى تحديد مصروف واحد على الأقل للترحيل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var confirmResult = MessageBox.Show(
+            $"هل أنت متأكد من ترحيل وإقفال عدد ({selectedIds.Count}) مصاريف محددة مالياً؟\n" +
+            $"إجمالي المصاريف المحددة: {RunningSelectedExpensesTotal:N2} د.ل\n" +
+            $"بعد الترحيل، سيتم قفل هذه العمليات نهائياً ولن تتمكن من تعديلها أو حذفها.",
+            "تأكيد الترحيل الجماعي للمصاريف",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmResult != MessageBoxResult.Yes) return;
+
+        try
+        {
+            using var context = new AppDbContext();
+            var postingService = new Services.PostingService(context);
+
+            var batchResult = await postingService.PostGeneralExpensesBatchAsync(selectedIds, "Admin", "ترحيل جماعي للمصاريف المحددة من الواجهة");
+
+            if (batchResult.Success)
+            {
+                MessageBox.Show(
+                    $"تمت عملية الترحيل الجماعي للمصاريف بنجاح!\n\n" +
+                    $"🔹 عدد المصاريف المرحلة: {batchResult.PostedCount}\n" +
+                    $"🔹 إجمالي المصاريف المرحلة: {batchResult.TotalExpenses:N2} د.ل\n" +
+                    $"🔹 زمن التنفيذ الفعلي: {batchResult.Duration.TotalMilliseconds:N0} مللي ثانية\n" +
+                    $"🔹 معرف جلسة الترحيل (Session Guid):\n{batchResult.SessionGuid}\n" +
+                    $"🔹 معرف التتبع (Correlation Id):\n{batchResult.CorrelationId}",
+                    "نجاح الترحيل الجماعي للمصاريف",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                LoadExpenses();
+            }
+            else
+            {
+                var errors = string.Join("\n", batchResult.Errors);
+                MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task PostPeriodAsync()
+    {
+        DateTime startDate = DateTime.MinValue;
+        DateTime endDate = DateTime.MinValue;
+        bool dateSelected = false;
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var dialog = new Presentation.Views.DatePeriodSelectionDialog(DateFrom, DateTo);
+            if (System.Windows.Application.Current.MainWindow != null)
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+            if (dialog.ShowDialog() == true)
+            {
+                startDate = dialog.SelectedStartDate;
+                endDate = dialog.SelectedEndDate;
+                dateSelected = true;
+            }
+        });
+
+        if (!dateSelected) return;
+
+        try
+        {
+            using var context = new AppDbContext();
+            
+            // جلب المصاريف المفتوحة فقط في هذه الفترة
+            var expensesInPeriod = await context.GeneralExpenses
+                .Where(e => e.PaymentDate.Date >= startDate && e.PaymentDate.Date <= endDate && e.FinancialStatus == FinancialStatus.Draft)
+                .Select(e => e.Id)
+                .ToListAsync();
+
+            if (!expensesInPeriod.Any())
+            {
+                MessageBox.Show(
+                    $"لا توجد أي مصاريف مفتوحة (غير مرحلة) في الفترة المحددة:\nمن: {startDate:dd-MM-yyyy} إلى: {endDate:dd-MM-yyyy}",
+                    "لا توجد بيانات للترحيل",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+                return;
+            }
+
+            var confirmResult = MessageBox.Show(
+                $"هل أنت متأكد من ترحيل وإقفال جميع المصاريف المفتوحة في الفترة المحددة؟\n\n" +
+                $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
+                $"📦 عدد المصاريف المفتوحة المكتشفة: {expensesInPeriod.Count} مصروف\n\n" +
+                $"بعد الترحيل، سيتم قفل هذه العمليات محاسبياً نهائياً ولن تتمكن من تعديلها أو حذفها.",
+                "تأكيد ترحيل وإقفال فترة زمنية",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirmResult != MessageBoxResult.Yes) return;
+
+            var postingService = new Services.PostingService(context);
+            var batchResult = await postingService.PostGeneralExpensesBatchAsync(expensesInPeriod, "Admin", $"ترحيل جماعي للمصاريف للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
+
+            if (batchResult.Success)
+            {
+                MessageBox.Show(
+                    $"تمت عملية الترحيل الجماعي للمصاريف بنجاح!\n\n" +
+                    $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
+                    $"🔹 عدد المصاريف المرحلة: {batchResult.PostedCount}\n" +
+                    $"🔹 إجمالي المصاريف المرحلة: {batchResult.TotalExpenses:N2} د.ل\n" +
+                    $"🔹 زمن التنفيذ الفعلي: {batchResult.Duration.TotalMilliseconds:N0} مللي ثانية\n" +
+                    $"🔹 معرف الجلسة (Session Guid):\n{batchResult.SessionGuid}\n" +
+                    $"🔹 معرف التتبع (Correlation Id):\n{batchResult.CorrelationId}",
+                    "نجاح الترحيل الجماعي للفترة الزمنية",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                LoadExpenses();
+            }
+            else
+            {
+                var errors = string.Join("\n", batchResult.Errors);
+                MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي للفترة: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    public void LoadArchivedMonths()
+    {
+        try
+        {
+            using var db = new AppDbContext();
+            var expenses = db.GeneralExpenses
+                .Where(e => !e.IsDeleted && (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
+                .OrderBy(e => e.PaymentDate)
+                .ToList();
+
+            var grouped = expenses
+                .GroupBy(e => new { e.PaymentDate.Year, e.PaymentDate.Month })
+                .Select(g => {
+                    var year = g.Key.Year;
+                    var month = g.Key.Month;
+                    var isPosted = g.All(e => e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived);
+                    return new GeneralExpenseMonthCard
+                    {
+                        Year = year,
+                        Month = month,
+                        MonthName = $"{ExpenseManagementViewModel.GetArabicMonthName(month)} {year}",
+                        TotalExpenses = g.Sum(e => e.Amount),
+                        OperationsCount = g.Count(),
+                        IsPosted = isPosted
+                    };
+                })
+                .OrderByDescending(m => m.Year)
+                .ThenByDescending(m => m.Month)
+                .Select((m, idx) => {
+                    m.Sequence = idx + 1;
+                    return m;
+                })
+                .ToList();
+
+            ArchivedMonths.Clear();
+            foreach (var m in grouped)
+            {
+                ArchivedMonths.Add(m);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ في تحميل كروت أشهر الأرشيف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    private void SelectMonth(GeneralExpenseMonthCard month)
+    {
+        SelectedArchivedMonth = month;
+        ArchiveLevel = 1;
+        LoadExpenses();
+    }
+
+    [RelayCommand]
+    private void GoBackToMonths()
+    {
+        ArchiveLevel = 0;
+        SelectedArchivedMonth = null;
+        LoadArchivedMonths();
     }
 }
 
@@ -466,7 +1279,7 @@ public class ExpenseTypeItem
 public class PaymentMethodItem
 {
     public string Name { get; set; } = string.Empty;
-    public PaymentMethodType Value { get; set; }
+    public PaymentMethodType? Value { get; set; }
 }
 
 public class TypeSummaryItem
@@ -474,4 +1287,28 @@ public class TypeSummaryItem
     public string TypeName { get; set; } = string.Empty;
     public decimal Total { get; set; }
     public int Count { get; set; }
+}
+
+public partial class GeneralExpenseMonthCard : ObservableObject
+{
+    [ObservableProperty]
+    private int sequence;
+
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string MonthName { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    private decimal totalExpenses;
+
+    [ObservableProperty]
+    private int operationsCount;
+
+    [ObservableProperty]
+    private bool isPosted;
+
+    public string StatusText => IsPosted ? "مرحّل بالكامل" : "مفتوح";
+    public string StatusColor => IsPosted ? "#10b981" : "#3b82f6";
+    public string CardBackground => IsPosted ? "#f0fdf4" : "#f8faff";
+    public string CardBorderBrush => IsPosted ? "#dcfce7" : "#e5eeff";
 }

@@ -55,6 +55,107 @@ namespace MeezanPOS.Migrations
                     b.ToTable("AuditLogs");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.BankAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AccountNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CurrentBalance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FriendlyName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LegalOwnerName")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("OpeningBalance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BankAccounts");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.BankTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("BalanceAfter")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.ToTable("BankTransactions");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.BankingItem", b =>
                 {
                     b.Property<int>("Id")
@@ -63,6 +164,9 @@ namespace MeezanPOS.Migrations
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("BankAccountId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -76,14 +180,72 @@ namespace MeezanPOS.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BankAccountId");
+
                     b.HasIndex("DailyJournalId");
 
                     b.ToTable("BankingItems");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.CardPaymentReconciliation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BankTransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClearedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DailyJournalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ReferenceNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("BankTransactionId");
+
+                    b.HasIndex("DailyJournalId");
+
+                    b.ToTable("CardPaymentReconciliations");
                 });
 
             modelBuilder.Entity("MeezanPOS.Domain.Entities.CashSession", b =>
@@ -222,6 +384,9 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WorkerName")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DailyJournalId");
@@ -299,6 +464,44 @@ namespace MeezanPOS.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("DailyJournals");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.DailyJournalBankSale", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DailyJournalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("DailyJournalId");
+
+                    b.ToTable("DailyJournalBankSales");
                 });
 
             modelBuilder.Entity("MeezanPOS.Domain.Entities.Expense", b =>
@@ -383,6 +586,9 @@ namespace MeezanPOS.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -421,7 +627,12 @@ namespace MeezanPOS.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("WorkerName")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
 
                     b.ToTable("GeneralExpenses");
                 });
@@ -461,6 +672,103 @@ namespace MeezanPOS.Migrations
                     b.HasIndex("DailyJournalId");
 
                     b.ToTable("OrderAdjustmentItems");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.OwnerDebt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExpenseCategory")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PartnerName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("SourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SourceType")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("OwnerDebts");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.OwnerDebtSettlement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("BankAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OwnerDebtId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PartnerName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("SettlementDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SettlementSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankAccountId");
+
+                    b.HasIndex("OwnerDebtId");
+
+                    b.ToTable("OwnerDebtSettlements");
                 });
 
             modelBuilder.Entity("MeezanPOS.Domain.Entities.PostingSession", b =>
@@ -796,6 +1104,44 @@ namespace MeezanPOS.Migrations
                     b.ToTable("SupplierInvoices");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.SupplierInvoiceItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SupplierInvoiceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SupplierInvoiceId");
+
+                    b.ToTable("SupplierInvoiceItems");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.SupplierTransaction", b =>
                 {
                     b.Property<int>("Id")
@@ -920,13 +1266,95 @@ namespace MeezanPOS.Migrations
                     b.ToTable("UserActionLogs");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.WorkerAttendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("AccruedWage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ShiftType")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("WorkDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WorkerName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WorkerAttendances");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.BankTransaction", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BankAccount");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.BankingItem", b =>
                 {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("MeezanPOS.Domain.Entities.DailyJournal", "DailyJournal")
                         .WithMany("BankingItems")
                         .HasForeignKey("DailyJournalId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("DailyJournal");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.CardPaymentReconciliation", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MeezanPOS.Domain.Entities.BankTransaction", "BankTransaction")
+                        .WithMany()
+                        .HasForeignKey("BankTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MeezanPOS.Domain.Entities.DailyJournal", "DailyJournal")
+                        .WithMany()
+                        .HasForeignKey("DailyJournalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("BankTransaction");
 
                     b.Navigation("DailyJournal");
                 });
@@ -971,6 +1399,24 @@ namespace MeezanPOS.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.DailyJournalBankSale", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MeezanPOS.Domain.Entities.DailyJournal", "DailyJournal")
+                        .WithMany("BankSales")
+                        .HasForeignKey("DailyJournalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("DailyJournal");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.Expense", b =>
                 {
                     b.HasOne("MeezanPOS.Domain.Entities.CashSession", "CashSession")
@@ -981,6 +1427,16 @@ namespace MeezanPOS.Migrations
                     b.Navigation("CashSession");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.GeneralExpense", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BankAccount");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.OrderAdjustmentItem", b =>
                 {
                     b.HasOne("MeezanPOS.Domain.Entities.DailyJournal", "DailyJournal")
@@ -989,6 +1445,23 @@ namespace MeezanPOS.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("DailyJournal");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.OwnerDebtSettlement", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("BankAccountId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("MeezanPOS.Domain.Entities.OwnerDebt", "OwnerDebt")
+                        .WithMany()
+                        .HasForeignKey("OwnerDebtId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BankAccount");
+
+                    b.Navigation("OwnerDebt");
                 });
 
             modelBuilder.Entity("MeezanPOS.Domain.Entities.PostingSessionDetail", b =>
@@ -1043,6 +1516,17 @@ namespace MeezanPOS.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.SupplierInvoiceItem", b =>
+                {
+                    b.HasOne("MeezanPOS.Domain.Entities.SupplierInvoice", "SupplierInvoice")
+                        .WithMany("Items")
+                        .HasForeignKey("SupplierInvoiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SupplierInvoice");
+                });
+
             modelBuilder.Entity("MeezanPOS.Domain.Entities.SupplierTransaction", b =>
                 {
                     b.HasOne("MeezanPOS.Domain.Entities.Supplier", "Supplier")
@@ -1083,6 +1567,8 @@ namespace MeezanPOS.Migrations
                 {
                     b.Navigation("Adjustments");
 
+                    b.Navigation("BankSales");
+
                     b.Navigation("BankingItems");
 
                     b.Navigation("ExpenseItems");
@@ -1101,6 +1587,11 @@ namespace MeezanPOS.Migrations
             modelBuilder.Entity("MeezanPOS.Domain.Entities.SaleHeader", b =>
                 {
                     b.Navigation("SaleItems");
+                });
+
+            modelBuilder.Entity("MeezanPOS.Domain.Entities.SupplierInvoice", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

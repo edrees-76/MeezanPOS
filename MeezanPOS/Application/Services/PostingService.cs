@@ -47,7 +47,10 @@ namespace MeezanPOS.Application.Services
                 {
                     // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف الناتج عن تحديث نوع الحقل في SQLite
                     var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-                    await _context.Database.ExecuteSqlRawAsync($"UPDATE {tableName} SET RowVersion = 1 WHERE Id = {entityId}");
+#pragma warning disable EF1002
+                    var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
+                    await _context.Database.ExecuteSqlRawAsync(sql, entityId);
+#pragma warning restore EF1002
                     
                     // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
                     _context.Entry(entity).State = EntityState.Detached;
@@ -128,7 +131,10 @@ namespace MeezanPOS.Application.Services
                 {
                     // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف
                     var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-                    await _context.Database.ExecuteSqlRawAsync($"UPDATE {tableName} SET RowVersion = 1 WHERE Id = {entityId}");
+#pragma warning disable EF1002
+                    var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
+                    await _context.Database.ExecuteSqlRawAsync(sql, entityId);
+#pragma warning restore EF1002
                     
                     _context.Entry(entity).State = EntityState.Detached;
                     entity = await _context.Set<T>().FindAsync(entityId);
@@ -253,7 +259,7 @@ namespace MeezanPOS.Application.Services
                     // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف في SQLite
                     foreach (var journal in journals)
                     {
-                        await _context.Database.ExecuteSqlRawAsync($"UPDATE DailyJournals SET RowVersion = 1 WHERE Id = {journal.Id}");
+                        await _context.Database.ExecuteSqlAsync($"UPDATE DailyJournals SET RowVersion = 1 WHERE Id = {journal.Id}");
                     }
 
                     // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
@@ -280,6 +286,134 @@ namespace MeezanPOS.Application.Services
                 result.SessionGuid = session.SessionId;
                 result.PostedCount = journals.Count;
                 result.TotalSales = totalSales;
+                result.TotalExpenses = totalExpenses;
+                result.Duration = stopwatch.Elapsed;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                result.Success = false;
+                result.Errors.Add(ex.Message);
+            }
+
+            return result;
+        }
+
+        public async Task<PostingBatchResult> PostGeneralExpensesBatchAsync(List<int> expenseIds, string postedByUserId, string notes)
+        {
+            var result = new PostingBatchResult
+            {
+                Success = false,
+                CorrelationId = Guid.NewGuid(),
+                Errors = new List<string>()
+            };
+
+            if (expenseIds == null || expenseIds.Count == 0)
+            {
+                result.Errors.Add("لم يتم تحديد أي مصاريف للترحيل.");
+                return result;
+            }
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            try
+            {
+                var ids = expenseIds.ToHashSet();
+
+                // تحميل الكيانات دفعة واحدة من قاعدة البيانات
+                var expenses = await _context.GeneralExpenses
+                    .Where(e => ids.Contains(e.Id))
+                    .ToListAsync();
+
+                // التحقق من وجود جميع المصاريف المطلوبة
+                if (expenses.Count != ids.Count)
+                {
+                    var foundIds = expenses.Select(e => e.Id).ToHashSet();
+                    var missingIds = ids.Where(id => !foundIds.Contains(id)).ToList();
+                    throw new Exception($"بعض المصاريف غير موجودة في النظام: {string.Join(", ", missingIds)}");
+                }
+
+                // التحقق المحاسبي: يجب أن تكون جميع المصاريف في حالة Draft
+                var nonDraftExpenses = expenses.Where(e => e.FinancialStatus != FinancialStatus.Draft).ToList();
+                if (nonDraftExpenses.Any())
+                {
+                    var nonDraftIds = nonDraftExpenses.Select(e => e.Id).ToList();
+                    throw new Exception($"لا يمكن ترحيل مصاريف تمت معالجتها أو ترحيلها مسبقاً. معرفات المصاريف المخالفة: {string.Join(", ", nonDraftIds)}");
+                }
+
+                // حساب إجمالي الجلسة
+                decimal totalExpenses = expenses.Sum(e => e.Amount);
+                DateTime maxExpenseDate = expenses.Any() ? expenses.Max(e => e.PaymentDate) : DateTime.Now;
+
+                // 1. إنشاء الجلسة وإدخالها للحصول على المعرف التلقائي
+                var session = new PostingSession
+                {
+                    CreatedBy = postedByUserId,
+                    PostedUntilDate = maxExpenseDate,
+                    TotalAffectedRows = expenses.Count,
+                    Status = "Posted",
+                    Notes = notes
+                };
+
+                _context.PostingSessions.Add(session);
+                await _context.SaveChangesAsync(); // حفظ الجلسة أولاً للحصول على Id
+
+                // 2. تحديث الحالات وربط المصاريف وتوليد تفاصيل الجلسة في الذاكرة
+                foreach (var expense in expenses)
+                {
+                    expense.FinancialStatus = FinancialStatus.Posted;
+                    expense.PostedDate = DateTime.Now;
+                    expense.PostedByUserId = postedByUserId;
+                    expense.PostingSessionId = session.Id;
+                    expense.RowVersion++;
+
+                    var detail = new PostingSessionDetail
+                    {
+                        PostingSessionId = session.Id,
+                        EntityType = "GeneralExpense",
+                        EntityId = expense.Id,
+                        ActionType = "Posted"
+                    };
+                    _context.PostingSessionDetails.Add(detail);
+                }
+
+                // 3. الحفظ الموحد للمصاريف وتفاصيل الجلسة
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف في SQLite
+                    foreach (var expense in expenses)
+                    {
+                        await _context.Database.ExecuteSqlAsync($"UPDATE GeneralExpenses SET RowVersion = 1 WHERE Id = {expense.Id}");
+                    }
+
+                    // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
+                    foreach (var expense in expenses)
+                    {
+                        _context.Entry(expense).State = EntityState.Detached;
+                        var activeExpense = await _context.GeneralExpenses.FindAsync(expense.Id);
+                        if (activeExpense != null)
+                        {
+                            activeExpense.FinancialStatus = FinancialStatus.Posted;
+                            activeExpense.PostedDate = DateTime.Now;
+                            activeExpense.PostedByUserId = postedByUserId;
+                            activeExpense.PostingSessionId = session.Id;
+                            activeExpense.RowVersion = 2; // نسخة جديدة بعد التصحيح
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                stopwatch.Stop();
+                result.Success = true;
+                result.SessionGuid = session.SessionId;
+                result.PostedCount = expenses.Count;
+                result.TotalSales = 0;
                 result.TotalExpenses = totalExpenses;
                 result.Duration = stopwatch.Elapsed;
             }

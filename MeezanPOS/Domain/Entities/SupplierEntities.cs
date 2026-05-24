@@ -30,6 +30,20 @@ public class SupplierInvoice : BaseEntity
     public DateTime InvoiceDate { get; set; }
     public string? InvoiceNumber { get; set; }
     public string? Notes { get; set; }
+
+    // تفاصيل الفاتورة (الأصناف)
+    public List<SupplierInvoiceItem> Items { get; set; } = new();
+}
+
+public class SupplierInvoiceItem : BaseEntity
+{
+    public int SupplierInvoiceId { get; set; }
+    public SupplierInvoice? SupplierInvoice { get; set; }
+    
+    public string Description { get; set; } = string.Empty; // البيان
+    public decimal Quantity { get; set; }                     // الكمية
+    public decimal UnitPrice { get; set; }                    // سعر الوحدة
+    public decimal TotalValue { get; set; }                   // القيمة = الكمية × سعر الوحدة
 }
 
 public class SupplierTransaction : BaseEntity

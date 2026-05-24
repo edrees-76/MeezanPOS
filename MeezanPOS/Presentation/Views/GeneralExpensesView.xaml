@@ -2,10 +2,76 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
              FlowDirection="RightToLeft">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+
+        <!-- ستايل صندوق التحديد الاحترافي المغلق والكامل -->
+        <Style x:Key="PremiumCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#cbd5e1"/>
+            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid x:Name="RootGrid" Background="Transparent" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="BoxBorder" 
+                                    Width="18" Height="18"
+                                    Margin="1"
+                                    Background="{TemplateBinding Background}" 
+                                    BorderBrush="{TemplateBinding BorderBrush}" 
+                                    BorderThickness="{TemplateBinding BorderThickness}" 
+                                    CornerRadius="4"
+                                    SnapsToDevicePixels="True"
+                                    UseLayoutRounding="True"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center">
+                                <materialDesign:PackIcon x:Name="CheckIcon" 
+                                                         Kind="Check" 
+                                                         Width="12" Height="12" 
+                                                         Foreground="White" 
+                                                         HorizontalAlignment="Center" 
+                                                         VerticalAlignment="Center" 
+                                                         Visibility="Collapsed"/>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="BoxBorder" Property="Background" Value="#3b82f6"/>
+                                <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+                                <Setter TargetName="CheckIcon" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
+        <!-- Tab Button Style for Segmented Control -->
+        <Style x:Key="SleekTabButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="24,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#64748b"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Resources>
+                <Style TargetType="Border">
+                    <Setter Property="CornerRadius" Value="20"/>
+                </Style>
+            </Style.Resources>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
@@ -27,24 +93,116 @@
             </Border.Background>
             <Grid>
                 <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
+                
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
                     <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" VerticalAlignment="Center" Foreground="#1a56db" Margin="0,0,10,0"/>
                     <TextBlock Text="المصاريف العامة" FontSize="22" FontWeight="SemiBold" Foreground="#1e293b" VerticalAlignment="Center"/>
                 </StackPanel>
-                <Button Grid.Column="1" Command="{Binding PrintPdfCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" ToolTip="طباعة PDF">
+
+                <!-- Gorgeous Segmented Control for switching modes -->
+                <Border Grid.Column="1" Background="#E2E8F0" CornerRadius="22" Padding="4" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="16,0">
                     <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,6,0"/>
-                        <TextBlock Text="PDF" FontSize="13"/>
+                        <!-- المصاريف المفتوحة -->
+                        <Button Command="{Binding SetShowPostedArchiveCommand}" CommandParameter="False">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Setter Property="Foreground" Value="#1E1B4B"/>
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="18"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="FolderOpenOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="المصاريف المفتوحة" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- الأرشيف المرحّل -->
+                        <Button Command="{Binding SetShowPostedArchiveCommand}" CommandParameter="True">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Setter Property="Foreground" Value="#1E1B4B"/>
+                                            <Setter Property="Effect">
+                                                <Setter.Value>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                            <Button.Resources>
+                                <Style TargetType="Border">
+                                    <Setter Property="CornerRadius" Value="18"/>
+                                </Style>
+                            </Button.Resources>
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="ArchiveOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="الأرشيف المرحّل" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
-                </Button>
+                </Border>
+                
+                <StackPanel Orientation="Horizontal" Grid.Column="2">
+                    <Button Command="{Binding OpenAddExpenseDialogCommand}" Foreground="White" Background="#4CAF50" Margin="0,0,10,0" ToolTip="إضافة مصروف جديد">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" Margin="0,0,6,0"/>
+                            <TextBlock Text="إضافة مصروف" FontSize="13" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding PrintPdfCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" ToolTip="طباعة PDF">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,6,0"/>
+                            <TextBlock Text="PDF" FontSize="13"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- ═══════════ الفلاتر ═══════════ -->
         <Border Grid.Row="1" Background="White" CornerRadius="10" Padding="16,12" Margin="0,0,0,12">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/>
             </Border.Effect>
@@ -54,7 +212,9 @@
                 <TextBlock Text="إلى:" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="13"/>
                 <DatePicker SelectedDate="{Binding DateTo}" Width="140" Margin="0,0,16,0" FontSize="13"/>
                 <TextBlock Text="النوع:" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="13"/>
-                <ComboBox ItemsSource="{Binding FilterExpenseTypes}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilterType}" Width="130" Margin="0,0,16,0" FontSize="13"/>
+                <ComboBox ItemsSource="{Binding FilterExpenseTypes}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilterType}" Width="110" Margin="0,0,16,0" FontSize="13"/>
+                <TextBlock Text="الدفع:" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="13"/>
+                <ComboBox ItemsSource="{Binding FilterPaymentMethods}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedFilterPaymentMethod}" Width="110" Margin="0,0,16,0" FontSize="13"/>
                 <Button Command="{Binding LoadExpensesCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1a56db" Margin="0,0,6,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Magnify" Width="18" Height="18" Margin="0,0,4,0"/>
@@ -67,128 +227,403 @@
                         <TextBlock Text="إعادة تصفية" FontSize="13"/>
                     </StackPanel>
                 </Button>
+                <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع المصاريف المفتوحة في الفترة المحددة" Background="#6366f1" BorderBrush="#6366f1" Height="36" Cursor="Hand" Margin="8,0,0,0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CalendarClock" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="ترحيل وقفل فترة" VerticalAlignment="Center" FontWeight="Bold" FontSize="13" Foreground="White"/>
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </Border>
 
-        <!-- ═══════════ نموذج الإضافة/التعديل ═══════════ -->
-        <Border Grid.Row="2" Background="White" CornerRadius="10" Padding="16,12" Margin="0,0,0,12">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/>
-            </Border.Effect>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Text="النوع:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <ComboBox Grid.Column="1" ItemsSource="{Binding ExpenseTypes}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedExpenseType}" FontSize="12" Margin="0,0,10,0"/>
-
-                <TextBlock Grid.Column="2" Text="المبلغ:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <TextBox Grid.Column="3" Text="{Binding InputAmount, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="0.00" FontSize="12" Margin="0,0,10,0"/>
-
-                <TextBlock Grid.Column="4" Text="التاريخ:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <DatePicker Grid.Column="5" SelectedDate="{Binding InputPaymentDate}" FontSize="12" Margin="0,0,10,0"/>
-
-                <TextBlock Grid.Column="6" Text="طريقة الدفع:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <ComboBox Grid.Column="7" ItemsSource="{Binding PaymentMethods}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedPaymentMethod}" FontSize="12" Margin="0,0,10,0"/>
-
-                <TextBlock Grid.Column="8" Text="الوصف:" VerticalAlignment="Center" FontSize="12" Margin="0,0,6,0"/>
-                <TextBox Grid.Column="9" Text="{Binding InputDescription, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات اختيارية" FontSize="12" Margin="0,0,10,0"/>
-
-                <StackPanel Grid.Column="10" Orientation="Horizontal">
-                    <Button Command="{Binding SaveExpenseCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="White" Background="#4CAF50" Margin="0,0,4,0" Padding="12,6">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ContentSave" Width="18" Height="18" Margin="0,0,4,0"/>
-                            <TextBlock Text="حفظ" FontSize="12"/>
-                        </StackPanel>
-                    </Button>
-                    <Button Command="{Binding CancelEditCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#6b7280" Visibility="{Binding IsEditing, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="12,6">
-                        <TextBlock Text="إلغاء" FontSize="12"/>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
 
         <!-- ═══════════ الجدول ═══════════ -->
         <Border Grid.Row="3" Background="White" CornerRadius="10" Padding="8" Margin="0,0,0,12">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/>
             </Border.Effect>
-            <DataGrid ItemsSource="{Binding Expenses}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
-                      HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
-                      FontSize="13" RowHeight="36" Background="Transparent"
-                      materialDesign:DataGridAssist.ColumnHeaderPadding="8">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="#" Binding="{Binding Sequence}" Width="40"/>
-                    <DataGridTextColumn Header="النوع" Binding="{Binding ExpenseTypeName}" Width="*"/>
-                    <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat=N2}" Width="*"/>
-                    <DataGridTextColumn Header="تاريخ الدفع" Binding="{Binding PaymentDateDisplay}" Width="*"/>
-                    <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethodName}" Width="*"/>
-                    
-                    <DataGridTemplateColumn Header="الحالة" Width="100">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Border Background="{Binding FinancialStatusColor, StringFormat={}{0}1A}" 
-                                        BorderBrush="{Binding FinancialStatusColor}" BorderThickness="1" 
-                                        CornerRadius="12" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="{Binding FinancialStatusIcon}" Foreground="{Binding FinancialStatusColor}" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                                        <TextBlock Text="{Binding FinancialStatusName}" Foreground="{Binding FinancialStatusColor}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
+            <Grid>
+                <!-- 1. Open Expenses and Detailed Archive Panel -->
+                <Grid x:Name="OpenExpensesAndDetailedArchivePanel">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                        <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                    <DataGridTextColumn Header="الوصف" Binding="{Binding Description}" Width="2*"/>
-                    
-                    <DataGridTemplateColumn Header="إجراءات" Width="180">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                    <!-- أزرار التعديل والحذف - تظهر فقط إذا لم تكن مرحلة -->
-                                    <Button Command="{Binding DataContext.EditExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1a56db" Padding="4" ToolTip="تعديل">
-                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"/>
-                                    </Button>
-                                    <Button Command="{Binding DataContext.DeleteExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" Padding="4" ToolTip="حذف">
-                                        <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
-                                    </Button>
-                                    
-                                    <!-- أزرار الترحيل وفك الترحيل -->
-                                    <Button Command="{Binding DataContext.PostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                            CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#10b981" Padding="4" ToolTip="ترحيل مالي">
-                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="18" Height="18"/>
-                                    </Button>
-                                    <Button Command="{Binding DataContext.UnpostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                            CommandParameter="{Binding}" Visibility="{Binding IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#f59e0b" Padding="4" ToolTip="فك الترحيل (يتطلب الصلاحية)">
-                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18"/>
-                                    </Button>
+                    <!-- Header with back button & month name (Visible only in detail archive mode) -->
+                    <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,12" Margin="0,0,0,16">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                            <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Go Back Button -->
+                            <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3b82f6" Height="36" Padding="8,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ArrowRight" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="العودة لقائمة الأشهر" VerticalAlignment="Center" FontWeight="Bold"/>
                                 </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                            </Button>
+
+                            <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف مصروفات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- DataGrid Container -->
+                    <Grid Grid.Row="1">
+                        <DataGrid ItemsSource="{Binding Expenses}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
+                                  FontSize="13" MinRowHeight="36" Background="Transparent"
+                                  materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Width="65" Visibility="{Binding DataContext.ShowPostedArchive, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                    <DataGridTemplateColumn.HeaderTemplate>
+                                        <DataTemplate>
+                                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
+                                                          IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.HeaderTemplate>
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
+                                                          IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+                                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTextColumn Header="#" Binding="{Binding Sequence}" Width="40"/>
+                                <DataGridTextColumn Header="النوع" Binding="{Binding ExpenseTypeName}" Width="*"/>
+                                <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat=N2}" Width="*"/>
+                                <DataGridTextColumn Header="تاريخ الدفع" Binding="{Binding PaymentDateDisplay}" Width="*"/>
+                                <DataGridTextColumn Header="طريقة الدفع" Binding="{Binding PaymentMethodName}" Width="*"/>
+                                
+                                <DataGridTemplateColumn Header="الحالة" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{Binding FinancialStatusColor, StringFormat={}{0}1A}" 
+                                                    BorderBrush="{Binding FinancialStatusColor}" BorderThickness="1" 
+                                                    CornerRadius="12" Padding="8,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <materialDesign:PackIcon Kind="{Binding FinancialStatusIcon}" Foreground="{Binding FinancialStatusColor}" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                                    <TextBlock Text="{Binding FinancialStatusName}" Foreground="{Binding FinancialStatusColor}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="الوصف" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" Padding="4" VerticalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <DataGridTemplateColumn Header="إجراءات" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <!-- زر عرض التفاصيل الشاملة (رسالة منبثقة) -->
+                                                <Button Command="{Binding DataContext.ShowExpenseDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#8b5cf6" Padding="4" ToolTip="تفاصيل الحركة">
+                                                    <materialDesign:PackIcon Kind="InformationOutline" Width="18" Height="18"/>
+                                                </Button>
+
+                                                <!-- زر العرض للمصروفات المؤرشفة/المرحّلة -->
+                                                <Button Command="{Binding DataContext.ViewExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}"
+                                                        Foreground="#3b82f6" Padding="4" ToolTip="عرض التفاصيل">
+                                                    <Button.Style>
+                                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsDraft}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Button.Style>
+                                                    <materialDesign:PackIcon Kind="Eye" Width="18" Height="18"/>
+                                                </Button>
+
+                                                <!-- أزرار التعديل والحذف - تظهر فقط إذا لم تكن مرحلة -->
+                                                <Button Command="{Binding DataContext.EditExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#1a56db" Padding="4" ToolTip="تعديل">
+                                                    <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18"/>
+                                                </Button>
+                                                <Button Command="{Binding DataContext.DeleteExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#dc2626" Padding="4" ToolTip="حذف">
+                                                    <materialDesign:PackIcon Kind="Delete" Width="18" Height="18"/>
+                                                </Button>
+                                                
+                                                <!-- أزرار الترحيل وفك الترحيل -->
+                                                <Button Command="{Binding DataContext.PostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}" Visibility="{Binding IsDraft, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#10b981" Padding="4" ToolTip="ترحيل مالي">
+                                                    <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="18" Height="18"/>
+                                                </Button>
+                                                <Button Command="{Binding DataContext.UnpostExpenseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                        CommandParameter="{Binding}" Visibility="{Binding IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#f59e0b" Padding="4" ToolTip="فك الترحيل (يتطلب الصلاحية)">
+                                                    <materialDesign:PackIcon Kind="Lock" Width="18" Height="18"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <!-- Floating Glassmorphic Action Bar -->
+                        <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                                Margin="24,0,24,20" Padding="20,12"
+                                Background="#fcfdfd" BorderBrush="#cbd5e1" BorderThickness="1.5"
+                                CornerRadius="24" Height="Auto" Width="Auto" MinWidth="600"
+                                Visibility="{Binding HasSelectedExpenses, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#0f172a" Opacity="0.18"/>
+                            </Border.Effect>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <!-- Selected Count -->
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#eff6ff" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3b82f6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="المصاريف المحددة" FontSize="11" Foreground="#64748b" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} عمليات}" FontSize="14" FontWeight="Bold" Foreground="#0f172a"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <!-- Expenses Aggregate -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#fdf2f8" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#db2777" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="إجمالي المصاريف المحددة" FontSize="11" Foreground="#be185d" FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#831843"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                
+                                <!-- Post Selected Button -->
+                                <Button Grid.Column="4" 
+                                        Command="{Binding PostSelectedExpensesCommand}"
+                                        Style="{StaticResource MaterialDesignRaisedButton}"
+                                        Background="#0f172a" BorderBrush="#0f172a" Foreground="White"
+                                        Height="42" Padding="20,0" VerticalAlignment="Center" Cursor="Hand">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="21"/>
+                                        </Style>
+                                    </Button.Resources>
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="ترحيل وإقفال المصاريف المحددة مالياً" VerticalAlignment="Center" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Grid>
+
+                <!-- 2. Archived Months Card Panel (Visible when ShowPostedArchive is True and ArchiveLevel == 0) -->
+                <Grid x:Name="ArchivedMonthsPanel">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                        <Condition Binding="{Binding ArchiveLevel}" Value="0"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Title Bar -->
+                            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="أرشيف الترحيل الشهري للمصروفات العامة" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الأرشيف" Command="{Binding LoadArchivedMonthsCommand}" Height="32"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Months List -->
+                            <ItemsControl ItemsSource="{Binding ArchivedMonths}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,12" Margin="0,0,0,12">
+                                            <Border.Effect>
+                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
+                                            </Border.Effect>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <!-- Month Name + Badge -->
+                                                    <ColumnDefinition Width="280"/>
+                                                    <!-- Total Expenses -->
+                                                    <ColumnDefinition Width="220"/>
+                                                    <!-- Operations Count -->
+                                                    <ColumnDefinition Width="180"/>
+                                                    <!-- Spacer -->
+                                                    <ColumnDefinition Width="*"/>
+                                                    <!-- Actions -->
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Month Name + Badge -->
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#8b5cf6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <Border Background="{Binding StatusColor}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                                                    </Border>
+                                                </StackPanel>
+
+                                                <!-- Total Expenses -->
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="إجمالي المصاريف: " FontSize="13" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="15" FontWeight="Bold" Foreground="#ef4444" VerticalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Operations Count -->
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="عدد العمليات: " FontSize="13" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding OperationsCount, StringFormat=\{0\} عملية}" FontSize="14" Foreground="#0f172a" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <!-- Action Button -->
+                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Content="عرض كشف التفاصيل" 
+                                                            Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                            CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignRaisedButton}" 
+                                                            Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Cursor="Hand" Margin="0,0,10,0">
+                                                        <Button.Resources>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="CornerRadius" Value="8"/>
+                                                            </Style>
+                                                        </Button.Resources>
+                                                    </Button>
+
+                                                    <!-- Lock icon as status -->
+                                                    <Border Width="36" Height="36" Background="#EEF2FF" CornerRadius="18" Padding="6" ToolTip="حالة ترحيل الشهر">
+                                                        <materialDesign:PackIcon Kind="Lock" Width="20" Height="20" Foreground="#10b981" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
         </Border>
 
         <!-- ═══════════ الملخصات ═══════════ -->
         <Border Grid.Row="4" Background="White" CornerRadius="10" Padding="16,12">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <!-- تظهر في وضع المصاريف المفتوحة -->
+                        <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <!-- تظهر في تفاصيل الشهر المختار من الأرشيف -->
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding ShowPostedArchive}" Value="True"/>
+                                <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <Border.Effect>
                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Opacity="0.08"/>
             </Border.Effect>

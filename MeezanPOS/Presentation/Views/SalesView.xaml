@@ -199,6 +199,8 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="16"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <!-- Total Sales -->
@@ -231,6 +233,90 @@
                         <TextBlock Text="إجمالي الخدمات المصرفية" FontSize="15" Foreground="#7e22ce" VerticalAlignment="Center" FontWeight="Medium"/>
                     </StackPanel>
                     <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#581c87"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Total Differences Card -->
+            <Border Grid.Column="6" CornerRadius="16" Padding="20" BorderThickness="1">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <!-- Default (Matched: Green) -->
+                        <Setter Property="Background" Value="#f0fdf4"/>
+                        <Setter Property="BorderBrush" Value="#dcfce7"/>
+                        <Style.Triggers>
+                            <!-- Deficit: Red -->
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                <Setter Property="Background" Value="#fef2f2"/>
+                                <Setter Property="BorderBrush" Value="#fee2e2"/>
+                            </DataTrigger>
+                            <!-- Surplus: Blue -->
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                <Setter Property="Background" Value="#eff6ff"/>
+                                <Setter Property="BorderBrush" Value="#dbeafe"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <materialDesign:PackIcon Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <!-- Default: Green -->
+                                    <Setter Property="Kind" Value="CheckCircleOutline"/>
+                                    <Setter Property="Foreground" Value="#10b981"/>
+                                    <Style.Triggers>
+                                        <!-- Deficit: Red -->
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                            <Setter Property="Kind" Value="AlertCircleOutline"/>
+                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                        </DataTrigger>
+                                        <!-- Surplus: Blue -->
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                            <Setter Property="Kind" Value="TrendingUp"/>
+                                            <Setter Property="Foreground" Value="#3b82f6"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                        <TextBlock Text="إجمالي الفروقات بالفترة" FontSize="15" VerticalAlignment="Center" FontWeight="Medium">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <!-- Default: Green -->
+                                    <Setter Property="Foreground" Value="#15803d"/>
+                                    <Style.Triggers>
+                                        <!-- Deficit: Red -->
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                            <Setter Property="Foreground" Value="#b91c1c"/>
+                                        </DataTrigger>
+                                        <!-- Surplus: Blue -->
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                            <Setter Property="Foreground" Value="#1d4ed8"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                    <TextBlock Text="{Binding TotalDifferenceText}" FontSize="26" FontWeight="Bold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <!-- Default: Green -->
+                                <Setter Property="Foreground" Value="#14532d"/>
+                                <Style.Triggers>
+                                    <!-- Deficit: Red -->
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                        <Setter Property="Foreground" Value="#7f1d1d"/>
+                                    </DataTrigger>
+                                    <!-- Surplus: Blue -->
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                        <Setter Property="Foreground" Value="#1e3a8a"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </StackPanel>
             </Border>
         </Grid>
@@ -291,6 +377,8 @@
                                         <ColumnDefinition Width="12"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="12"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="12"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
@@ -301,7 +389,9 @@
                                     
                                     <ComboBox Grid.Column="6" ItemsSource="{Binding ShiftTypes}" SelectedItem="{Binding FilterShiftType}" materialDesign:HintAssist.Hint="نوع الوردية" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
                                     
-                                    <StackPanel Grid.Column="8" Orientation="Horizontal">
+                                    <ComboBox Grid.Column="8" ItemsSource="{Binding DifferenceFilters}" SelectedItem="{Binding SelectedDifferenceFilter}" materialDesign:HintAssist.Hint="فلتر الفروقات" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
+                                    
+                                    <StackPanel Grid.Column="10" Orientation="Horizontal">
                                         <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="45" Width="100" Margin="0,0,8,0"/>
                                         <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
                                             <materialDesign:PackIcon Kind="FilterRemove" Width="20" Height="20"/>

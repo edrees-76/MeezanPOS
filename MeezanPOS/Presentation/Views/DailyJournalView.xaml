@@ -149,7 +149,34 @@
                             <TextBox Text="{Binding BankingSalesInput, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
                                      materialDesign:HintAssist.Hint="0.00"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     FontSize="20" FontWeight="Bold" Padding="12"/>
+                                     IsEnabled="{Binding IsNotViewingMode}"
+                                     FontSize="20" FontWeight="Bold" Padding="12"
+                                     Margin="0,0,0,16"/>
+
+                            <Border BorderBrush="#f3f4f6" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="تفصيل المصارف (اختياري):" FontSize="12" FontWeight="SemiBold" Foreground="#4b5563" Margin="0,0,0,12"/>
+                                    <ItemsControl ItemsSource="{Binding BankSalesInputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,0,8">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="12"/>
+                                                        <ColumnDefinition Width="180"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding BankFriendlyName}" FontWeight="SemiBold" FontSize="13" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                                                    <TextBox Grid.Column="2" Text="{Binding Amount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
+                                                             materialDesign:HintAssist.Hint="0.00"
+                                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                             IsEnabled="{Binding DataContext.IsNotViewingMode, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                             FontSize="16" FontWeight="Bold" Padding="8"/>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Grid>
 
@@ -226,12 +253,13 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <!-- المصرف (قائمة منسدلة) -->
+                            <!-- المصرف (قائمة منسدلة من الحسابات النشطة فقط) -->
                             <DataGridTemplateColumn Header="المصرف" Width="*">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <ComboBox ItemsSource="{Binding DataContext.BankNames, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                  SelectedItem="{Binding BankName, UpdateSourceTrigger=PropertyChanged}" IsEditable="True" 
+                                        <ComboBox ItemsSource="{Binding DataContext.ActiveBankAccounts, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SelectedValue="{Binding BankAccountId, UpdateSourceTrigger=PropertyChanged}" 
+                                                  SelectedValuePath="Id" DisplayMemberPath="DisplayName"
                                                   BorderThickness="0" Background="Transparent" Foreground="Black" Padding="8" FontSize="14"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
@@ -474,15 +502,92 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>
-                                            <!-- الأنواع البسيطة ويومية العامل: وصف نصي -->
-                                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="البيان أو اسم العامل" Visibility="{Binding IsSimpleExpense, Converter={StaticResource BooleanToVisibilityConverter}}" BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
-                                            
                                             <!-- أنواع المورد (مشتريات/دفعات): قائمة الموردين -->
                                             <ComboBox ItemsSource="{Binding DataContext.Suppliers, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                       DisplayMemberPath="Name" SelectedValuePath="Id" SelectedValue="{Binding SelectedSupplierId, UpdateSourceTrigger=PropertyChanged}"
                                                       materialDesign:HintAssist.Hint="اختر المورد"
                                                       Visibility="{Binding HasSupplier, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                       BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13"/>
+                                            
+                                            <!-- المصروفات البسيطة (ما عدا أجور العمال) -->
+                                            <TextBox Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" 
+                                                     materialDesign:HintAssist.Hint="البيان" 
+                                                     BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13">
+                                                <TextBox.Style>
+                                                    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <MultiDataTrigger>
+                                                                <MultiDataTrigger.Conditions>
+                                                                    <Condition Binding="{Binding IsSimpleExpense}" Value="True"/>
+                                                                    <Condition Binding="{Binding IsWorkerWage}" Value="False"/>
+                                                                </MultiDataTrigger.Conditions>
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </MultiDataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBox.Style>
+                                            </TextBox>
+
+                                            <!-- أجور العمال (تفاعلية تفصيلي / إجمالي) -->
+                                            <Grid>
+                                                <Grid.Style>
+                                                    <Style TargetType="Grid">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsWorkerWage}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Grid.Style>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- خيار تفصيلي -->
+                                                <CheckBox Grid.Column="0" IsChecked="{Binding IsDetailedWage, UpdateSourceTrigger=PropertyChanged}" 
+                                                          Content="تفصيلي 👤" Margin="0,0,8,0" VerticalAlignment="Center" FontSize="11" 
+                                                          Style="{StaticResource MaterialDesignCheckBox}"/>
+
+                                                <!-- اسم العامل (يظهر عند تفعيل تفصيلي) -->
+                                                <ComboBox Grid.Column="1" 
+                                                          ItemsSource="{Binding DataContext.AvailableWorkerNames, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                          Text="{Binding WorkerName, UpdateSourceTrigger=PropertyChanged}" 
+                                                          IsEditable="True" 
+                                                          materialDesign:HintAssist.Hint="اسم العامل" 
+                                                          BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13" 
+                                                          VerticalAlignment="Center">
+                                                    <ComboBox.Style>
+                                                        <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsDetailedWage}" Value="True">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </ComboBox.Style>
+                                                </ComboBox>
+                                                
+                                                <!-- وصف يومية العمال (يظهر عند عدم تفعيل تفصيلي) -->
+                                                <TextBox Grid.Column="1" Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" 
+                                                         materialDesign:HintAssist.Hint="يومية عمال إجمالية" 
+                                                         BorderThickness="0" Background="Transparent" Foreground="Black" Padding="6" FontSize="13" 
+                                                         VerticalAlignment="Center">
+                                                    <TextBox.Style>
+                                                        <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsDetailedWage}" Value="False">
+                                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBox.Style>
+                                                </TextBox>
+                                            </Grid>
                                         </Grid>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

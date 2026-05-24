@@ -101,6 +101,20 @@ public partial class SalesViewModel : ObservableObject
     public ObservableCollection<string> ShiftTypes { get; } = new() { "الكل", "صباحية", "مسائية", "يوم كامل" };
 
     [ObservableProperty]
+    private string selectedDifferenceFilter = "الكل";
+
+    public ObservableCollection<string> DifferenceFilters { get; } = new() { "الكل", "يوجد فروقات", "مطابق", "عجز", "زيادة" };
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalDifferenceColor))]
+    [NotifyPropertyChangedFor(nameof(TotalDifferenceText))]
+    private decimal totalDifferencePeriod;
+
+    public string TotalDifferenceColor => TotalDifferencePeriod < 0 ? "#ef4444" : TotalDifferencePeriod > 0 ? "#3b82f6" : "#10b981";
+
+    public string TotalDifferenceText => TotalDifferencePeriod < 0 ? $"عجز {System.Math.Abs(TotalDifferencePeriod):N2} د.ل" : TotalDifferencePeriod > 0 ? $"زيادة {TotalDifferencePeriod:N2} د.ل" : "مطابق ✓";
+
+    [ObservableProperty]
     private SelectableDailyJournal? selectedJournal;
 
     // --- أوامر التصفح الهرمي الجديدة ---
@@ -259,6 +273,7 @@ public partial class SalesViewModel : ObservableObject
     {
         SelectedCashier = "الكل";
         FilterShiftType = "الكل";
+        SelectedDifferenceFilter = "الكل";
         FilterStartDate = null;
         FilterEndDate = null;
         ApplyFilters();
@@ -311,6 +326,26 @@ public partial class SalesViewModel : ObservableObject
             filtered = filtered.Where(j => j.ShiftType == selectedShiftType);
         }
 
+        if (SelectedDifferenceFilter != "الكل")
+        {
+            if (SelectedDifferenceFilter == "يوجد فروقات")
+            {
+                filtered = filtered.Where(j => j.Difference != 0);
+            }
+            else if (SelectedDifferenceFilter == "مطابق")
+            {
+                filtered = filtered.Where(j => j.Difference == 0);
+            }
+            else if (SelectedDifferenceFilter == "عجز")
+            {
+                filtered = filtered.Where(j => j.Difference < 0);
+            }
+            else if (SelectedDifferenceFilter == "زيادة")
+            {
+                filtered = filtered.Where(j => j.Difference > 0);
+            }
+        }
+
         var resultList = filtered.ToList();
 
         if (SelectedTab == 0)
@@ -344,6 +379,7 @@ public partial class SalesViewModel : ObservableObject
         TotalSalesPeriod = resultList.Sum(j => j.TotalSales);
         TotalCashSalesPeriod = resultList.Sum(j => j.CashSales);
         TotalBankingSalesPeriod = resultList.Sum(j => j.BankingTotal);
+        TotalDifferencePeriod = resultList.Sum(j => j.Difference);
     }
 
     [RelayCommand]
@@ -568,17 +604,17 @@ public partial class SalesViewModel : ObservableObject
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
             var filePath = System.IO.Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), 
+                System.IO.Path.GetTempPath(), 
                 $"تقرير_المبيعات_{System.DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
             QuestPDF.Fluent.Document.Create(container =>
             {
                 container.Page(page =>
                 {
-                    page.Size(QuestPDF.Helpers.PageSizes.A4.Landscape());
-                    page.Margin(1, QuestPDF.Infrastructure.Unit.Centimetre);
+                    page.Size(QuestPDF.Helpers.PageSizes.A4.Portrait());
+                    page.Margin(0.8f, QuestPDF.Infrastructure.Unit.Centimetre);
                     page.PageColor(QuestPDF.Helpers.Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(11).FontFamily("Arial").DirectionFromRightToLeft());
+                    page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial").DirectionFromRightToLeft());
                     page.ContentFromRightToLeft();
 
                     page.Header().Element(ComposeHeader);
@@ -622,6 +658,10 @@ public partial class SalesViewModel : ObservableObject
                 if (!string.IsNullOrWhiteSpace(FilterShiftType) && FilterShiftType != "الكل")
                     filterParts.Add($"الوردية: {FilterShiftType}");
 
+                // فلتر الفروقات
+                if (!string.IsNullOrWhiteSpace(SelectedDifferenceFilter) && SelectedDifferenceFilter != "الكل")
+                    filterParts.Add($"الفروقات: {SelectedDifferenceFilter}");
+
                 // التاريخ من - إلى
                 System.DateTime? startDate = FilterStartDate;
                 System.DateTime? endDate = FilterEndDate;
@@ -656,22 +696,29 @@ public partial class SalesViewModel : ObservableObject
             // Cards Summary
             column.Item().Row(row =>
             {
-                row.RelativeItem().PaddingRight(10).Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(10).Column(c =>
+                row.RelativeItem().PaddingRight(6).Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(6).Column(c =>
                 {
-                    c.Item().Text("إجمالي المبيعات").FontSize(14).SemiBold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
-                    c.Item().Text($"{TotalSalesPeriod:N2} د.ل").FontSize(16).Bold();
+                    c.Item().Text("إجمالي المبيعات").FontSize(11).SemiBold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
+                    c.Item().Text($"{TotalSalesPeriod:N2} د.ل").FontSize(13).Bold();
                 });
 
-                row.RelativeItem().PaddingRight(10).Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(10).Column(c =>
+                row.RelativeItem().PaddingRight(6).Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(6).Column(c =>
                 {
-                    c.Item().Text("إجمالي المبيعات النقدية").FontSize(14).SemiBold().FontColor(QuestPDF.Helpers.Colors.Green.Darken2);
-                    c.Item().Text($"{TotalCashSalesPeriod:N2} د.ل").FontSize(16).Bold();
+                    c.Item().Text("إجمالي المبيعات النقدية").FontSize(11).SemiBold().FontColor(QuestPDF.Helpers.Colors.Green.Darken2);
+                    c.Item().Text($"{TotalCashSalesPeriod:N2} د.ل").FontSize(13).Bold();
                 });
 
-                row.RelativeItem().Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(10).Column(c =>
+                row.RelativeItem().PaddingRight(6).Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(6).Column(c =>
                 {
-                    c.Item().Text("إجمالي الخدمات المصرفية").FontSize(14).SemiBold().FontColor(QuestPDF.Helpers.Colors.Purple.Darken2);
-                    c.Item().Text($"{TotalBankingSalesPeriod:N2} د.ل").FontSize(16).Bold();
+                    c.Item().Text("إجمالي الخدمات المصرفية").FontSize(11).SemiBold().FontColor(QuestPDF.Helpers.Colors.Purple.Darken2);
+                    c.Item().Text($"{TotalBankingSalesPeriod:N2} د.ل").FontSize(13).Bold();
+                });
+
+                row.RelativeItem().Background(QuestPDF.Helpers.Colors.Grey.Lighten4).Padding(6).Column(c =>
+                {
+                    c.Item().Text("إجمالي الفروقات").FontSize(11).SemiBold().FontColor(QuestPDF.Helpers.Colors.Grey.Darken3);
+                    var diffColor = TotalDifferencePeriod < 0 ? QuestPDF.Helpers.Colors.Red.Medium : TotalDifferencePeriod > 0 ? QuestPDF.Helpers.Colors.Blue.Medium : QuestPDF.Helpers.Colors.Green.Medium;
+                    c.Item().Text(TotalDifferenceText).FontSize(13).Bold().FontColor(diffColor);
                 });
             });
 
@@ -714,7 +761,7 @@ public partial class SalesViewModel : ObservableObject
 
                 QuestPDF.Infrastructure.IContainer CellStyle(QuestPDF.Infrastructure.IContainer container)
                 {
-                    return container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Black);
+                    return container.DefaultTextStyle(x => x.SemiBold().FontSize(7.5f)).PaddingVertical(4).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Black);
                 }
             });
 
@@ -740,7 +787,7 @@ public partial class SalesViewModel : ObservableObject
 
                 QuestPDF.Infrastructure.IContainer CellStyle(QuestPDF.Infrastructure.IContainer container)
                 {
-                    return container.BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).PaddingVertical(5);
+                    return container.DefaultTextStyle(x => x.FontSize(7.5f)).BorderBottom(1).BorderColor(QuestPDF.Helpers.Colors.Grey.Lighten2).PaddingVertical(4);
                 }
             }
         });

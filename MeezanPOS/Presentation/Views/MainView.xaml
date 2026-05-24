@@ -7,6 +7,7 @@
         xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="800" Width="1200"
+        Icon="/Assets/Images/mizan_3d_icon_final_transparent.png"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         FlowDirection="RightToLeft"
@@ -45,7 +46,7 @@
                 <!-- Header -->
                 <StackPanel Grid.Row="0" Margin="16,30,16,20" Orientation="Horizontal">
                     <Border Width="65" Height="65" CornerRadius="32.5" Background="White" Margin="-5,0,0,0" ClipToBounds="True">
-                        <Image Source="/Assets/Images/mizan_chef_scale-removebg-preview.png" Stretch="Uniform" Margin="4"/>
+                        <Image Source="/Assets/Images/mizan_3d_icon_final_transparent.png" Stretch="Uniform" Margin="4"/>
                     </Border>
                     <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="ميزان للمطاعم" FontWeight="Bold" FontSize="18" Foreground="#ffe081"/>
@@ -127,6 +128,18 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Margin="0,0,16,0"/>
                             <TextBlock Text="إدارة المصروفات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountMultipleOutline" Width="24" Height="24" Margin="0,0,16,0"/>
+                            <TextBlock Text="أجور ومستحقات العمال" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Bank" Width="24" Height="24" Margin="0,0,16,0"/>
+                            <TextBlock Text="الحسابات البنكية والخزينة" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                 </ListBox>

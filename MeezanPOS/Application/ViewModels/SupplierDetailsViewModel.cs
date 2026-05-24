@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,12 +21,18 @@ public partial class UnifiedLedgerRow : ObservableObject
     [ObservableProperty] private decimal openingBalance;
     
     // Invoice side
-    [ObservableProperty] private decimal? invoiceAmount;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasInvoice))]
+    private decimal? invoiceAmount;
+
     [ObservableProperty] private DateTime? invoiceDate;
     [ObservableProperty] private string invoiceNumber = string.Empty;
     
     // Payment side
-    [ObservableProperty] private decimal? paymentAmount;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPayment))]
+    private decimal? paymentAmount;
+
     [ObservableProperty] private DateTime? paymentDate;
     [ObservableProperty] private string paymentMethod = string.Empty;
     [ObservableProperty] private string receiptNumber = string.Empty;
@@ -40,17 +47,23 @@ public partial class UnifiedLedgerRow : ObservableObject
     private TransactionSourceType sourceType;
 
     [ObservableProperty] private int sourceId;
+    [ObservableProperty] private int transactionId;
 
     [ObservableProperty] private bool isTransferPayment;
 
     public bool IsDailyJournalPayment => SourceType == TransactionSourceType.DailyJournalPayment;
     public bool IsPlainPayment => !IsDailyJournalPayment && !IsTransferPayment;
+
+    public bool HasInvoice => InvoiceAmount.HasValue && InvoiceAmount.Value > 0;
+    public bool HasPayment => PaymentAmount.HasValue && PaymentAmount.Value > 0;
 }
 
 public partial class SupplierDetailsViewModel : ObservableObject
 {
     private readonly AppDbContext _context;
     private readonly ILedgerService _ledgerService;
+    private int? _editingInvoiceId;
+    private int? _editingPaymentTransactionId;
     
     public int SupplierId { get; }
     
@@ -80,12 +93,47 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
     public Action? OnBack { get; set; }
 
+    // --- نافذة خيارات الطباعة ---
+    [ObservableProperty]
+    private bool isPrintSelectionOpen;
+
     // --- نافذة إضافة فاتورة ---
     [ObservableProperty]
     private bool isInvoiceFormOpen;
 
     [ObservableProperty]
     private SupplierInvoice newInvoice = new();
+
+    // --- نافذة تفاصيل الفاتورة (الأصناف) ---
+    [ObservableProperty]
+    private bool isInvoiceDetailsOpen;
+
+    [ObservableProperty]
+    private ObservableCollection<InvoiceItemViewModel> invoiceItems = new();
+
+    [ObservableProperty]
+    private decimal invoiceItemsTotal;
+
+    [ObservableProperty]
+    private bool isTotalMatching;
+
+    [ObservableProperty]
+    private string matchingStatusText = string.Empty;
+
+    private void RecalculateItemsTotal()
+    {
+        InvoiceItemsTotal = InvoiceItems.Sum(i => i.TotalValue);
+        IsTotalMatching = NewInvoice.TotalAmount > 0 && InvoiceItemsTotal == NewInvoice.TotalAmount;
+        if (NewInvoice.TotalAmount <= 0)
+            MatchingStatusText = "أدخل إجمالي الفاتورة أولاً";
+        else if (IsTotalMatching)
+            MatchingStatusText = "✅ الإجمالي متطابق!";
+        else
+        {
+            var diff = NewInvoice.TotalAmount - InvoiceItemsTotal;
+            MatchingStatusText = $"⚠️ الفرق: {diff:N2}";
+        }
+    }
 
     // --- نافذة الدفع ---
     [ObservableProperty]
@@ -138,6 +186,18 @@ public partial class SupplierDetailsViewModel : ObservableObject
     [ObservableProperty]
     private DateTime? _filterEndDate;
 
+    [ObservableProperty]
+    private ObservableCollection<BankAccount> bankAccounts = new();
+
+    [ObservableProperty]
+    private BankAccount? selectedBankAccountForPayment;
+
+    [ObservableProperty]
+    private string partnerNameForPayment = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<string> partnerNames = new();
+
     public SupplierDetailsViewModel(int supplierId, string supplierName)
     {
         SupplierId = supplierId;
@@ -146,6 +206,31 @@ public partial class SupplierDetailsViewModel : ObservableObject
         _ledgerService = new LedgerService(_context);
         
         _ = LoadDataAsync();
+        _ = LoadBankAccountsAndPartnersAsync();
+    }
+
+    private async Task LoadBankAccountsAndPartnersAsync()
+    {
+        try
+        {
+            var bankService = new BankService(_context);
+            var accountsList = await bankService.GetAllAccountsAsync();
+            
+            var ownerDebtService = new OwnerDebtService(_context, bankService);
+            var namesList = await ownerDebtService.GetPartnerNamesAsync();
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                BankAccounts = new ObservableCollection<BankAccount>(accountsList.Where(a => a.IsActive));
+                PartnerNames = new ObservableCollection<string>(namesList);
+                
+                if (BankAccounts.Any())
+                    SelectedBankAccountForPayment = BankAccounts.First();
+                if (PartnerNames.Any())
+                    PartnerNameForPayment = PartnerNames.First();
+            });
+        }
+        catch { /* تجاهل الأخطاء الصامتة */ }
     }
 
     [RelayCommand]
@@ -235,7 +320,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 Sequence = seq++,
                 OpeningBalance = currentBal,
                 SourceType = trans.SourceType,
-                SourceId = trans.SourceId
+                SourceId = trans.SourceId,
+                TransactionId = trans.Id
             };
 
             if (trans.Type == SupplierTransactionType.IncreaseDebt)
@@ -260,25 +346,27 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 if (trans.SourceType == TransactionSourceType.DailyJournalPayment)
                     row.PaymentMethod = "من اليومية";
                 else if (trans.SourceType == TransactionSourceType.ExternalPayment)
-                {
-                    // تحقق إذا كانت الدفعة تحويل بنكي عبر الملاحظات
+                    // تحقق إذا كانت الدفعة تحويل بنكي أو سداد شخصي عبر الملاحظات
                     if (!string.IsNullOrEmpty(trans.Notes) && trans.Notes.Contains("تحويل بنكي"))
                     {
                         row.PaymentMethod = "تحويل";
                         row.IsTransferPayment = true;
                     }
+                    else if (!string.IsNullOrEmpty(trans.Notes) && (trans.Notes.Contains("سداد شخصي") || trans.Notes.Contains("شخصي (شريك)")))
+                    {
+                        row.PaymentMethod = "شخصي (شريك)";
+                    }
                     else
                     {
                         row.PaymentMethod = "نقدي";
                     }
-                }
 
                 row.ReceiptNumber = trans.ReceiptNumber ?? (trans.SourceId > 0 ? trans.SourceId.ToString() : "");
                 
                 string displayNotes = trans.Notes ?? string.Empty;
                 if (row.IsTransferPayment)
                 {
-                    var bankMatch = System.Text.RegularExpressions.Regex.Match(displayNotes, @"تحويل بنكي:\s*(.+?)\s*\((\d{1,4})\)");
+                    var bankMatch = System.Text.RegularExpressions.Regex.Match(displayNotes, @"تحويل بنكي:\s*(.+?)\s*\(([^)]+)\)");
                     if (bankMatch.Success)
                     {
                         string bankName = bankMatch.Groups[1].Value.Trim();
@@ -309,16 +397,67 @@ public partial class SupplierDetailsViewModel : ObservableObject
     [RelayCommand]
     public void OpenAddInvoiceForm()
     {
+        _editingInvoiceId = null;
         NewInvoice = new SupplierInvoice 
         { 
             SupplierId = SupplierId, 
             InvoiceDate = DateTime.Now 
         };
+        InvoiceItems.Clear();
+        InvoiceItemsTotal = 0;
+        IsTotalMatching = false;
+        MatchingStatusText = string.Empty;
+        IsInvoiceDetailsOpen = false;
         IsInvoiceFormOpen = true;
     }
 
     [RelayCommand]
-    public void CloseInvoiceForm() => IsInvoiceFormOpen = false;
+    public void OpenInvoiceDetails()
+    {
+        IsInvoiceDetailsOpen = true;
+        if (InvoiceItems.Count == 0)
+        {
+            AddInvoiceItem();
+        }
+        RecalculateItemsTotal();
+    }
+
+    [RelayCommand]
+    public void CloseInvoiceDetails()
+    {
+        IsInvoiceDetailsOpen = false;
+    }
+
+    [RelayCommand]
+    public void AddInvoiceItem()
+    {
+        var item = new InvoiceItemViewModel
+        {
+            Sequence = InvoiceItems.Count + 1
+        };
+        item.OnTotalChanged += RecalculateItemsTotal;
+        InvoiceItems.Add(item);
+        RecalculateItemsTotal();
+    }
+
+    [RelayCommand]
+    public void RemoveInvoiceItem(InvoiceItemViewModel? item)
+    {
+        if (item == null) return;
+        item.OnTotalChanged -= RecalculateItemsTotal;
+        InvoiceItems.Remove(item);
+        // إعادة ترقيم التسلسل
+        for (int i = 0; i < InvoiceItems.Count; i++)
+            InvoiceItems[i].Sequence = i + 1;
+        RecalculateItemsTotal();
+    }
+
+    [RelayCommand]
+    public void CloseInvoiceForm()
+    {
+        _editingInvoiceId = null;
+        IsInvoiceFormOpen = false;
+    }
 
     [RelayCommand]
     public async Task SaveInvoiceAsync()
@@ -329,9 +468,67 @@ public partial class SupplierDetailsViewModel : ObservableObject
             return;
         }
 
+        // التحقق من تطابق الإجمالي إذا كان المستخدم أدخل تفاصيل
+        if (InvoiceItems.Count > 0)
+        {
+            RecalculateItemsTotal();
+            if (!IsTotalMatching)
+            {
+                var diff = NewInvoice.TotalAmount - InvoiceItemsTotal;
+                var result = MessageBox.Show(
+                    $"إجمالي الأصناف ({InvoiceItemsTotal:N2}) لا يتطابق مع إجمالي الفاتورة ({NewInvoice.TotalAmount:N2}).\n" +
+                    $"الفرق: {diff:N2}\n\n" +
+                    "هل تريد الحفظ على أي حال؟",
+                    "تحذير: عدم تطابق الإجمالي",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning,
+                    MessageBoxResult.No);
+                if (result == MessageBoxResult.No) return;
+            }
+        }
+
         try
         {
-            await _ledgerService.PostInvoiceAsync(NewInvoice);
+            if (_editingInvoiceId.HasValue)
+            {
+                // تعديل فاتورة قائمة
+                var listItems = InvoiceItems.Select(item => new SupplierInvoiceItem
+                {
+                    Description = item.Description,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList();
+
+                await _ledgerService.UpdateInvoiceAsync(NewInvoice, listItems);
+                MessageBox.Show("تم تعديل الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                // إضافة فاتورة جديدة
+                await _ledgerService.PostInvoiceAsync(NewInvoice);
+
+                // حفظ تفاصيل الأصناف في قاعدة البيانات
+                if (InvoiceItems.Count > 0)
+                {
+                    foreach (var item in InvoiceItems)
+                    {
+                        var dbItem = new MeezanPOS.Domain.Entities.SupplierInvoiceItem
+                        {
+                            SupplierInvoiceId = NewInvoice.Id,
+                            Description = item.Description,
+                            Quantity = item.Quantity,
+                            UnitPrice = item.UnitPrice,
+                            TotalValue = item.TotalValue
+                        };
+                        _context.SupplierInvoiceItems.Add(dbItem);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+                MessageBox.Show("تم حفظ الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+
+            _editingInvoiceId = null;
+            IsInvoiceDetailsOpen = false;
             IsInvoiceFormOpen = false;
             await LoadDataAsync();
         }
@@ -344,6 +541,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
     [RelayCommand]
     public void OpenPaymentForm(SupplierInvoice? invoice = null)
     {
+        _editingPaymentTransactionId = null;
         SelectedInvoiceForPayment = invoice;
         PaymentAmount = invoice != null ? (invoice.TotalAmount - invoice.PaidAmount) : 0;
         PaymentDescription = invoice != null ? $"سداد فاتورة #{invoice.Id}" : "دفعة من الحساب للمورد";
@@ -352,11 +550,17 @@ public partial class SupplierDetailsViewModel : ObservableObject
         SelectedPaymentMethod = "نقدي";
         BankName = string.Empty;
         TransferLast4 = string.Empty;
+        SelectedBankAccountForPayment = BankAccounts.FirstOrDefault();
+        PartnerNameForPayment = PartnerNames.FirstOrDefault() ?? string.Empty;
         IsPaymentFormOpen = true;
     }
 
     [RelayCommand]
-    public void ClosePaymentForm() => IsPaymentFormOpen = false;
+    public void ClosePaymentForm()
+    {
+        _editingPaymentTransactionId = null;
+        IsPaymentFormOpen = false;
+    }
 
     [RelayCommand]
     public async Task SavePaymentAsync()
@@ -369,44 +573,233 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
         try
         {
-            // التحقق من الحقول الإضافية إذا كان تحويل
-            if (SelectedPaymentMethod == "تحويل" && (string.IsNullOrWhiteSpace(BankName) || string.IsNullOrWhiteSpace(TransferLast4)))
+            int? bankAccountId = null;
+            string? partnerName = null;
+
+            // التحقق من الحقول الإضافية بناءً على طريقة الدفع
+            if (SelectedPaymentMethod == "تحويل" || SelectedPaymentMethod == "تحويل بنكي")
             {
-                MessageBox.Show("يجب إدخال اسم المصرف ورقم التحويل اخر 4 ارقام للتحويل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                if (SelectedBankAccountForPayment == null)
+                {
+                    MessageBox.Show("يرجى تحديد الحساب البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (string.IsNullOrWhiteSpace(TransferLast4))
+                {
+                    MessageBox.Show("يرجى إدخال رقم العملية أو آخر 4 أرقام من التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                bankAccountId = SelectedBankAccountForPayment.Id;
+            }
+            else if (SelectedPaymentMethod == "شخصي (شريك)")
+            {
+                if (string.IsNullOrWhiteSpace(PartnerNameForPayment))
+                {
+                    MessageBox.Show("يرجى إدخال أو تحديد اسم الشريك الممول للدفعة الشخصية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                partnerName = PartnerNameForPayment;
             }
 
             // تجميع الملاحظات
             string finalNotes = PaymentDescription;
             if (!string.IsNullOrWhiteSpace(ReceiptNumber))
                 finalNotes += $" | إيصال: {ReceiptNumber}";
-            if (SelectedPaymentMethod == "تحويل")
-                finalNotes += $" | تحويل بنكي: {BankName} ({TransferLast4})";
 
-            // حسب طلب المستخدم: لا يتم الخصم من الكاشير هنا
+            if ((SelectedPaymentMethod == "تحويل" || SelectedPaymentMethod == "تحويل بنكي") && SelectedBankAccountForPayment != null)
+                finalNotes += $" | تحويل بنكي: {SelectedBankAccountForPayment.BankName} - {SelectedBankAccountForPayment.FriendlyName} ({TransferLast4})";
+            else if (SelectedPaymentMethod == "شخصي (شريك)")
+                finalNotes += $" | سداد شخصي: الشريك {PartnerNameForPayment}";
+            else
+                finalNotes += " | سداد نقدي";
 
-            // توجيه الدفعة لمحرك الدفتر (Ledger Engine)
-            var paymentId = int.TryParse(ReceiptNumber, out var rId) ? rId : 0;
+            if (_editingPaymentTransactionId.HasValue)
+            {
+                // تعديل دفعة قائمة
+                await _ledgerService.UpdatePaymentAsync(
+                    transactionId: _editingPaymentTransactionId.Value,
+                    amount: PaymentAmount,
+                    paymentDate: PaymentDate,
+                    receiptNumber: ReceiptNumber,
+                    notes: finalNotes,
+                    bankAccountId: bankAccountId,
+                    partnerName: partnerName,
+                    bankReferenceNumber: TransferLast4
+                );
+                MessageBox.Show("تم تعديل الدفعة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                // توجيه الدفعة لمحرك الدفتر (Ledger Engine)
+                var paymentId = int.TryParse(ReceiptNumber, out var rId) ? rId : 0;
 
-            await _ledgerService.PostPaymentAsync(
-                supplierId: SupplierId,
-                amount: PaymentAmount,
-                source: SelectedPaymentMethod == "تحويل" ? TransactionSourceType.ExternalPayment : TransactionSourceType.ExternalPayment,
-                sourceId: paymentId,
-                paymentDate: PaymentDate,
-                targetInvoiceId: SelectedInvoiceForPayment?.Id,
-                receiptNumber: ReceiptNumber,
-                notes: finalNotes
-            );
+                await _ledgerService.PostPaymentAsync(
+                    supplierId: SupplierId,
+                    amount: PaymentAmount,
+                    source: TransactionSourceType.ExternalPayment,
+                    sourceId: paymentId,
+                    paymentDate: PaymentDate,
+                    targetInvoiceId: SelectedInvoiceForPayment?.Id,
+                    receiptNumber: ReceiptNumber,
+                    notes: finalNotes,
+                    bankAccountId: bankAccountId,
+                    partnerName: partnerName,
+                    bankReferenceNumber: TransferLast4
+                );
 
-            MessageBox.Show("تم تسجيل الدفعة بنجاح في كشف حساب المورد.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("تم تسجيل الدفعة بنجاح في كشف حساب المورد.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
             
+            _editingPaymentTransactionId = null;
             IsPaymentFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
             MessageBox.Show($"حدث خطأ أثناء حفظ الدفعة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    public async Task EditInvoiceAsync(UnifiedLedgerRow row)
+    {
+        if (row == null || row.SourceType != TransactionSourceType.Invoice) return;
+
+        IsLoading = true;
+        try
+        {
+            var invoice = await _context.SupplierInvoices
+                .Include(i => i.Items)
+                .FirstOrDefaultAsync(i => i.Id == row.SourceId);
+
+            if (invoice == null)
+            {
+                MessageBox.Show("لم يتم العثور على الفاتورة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _editingInvoiceId = invoice.Id;
+            NewInvoice = new SupplierInvoice
+            {
+                Id = invoice.Id,
+                SupplierId = invoice.SupplierId,
+                InvoiceNumber = invoice.InvoiceNumber,
+                InvoiceDate = invoice.InvoiceDate,
+                TotalAmount = invoice.TotalAmount,
+                Notes = invoice.Notes
+            };
+
+            InvoiceItems.Clear();
+            foreach (var item in invoice.Items)
+            {
+                var itemVM = new InvoiceItemViewModel
+                {
+                    Sequence = InvoiceItems.Count + 1,
+                    Description = item.Description,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                };
+                itemVM.OnTotalChanged += RecalculateItemsTotal;
+                InvoiceItems.Add(itemVM);
+            }
+
+            RecalculateItemsTotal();
+            IsInvoiceDetailsOpen = false;
+            IsInvoiceFormOpen = true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء تحميل الفاتورة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task EditPaymentAsync(UnifiedLedgerRow row)
+    {
+        if (row == null || row.PaymentAmount == null) return;
+
+        IsLoading = true;
+        try
+        {
+            var trans = await _context.SupplierTransactions
+                .FirstOrDefaultAsync(t => t.Id == row.TransactionId);
+
+            if (trans == null)
+            {
+                MessageBox.Show("لم يتم العثور على الدفعة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            _editingPaymentTransactionId = trans.Id;
+            PaymentAmount = trans.Amount;
+            PaymentDate = trans.TransactionDate;
+            ReceiptNumber = trans.ReceiptNumber ?? string.Empty;
+
+            // استخراج طريقة الدفع والملاحظات
+            SelectedPaymentMethod = "نقدي";
+            SelectedBankAccountForPayment = null;
+            PartnerNameForPayment = string.Empty;
+            TransferLast4 = string.Empty;
+
+            if (trans.SourceType == TransactionSourceType.DailyJournalPayment)
+            {
+                SelectedPaymentMethod = "من اليومية";
+            }
+            else
+            {
+                var bankTx = await _context.BankTransactions
+                    .FirstOrDefaultAsync(t => t.SourceType == "SupplierTransaction" && t.SourceId == trans.Id && !t.IsDeleted);
+
+                var ownerDebt = await _context.OwnerDebts
+                    .FirstOrDefaultAsync(d => d.SourceType == "SupplierTransaction" && d.SourceId == trans.Id && !d.IsDeleted);
+
+                if (bankTx != null)
+                {
+                    SelectedPaymentMethod = "تحويل";
+                    SelectedBankAccountForPayment = BankAccounts.FirstOrDefault(a => a.Id == bankTx.BankAccountId);
+                    TransferLast4 = bankTx.ReferenceNumber ?? string.Empty;
+                }
+                else if (ownerDebt != null)
+                {
+                    SelectedPaymentMethod = "شخصي (شريك)";
+                    PartnerNameForPayment = ownerDebt.PartnerName;
+                }
+            }
+
+            // استخراج الوصف/البيان الأساسي من الملاحظات قبل علامة البايب |
+            if (!string.IsNullOrEmpty(trans.Notes))
+            {
+                var parts = trans.Notes.Split('|');
+                PaymentDescription = parts[0].Trim();
+            }
+            else
+            {
+                PaymentDescription = string.Empty;
+            }
+
+            // الفاتورة المرتبطة بالدفعة إن وجدت
+            if (trans.SupplierInvoiceId.HasValue)
+            {
+                SelectedInvoiceForPayment = await _context.SupplierInvoices.FindAsync(trans.SupplierInvoiceId.Value);
+            }
+            else
+            {
+                SelectedInvoiceForPayment = null;
+            }
+
+            IsPaymentFormOpen = true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء تحميل الدفعة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
     [RelayCommand]
@@ -418,10 +811,23 @@ public partial class SupplierDetailsViewModel : ObservableObject
             return;
         }
 
+        IsPrintSelectionOpen = true;
+    }
+
+    [RelayCommand]
+    public void ClosePrintSelection()
+    {
+        IsPrintSelectionOpen = false;
+    }
+
+    [RelayCommand]
+    public void PrintStandardStatement()
+    {
+        IsPrintSelectionOpen = false;
         try
         {
             string fileName = $"كشف_حساب_{SupplierName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            string filePath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), fileName);
+            string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
 
             SupplierStatementPdfReport.GeneratePdf(
                 filePath, 
@@ -445,6 +851,67 @@ public partial class SupplierDetailsViewModel : ObservableObject
         catch (Exception ex)
         {
             MessageBox.Show($"حدث خطأ أثناء إنشاء التقرير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    public async Task PrintDetailedStatement()
+    {
+        IsPrintSelectionOpen = false;
+        IsLoading = true;
+        try
+        {
+            // 1. استخراج الـ IDs الخاصة بجميع فواتير المشتريات المعروضة في كشف الحساب المفلتر حالياً
+            var invoiceIds = UnifiedLedger
+                .Where(r => r.HasInvoice && r.SourceType == TransactionSourceType.Invoice)
+                .Select(r => r.SourceId)
+                .Distinct()
+                .ToList();
+
+            List<SupplierInvoice> detailedInvoices = new();
+
+            if (invoiceIds.Any())
+            {
+                using var context = new AppDbContext();
+                // 2. تحميل الفواتير بكافة أصنافها
+                detailedInvoices = await context.SupplierInvoices
+                    .Include(i => i.Items)
+                    .Where(i => invoiceIds.Contains(i.Id) && !i.IsDeleted)
+                    .OrderBy(i => i.InvoiceDate)
+                    .ThenBy(i => i.Id)
+                    .ToListAsync();
+            }
+
+            string fileName = $"كشف_حساب_مفصل_{SupplierName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
+
+            SupplierStatementPdfReport.GeneratePdf(
+                filePath, 
+                SupplierName, 
+                TotalOpeningBalance, 
+                TotalInvoicesSum, 
+                TotalPaymentsSum, 
+                CurrentBalance, 
+                UnifiedLedger.ToList(),
+                FilterStartDate,
+                FilterEndDate,
+                detailedInvoices
+            );
+
+            // فتح الملف تلقائياً
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true }
+            };
+            process.Start();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"حدث خطأ أثناء إنشاء التقرير التفصيلي:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -499,12 +966,36 @@ public partial class SupplierDetailsViewModel : ObservableObject
         string bankName = "غير محدد";
         string last4 = "----";
 
-        // الملاحظات مخزنة بصيغة: ... | تحويل بنكي: اسم_المصرف (آخر_4_أرقام)
-        var bankMatch = System.Text.RegularExpressions.Regex.Match(notesText, @"تحويل بنكي:\s*(.+?)\s*\((\d{1,4})\)");
-        if (bankMatch.Success)
+        // الملاحظات مخزنة بصيغة: ... | تحويل بنكي: اسم_المصرف (رقم_التحويل)
+        try
         {
-            bankName = bankMatch.Groups[1].Value.Trim();
-            last4 = bankMatch.Groups[2].Value;
+            // محاولة جلب تفاصيل التحويل بدقة مباشرة من قاعدة البيانات لضمان الدقة الكاملة
+            using (var db = new AppDbContext())
+            {
+                var bankTx = db.BankTransactions
+                    .Include(t => t.BankAccount)
+                    .FirstOrDefault(t => t.SourceType == "SupplierTransaction" && t.SourceId == row.TransactionId && !t.IsDeleted);
+
+                if (bankTx != null)
+                {
+                    bankName = bankTx.BankAccount?.FriendlyName ?? "غير محدد";
+                    last4 = bankTx.ReferenceNumber ?? "----";
+                }
+            }
+        }
+        catch
+        {
+            // في حال حدوث أي خطأ، نعتمد على المعالجة النصية كبديل
+        }
+
+        if (bankName == "غير محدد" || last4 == "----")
+        {
+            var bankMatch = System.Text.RegularExpressions.Regex.Match(notesText, @"تحويل بنكي:\s*(.+?)\s*\(([^)]+)\)");
+            if (bankMatch.Success)
+            {
+                bankName = bankMatch.Groups[1].Value.Trim();
+                last4 = bankMatch.Groups[2].Value.Trim();
+            }
         }
 
         string details = $"🏦 تفاصيل التحويل المصرفي:\n" +

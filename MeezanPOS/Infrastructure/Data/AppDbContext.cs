@@ -27,23 +27,45 @@ public class AppDbContext : DbContext
     public DbSet<DailyExpenseItem> DailyExpenseItems { get; set; }
     public DbSet<BankingItem> BankingItems { get; set; }
     public DbSet<OrderAdjustmentItem> OrderAdjustmentItems { get; set; }
+    public DbSet<DailyJournalBankSale> DailyJournalBankSales { get; set; }
 
     // --- الموردين ---
     public DbSet<Supplier> Suppliers { get; set; }
     public DbSet<SupplierInvoice> SupplierInvoices { get; set; }
+    public DbSet<SupplierInvoiceItem> SupplierInvoiceItems { get; set; }
     public DbSet<SupplierTransaction> SupplierTransactions { get; set; }
 
     // --- المصاريف العامة ---
     public DbSet<GeneralExpense> GeneralExpenses { get; set; }
+
+    // --- حضور العمال وأجورهم ---
+    public DbSet<WorkerAttendance> WorkerAttendances { get; set; }
 
     // --- التدقيق المالي والترحيل (Financial Core) ---
     public DbSet<FinancialPeriod> FinancialPeriods { get; set; }
     public DbSet<PostingSession> PostingSessions { get; set; }
     public DbSet<PostingSessionDetail> PostingSessionDetails { get; set; }
 
+    // --- الخدمات المصرفية والبنكية ---
+    public DbSet<BankAccount> BankAccounts { get; set; }
+    public DbSet<BankTransaction> BankTransactions { get; set; }
+    public DbSet<CardPaymentReconciliation> CardPaymentReconciliations { get; set; }
+    public DbSet<OwnerDebt> OwnerDebts { get; set; }
+    public DbSet<OwnerDebtSettlement> OwnerDebtSettlements { get; set; }
+
+    // المسار الثابت والموحد لقاعدة البيانات - يمنع إنشاء قواعد بيانات متعددة
+    public static string GetDatabasePath()
+    {
+        var appDataDir = System.IO.Path.Combine(
+            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+            "MeezanPOS");
+        System.IO.Directory.CreateDirectory(appDataDir);
+        return System.IO.Path.Combine(appDataDir, "Meezan.db");
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlite("Data Source=Meezan.db");
+        optionsBuilder.UseSqlite($"Data Source={GetDatabasePath()}");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -60,13 +82,23 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Expense>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<Supplier>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<SupplierInvoice>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<SupplierInvoiceItem>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<SupplierTransaction>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<GeneralExpense>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<WorkerAttendance>().HasQueryFilter(e => !e.IsDeleted);
         
         // Financial Core
         modelBuilder.Entity<FinancialPeriod>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PostingSession>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PostingSessionDetail>().HasQueryFilter(e => !e.IsDeleted);
+
+        // الخدمات المصرفية والبنكية
+        modelBuilder.Entity<BankAccount>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<BankTransaction>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<CardPaymentReconciliation>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<OwnerDebt>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<OwnerDebtSettlement>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<DailyJournalBankSale>().HasQueryFilter(e => !e.IsDeleted);
         
         // Disable cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))

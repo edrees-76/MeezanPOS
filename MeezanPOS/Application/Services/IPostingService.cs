@@ -24,5 +24,10 @@ namespace MeezanPOS.Application.Services
         /// ترحيل جماعي مخصص لورديات العمل اليومية مع التحقق المحاسبي المتقدم وتوليد استجابة ترحيل متكاملة
         /// </summary>
         Task<PostingBatchResult> PostDailyJournalsBatchAsync(List<int> journalIds, string postedByUserId, string notes);
+
+        /// <summary>
+        /// ترحيل جماعي مخصص للمصاريف العامة مع التحقق المحاسبي وتوليد استجابة ترحيل متكاملة
+        /// </summary>
+        Task<PostingBatchResult> PostGeneralExpensesBatchAsync(List<int> expenseIds, string postedByUserId, string notes);
     }
 }

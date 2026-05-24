@@ -54,6 +54,9 @@ public class DailyJournal : BaseEntity, IPostableEntity
     // تفاصيل المرتجعات والمجانية
     public ICollection<OrderAdjustmentItem> Adjustments { get; set; } = new List<OrderAdjustmentItem>();
 
+    // تقسيم مبيعات الخدمات المصرفية حسب المصرف
+    public ICollection<DailyJournalBankSale> BankSales { get; set; } = new List<DailyJournalBankSale>();
+
     // IPostableEntity Implementation
     public FinancialStatus FinancialStatus { get; set; } = FinancialStatus.Draft;
     public DateTime? PostedDate { get; set; }
@@ -96,6 +99,7 @@ public class DailyExpenseItem : BaseEntity
     public int? SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
     public string? SupplierName { get; set; }  // اسم المورد (للموردين غير المسجلين)
+    public string? WorkerName { get; set; }    // اسم العامل (اختياري) في حال كان المصروف أجور تفصيلية من الصندوق
     public string? Notes { get; set; }
     public string? InvoiceNumber { get; set; }
 }
@@ -110,4 +114,29 @@ public class BankingItem : BaseEntity
 
     public decimal Amount { get; set; }
     public string? Description { get; set; }
+
+    public int? BankAccountId { get; set; }
+    public BankAccount? BankAccount { get; set; }
+
+    [System.ComponentModel.DataAnnotations.MaxLength(50)]
+    public string? ReferenceNumber { get; set; }
+
+    public bool IsReconciled { get; set; }
+}
+
+/// <summary>
+/// تقسيم مبيعات الخدمات المصرفية حسب المصرف في الحركة اليومية
+/// </summary>
+public class DailyJournalBankSale : BaseEntity
+{
+    public int DailyJournalId { get; set; }
+    public DailyJournal? DailyJournal { get; set; }
+
+    public int? BankAccountId { get; set; }
+    public BankAccount? BankAccount { get; set; }
+
+    [MaxLength(100)]
+    public string BankName { get; set; } = string.Empty;
+
+    public decimal Amount { get; set; }
 }

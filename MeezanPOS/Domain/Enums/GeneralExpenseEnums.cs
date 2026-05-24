@@ -13,6 +13,7 @@ public enum GeneralExpenseType
     Maintenance = 6,    // صيانة
     Insurance = 7,      // تأمين
     Taxes = 8,          // ضرائب/رسوم
+    SupplierPayment = 10,     // تسديد قيمة
     Other = 99          // أخرى
 }
 
@@ -23,5 +24,6 @@ public enum PaymentMethodType
 {
     Cash = 1,           // نقدي
     BankTransfer = 2,   // تحويل بنكي
-    Cheque = 3          // شيك
+    Cheque = 3,         // شيك
+    PersonalPartner = 4 // شخصي (شريك)
 }

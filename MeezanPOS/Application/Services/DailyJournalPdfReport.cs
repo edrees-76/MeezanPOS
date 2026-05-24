@@ -78,7 +78,23 @@ public class DailyJournalPdfReport : IDocument
                     innerCol.Item().Row(row =>
                     {
                         row.RelativeItem().Column(col => { col.Item().Text("مبيعات نقدية (كاش)").SemiBold(); col.Item().Text($"{_vm.CashSalesInput ?? 0:N2}"); });
-                        row.RelativeItem().Column(col => { col.Item().Text("خدمات مصرفية (شبكة / بطاقات)").SemiBold(); col.Item().Text($"{_vm.BankingSalesInput ?? 0:N2}"); });
+                        row.RelativeItem().Column(col => 
+                        { 
+                            col.Item().Text("خدمات مصرفية (شبكة / بطاقات)").SemiBold(); 
+                            col.Item().Text($"{_vm.BankingSalesInput ?? 0:N2}"); 
+                            
+                            var activeBankSales = _vm.BankSalesInputs.Where(x => (x.Amount ?? 0) > 0).ToList();
+                            if (activeBankSales.Any())
+                            {
+                                col.Item().PaddingTop(4).Column(banksCol =>
+                                {
+                                    foreach (var bs in activeBankSales)
+                                    {
+                                        banksCol.Item().Text($"- {bs.BankFriendlyName}: {bs.Amount ?? 0:N2} د.ل").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                    }
+                                });
+                            }
+                        });
                     });
                     innerCol.Item().PaddingTop(10).Background("#ecfdf5").Padding(10).Row(row =>
                     {
@@ -106,10 +122,18 @@ public class DailyJournalPdfReport : IDocument
                             foreach (var item in _vm.BankingItems)
                             {
                                 table.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text($"{item.Amount:N2}");
-                                table.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(item.BankName);
+                                // حل مشكلة: اسم المصرف لا يظهر قبل الحفظ لأن BankName لا يُعيَّن عند الاختيار من القائمة
+                                var bankDisplayName = !string.IsNullOrEmpty(item.BankName)
+                                    ? item.BankName
+                                    : _vm.ActiveBankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId)?.DisplayName ?? "";
+                                table.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(bankDisplayName);
                                 table.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(item.Last4Digits);
                             }
                         });
+                    }
+                    else
+                    {
+                        innerCol.Item().Text("لم يتم إدخال تفاصيل الدفتر المصرفي (مطابقة المبيعات الإجمالية فقط)").FontSize(10).Italic().FontColor(Colors.Grey.Medium);
                     }
                     innerCol.Item().PaddingTop(10).Background("#eff6ff").Padding(10).Column(col =>
                     {

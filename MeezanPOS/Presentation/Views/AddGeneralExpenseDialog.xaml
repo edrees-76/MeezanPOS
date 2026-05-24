@@ -1,0 +1,270 @@
+<Window x:Class="MeezanPOS.Presentation.Views.AddGeneralExpenseDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="إضافة مصروف عام" SizeToContent="Height" Width="550"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        FlowDirection="RightToLeft"
+        MouseLeftButtonDown="DragWindow">
+
+    <Border Background="White" CornerRadius="12" BorderBrush="#cbd5e1" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.15"/>
+        </Border.Effect>
+
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 1. Header -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24" Foreground="#4CAF50" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DialogTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1e293b" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Close Button -->
+                <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="30" Height="30" Padding="0" Click="Close_Click" Cursor="Hand">
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#64748b"/>
+                </Button>
+            </Grid>
+
+            <Separator Grid.Row="1" Margin="0,12,0,16" Background="#e2e8f0"/>
+
+            <!-- 2. Form Inputs -->
+            <StackPanel Grid.Row="2">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="IsEnabled" Value="True"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsViewingMode}" Value="True">
+                                <Setter Property="IsEnabled" Value="False"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="النوع:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <ComboBox ItemsSource="{Binding ExpenseTypes}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedExpenseType}" Style="{StaticResource MaterialDesignOutlinedComboBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="المبلغ:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding InputAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" materialDesign:HintAssist.Hint="0.00" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Detailed Wage Panel (Only visible when ExpenseType is Salaries/4) -->
+                <StackPanel x:Name="DetailedWagePanel" Margin="0,0,0,12">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedExpenseType}" Value="Salaries">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Toggle switch for Detailed Wage -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="تفصيلي (👤):" FontSize="13" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                          IsChecked="{Binding IsDetailedWage}" 
+                                          ToolTip="تفعيل النمط التفصيلي لإدخال اسم العامل وتسجيل مستحقاته"
+                                          Width="50" Height="26" VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Worker name editable autocomplete Combo -->
+                        <StackPanel Grid.Column="2">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDetailedWage}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="اسم العامل:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <ComboBox ItemsSource="{Binding AvailableWorkerNames}" 
+                                      Text="{Binding InputWorkerName, UpdateSourceTrigger=PropertyChanged}" 
+                                      IsEditable="True"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                      FontSize="14" VerticalContentAlignment="Center" Padding="12,10"
+                                      materialDesign:HintAssist.Hint="اكتب أو اختر اسم العامل"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="التاريخ:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <DatePicker SelectedDate="{Binding InputPaymentDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="طريقة الدفع:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <ComboBox ItemsSource="{Binding PaymentMethods}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedPaymentMethod}" Style="{StaticResource MaterialDesignOutlinedComboBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Bank Account Selection (Only visible when PaymentMethod is BankTransfer) -->
+                <StackPanel Margin="0,0,0,12">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedPaymentMethod}" Value="BankTransfer">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="180"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="الحساب البنكي:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <ComboBox ItemsSource="{Binding BankAccounts}" 
+                                      SelectedItem="{Binding SelectedBankAccountForExpense}" 
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                      FontSize="14" VerticalContentAlignment="Center" Padding="12,14"
+                                      materialDesign:HintAssist.Hint="اختر الحساب البنكي لتسجيل الحركة">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock>
+                                            <Run Text="{Binding FriendlyName, Mode=OneWay}" FontWeight="SemiBold"/>
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding BankName, Mode=OneWay}" FontSize="12" Foreground="#64748b"/>
+                                            <Run Text=" (رصيد: "/>
+                                            <Run Text="{Binding CurrentBalance, StringFormat=N2, Mode=OneWay}"/>
+                                            <Run Text=")"/>
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
+                        
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="رقم التحويل (اخر 4 أرقام):" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <TextBox Text="{Binding InputReferenceNumber, UpdateSourceTrigger=PropertyChanged}" 
+                                     materialDesign:HintAssist.Hint="----" 
+                                     MaxLength="20"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                     FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <!-- Partner Selection (Only visible when PaymentMethod is PersonalPartner) -->
+                <StackPanel Margin="0,0,0,12">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedPaymentMethod}" Value="PersonalPartner">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    
+                    <TextBlock Text="اسم الشريك ممول المصروف:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <ComboBox ItemsSource="{Binding PartnerNames}" 
+                              Text="{Binding InputPartnerName, UpdateSourceTrigger=PropertyChanged}" 
+                              IsEditable="True"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                              FontSize="14" VerticalContentAlignment="Center" Padding="12,14"
+                              materialDesign:HintAssist.Hint="اكتب أو اختر اسم الشريك الممول"/>
+                </StackPanel>
+
+                <StackPanel Margin="0,0,0,24">
+                    <TextBlock Text="الوصف:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding InputDescription, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات اختيارية" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                </StackPanel>
+
+            </StackPanel>
+
+            <!-- 3. Actions -->
+            <Grid Grid.Row="3" Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Command="{Binding SaveExpenseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Foreground="White" Background="#4CAF50" BorderBrush="#4CAF50" Height="45" FontSize="15" FontWeight="SemiBold">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsViewingMode}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSave" Width="20" Height="20" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="حفظ المصروف" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <Button Grid.Column="2" Click="Close_Click" Foreground="#64748b" BorderBrush="#cbd5e1" Height="45" FontSize="15" FontWeight="SemiBold">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
+                            <Setter Property="Content" Value="إلغاء"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsViewingMode}" Value="True">
+                                    <Setter Property="Grid.Column" Value="0"/>
+                                    <Setter Property="Grid.ColumnSpan" Value="3"/>
+                                    <Setter Property="Content" Value="إغلاق"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+
+        </Grid>
+    </Border>
+</Window>
