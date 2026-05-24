@@ -26,6 +26,8 @@ namespace MeezanPOS.Presentation.Views
         private bool _isLoading = true;
         private bool _isGeneralExpense;
         private bool _isSupplierPayment;
+        private bool _isOwnerDebt;
+        private bool _isOwnerSettlement;
 
         // General Expense fields
         private string _expenseTypeName = string.Empty;
@@ -49,6 +51,8 @@ namespace MeezanPOS.Presentation.Views
         private string _invoiceTotalString = string.Empty;
         private string _invoiceStatusName = string.Empty;
         private List<SupplierInvoiceItem> _invoiceItems = new();
+        private string _paymentMethod = string.Empty;
+        private string _transferReference = string.Empty;
 
         public TransactionDetailsViewWindow(string sourceType, int sourceId)
         {
@@ -60,10 +64,36 @@ namespace MeezanPOS.Presentation.Views
             Loaded += async (s, e) => await LoadDataAsync();
         }
 
+        public bool IsOwnerDebt
+        {
+            get => _isOwnerDebt;
+            set { _isOwnerDebt = value; OnPropertyChanged(); }
+        }
+
+        public bool IsOwnerSettlement
+        {
+            get => _isOwnerSettlement;
+            set { _isOwnerSettlement = value; OnPropertyChanged(); }
+        }
+
+        public string PaymentMethod
+        {
+            get => _paymentMethod;
+            set { _paymentMethod = value; OnPropertyChanged(); }
+        }
+
+        public string TransferReference
+        {
+            get => _transferReference;
+            set { _transferReference = value; OnPropertyChanged(); }
+        }
+
         private void DragWindow(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left)
-                DragMove();
+            if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
+            {
+                try { DragMove(); } catch { }
+            }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -142,6 +172,91 @@ namespace MeezanPOS.Presentation.Views
                     else
                     {
                         PaymentNotes = "لم يتم العثور على تفاصيل حركة السداد في قاعدة البيانات.";
+                    }
+                }
+                else if (_sourceType == "OwnerDebt" || _sourceType == "Bank" || _sourceType == "Cash")
+                {
+                    IsOwnerDebt = true;
+                    HeaderTitle = "تفاصيل تمويل الشريك";
+                    HeaderIcon = "HandCoinOutline";
+                    HeaderColor = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald 500
+
+                    using var db = new AppDbContext();
+                    // محاولة جلب الدين حسب الـ ID
+                    // ملاحظة: إذا كان الـ sourceType هو "Bank" أو "Cash" فهذا يعني أنه تمويل يدوي (في النسخة الجديدة)
+                    // والـ sourceId هو الـ BankAccountId أو null.
+                    // لكن في كشف حساب الشريك، الـ ReferenceNumber هو ID الدين.
+                    // والـ SourceId في الـ DTO يتم تعبئته من d.SourceId.
+                    
+                    // لحظة، في GetPartnerStatementAsync:
+                    // SourceType = d.SourceType,
+                    // SourceId = d.SourceId,
+                    // ReferenceNumber = d.Id.ToString()
+                    
+                    // إذاً يجب أن أستخدم d.Id وهو موجود في الـ ReferenceNumber.
+                    // لكن النافذة تستقبل _sourceId.
+                    
+                    var debt = await db.OwnerDebts
+                        .FirstOrDefaultAsync(x => x.Id == _sourceId);
+
+                    if (debt != null)
+                    {
+                        SupplierName = debt.PartnerName; // استعارة الحقل للاسم
+                        PaymentAmountString = $"{debt.Amount:N2} د.ل";
+                        PaymentDateString = debt.TransactionDate.ToString("yyyy/MM/dd");
+                        ReceiptNumber = debt.ExpenseCategory ?? "تمويل تشغيلي";
+                        PaymentNotes = string.IsNullOrEmpty(debt.Notes) ? "لا توجد ملاحظات" : debt.Notes;
+                        
+                        PaymentMethod = debt.PaymentMethod == "Transfer" ? "تحويل مصرفي" : (debt.PaymentMethod == "Cash" ? "نقدي" : "-");
+                        TransferReference = debt.TransferReference ?? "غير محدد";
+                        
+                        // إذا كان تمويلاً بنكياً، نحاول معرفة البنك
+                        if (debt.SourceType == "Bank" && debt.SourceId.HasValue)
+                        {
+                            var bank = await db.BankAccounts.FirstOrDefaultAsync(b => b.Id == debt.SourceId.Value);
+                            if (bank != null)
+                            {
+                                InvoiceNumber = bank.FriendlyName; // استعارة الحقل لاسم البنك
+                                HasInvoice = true; // سنعرض قسماً للبنك
+                            }
+                        }
+                    }
+                    else
+                    {
+                        PaymentNotes = "لم يتم العثور على بيانات التمويل.";
+                    }
+                }
+                else if (_sourceType == "OwnerDebtSettlement")
+                {
+                    IsOwnerSettlement = true;
+                    HeaderTitle = "تفاصيل تسوية ذمة";
+                    HeaderIcon = "CashCheck";
+                    HeaderColor = new SolidColorBrush(Color.FromRgb(245, 158, 11)); // Amber 500
+
+                    using var db = new AppDbContext();
+                    var sett = await db.OwnerDebtSettlements
+                        .Include(s => s.BankAccount)
+                        .FirstOrDefaultAsync(s => s.Id == _sourceId);
+
+                    if (sett != null)
+                    {
+                        SupplierName = sett.PartnerName;
+                        PaymentAmountString = $"{sett.Amount:N2} د.ل";
+                        PaymentDateString = sett.SettlementDate.ToString("yyyy/MM/dd");
+                        ReceiptNumber = sett.SettlementSource == OwnerDebtSettlementSource.Bank ? "تسوية مصرفية" 
+                                      : sett.SettlementSource == OwnerDebtSettlementSource.PettyCash ? "تسوية من الخزينة" 
+                                      : "تسوية من الكاشير";
+                        PaymentNotes = string.IsNullOrEmpty(sett.Notes) ? "لا توجد ملاحظات" : sett.Notes;
+                        
+                        if (sett.BankAccount != null)
+                        {
+                            InvoiceNumber = sett.BankAccount.FriendlyName;
+                            HasInvoice = true;
+                        }
+                    }
+                    else
+                    {
+                        PaymentNotes = "لم يتم العثور على بيانات التسوية.";
                     }
                 }
             }

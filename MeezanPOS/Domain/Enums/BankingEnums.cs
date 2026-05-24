@@ -51,3 +51,13 @@ public enum OwnerDebtSettlementSource
     Bank = 2,         // Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¨Ù†ÙƒÙŠ
     PettyCash = 3     // Ø§Ù„Ù†Ù‚Ø¯ÙŠØ© Ø§Ù„Ù…Ø¬Ù…Ø¹Ø© (Ø§Ù„Ø®Ø²ÙŠÙ†Ø©)
 }
+
+/// <summary>
+/// ÇÊÌÇå ÇáÑÕíÏ ÇáãÇáí ááÔÑíß
+/// </summary>
+public enum PartnerBalanceDirection
+{
+    RestaurantOwesPartner = 1, // ÇáãØÚã ãÏíä ááÔÑíß
+    PartnerOwesRestaurant = 2, // ÇáÔÑíß ãÏíä ááãØÚã
+    Settled = 3                // ÊãÊ ÇáÊÓæíÉ / ÕİÑ
+}
