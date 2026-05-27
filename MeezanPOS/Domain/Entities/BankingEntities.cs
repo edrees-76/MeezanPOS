@@ -84,6 +84,9 @@ public class BankTransaction : BaseEntity
     }
 
     [NotMapped]
+    public int SequenceNumber { get; set; }
+
+    [NotMapped]
     public string DisplayNotes
     {
         get

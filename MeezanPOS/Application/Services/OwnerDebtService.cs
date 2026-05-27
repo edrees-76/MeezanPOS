@@ -42,25 +42,68 @@ public class OwnerDebtService : IOwnerDebtService
             .ToListAsync();
     }
 
-    public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null)
+    public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null, int? bankAccountId = null)
     {
-        var debt = new OwnerDebt
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            PartnerName = partnerName,
-            Amount = amount,
-            ExpenseCategory = expenseCategory,
-            Notes = notes,
-            TransactionDate = date,
-            Status = OwnerDebtStatus.Unpaid,
-            SourceType = sourceType,
-            SourceId = sourceId,
-            PaymentMethod = paymentMethod,
-            TransferReference = transferReference
-        };
+            var debt = new OwnerDebt
+            {
+                PartnerName = partnerName,
+                Amount = amount,
+                ExpenseCategory = expenseCategory,
+                Notes = notes,
+                TransactionDate = date,
+                Status = OwnerDebtStatus.Unpaid,
+                SourceType = sourceType,
+                SourceId = sourceId,
+                PaymentMethod = paymentMethod,
+                TransferReference = transferReference
+            };
 
-        _context.OwnerDebts.Add(debt);
-        await _context.SaveChangesAsync();
-        return debt;
+            _context.OwnerDebts.Add(debt);
+            await _context.SaveChangesAsync();
+
+            // إذا كان التمويل عبر تحويل مصرفي، نقوم بزيادة رصيد البنك فورا
+            if (paymentMethod == "Transfer" && bankAccountId.HasValue)
+            {
+                var bankTxNotes = $"تمويل من الشريك: {partnerName}" + (string.IsNullOrEmpty(notes) ? "" : $" - {notes}");
+                await _bankService.RecordTransactionAsync(
+                    bankAccountId.Value,
+                    BankTransactionType.Deposit, // إيداع
+                    amount,
+                    transferReference,
+                    bankTxNotes,
+                    "OwnerDebt_Transfer",
+                    debt.Id,
+                    date
+                );
+            }
+            // إذا كان نقدا وتم تحديده كإيداع في البنك (مثلا شريك أودع نقدا في حساب البنك)
+            else if (paymentMethod == "Cash" && bankAccountId.HasValue)
+            {
+                var bankTxNotes = $"إيداع نقدي من الشريك: {partnerName}" + (string.IsNullOrEmpty(notes) ? "" : $" - {notes}");
+                await _bankService.RecordTransactionAsync(
+                    bankAccountId.Value,
+                    BankTransactionType.Deposit,
+                    amount,
+                    null,
+                    bankTxNotes,
+                    "OwnerDebt_Cash",
+                    debt.Id,
+                    date
+                );
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            return debt;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task DeleteDebtAsync(int debtId)
@@ -304,9 +347,12 @@ public class OwnerDebtService : IOwnerDebtService
                 Amount = d.Amount,
                 IsSettlement = false,
                 SourceType = d.SourceType ?? "OwnerDebt",
-                SourceId = d.Id,
-                ReferenceNumber = d.TransferReference ?? d.Id.ToString(),
-                PaymentMethod = d.PaymentMethod == "Transfer" ? "تحويل مصرفي" : (d.PaymentMethod == "Cash" ? "نقدي" : "-"),
+                SourceId = (d.SourceType == "GeneralExpense" || d.SourceType == "SupplierTransaction") ? (d.SourceId ?? d.Id) : d.Id,
+                ReferenceNumber = !string.IsNullOrEmpty(d.TransferReference) ? d.TransferReference : d.Id.ToString("D5"),
+                PaymentMethod = d.PaymentMethod == "Transfer" ? "تحويل مصرفي" :
+                                d.PaymentMethod == "Cash" ? "نقدي" :
+                                d.PaymentMethod == "PersonalPartner" ? "شخصي (شريك)" :
+                                d.PaymentMethod == "GeneralExpense" ? "مصروف عام" : "-",
                 TransferReference = d.TransferReference,
                 CanDelete = d.SourceType == null // فقط الديون اليدوية يمكن حذفها
             })
@@ -374,7 +420,7 @@ public class OwnerDebtService : IOwnerDebtService
         if (sourceType == "GeneralExpense")
             return $"مصروف تشغيلي ({expenseCategory ?? "عام"}) مدفوع بواسطة الشريك";
 
-        return string.IsNullOrEmpty(notes) ? "دين مسجل يدوياً" : notes;
+        return string.IsNullOrEmpty(notes) ? "تمويل مباشر من الشريك" : notes;
     }
 
     private static string GenerateSettlementDescription(OwnerDebtSettlementSource source, string? bankName, string? notes)

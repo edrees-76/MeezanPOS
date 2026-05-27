@@ -241,6 +241,17 @@
                         </Style>
                     </DataGrid.RowStyle>
                     <DataGrid.Columns>
+                        <!-- التسلسل -->
+                        <DataGridTextColumn Header="م" Binding="{Binding SequenceNumber}" Width="50">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextAlignment" Value="Center"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="#94a3b8"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
                         <!-- التاريخ والوقت -->
                         <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding TransactionDate, StringFormat=yyyy/MM/dd HH:mm}" Width="160">
                             <DataGridTextColumn.ElementStyle>

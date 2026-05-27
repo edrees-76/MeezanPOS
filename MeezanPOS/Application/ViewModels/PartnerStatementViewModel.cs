@@ -50,15 +50,15 @@ public partial class PartnerStatementViewModel : ObservableObject
             CurrentBalance = TotalDebts - TotalSettlements;
 
             BalanceDirection = CurrentBalance > 0
-                ? PartnerBalanceDirection.PartnerOwesRestaurant
+                ? PartnerBalanceDirection.RestaurantOwesPartner
                 : CurrentBalance < 0
-                    ? PartnerBalanceDirection.RestaurantOwesPartner
+                    ? PartnerBalanceDirection.PartnerOwesRestaurant
                     : PartnerBalanceDirection.Settled;
 
             BalanceDirectionText = BalanceDirection switch
             {
-                PartnerBalanceDirection.PartnerOwesRestaurant => "الشريك مدين للمطعم",
                 PartnerBalanceDirection.RestaurantOwesPartner => "المطعم مدين للشريك",
+                PartnerBalanceDirection.PartnerOwesRestaurant => "الشريك مدين للمطعم",
                 _ => "الحسابات متوازنة"
             };
 
@@ -111,39 +111,29 @@ public partial class PartnerStatementViewModel : ObservableObject
             return;
         }
 
-        var saveFileDialog = new SaveFileDialog
+        try
         {
-            Filter = "PDF Files | *.pdf",
-            FileName = $"كشف_حساب_{PartnerName}_{DateTime.Now:yyyyMMdd}.pdf"
-        };
+            string fileName = $"كشف_حساب_{PartnerName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
 
-        if (saveFileDialog.ShowDialog() == true)
+            PartnerStatementPdfReport.GeneratePdf(
+                filePath,
+                PartnerName,
+                0, // Opening Balance (Placeholder if not tracked separately)
+                TotalDebts,
+                TotalSettlements,
+                CurrentBalance,
+                BalanceDirection,
+                StatementEntries.ToList(),
+                FilterDateFrom ?? (StatementEntries.Any() ? StatementEntries.Min(e => e.TransactionDate) : DateTime.Now),
+                FilterDateTo ?? (StatementEntries.Any() ? StatementEntries.Max(e => e.TransactionDate) : DateTime.Now)
+            );
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
         {
-            try
-            {
-                // حساب رصيد البداية (رصيد ما قبل أول حركة في القائمة المعروضة)
-                // ملاحظة: بما أننا نرسل الكشف الكامل، رصيد البداية هو 0 إلا إذا كان هناك رصيد افتتاحي
-                // للحفاظ على البساطة، سنعتمد القيم المحسوبة في الفيو موديل
-                
-                PartnerStatementPdfReport.GeneratePdf(
-                    saveFileDialog.FileName,
-                    PartnerName,
-                    0, // Opening Balance (Placeholder if not tracked separately)
-                    TotalSettlements,
-                    TotalDebts,
-                    CurrentBalance,
-                    BalanceDirection,
-                    StatementEntries.ToList(),
-                    FilterDateFrom ?? StatementEntries.Min(e => e.TransactionDate),
-                    FilterDateTo ?? StatementEntries.Max(e => e.TransactionDate)
-                );
-
-                MessageBox.Show("تم تصدير كشف الحساب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"خطأ أثناء التصدير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            MessageBox.Show($"خطأ أثناء تصدير وفتح كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

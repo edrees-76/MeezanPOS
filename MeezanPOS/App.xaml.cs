@@ -9,6 +9,8 @@ namespace MeezanPOS;
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    private static System.Threading.Mutex? _appMutex;
+
     public App()
     {
         this.DispatcherUnhandledException += (s, e) => 
@@ -27,6 +29,19 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        const string mutexName = "MeezanPOS_SingleInstance_Mutex";
+        bool createdNew;
+        _appMutex = new System.Threading.Mutex(true, mutexName, out createdNew);
+
+        if (!createdNew)
+        {
+            MessageBox.Show("المنظومة مفتوحة بالفعل وهي قيد التشغيل حالياً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            _appMutex.Dispose();
+            _appMutex = null;
+            System.Windows.Application.Current.Shutdown();
+            return;
+        }
+
         base.OnStartup(e);
 
         // التأكد من تطبيق كل التحديثات على قاعدة البيانات عند بدء التشغيل
@@ -65,6 +80,7 @@ public partial class App : System.Windows.Application
             try
             {
                 context.Database.Migrate();
+                MeezanPOS.Infrastructure.Data.AppDbContext.MigrateDatabase();
             }
             catch (System.Exception ex)
             {
@@ -131,6 +147,7 @@ public partial class App : System.Windows.Application
             // إضافة حقول طريقة الدفع ومرجع التحويل لجدول ديون الشركاء
             try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;"); } catch { }
             try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;"); } catch { }
+            try { context.Database.ExecuteSqlRaw("ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;"); } catch { }
         }
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));
@@ -205,6 +222,20 @@ public partial class App : System.Windows.Application
                 }
             }
         }
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        if (_appMutex != null)
+        {
+            try
+            {
+                _appMutex.ReleaseMutex();
+            }
+            catch { }
+            _appMutex.Dispose();
+        }
+        base.OnExit(e);
     }
 }
 

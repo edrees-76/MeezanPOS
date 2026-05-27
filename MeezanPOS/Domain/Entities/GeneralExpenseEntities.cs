@@ -15,6 +15,7 @@ public class GeneralExpense : BaseEntity, IPostableEntity
     public DateTime PaymentDate { get; set; }
     public PaymentMethodType PaymentMethod { get; set; } = PaymentMethodType.Cash;
     public string Description { get; set; } = string.Empty;
+    public string? CustomExpenseName { get; set; } // اسم المصروف اليدوي (في حال اختيار أخرى)
     public string? WorkerName { get; set; } // اسم العامل (اختياري) في حال كان المصروف أجور تفصيلية
     public int? BankAccountId { get; set; } // معرف الحساب البنكي (اختياري) عند الدفع بتحويل بنكي
     public BankAccount? BankAccount { get; set; }

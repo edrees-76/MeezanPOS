@@ -1058,7 +1058,12 @@ public partial class BankingServicesViewModel : ObservableObject
                 );
             }
 
-            StatementTransactions = new ObservableCollection<BankTransaction>(displayList);
+            var displayListWithSeq = displayList.ToList();
+            for (int i = 0; i < displayListWithSeq.Count; i++)
+            {
+                displayListWithSeq[i].SequenceNumber = i + 1;
+            }
+            StatementTransactions = new ObservableCollection<BankTransaction>(displayListWithSeq);
         }
         catch (Exception ex)
         {
@@ -1082,9 +1087,8 @@ public partial class BankingServicesViewModel : ObservableObject
         try
         {
             string safeName = string.Join("_", StatementAccount.FriendlyName.Split(System.IO.Path.GetInvalidFileNameChars()));
-            string fileName = $"BankStatement_{safeName}_{StatementStartDate:yyyyMMdd}_{StatementEndDate:yyyyMMdd}.pdf";
-            string filePath = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.Desktop), fileName);
+            string fileName = $"BankStatement_{safeName}_{StatementStartDate:yyyyMMdd}_{StatementEndDate:yyyyMMdd_HHmmss}.pdf";
+            string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
 
             BankStatementPdfReport.GeneratePdf(
                 filePath,
@@ -1103,8 +1107,6 @@ public partial class BankingServicesViewModel : ObservableObject
                 FileName = filePath,
                 UseShellExecute = true
             });
-
-            MessageBox.Show($"تم تصدير كشف الحساب بنجاح إلى سطح المكتب:\n{fileName}", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -1315,13 +1317,7 @@ public partial class BankingServicesViewModel : ObservableObject
             string timeStr = DateTime.Now.ToString("HH_mm_ss");
             string fileName = $"{bankName} - {dateStr} - {timeStr}.pdf";
             
-            var docPath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), "MeezanReports");
-            if (!System.IO.Directory.Exists(docPath))
-            {
-                System.IO.Directory.CreateDirectory(docPath);
-            }
-            
-            var filePath = System.IO.Path.Combine(docPath, fileName);
+            var filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
             report.GeneratePdf(filePath);
             
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });

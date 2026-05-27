@@ -72,6 +72,25 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- Custom Expense Type Name (Only visible when SelectedExpenseType is Other) -->
+                <StackPanel Margin="0,0,0,12">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedExpenseType}" Value="Other">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="نوع المصروف اليدوي:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding InputCustomExpenseType, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="مثلاً: صيانة آلات، قرطاسية ..." 
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                             FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                </StackPanel>
+
                 <!-- Detailed Wage Panel (Only visible when ExpenseType is Salaries/4) -->
                 <StackPanel x:Name="DetailedWagePanel" Margin="0,0,0,12">
                     <StackPanel.Style>

@@ -22,7 +22,10 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
     public int Sequence { get; set; }
     public int Id { get; set; }
     public GeneralExpenseType ExpenseType { get; set; }
-    public string ExpenseTypeName { get; set; } = string.Empty;
+    public string? CustomExpenseName { get; set; }
+    public string ExpenseTypeName => (ExpenseType == GeneralExpenseType.Other && !string.IsNullOrEmpty(CustomExpenseName)) 
+        ? CustomExpenseName 
+        : GeneralExpensesViewModel.GetExpenseTypeName(ExpenseType);
     public decimal Amount { get; set; }
     public DateTime PaymentDate { get; set; }
     public string PaymentDateDisplay => PaymentDate.ToString("yyyy/MM/dd");
@@ -160,6 +163,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
     [ObservableProperty]
     private string inputDescription = string.Empty;
+
+    [ObservableProperty]
+    private string inputCustomExpenseType = string.Empty;
 
     [ObservableProperty]
     private bool isDetailedWage = false;
@@ -383,7 +389,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     Sequence = seq++,
                     Id = item.Id,
                     ExpenseType = item.ExpenseType,
-                    ExpenseTypeName = GetExpenseTypeName(item.ExpenseType),
+                    CustomExpenseName = item.CustomExpenseName,
                     Amount = item.Amount,
                     PaymentDate = item.PaymentDate,
                     PaymentMethod = item.PaymentMethod,
@@ -469,6 +475,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             MessageBox.Show("يرجى إدخال اسم العامل للمصروف التفصيلي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
+        
+        if (SelectedExpenseType == GeneralExpenseType.Other && string.IsNullOrWhiteSpace(InputCustomExpenseType))
+        {
+            MessageBox.Show("يرجى كتابة نوع المصروف اليدوي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
 
         if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense == null)
         {
@@ -510,7 +522,16 @@ public partial class GeneralExpensesViewModel : ObservableObject
                         await ownerDebtService.DeleteDebtAsync(debt.Id);
                     }
 
+                    // عكس الحركة النقدية القديمة إن وجدت
+                    var cashLedgerService = new Services.CashLedgerService(db);
+                    var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
+                    if (oldCashMovement != null)
+                    {
+                        await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل المصروف العام");
+                    }
+
                     existing.ExpenseType = SelectedExpenseType;
+                    existing.CustomExpenseName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType.Trim() : null;
                     existing.Amount = InputAmount.Value;
                     existing.PaymentDate = InputPaymentDate;
                     existing.PaymentMethod = SelectedPaymentMethod;
@@ -532,7 +553,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     // تسجيل الحركة البنكية الجديدة
                     if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
                     {
-                        var notes = $"مصروف عام: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                        var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                         await bankService.RecordTransactionAsync(
                             SelectedBankAccountForExpense.Id,
                             BankTransactionType.ExpensePayment,
@@ -546,7 +568,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     }
                     else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
                     {
-                        var notes = $"مصروف عام شخصي: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                        var notes = $"مصروف عام شخصي: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                         await ownerDebtService.RecordDebtAsync(
                             InputPartnerName.Trim(),
                             InputAmount.Value,
@@ -555,6 +578,19 @@ public partial class GeneralExpensesViewModel : ObservableObject
                             InputPaymentDate,
                             "GeneralExpense",
                             existing.Id
+                        );
+                    }
+                    else if (SelectedPaymentMethod == PaymentMethodType.Cash)
+                    {
+                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                        var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                        await cashLedgerService.RecordMovementAsync(
+                            CashMovementType.CashOut,
+                            InputAmount.Value,
+                            "GeneralExpense",
+                            existing.Id,
+                            notes,
+                            InputPaymentDate
                         );
                     }
 
@@ -567,6 +603,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 var expense = new Domain.Entities.GeneralExpense
                 {
                     ExpenseType = SelectedExpenseType,
+                    CustomExpenseName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType.Trim() : null,
                     Amount = InputAmount.Value,
                     PaymentDate = InputPaymentDate,
                     PaymentMethod = SelectedPaymentMethod,
@@ -580,7 +617,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 // تسجيل الحركة البنكية
                 if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
                 {
-                    var notes = $"مصروف عام: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                    var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                     await bankService.RecordTransactionAsync(
                         SelectedBankAccountForExpense.Id,
                         BankTransactionType.ExpensePayment,
@@ -594,15 +632,30 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
                 else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
                 {
-                    var notes = $"مصروف عام شخصي: {GetExpenseTypeName(SelectedExpenseType)}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                    var notes = $"مصروف عام شخصي: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                     await ownerDebtService.RecordDebtAsync(
                         InputPartnerName.Trim(),
                         InputAmount.Value,
-                        SelectedExpenseType.ToString(),
+                        typeName,
                         notes,
                         InputPaymentDate,
                         "GeneralExpense",
                         expense.Id
+                    );
+                }
+                else if (SelectedPaymentMethod == PaymentMethodType.Cash)
+                {
+                    var cashLedgerService = new Services.CashLedgerService(db);
+                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
+                    var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashOut,
+                        InputAmount.Value,
+                        "GeneralExpense",
+                        expense.Id,
+                        notes,
+                        InputPaymentDate
                     );
                 }
 
@@ -643,6 +696,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         SelectedPaymentMethod = item.PaymentMethod;
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
         InputDescription = item.Description;
+        InputCustomExpenseType = item.CustomExpenseName ?? string.Empty;
         IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
         InputWorkerName = item.WorkerName ?? string.Empty;
 
@@ -692,6 +746,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         SelectedPaymentMethod = item.PaymentMethod;
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
         InputDescription = item.Description;
+        InputCustomExpenseType = item.CustomExpenseName ?? string.Empty;
         IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
         InputWorkerName = item.WorkerName ?? string.Empty;
 
@@ -858,6 +913,14 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     await ownerDebtService.DeleteDebtAsync(debt.Id);
                 }
 
+                // عكس الحركة النقدية المرتبطة إن وجدت
+                var cashLedgerService = new Services.CashLedgerService(db);
+                var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
+                if (oldCashMovement != null)
+                {
+                    await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "حذف المصروف العام");
+                }
+
                 existing.IsDeleted = true;
                 existing.UpdatedAt = DateTime.Now;
                 await db.SaveChangesAsync();
@@ -965,6 +1028,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputPaymentDate = DateTime.Today;
         SelectedPaymentMethod = PaymentMethodType.Cash;
         InputDescription = string.Empty;
+        InputCustomExpenseType = string.Empty;
         IsDetailedWage = false;
         InputWorkerName = string.Empty;
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault();

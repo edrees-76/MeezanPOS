@@ -178,6 +178,16 @@ public class LedgerService : ILedgerService
                     await _context.SaveChangesAsync();
 
                     ledgerTx.SourceId = expense.Id;
+
+                    var cashLedgerService = new CashLedgerService(_context);
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashOut,
+                        amount,
+                        "GeneralExpense",
+                        expense.Id,
+                        expenseNotes,
+                        paymentDate
+                    );
                 }
             }
 
@@ -364,6 +374,17 @@ public class LedgerService : ILedgerService
                 throw new Exception("لا يمكن تعديل حركة السداد لأن المصروف المرتبط بها قد تم ترحيله مالياً بالفعل.");
             }
 
+            // عكس الحركة النقدية القديمة للمصروف إن وجدت
+            if (oldExpense != null)
+            {
+                var cashLedgerService = new CashLedgerService(_context);
+                var oldCashMovement = await _context.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == oldExpense.Id && !m.IsReversed);
+                if (oldCashMovement != null)
+                {
+                    await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل دفعة المورد");
+                }
+            }
+
             if (bankAccountId.HasValue)
             {
                 // إذا تم تحديد حساب بنكي
@@ -514,6 +535,16 @@ public class LedgerService : ILedgerService
                         oldExpense.BankAccountId = null;
                         oldExpense.Description = expenseNotes;
                         oldExpense.UpdatedAt = DateTime.Now;
+
+                        var cashLedgerService = new CashLedgerService(_context);
+                        await cashLedgerService.RecordMovementAsync(
+                            CashMovementType.CashOut,
+                            amount,
+                            "GeneralExpense",
+                            oldExpense.Id,
+                            expenseNotes,
+                            paymentDate
+                        );
                     }
                     else
                     {
@@ -531,6 +562,16 @@ public class LedgerService : ILedgerService
                         _context.GeneralExpenses.Add(expense);
                         await _context.SaveChangesAsync();
                         ledgerTx.SourceId = expense.Id;
+
+                        var cashLedgerService = new CashLedgerService(_context);
+                        await cashLedgerService.RecordMovementAsync(
+                            CashMovementType.CashOut,
+                            amount,
+                            "GeneralExpense",
+                            expense.Id,
+                            expenseNotes,
+                            paymentDate
+                        );
                     }
                 }
                 else

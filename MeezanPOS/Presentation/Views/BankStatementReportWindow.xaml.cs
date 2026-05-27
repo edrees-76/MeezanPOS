@@ -49,8 +49,7 @@ public partial class BankStatementReportWindow : Window
                 detailsDialog.ShowDialog();
             }
         }
-        else if ((transaction.Type == BankTransactionType.ExpensePayment || transaction.Type == BankTransactionType.SupplierPayment)
-                 && !string.IsNullOrEmpty(transaction.SourceType) && transaction.SourceId.HasValue)
+        else if (!string.IsNullOrEmpty(transaction.SourceType) && transaction.SourceId.HasValue)
         {
             // فتح نافذة تفاصيل العملية المالية المخصصة
             var detailsDialog = new TransactionDetailsViewWindow(transaction.SourceType, transaction.SourceId.Value)

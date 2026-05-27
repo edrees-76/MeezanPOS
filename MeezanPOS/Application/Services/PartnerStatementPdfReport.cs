@@ -145,10 +145,10 @@ public class PartnerStatementPdfReport
                     table.Cell().Element(CellStyle).Text(tx.TransactionDate.ToString("yyyy/MM/dd"));
                     table.Cell().Element(CellStyle).AlignLeft().Text(tx.Description);
                     
-                    // Increase if Settlement (liability reduction/funding)
-                    // Decrease if Debt (liability increase/withdrawal)
-                    table.Cell().Element(CellStyle).Text(tx.IsSettlement ? $"{tx.Amount:N2}" : "").FontColor(Colors.Green.Darken3).SemiBold();
-                    table.Cell().Element(CellStyle).Text(!tx.IsSettlement ? $"{tx.Amount:N2}" : "").FontColor(Colors.Red.Darken3).SemiBold();
+                    // !IsSettlement = Partner paid (Increase/Funding for the restaurant's debt to partner)
+                    // IsSettlement = Restaurant paid back (Decrease/Withdrawal)
+                    table.Cell().Element(CellStyle).Text(!tx.IsSettlement ? $"{tx.Amount:N2}" : "").FontColor(Colors.Green.Darken3).SemiBold();
+                    table.Cell().Element(CellStyle).Text(tx.IsSettlement ? $"{tx.Amount:N2}" : "").FontColor(Colors.Red.Darken3).SemiBold();
                     
                     table.Cell().Element(CellStyle).Text($"{tx.RunningBalance:N2}").Bold().FontColor(Colors.Indigo.Darken4);
 
@@ -162,17 +162,6 @@ public class PartnerStatementPdfReport
                 }
             });
             
-            column.Item().PaddingTop(1f, Unit.Centimetre).Row(row => {
-                row.RelativeItem().Column(col => {
-                    col.Item().Text("توقيع المحاسب").SemiBold().AlignCenter();
-                    col.Item().PaddingTop(1.5f, Unit.Centimetre).BorderBottom(1).BorderColor(Colors.Grey.Lighten1);
-                });
-                row.ConstantItem(100);
-                row.RelativeItem().Column(col => {
-                    col.Item().Text("توقيع الشريك").SemiBold().AlignCenter();
-                    col.Item().PaddingTop(1.5f, Unit.Centimetre).BorderBottom(1).BorderColor(Colors.Grey.Lighten1);
-                });
-            });
         });
     }
 
@@ -204,7 +193,7 @@ public class PartnerStatementPdfReport
                     x.TotalPages();
                 });
                 row.RelativeItem().AlignLeft().PaddingRight(5).Text($"صدر في: {DateTime.Now:yyyy/MM/dd HH:mm}").FontSize(8).FontColor(Colors.Grey.Medium);
-                row.RelativeItem().AlignCenter().Text("منظومة ميزان لخدمات المطاعم - سجل التمويل التشغيلي").FontSize(9).SemiBold().FontColor(Colors.Grey.Medium);
+                row.RelativeItem().AlignCenter().Text("منظومة ميزان").FontSize(12).SemiBold().FontColor(Colors.Grey.Medium);
             });
     }
 }

@@ -168,6 +168,34 @@
                             <TextBlock Text="أرشيف الأشهر المرحّلة" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
+
+                    <!-- Tab 2: Current Cash -->
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="2">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="2">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="18"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CashMultiple" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="الكاش الحالي" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
         </Grid>
@@ -797,29 +825,6 @@
                                     <!-- Batch actions inside selected month -->
                                     <StackPanel Grid.Column="3" Orientation="Horizontal">
                                         
-                                        <!-- If open -->
-                                        <Button Command="{Binding PostMonthCommand}"
-                                                CommandParameter="{Binding SelectedArchivedMonth}"
-                                                Visibility="{Binding SelectedArchivedMonth.IsPosted, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
-                                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                                Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Padding="16,0" Margin="0,0,8,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="إقفال وترحيل الشهر بالكامل" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
-
-                                        <!-- If posted -->
-                                        <Button Command="{Binding UnpostMonthCommand}"
-                                                CommandParameter="{Binding SelectedArchivedMonth}"
-                                                Visibility="{Binding SelectedArchivedMonth.IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                                Style="{StaticResource MaterialDesignRaisedButton}"
-                                                Background="#ef4444" BorderBrush="#ef4444" Height="36" Padding="16,0" Margin="0,0,8,0">
-                                            <StackPanel Orientation="Horizontal">
-                                                <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="فك ترحيل وإقفال الشهر" VerticalAlignment="Center"/>
-                                            </StackPanel>
-                                        </Button>
 
                                         <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الحركات" Command="{Binding LoadDataCommand}" Height="36"/>
                                     </StackPanel>
@@ -846,17 +851,6 @@
                                       HorizontalGridLinesBrush="#f1f5f9">
 
                                 <DataGrid.Columns>
-                                    <DataGridTemplateColumn Width="65">
-                                        <DataGridTemplateColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                    <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
-                                                              IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
-                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Grid>
-                                            </DataTemplate>
-                                        </DataGridTemplateColumn.CellTemplate>
-                                    </DataGridTemplateColumn>
                                     <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto"/>
                                     <DataGridTextColumn Header="التاريخ" Binding="{Binding Journal.JournalDate, StringFormat=\{0:dd-MM-yyyy\}}" Width="Auto"/>
                                     <DataGridTextColumn Header="الوردية" Binding="{Binding Journal.ShiftName}" Width="Auto"/>
@@ -887,6 +881,26 @@
                                                             Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
                                                         <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
                                                     </Button>
+                                                     <!-- Edit (Only visible if open/Draft) -->
+                                                     <Button Command="{Binding DataContext.EditJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                             CommandParameter="{Binding}"
+                                                             ToolTip="تعديل الوردية"
+                                                             Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
+                                                         <Button.Style>
+                                                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignToolButton}">
+                                                                 <Setter Property="Visibility" Value="Collapsed"/>
+                                                                 <Style.Triggers>
+                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Draft">
+                                                                         <Setter Property="Visibility" Value="Visible"/>
+                                                                     </DataTrigger>
+                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Reviewed">
+                                                                         <Setter Property="Visibility" Value="Visible"/>
+                                                                     </DataTrigger>
+                                                                 </Style.Triggers>
+                                                             </Style>
+                                                         </Button.Style>
+                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
+                                                     </Button>
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -916,5 +930,111 @@
                 </Grid>
             </Grid>
         </Grid>
+        <!-- ==================== TAB 2: CURRENT CASH ==================== -->
+        <Grid Grid.Row="2">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="2">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header & Summary Card -->
+                    <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#10b981" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="#64748b" FontWeight="Medium"/>
+                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#14532d"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                 <!-- Rebuild Warning Alert -->
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
+                                         Height="40" Width="140" Padding="0" Margin="0,0,10,0"
+                                         Background="#dc2626" BorderBrush="#dc2626"
+                                         Cursor="Help"
+                                         Visibility="{Binding IsRebuildRequired, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                         ToolTip="تنبيه: يجب إعادة بناء الدفتر بسبب تسجيل حركة بتاريخ سابق أو تعديل مصروف/سداد بأثر رجعي!">
+                                     <Grid Width="140">
+                                        <materialDesign:PackIcon Kind="Alert" Width="28" Height="28" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                     </Grid>
+                                 </Button>
+
+                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                                        Content="إعادة بناء الدفتر" 
+                                        Command="{Binding RebuildCashLedgerCommand}" 
+                                        BorderBrush="#f59e0b" Foreground="#d97706"
+                                        Height="40" Width="140" Margin="0,0,10,0" Cursor="Hand" ToolTip="إعادة حساب الأرصدة التراكمية لتصحيح أي خلل"/>
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+                                        Content="تحديث البيانات" 
+                                        Command="{Binding LoadCashMovementsCommand}" 
+                                        Background="#10b981" BorderBrush="#10b981"
+                                        Height="40" Cursor="Hand"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Cash Movements DataGrid -->
+                    <Grid Grid.Row="1">
+                        <DataGrid Margin="0" 
+                                  ItemsSource="{Binding CashMovements}" 
+                                  AutoGenerateColumns="False"
+                                  CanUserAddRows="False" 
+                                  IsReadOnly="True"
+                                  HeadersVisibility="Column"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  RowHeight="50"
+                                  GridLinesVisibility="Horizontal"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  HorizontalGridLinesBrush="#f1f5f9">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="م" Binding="{Binding Sequence}" Width="Auto" MinWidth="40"/>
+                                <DataGridTextColumn Header="التاريخ" Binding="{Binding TransactionDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="150"/>
+                                <DataGridTextColumn Header="البيان" Binding="{Binding Notes}" Width="*" MinWidth="250"/>
+                                <DataGridTemplateColumn Header="المبلغ" Width="Auto" MinWidth="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Command="{Binding DataContext.ViewCashMovementDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                                    Cursor="Hand" Padding="4,0" Height="Auto"
+                                                    ToolTip="اضغط لعرض التفاصيل">
+                                                <TextBlock Text="{Binding Amount, StringFormat=\{0:N2\} د.ل}" 
+                                                           FontWeight="Bold" Foreground="#3b82f6" 
+                                                           TextDecorations="Underline"/>
+                                            </Button>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="الرصيد بعد الحركة" Binding="{Binding BalanceAfter, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
     </Grid>
 </UserControl>

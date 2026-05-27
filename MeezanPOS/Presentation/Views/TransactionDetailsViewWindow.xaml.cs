@@ -11,11 +11,14 @@ using Microsoft.EntityFrameworkCore;
 using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
 using MeezanPOS.Infrastructure.Data;
+using MeezanPOS.Application.ViewModels;
+using QuestPDF.Fluent;
 
 namespace MeezanPOS.Presentation.Views
 {
     public partial class TransactionDetailsViewWindow : Window, INotifyPropertyChanged
     {
+        private CashMovement? _cashMovement;
         private readonly string _sourceType;
         private readonly int _sourceId;
 
@@ -28,6 +31,7 @@ namespace MeezanPOS.Presentation.Views
         private bool _isSupplierPayment;
         private bool _isOwnerDebt;
         private bool _isOwnerSettlement;
+        private bool _isDailyJournal;
 
         // General Expense fields
         private string _expenseTypeName = string.Empty;
@@ -54,11 +58,33 @@ namespace MeezanPOS.Presentation.Views
         private string _paymentMethod = string.Empty;
         private string _transferReference = string.Empty;
 
+        // CashMovement fields
+        private bool _hasCashMovement;
+        private string _cashMovementSequence = string.Empty;
+        private string _cashMovementAmountString = string.Empty;
+        private string _cashMovementDateString = string.Empty;
+        private string _cashMovementTypeString = string.Empty;
+        private string _cashMovementBalanceAfterString = string.Empty;
+        private string _cashMovementStatusString = string.Empty;
+        private Brush _cashMovementStatusColor = Brushes.Gray;
+        private string _cashMovementNotes = string.Empty;
+
         public TransactionDetailsViewWindow(string sourceType, int sourceId)
         {
             InitializeComponent();
             _sourceType = sourceType;
             _sourceId = sourceId;
+            DataContext = this;
+
+            Loaded += async (s, e) => await LoadDataAsync();
+        }
+
+        public TransactionDetailsViewWindow(CashMovement movement)
+        {
+            InitializeComponent();
+            _cashMovement = movement;
+            _sourceType = movement.SourceType;
+            _sourceId = movement.SourceId ?? 0;
             DataContext = this;
 
             Loaded += async (s, e) => await LoadDataAsync();
@@ -88,6 +114,64 @@ namespace MeezanPOS.Presentation.Views
             set { _transferReference = value; OnPropertyChanged(); }
         }
 
+        public bool HasCashMovement
+        {
+            get => _hasCashMovement;
+            set { _hasCashMovement = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasNoSourceDetails)); }
+        }
+
+        public bool HasNoSourceDetails => !_isGeneralExpense && !_isSupplierPayment && !_isDailyJournal && !_isOwnerDebt && !_isOwnerSettlement;
+
+        public bool CanGoToSource => _sourceType == "DailyJournal" || _sourceType == "GeneralExpense" || _sourceType == "SupplierTransaction";
+
+        public string CashMovementSequence
+        {
+            get => _cashMovementSequence;
+            set { _cashMovementSequence = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementAmountString
+        {
+            get => _cashMovementAmountString;
+            set { _cashMovementAmountString = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementDateString
+        {
+            get => _cashMovementDateString;
+            set { _cashMovementDateString = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementTypeString
+        {
+            get => _cashMovementTypeString;
+            set { _cashMovementTypeString = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementBalanceAfterString
+        {
+            get => _cashMovementBalanceAfterString;
+            set { _cashMovementBalanceAfterString = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementStatusString
+        {
+            get => _cashMovementStatusString;
+            set { _cashMovementStatusString = value; OnPropertyChanged(); }
+        }
+
+        public Brush CashMovementStatusColor
+        {
+            get => _cashMovementStatusColor;
+            set { _cashMovementStatusColor = value; OnPropertyChanged(); }
+        }
+
+        public string CashMovementNotes
+        {
+            get => _cashMovementNotes;
+            set { _cashMovementNotes = value; OnPropertyChanged(); }
+        }
+
         private void DragWindow(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left && e.ButtonState == MouseButtonState.Pressed)
@@ -106,20 +190,57 @@ namespace MeezanPOS.Presentation.Views
             IsLoading = true;
             try
             {
+                using var outerDb = new AppDbContext();
+
+                // 1. Try to load the corresponding CashMovement if not already loaded
+                if (_cashMovement == null && _sourceId > 0 && !string.IsNullOrEmpty(_sourceType))
+                {
+                    _cashMovement = await outerDb.CashMovements
+                        .FirstOrDefaultAsync(m => m.SourceType == _sourceType && m.SourceId == _sourceId);
+                }
+
+                if (_cashMovement != null)
+                {
+                    HasCashMovement = true;
+                    CashMovementSequence = _cashMovement.Sequence > 0 ? _cashMovement.Sequence.ToString() : _cashMovement.Id.ToString();
+                    CashMovementAmountString = $"{_cashMovement.Amount:N2} د.ل";
+                    CashMovementDateString = _cashMovement.TransactionDate.ToString("yyyy/MM/dd hh:mm tt");
+                    CashMovementTypeString = _cashMovement.Type == CashMovementType.CashIn ? "وارد (+)" : "صادر (-)";
+                    CashMovementBalanceAfterString = $"{_cashMovement.BalanceAfter:N2} د.ل";
+                    CashMovementStatusString = _cashMovement.IsReversed ? "معكوسة" : "سارية";
+                    CashMovementStatusColor = _cashMovement.IsReversed 
+                        ? new SolidColorBrush(Color.FromRgb(220, 38, 38)) // Red 600
+                        : new SolidColorBrush(Color.FromRgb(22, 163, 74)); // Green 600
+                    CashMovementNotes = string.IsNullOrEmpty(_cashMovement.Notes) ? "لا يوجد" : _cashMovement.Notes;
+
+                    // Customize Header
+                    HeaderTitle = "تفاصيل الحركة المالية";
+                    HeaderIcon = "CashMultiple";
+                    HeaderColor = new SolidColorBrush(Color.FromRgb(22, 163, 74)); // Green 600
+                }
+                else
+                {
+                    HasCashMovement = false;
+                }
+
                 if (_sourceType == "GeneralExpense")
                 {
                     IsGeneralExpense = true;
-                    HeaderTitle = "تفاصيل المصروف العام";
-                    HeaderIcon = "CreditCardOutline";
-                    HeaderColor = new SolidColorBrush(Color.FromRgb(225, 29, 72)); // Rose 600
+                    if (!HasCashMovement)
+                    {
+                        HeaderTitle = "تفاصيل المصروف العام";
+                        HeaderIcon = "CreditCardOutline";
+                        HeaderColor = new SolidColorBrush(Color.FromRgb(225, 29, 72)); // Rose 600
+                    }
 
-                    using var db = new AppDbContext();
-                    var expense = await db.GeneralExpenses
+                    var expense = await outerDb.GeneralExpenses
                         .FirstOrDefaultAsync(x => x.Id == _sourceId);
 
                     if (expense != null)
                     {
-                        ExpenseTypeName = GetExpenseTypeName(expense.ExpenseType);
+                        ExpenseTypeName = expense.ExpenseType == GeneralExpenseType.Other && !string.IsNullOrEmpty(expense.CustomExpenseName)
+                            ? expense.CustomExpenseName
+                            : GetExpenseTypeName(expense.ExpenseType);
                         ExpenseAmountString = $"{expense.Amount:N2} د.ل";
                         ExpenseDateString = expense.PaymentDate.ToString("yyyy/MM/dd");
                         ExpensePaymentMethodName = GetPaymentMethodName(expense.PaymentMethod);
@@ -174,7 +295,7 @@ namespace MeezanPOS.Presentation.Views
                         PaymentNotes = "لم يتم العثور على تفاصيل حركة السداد في قاعدة البيانات.";
                     }
                 }
-                else if (_sourceType == "OwnerDebt" || _sourceType == "Bank" || _sourceType == "Cash")
+                else if (_sourceType == "OwnerDebt" || _sourceType == "Bank" || _sourceType == "Cash" || _sourceType == "OwnerDebt_Transfer" || _sourceType == "OwnerDebt_Cash")
                 {
                     IsOwnerDebt = true;
                     HeaderTitle = "تفاصيل تمويل الشريك";
@@ -259,6 +380,41 @@ namespace MeezanPOS.Presentation.Views
                         PaymentNotes = "لم يتم العثور على بيانات التسوية.";
                     }
                 }
+                else if (_sourceType == "DailyJournal")
+                {
+                    IsDailyJournal = true;
+                    HeaderTitle = "تفاصيل حركة الكاش لليومية/الوردية";
+                    HeaderIcon = "CalendarSyncOutline";
+                    HeaderColor = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald 500
+
+                    using var db = new AppDbContext();
+                    var journal = await db.DailyJournals
+                        .FirstOrDefaultAsync(x => x.Id == _sourceId);
+
+                    if (journal != null)
+                    {
+                        SupplierName = journal.EmployeeName;
+                        PaymentAmountString = $"{journal.ActualCash - journal.CashFloat:N2} د.ل";
+                        PaymentDateString = journal.JournalDate.ToString("yyyy/MM/dd HH:mm");
+                        ReceiptNumber = journal.ShiftName;
+                        PaymentNotes = string.IsNullOrEmpty(journal.Notes) ? "لا توجد ملاحظات" : journal.Notes;
+
+                        InvoiceNumber = $"{journal.CashFloat:N2} د.ل";
+                        InvoiceDateString = $"{journal.ExpectedCash:N2} د.ل";
+                        InvoiceTotalString = $"{journal.ActualCash:N2} د.ل";
+                        InvoiceStatusName = journal.DifferenceText;
+
+                        StatusColor = journal.Difference < 0
+                            ? new SolidColorBrush(Color.FromRgb(220, 38, 38)) // Red 600
+                            : (journal.Difference > 0
+                                ? new SolidColorBrush(Color.FromRgb(22, 163, 74)) // Green 600
+                                : new SolidColorBrush(Color.FromRgb(71, 85, 105))); // Slate 600
+                    }
+                    else
+                    {
+                        PaymentNotes = "لم يتم العثور على بيانات اليومية.";
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -317,6 +473,7 @@ namespace MeezanPOS.Presentation.Views
         public bool IsLoading { get => _isLoading; set => SetField(ref _isLoading, value); }
         public bool IsGeneralExpense { get => _isGeneralExpense; set => SetField(ref _isGeneralExpense, value); }
         public bool IsSupplierPayment { get => _isSupplierPayment; set => SetField(ref _isSupplierPayment, value); }
+        public bool IsDailyJournal { get => _isDailyJournal; set => SetField(ref _isDailyJournal, value); }
 
         public string ExpenseTypeName { get => _expenseTypeName; set => SetField(ref _expenseTypeName, value); }
         public string ExpenseAmountString { get => _expenseAmountString; set => SetField(ref _expenseAmountString, value); }
@@ -338,5 +495,136 @@ namespace MeezanPOS.Presentation.Views
         public string InvoiceTotalString { get => _invoiceTotalString; set => SetField(ref _invoiceTotalString, value); }
         public string InvoiceStatusName { get => _invoiceStatusName; set => SetField(ref _invoiceStatusName, value); }
         public List<SupplierInvoiceItem> InvoiceItems { get => _invoiceItems; set => SetField(ref _invoiceItems, value); }
+
+        private void PrintReceipt_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+                var filePath = System.IO.Path.Combine(
+                    System.IO.Path.GetTempPath(), 
+                    $"إيصال_حركة_{_cashMovement?.Id ?? _sourceId}_{System.DateTime.Now:yyyyMMdd_HHmmss}.pdf");
+
+                QuestPDF.Fluent.Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Size(226, 400, QuestPDF.Infrastructure.Unit.Point);
+                        page.Margin(10, QuestPDF.Infrastructure.Unit.Point);
+                        page.PageColor(QuestPDF.Helpers.Colors.White);
+                        page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Arial").DirectionFromRightToLeft());
+                        page.ContentFromRightToLeft();
+
+                        page.Content().Column(col =>
+                        {
+                            col.Item().AlignCenter().Text("منظومة ميزان للمطاعم").FontSize(11).Bold();
+                            col.Item().AlignCenter().Text("إيصال حركة مالية").FontSize(10).Bold().FontColor(QuestPDF.Helpers.Colors.Green.Darken2);
+                            col.Item().LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
+                            col.Item().Padding(4);
+
+                            col.Item().Text($"التسلسل: {CashMovementSequence}");
+                            col.Item().Text($"التاريخ: {CashMovementDateString}");
+                            col.Item().Text($"نوع الحركة: {CashMovementTypeString}");
+                            col.Item().Text($"المبلغ: {CashMovementAmountString}").Bold();
+                            col.Item().Text($"الرصيد بعد الحركة: {CashMovementBalanceAfterString}");
+                            col.Item().Text($"الحالة: {CashMovementStatusString}");
+                            col.Item().LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
+                            col.Item().Padding(4);
+
+                            if (_isGeneralExpense)
+                            {
+                                col.Item().Text($"المصدر: مصروف عام ({ExpenseTypeName})");
+                                col.Item().Text($"طريقة الدفع: {ExpensePaymentMethodName}");
+                                col.Item().Text($"المستلم: {ExpenseWorkerName}");
+                            }
+                            else if (_isSupplierPayment)
+                            {
+                                col.Item().Text($"المصدر: سداد مورد ({SupplierName})");
+                                col.Item().Text($"رقم الإيصال: {ReceiptNumber}");
+                            }
+                            else if (_isDailyJournal)
+                            {
+                                col.Item().Text($"المصدر: يومية عمل ({ReceiptNumber})");
+                                col.Item().Text($"الكاشير: {SupplierName}");
+                            }
+                            
+                            col.Item().Text($"البيان: {CashMovementNotes}").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
+                            
+                            col.Item().PaddingVertical(8);
+                            col.Item().LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
+                            col.Item().AlignCenter().Text("شكراً لتعاملكم معنا").FontSize(8).Italic();
+                        });
+                    });
+                })
+                .GeneratePdf(filePath);
+
+                new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo(filePath)
+                    {
+                        UseShellExecute = true
+                    }
+                }.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"حدث خطأ أثناء طباعة الإيصال:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GoToSource_Click(object sender, RoutedEventArgs e)
+        {
+            var mainWindow = System.Windows.Application.Current.MainWindow;
+            if (mainWindow?.DataContext is MainViewModel mainVM)
+            {
+                if (_sourceType == "DailyJournal")
+                {
+                    using var db = new AppDbContext();
+                    var journal = db.DailyJournals
+                        .Include(j => j.ExpenseItems)
+                        .Include(j => j.BankingItems)
+                        .Include(j => j.Adjustments)
+                        .FirstOrDefault(x => x.Id == _sourceId);
+
+                    if (journal != null)
+                    {
+                        var journalVM = new DailyJournalViewModel();
+                        journalVM.LoadJournalForViewing(journal);
+                        journalVM.OnClose = () =>
+                        {
+                            mainVM.CurrentViewModel = new SalesViewModel();
+                            mainVM.Title = "ميزان للمالية - المبيعات والإيرادات";
+                        };
+                        mainVM.CurrentViewModel = journalVM;
+                        mainVM.Title = "ميزان للمالية - عرض تفاصيل الحركة اليومية";
+                        Close();
+                    }
+                    else
+                    {
+                        MessageBox.Show("تعذر العثور على اليومية المرتبطة بالدوران المالي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
+                }
+                else if (_sourceType == "GeneralExpense")
+                {
+                    var generalExpensesVM = new GeneralExpensesViewModel();
+                    mainVM.CurrentViewModel = generalExpensesVM;
+                    mainVM.Title = "ميزان للمالية - المصروفات العامة";
+                    Close();
+                }
+                else if (_sourceType == "SupplierTransaction")
+                {
+                    using var db = new AppDbContext();
+                    var trans = db.SupplierTransactions.FirstOrDefault(x => x.Id == _sourceId);
+                    if (trans != null && trans.SupplierId > 0)
+                    {
+                        var supplierVM = new SupplierDetailsViewModel(trans.SupplierId, SupplierName);
+                        mainVM.CurrentViewModel = supplierVM;
+                        mainVM.Title = "ميزان للمالية - تفاصيل حساب المورد";
+                        Close();
+                    }
+                }
+            }
+        }
     }
 }

@@ -50,13 +50,10 @@ public partial class PartnerStatementWindow : Window
         if (sender is not DataGrid dataGrid) return;
         if (dataGrid.SelectedItem is not PartnerStatementEntryDto entry) return;
 
-        if (entry.SourceType == null || !entry.SourceId.HasValue)
-            return;
-
-        if (!entry.CanDelete && entry.SourceType != "OwnerDebtSettlement")
+        // فتح نافذة التفاصيل إذا وجد مُعرف للمصدر
+        if (entry.SourceId.HasValue)
         {
-            // فتح نافذة تفاصيل العملية المالية
-            var detailsWindow = new TransactionDetailsViewWindow(entry.SourceType, entry.SourceId.Value)
+            var detailsWindow = new TransactionDetailsViewWindow(entry.SourceType ?? "OwnerDebt", entry.SourceId.Value)
             {
                 Owner = this
             };

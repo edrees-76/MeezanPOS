@@ -58,245 +58,375 @@
                              Width="40" Height="40" 
                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
-                <!-- تفاصيل المصروف العام -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsGeneralExpense, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Margin="0,4">
-                        <!-- كرت البيانات الأساسية -->
-                        <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1" Margin="0,0,0,16">
-                            <UniformGrid Columns="2" Rows="3">
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="نوع المصروف:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpenseTypeName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="القيمة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpenseAmountString}" FontSize="15" FontWeight="Bold" Foreground="#e11d48"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="تاريخ الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpenseDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="طريقة الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpensePaymentMethodName}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="اسم الموظف / العامل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpenseWorkerName}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,8">
-                                    <TextBlock Text="الحالة المالية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
-                                    <TextBlock Text="{Binding ExpenseFinancialStatusName}" FontSize="14.5" FontWeight="Bold" Foreground="{Binding StatusColor}"/>
-                                </StackPanel>
-                            </UniformGrid>
-                        </Border>
+                <!-- المحتوى الرئيسي (يظهر بعد انتهاء التحميل) -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer.Style>
+                        <Style TargetType="ScrollViewer">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ScrollViewer.Style>
 
-                        <!-- كرت البيان/الوصف -->
-                        <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                    <StackPanel Margin="0,4">
+                        <!-- 🟢 الكرت الرئيسي: البيانات الأساسية للحركة المالية (CashMovement) -->
+                        <Border Background="#f0fdf4" CornerRadius="12" Padding="16" BorderBrush="#16a34a" BorderThickness="1.5" Margin="0,0,0,16"
+                                Visibility="{Binding HasCashMovement, Converter={StaticResource BoolToVis}}">
                             <StackPanel>
-                                <TextBlock Text="البيان والتفاصيل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,6"/>
-                                <TextBlock Text="{Binding ExpenseDescription}" FontSize="14" Foreground="#1e293b" TextWrapping="Wrap" LineHeight="20"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="20" Height="20" Foreground="#16a34a" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="البيانات الأساسية للحركة المالية" FontSize="14.5" FontWeight="Bold" Foreground="#14532d" VerticalAlignment="Center"/>
+                                </StackPanel>
+                                
+                                <UniformGrid Columns="2" Rows="3">
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="التسلسل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementSequence}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="المبلغ:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementAmountString}" FontSize="15" FontWeight="Bold" Foreground="#2563eb"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="التاريخ:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="نوع الحركة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementTypeString}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="الرصيد بعد الحركة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementBalanceAfterString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="الحالة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding CashMovementStatusString}" FontSize="14.5" FontWeight="Bold" Foreground="{Binding CashMovementStatusColor}"/>
+                                    </StackPanel>
+                                </UniformGrid>
                             </StackPanel>
                         </Border>
-                    </StackPanel>
-                </ScrollViewer>
 
-                <!-- تفاصيل سداد المورد -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsSupplierPayment, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Margin="0,4">
-                        <!-- كرت البيانات الأساسية للدفع -->
-                        <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1" Margin="0,0,0,12">
-                            <UniformGrid Columns="2" Rows="3">
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="اسم المورد:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="قيمة الدفعة المسددة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="تاريخ الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="رقم الإيصال:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6" Grid.ColumnSpan="2">
-                                    <TextBlock Text="البيان / ملاحظات السداد:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </UniformGrid>
-                        </Border>
-
-                        <!-- تفاصيل الفاتورة المرتبطة إن وجدت -->
-                        <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="تفاصيل الفاتورة المرتبطة بالدفع:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
-                            <Border Background="#eff6ff" CornerRadius="12" Padding="14,10" BorderBrush="#bfdbfe" BorderThickness="1" Margin="0,0,0,12">
-                                <UniformGrid Columns="2" Rows="2">
-                                    <StackPanel Margin="0,4">
-                                        <TextBlock Text="رقم الفاتورة (الورقية):" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
-                                        <TextBlock Text="{Binding InvoiceNumber}" FontSize="13.5" FontWeight="Bold" Foreground="#1e293b"/>
+                        <!-- تفاصيل المصروف العام -->
+                        <StackPanel Visibility="{Binding IsGeneralExpense, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <TextBlock Text="تفاصيل المصدر: مصروف عام" FontSize="14" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                            <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1" Margin="0,0,0,12">
+                                <UniformGrid Columns="2" Rows="3">
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="نوع المصروف:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpenseTypeName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
                                     </StackPanel>
-                                    <StackPanel Margin="0,4">
-                                        <TextBlock Text="تاريخ الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
-                                        <TextBlock Text="{Binding InvoiceDateString}" FontSize="13.5" FontWeight="SemiBold" Foreground="#1e293b"/>
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="القيمة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpenseAmountString}" FontSize="15" FontWeight="Bold" Foreground="#e11d48"/>
                                     </StackPanel>
-                                    <StackPanel Margin="0,4">
-                                        <TextBlock Text="إجمالي قيمة الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
-                                        <TextBlock Text="{Binding InvoiceTotalString}" FontSize="14" FontWeight="Bold" Foreground="#eab308"/>
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="تاريخ الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpenseDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
                                     </StackPanel>
-                                    <StackPanel Margin="0,4">
-                                        <TextBlock Text="حالة سداد الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
-                                        <TextBlock Text="{Binding InvoiceStatusName}" FontSize="13.5" FontWeight="Bold" Foreground="#16a34a"/>
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="طريقة الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpensePaymentMethodName}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="اسم الموظف / العامل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpenseWorkerName}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,8">
+                                        <TextBlock Text="الحالة المالية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,4"/>
+                                        <TextBlock Text="{Binding ExpenseFinancialStatusName}" FontSize="14.5" FontWeight="Bold" Foreground="{Binding StatusColor}"/>
                                     </StackPanel>
                                 </UniformGrid>
                             </Border>
 
-                            <!-- جدول أصناف الفاتورة -->
-                            <TextBlock Text="الأصناف المدخلة بالفاتورة:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
-                            <Border CornerRadius="8" BorderThickness="1" BorderBrush="#cbd5e1" Padding="0">
-                                <DataGrid ItemsSource="{Binding InvoiceItems}" 
-                                          AutoGenerateColumns="False" 
-                                          CanUserAddRows="False" 
-                                          IsReadOnly="True" 
-                                          HeadersVisibility="Column" 
-                                          GridLinesVisibility="Horizontal" 
-                                          BorderThickness="0" 
-                                          Background="Transparent" 
-                                          RowHeight="36" 
-                                          FontSize="13"
-                                          AlternatingRowBackground="#fafbff"
-                                          materialDesign:DataGridAssist.ColumnHeaderPadding="8"
-                                          materialDesign:DataGridAssist.CellPadding="8,4"
-                                          MaxHeight="180"
-                                          VerticalScrollBarVisibility="Auto">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="البيان" Binding="{Binding Description}" Width="*"/>
-                                        <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity, StringFormat=N2}" Width="100">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="TextAlignment" Value="Center"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
-                                        <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat=N2}" Width="110">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="TextAlignment" Value="Center"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
-                                        <DataGridTextColumn Header="إجمالي القيمة" Binding="{Binding TotalValue, StringFormat=N2}" Width="120">
-                                            <DataGridTextColumn.ElementStyle>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="TextAlignment" Value="Center"/>
-                                                    <Setter Property="FontWeight" Value="Bold"/>
-                                                    <Setter Property="Foreground" Value="#1e293b"/>
-                                                </Style>
-                                            </DataGridTextColumn.ElementStyle>
-                                        </DataGridTextColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- تفاصيل تمويل الشريك -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsOwnerDebt, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Margin="0,4">
-                        <Border Background="#f0fdf4" CornerRadius="12" Padding="16" BorderBrush="#bbf7d0" BorderThickness="1" Margin="0,0,0,12">
-                            <UniformGrid Columns="2" Rows="4">
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="اسم الشريك:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="مبلغ التمويل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="تاريخ العملية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="التصنيف:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="طريقة الدفع/الإيداع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentMethod}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="المرجع (أخر 4 أرقام):" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding TransferReference}" FontSize="14.5" FontWeight="Bold" Foreground="#0f172a"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6" Grid.ColumnSpan="2">
-                                    <TextBlock Text="ملاحظات:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </UniformGrid>
-                        </Border>
-
-                        <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="جِهة الإيداع للمطعم:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
-                            <Border Background="#eff6ff" CornerRadius="12" Padding="14,12" BorderBrush="#bfdbfe" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Bank" Foreground="#2563eb" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="تم الإيداع في حساب: " VerticalAlignment="Center" FontSize="14" Foreground="#1e40af"/>
-                                    <TextBlock Text="{Binding InvoiceNumber}" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#1e293b"/>
+                            <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="البيان والتفاصيل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding ExpenseDescription}" FontSize="14" Foreground="#1e293b" TextWrapping="Wrap" LineHeight="20"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
 
-                <!-- تفاصيل تسوية ذمة -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding IsOwnerSettlement, Converter={StaticResource BoolToVis}}">
-                    <StackPanel Margin="0,4">
-                        <Border Background="#fffbeb" CornerRadius="12" Padding="16" BorderBrush="#fef3c7" BorderThickness="1" Margin="0,0,0,12">
-                            <UniformGrid Columns="2" Rows="3">
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="اسم الشريك:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="قيمة التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#d97706"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="تاريخ التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6">
-                                    <TextBlock Text="مصدر التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
-                                </StackPanel>
-                                <StackPanel Margin="0,6" Grid.ColumnSpan="2">
-                                    <TextBlock Text="ملاحظات:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
-                                    <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </UniformGrid>
-                        </Border>
+                        <!-- تفاصيل سداد المورد -->
+                        <StackPanel Visibility="{Binding IsSupplierPayment, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <TextBlock Text="تفاصيل المصدر: سداد مورد" FontSize="14" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                            <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1" Margin="0,0,0,12">
+                                <UniformGrid Columns="2" Rows="3">
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="اسم المورد:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="قيمة الدفعة المسددة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="تاريخ الدفع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="رقم الإيصال:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6" Grid.ColumnSpan="2">
+                                        <TextBlock Text="البيان / ملاحظات السداد:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
 
-                        <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
-                            <TextBlock Text="التفاصيل المصرفية:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
-                            <Border Background="#fdf2f2" CornerRadius="12" Padding="14,12" BorderBrush="#fecaca" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="BankTransferOut" Foreground="#dc2626" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="تم السحب من حساب: " VerticalAlignment="Center" FontSize="14" Foreground="#991b1b"/>
-                                    <TextBlock Text="{Binding InvoiceNumber}" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#1e293b"/>
+                            <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="تفاصيل الفاتورة المرتبطة بالدفع:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                                <Border Background="#eff6ff" CornerRadius="12" Padding="14,10" BorderBrush="#bfdbfe" BorderThickness="1" Margin="0,0,0,12">
+                                    <UniformGrid Columns="2" Rows="2">
+                                        <StackPanel Margin="0,4">
+                                            <TextBlock Text="رقم الفاتورة (الورقية):" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
+                                            <TextBlock Text="{Binding InvoiceNumber}" FontSize="13.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,4">
+                                            <TextBlock Text="تاريخ الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
+                                            <TextBlock Text="{Binding InvoiceDateString}" FontSize="13.5" FontWeight="SemiBold" Foreground="#1e293b"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,4">
+                                            <TextBlock Text="إجمالي قيمة الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
+                                            <TextBlock Text="{Binding InvoiceTotalString}" FontSize="14" FontWeight="Bold" Foreground="#eab308"/>
+                                        </StackPanel>
+                                        <StackPanel Margin="0,4">
+                                            <TextBlock Text="حالة سداد الفاتورة:" FontSize="11.5" Foreground="#1e40af" Margin="0,0,0,2"/>
+                                            <TextBlock Text="{Binding InvoiceStatusName}" FontSize="13.5" FontWeight="Bold" Foreground="#16a34a"/>
+                                        </StackPanel>
+                                    </UniformGrid>
+                                </Border>
+
+                                <TextBlock Text="الأصناف المدخلة بالفاتورة:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                                <Border CornerRadius="8" BorderThickness="1" BorderBrush="#cbd5e1" Padding="0">
+                                    <DataGrid ItemsSource="{Binding InvoiceItems}" 
+                                              AutoGenerateColumns="False" 
+                                              CanUserAddRows="False" 
+                                              IsReadOnly="True" 
+                                              HeadersVisibility="Column" 
+                                              GridLinesVisibility="Horizontal" 
+                                              BorderThickness="0" 
+                                              Background="Transparent" 
+                                              RowHeight="36" 
+                                              FontSize="13"
+                                              AlternatingRowBackground="#fafbff"
+                                              materialDesign:DataGridAssist.ColumnHeaderPadding="8"
+                                              materialDesign:DataGridAssist.CellPadding="8,4"
+                                              MaxHeight="180"
+                                              VerticalScrollBarVisibility="Auto">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="البيان" Binding="{Binding Description}" Width="*"/>
+                                            <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity, StringFormat=N2}" Width="100">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Center"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, StringFormat=N2}" Width="110">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Center"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                            <DataGridTextColumn Header="إجمالي القيمة" Binding="{Binding TotalValue, StringFormat=N2}" Width="120">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Center"/>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="Foreground" Value="#1e293b"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- تفاصيل تمويل الشريك -->
+                        <StackPanel Visibility="{Binding IsOwnerDebt, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <TextBlock Text="تفاصيل المصدر: تمويل شريك" FontSize="14" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                            <Border Background="#f0fdf4" CornerRadius="12" Padding="16" BorderBrush="#bbf7d0" BorderThickness="1" Margin="0,0,0,12">
+                                <UniformGrid Columns="2" Rows="4">
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="اسم الشريك:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="مبلغ التمويل:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="تاريخ العملية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="التصنيف:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="طريقة الدفع/الإيداع:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentMethod}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="المرجع (أخر 4 أرقام):" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding TransferReference}" FontSize="14.5" FontWeight="Bold" Foreground="#0f172a"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6" Grid.ColumnSpan="2">
+                                        <TextBlock Text="ملاحظات:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
+
+                            <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="جِهة الإيداع للمطعم:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                                <Border Background="#eff6ff" CornerRadius="12" Padding="14,12" BorderBrush="#bfdbfe" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Bank" Foreground="#2563eb" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="تم الإيداع في حساب: " VerticalAlignment="Center" FontSize="14" Foreground="#1e40af"/>
+                                        <TextBlock Text="{Binding InvoiceNumber}" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- تفاصيل تسوية ذمة -->
+                        <StackPanel Visibility="{Binding IsOwnerSettlement, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <TextBlock Text="تفاصيل المصدر: تسوية ذمة شريك" FontSize="14" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                            <Border Background="#fffbeb" CornerRadius="12" Padding="16" BorderBrush="#fef3c7" BorderThickness="1" Margin="0,0,0,12">
+                                <UniformGrid Columns="2" Rows="3">
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="اسم الشريك:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="قيمة التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#d97706"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="تاريخ التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="مصدر التسوية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6" Grid.ColumnSpan="2">
+                                        <TextBlock Text="ملاحظات:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#334155" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
+
+                            <StackPanel Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="التفاصيل المصرفية:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                                <Border Background="#fdf2f2" CornerRadius="12" Padding="14,12" BorderBrush="#fecaca" BorderThickness="1">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="BankTransferOut" Foreground="#dc2626" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="تم السحب من حساب: " VerticalAlignment="Center" FontSize="14" Foreground="#991b1b"/>
+                                        <TextBlock Text="{Binding InvoiceNumber}" VerticalAlignment="Center" FontSize="14" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- تفاصيل حركة الكاش لليومية/الوردية -->
+                        <StackPanel Visibility="{Binding IsDailyJournal, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <TextBlock Text="تفاصيل المصدر: يومية عمل (وردية)" FontSize="14" FontWeight="Bold" Foreground="#475569" Margin="4,0,0,8"/>
+                            <Border Background="#f0fdf4" CornerRadius="12" Padding="16" BorderBrush="#bbf7d0" BorderThickness="1" Margin="0,0,0,12">
+                                <UniformGrid Columns="2" Rows="4">
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="كاشير الوردية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding SupplierName}" FontSize="14.5" FontWeight="Bold" Foreground="#1e293b"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="صافي نقدية الوردية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentAmountString}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="تاريخ الوردية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding PaymentDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="الوردية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding ReceiptNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="رأس المال الافتتاحي (الفكة):" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding InvoiceNumber}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="الكاش المتوقع بالصندوق:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding InvoiceDateString}" FontSize="14.5" FontWeight="SemiBold" Foreground="#334155"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="الكاش الفعلي المستلم:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding InvoiceTotalString}" FontSize="14.5" FontWeight="Bold" Foreground="#0f172a"/>
+                                    </StackPanel>
+                                    <StackPanel Margin="0,6">
+                                        <TextBlock Text="العجز / الزيادة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,3"/>
+                                        <TextBlock Text="{Binding InvoiceStatusName}" FontSize="14.5" FontWeight="Bold" Foreground="{Binding StatusColor}"/>
+                                    </StackPanel>
+                                </UniformGrid>
+                            </Border>
+                            <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="ملاحظات وتفاصيل إضافية:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding PaymentNotes}" FontSize="14" Foreground="#1e293b" TextWrapping="Wrap" LineHeight="20"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
+
+                        <!-- تفاصيل في حال عدم وجود مصدر معروف (مثل Reversal أو حركة يدوية) -->
+                        <StackPanel Visibility="{Binding HasNoSourceDetails, Converter={StaticResource BoolToVis}}" Margin="0,0,0,16">
+                            <Border Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#cbd5e1" BorderThickness="1">
+                                <StackPanel>
+                                    <TextBlock Text="ملاحظات وبيان الحركة:" FontSize="12.5" Foreground="#64748b" Margin="0,0,0,6"/>
+                                    <TextBlock Text="{Binding CashMovementNotes}" FontSize="14" Foreground="#1e293b" TextWrapping="Wrap" LineHeight="20"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
 
             <!-- 3. الأزرار -->
             <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <!-- زر الانتقال للمصدر -->
+                <Button Click="GoToSource_Click" 
+                        Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        BorderBrush="#2563eb" Foreground="#2563eb" 
+                        Height="38" Margin="0,0,12,0" 
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Visibility="{Binding CanGoToSource, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ArrowLeftBold" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="الانتقال للمصدر" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- زر طباعة الإيصال -->
+                <Button Click="PrintReceipt_Click" 
+                        Style="{StaticResource MaterialDesignRaisedButton}" 
+                        Background="#16a34a" BorderBrush="#16a34a" Foreground="White"
+                        Height="38" Margin="0,0,12,0" 
+                        materialDesign:ButtonAssist.CornerRadius="8"
+                        Visibility="{Binding HasCashMovement, Converter={StaticResource BoolToVis}}">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Printer" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="طباعة الإيصال" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12.5"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- زر إغلاق -->
                 <Button Click="Close_Click" Style="{StaticResource MaterialDesignFlatButton}" Background="#cbd5e1" Foreground="#334155" Height="38" Padding="24,0" materialDesign:ButtonAssist.CornerRadius="8">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>

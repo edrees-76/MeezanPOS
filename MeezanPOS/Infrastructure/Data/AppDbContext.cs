@@ -52,6 +52,7 @@ public class AppDbContext : DbContext
     public DbSet<CardPaymentReconciliation> CardPaymentReconciliations { get; set; }
     public DbSet<OwnerDebt> OwnerDebts { get; set; }
     public DbSet<OwnerDebtSettlement> OwnerDebtSettlements { get; set; }
+    public DbSet<CashMovement> CashMovements { get; set; }
 
     // المسار الثابت والموحد لقاعدة البيانات - يمنع إنشاء قواعد بيانات متعددة
     public static string GetDatabasePath()
@@ -99,6 +100,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<OwnerDebt>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<OwnerDebtSettlement>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<DailyJournalBankSale>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<CashMovement>().HasQueryFilter(e => !e.IsDeleted);
         
         // Disable cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
@@ -115,10 +117,35 @@ public class AppDbContext : DbContext
         using var context = new AppDbContext();
         var conn = context.Database.GetDbConnection();
         conn.Open();
+        
+        // إنشاء جدول حركات النقدية الجديد إذا لم يكن موجوداً
+        try
+        {
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS CashMovements (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    CreatedAt TEXT,
+                    UpdatedAt TEXT,
+                    IsDeleted INTEGER NOT NULL DEFAULT 0,
+                    TransactionDate TEXT NOT NULL,
+                    Type INTEGER NOT NULL,
+                    Amount REAL NOT NULL,
+                    BalanceAfter REAL NOT NULL,
+                    SourceType TEXT,
+                    SourceId INTEGER,
+                    Notes TEXT,
+                    IsReversed INTEGER NOT NULL DEFAULT 0
+                );";
+            cmd.ExecuteNonQuery();
+        }
+        catch { }
+
         var alterCommands = new[]
         {
             "ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;",
-            "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;"
+            "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;",
+            "ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;"
         };
         foreach (var sql in alterCommands)
         {

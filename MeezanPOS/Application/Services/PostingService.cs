@@ -65,6 +65,20 @@ namespace MeezanPOS.Application.Services
                     }
                 }
 
+                if (entity is DailyJournal finalJournal)
+                {
+                    var cashLedgerService = new CashLedgerService(_context);
+                    decimal cashAmount = finalJournal.ActualCash - finalJournal.CashFloat;
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashIn,
+                        cashAmount,
+                        "DailyJournal",
+                        finalJournal.Id,
+                        $"إيراد وردية: {finalJournal.ShiftName} - الكاشير: {finalJournal.EmployeeName}",
+                        finalJournal.JournalDate
+                    );
+                }
+
                 await transaction.CommitAsync();
                 return true;
             }
@@ -145,6 +159,17 @@ namespace MeezanPOS.Application.Services
                         activeEntity.PostingSessionId = null;
                         activeEntity.RowVersion = 2;
                         await _context.SaveChangesAsync();
+                    }
+                }
+
+                if (entity is DailyJournal journal)
+                {
+                    var cashLedgerService = new CashLedgerService(_context);
+                    var oldMovement = await _context.CashMovements
+                        .FirstOrDefaultAsync(m => m.SourceType == "DailyJournal" && m.SourceId == journal.Id && !m.IsReversed);
+                    if (oldMovement != null)
+                    {
+                        await cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"فك ترحيل الوردية: {reason}");
                     }
                 }
 
@@ -277,6 +302,20 @@ namespace MeezanPOS.Application.Services
                         }
                     }
                     await _context.SaveChangesAsync();
+                }
+
+                var cashLedgerService = new CashLedgerService(_context);
+                foreach (var journal in journals)
+                {
+                    decimal cashAmount = journal.ActualCash - journal.CashFloat;
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashIn,
+                        cashAmount,
+                        "DailyJournal",
+                        journal.Id,
+                        $"إيراد وردية: {journal.ShiftName} - الكاشير: {journal.EmployeeName}",
+                        journal.JournalDate
+                    );
                 }
 
                 await transaction.CommitAsync();

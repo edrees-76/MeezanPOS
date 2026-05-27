@@ -6,6 +6,7 @@ namespace MeezanPOS.Application.ViewModels;
 public class PartnerSummaryDto
 {
     public string PartnerName { get; set; } = string.Empty;
+    public int SequenceNumber { get; set; }
     public decimal DebtsTotal { get; set; }
     public decimal SettlementsTotal { get; set; }
     public decimal NetBalance { get; set; }

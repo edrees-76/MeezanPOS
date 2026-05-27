@@ -69,6 +69,15 @@ public partial class MonthSummaryCard : ObservableObject
 public partial class SalesViewModel : ObservableObject
 {
     [ObservableProperty]
+    private ObservableCollection<CashMovement> cashMovements = new();
+
+    [ObservableProperty]
+    private decimal currentCashBalance;
+
+    [ObservableProperty]
+    private bool isCashLoading;
+
+    [ObservableProperty]
     private ObservableCollection<SelectableDailyJournal> journals = new();
 
     [ObservableProperty]
@@ -132,6 +141,9 @@ public partial class SalesViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<SelectableDailyJournal> archivedJournals = new();
+
+    [ObservableProperty]
+    private bool isRebuildRequired;
 
     [ObservableProperty]
     private decimal runningSelectedSalesTotal;
@@ -257,10 +269,11 @@ public partial class SalesViewModel : ObservableObject
             }
 
             ApplyFilters();
+            await LoadCashMovementsAsync();
         }
-        catch
+        catch (System.Exception ex)
         {
-            // Handle exceptions
+            System.Diagnostics.Debug.WriteLine($"Error loading data: {ex.Message}");
         }
         finally
         {
@@ -1050,6 +1063,86 @@ public partial class SalesViewModel : ObservableObject
         {
             IsLoading = false;
         }
+    }
+
+    [RelayCommand]
+    public async Task LoadCashMovementsAsync()
+    {
+        IsCashLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var movements = await context.CashMovements
+                .OrderBy(m => m.TransactionDate)
+                .ThenBy(m => m.Id)
+                .ToListAsync();
+
+            // Add sequence numbers
+            for (int i = 0; i < movements.Count; i++)
+            {
+                movements[i].Sequence = i + 1;
+            }
+
+            CashMovements = new ObservableCollection<CashMovement>(movements);
+            
+            var cashLedgerService = new Services.CashLedgerService(context);
+            CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
+            IsRebuildRequired = await cashLedgerService.IsRebuildRequiredAsync();
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"خطأ في تحميل حركات النقدية: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsCashLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task RebuildCashLedgerAsync()
+    {
+        var result = System.Windows.MessageBox.Show(
+            "هل أنت متأكد من إعادة بناء دفتر النقدية؟\nسيقوم هذا الإجراء بإعادة حساب الأرصدة التراكمية بناءً على الترتيب التاريخي للحركات.",
+            "تأكيد إعادة البناء",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (result != System.Windows.MessageBoxResult.Yes) return;
+
+        IsCashLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var cashLedgerService = new Services.CashLedgerService(context);
+            await cashLedgerService.RebuildLedgerAsync();
+            await LoadCashMovementsAsync();
+            System.Windows.MessageBox.Show("تم إعادة بناء دفتر النقدية بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"خطأ أثناء إعادة بناء الدفتر: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsCashLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public void ViewCashMovementDetails(CashMovement movement)
+    {
+        if (movement == null) return;
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var window = System.Windows.Application.Current.MainWindow;
+            var detailsDialog = new MeezanPOS.Presentation.Views.TransactionDetailsViewWindow(movement)
+            {
+                Owner = window
+            };
+            detailsDialog.ShowDialog();
+        });
     }
 }
 

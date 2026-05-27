@@ -1128,7 +1128,7 @@ public partial class DailyJournalViewModel : ObservableObject
             var report = new MeezanPOS.Application.Services.DailyJournalPdfReport(this);
             string shiftName = GetShiftDisplayName(SelectedShiftType);
             string fileName = $"حركة يومية - {JournalDate:yyyy-MM-dd} - الوردية {shiftName}.pdf";
-            var filePath = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), fileName);
+            var filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
             
             // Generate PDF
             report.GeneratePdf(filePath);

@@ -25,6 +25,7 @@ public partial class PartnerDebtsDashboardViewModel : ObservableObject, IRecipie
     [ObservableProperty] private ObservableCollection<PartnerSummaryDto> _partners = new();
     [ObservableProperty] private ObservableCollection<PartnerSummaryDto> _filteredPartners = new();
     [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private string _selectedStatusFilter = "الكل";
     [ObservableProperty] private decimal _totalDebtsAllPartners;
     [ObservableProperty] private decimal _totalSettlementsAllPartners;
     [ObservableProperty] private decimal _netBalanceAllPartners;
@@ -66,20 +67,40 @@ public partial class PartnerDebtsDashboardViewModel : ObservableObject, IRecipie
     }
 
     partial void OnSearchTextChanged(string value) => ApplyFilter();
+    partial void OnSelectedStatusFilterChanged(string value) => ApplyFilter();
 
     private void ApplyFilter()
     {
-        if (string.IsNullOrWhiteSpace(SearchText))
+        var filtered = Partners.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            FilteredPartners = new ObservableCollection<PartnerSummaryDto>(Partners);
+            filtered = filtered.Where(p => p.PartnerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
         }
-        else
+
+        if (!string.IsNullOrEmpty(SelectedStatusFilter) && SelectedStatusFilter != "الكل")
         {
-            var filtered = Partners
-                .Where(p => p.PartnerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            FilteredPartners = new ObservableCollection<PartnerSummaryDto>(filtered);
+            if (SelectedStatusFilter == "المطعم مدين للشريك")
+            {
+                filtered = filtered.Where(p => p.BalanceDirection == PartnerBalanceDirection.RestaurantOwesPartner);
+            }
+            else if (SelectedStatusFilter == "الشريك مدين للمطعم")
+            {
+                filtered = filtered.Where(p => p.BalanceDirection == PartnerBalanceDirection.PartnerOwesRestaurant);
+            }
+            else if (SelectedStatusFilter == "تمت التسوية")
+            {
+                filtered = filtered.Where(p => p.BalanceDirection == PartnerBalanceDirection.Settled);
+            }
         }
+
+        var list = filtered.ToList();
+        for (int i = 0; i < list.Count; i++)
+        {
+            list[i].SequenceNumber = i + 1;
+        }
+
+        FilteredPartners = new ObservableCollection<PartnerSummaryDto>(list);
     }
 
     [RelayCommand]
