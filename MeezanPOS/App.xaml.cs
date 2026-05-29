@@ -22,8 +22,24 @@ public partial class App : System.Windows.Application
                 fullError += $"\n---\n{inner.Message}";
                 inner = inner.InnerException;
             }
-            MessageBox.Show($"خطأ غير متوقع:\n{fullError}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+
+            System.Diagnostics.Debug.WriteLine($"🔴 FATAL: {fullError}");
+            try
+            {
+                var logPath = System.IO.Path.Combine(
+                    System.IO.Path.GetDirectoryName(
+                        Infrastructure.Data.AppDbContext.GetDatabasePath())!,
+                    "crash_log.txt");
+                System.IO.File.AppendAllText(logPath,
+                    $"[{DateTime.UtcNow:O}] {fullError}\n{"=".PadRight(80, '=')}\n");
+            }
+            catch { }
+
+            MessageBox.Show($"خطأ غير متوقع:\n{fullError}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+
             e.Handled = true;
+            System.Windows.Application.Current.Shutdown(1);
         };
     }
 
@@ -84,11 +100,14 @@ public partial class App : System.Windows.Application
             }
             catch (System.Exception ex)
             {
-                var backupDir = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Backups");
-                var latestBackup = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
-                    .Select(f => new System.IO.FileInfo(f))
-                    .OrderByDescending(f => f.CreationTime)
-                    .FirstOrDefault();
+                var dbDir = System.IO.Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!;
+                var backupDir = System.IO.Path.Combine(dbDir, "Backups");
+                var latestBackup = System.IO.Directory.Exists(backupDir)
+                    ? System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
+                        .Select(f => new System.IO.FileInfo(f))
+                        .OrderByDescending(f => f.CreationTime)
+                        .FirstOrDefault()
+                    : null;
 
                 string restoreMessage = "";
                 if (latestBackup != null)
@@ -137,17 +156,8 @@ public partial class App : System.Windows.Application
                 System.Diagnostics.Debug.WriteLine($"خطأ أثناء تصحيح حقول RowVersion: {ex.Message}");
             }
 
-            // إضافة حقل المطابقة لجدول العمليات البنكية في الحركة اليومية إن لم يكن موجوداً
-            try
-            {
-                context.Database.ExecuteSqlRaw("ALTER TABLE BankingItems ADD COLUMN IsReconciled INTEGER NOT NULL DEFAULT 0;");
-            }
-            catch { /* العمود موجود مسبقاً */ }
-
-            // إضافة حقول طريقة الدفع ومرجع التحويل لجدول ديون الشركاء
-            try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;"); } catch { }
-            try { context.Database.ExecuteSqlRaw("ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;"); } catch { }
-            try { context.Database.ExecuteSqlRaw("ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;"); } catch { }
+            // ملاحظة: جميع عمليات ALTER TABLE وإنشاء الأعمدة الجديدة تتم في AppDbContext.MigrateDatabase()
+            // لا تضف أوامر ALTER TABLE هنا — أضفها هناك فقط لتجنب التكرار
         }
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));

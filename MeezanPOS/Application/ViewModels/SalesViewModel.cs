@@ -13,6 +13,8 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
+using MeezanPOS.Application.Services;
+
 namespace MeezanPOS.Application.ViewModels;
 
 public partial class SelectableDailyJournal : ObservableObject
@@ -68,10 +70,13 @@ public partial class MonthSummaryCard : ObservableObject
 
 public partial class SalesViewModel : ObservableObject
 {
+    private string CurrentUserId => "Admin"; // TODO: استبدالها بمستخدم الجلسة الحالي عند دعم تعدد المستخدمين
+
     [ObservableProperty]
     private ObservableCollection<CashMovement> cashMovements = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SettleKeepCalculation))]
     private decimal currentCashBalance;
 
     [ObservableProperty]
@@ -161,6 +166,24 @@ public partial class SalesViewModel : ObservableObject
     private bool hasSelectedJournals;
 
     private bool _isUpdatingSelection;
+
+    [ObservableProperty]
+    private bool isSettleOwnerCashDialogOpen;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SettleKeepCalculation))]
+    private decimal settlePayoutInput;
+
+    [ObservableProperty]
+    private string settleNotesInput = string.Empty;
+
+    [ObservableProperty]
+    private bool isSettlementArchiveDialogOpen;
+
+    [ObservableProperty]
+    private ObservableCollection<SettlementHistoryItem> settlementHistory = new();
+
+    public decimal SettleKeepCalculation => CurrentCashBalance - SettlePayoutInput;
 
     private List<DailyJournal> _allJournals = new();
 
@@ -433,7 +456,7 @@ public partial class SalesViewModel : ObservableObject
             IsLoading = true;
             using var context = new AppDbContext();
             var postingService = new MeezanPOS.Application.Services.PostingService(context);
-            await postingService.PostEntityAsync<DailyJournal>(journal.Id, "Admin");
+            await postingService.PostEntityAsync<DailyJournal>(journal.Id, CurrentUserId);
 
             System.Windows.MessageBox.Show("تم ترحيل الوردية وإقفالها مالياً بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             await LoadDataAsync();
@@ -481,7 +504,7 @@ public partial class SalesViewModel : ObservableObject
 
             foreach (var j in draftJournals)
             {
-                await postingService.PostEntityAsync<DailyJournal>(j.Id, "Admin");
+                await postingService.PostEntityAsync<DailyJournal>(j.Id, CurrentUserId);
             }
 
             System.Windows.MessageBox.Show($"تم ترحيل شهر {month.MonthName} بالكامل وإقفاله بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -538,7 +561,7 @@ public partial class SalesViewModel : ObservableObject
 
             foreach (var j in postedJournals)
             {
-                await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, "Admin");
+                await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, CurrentUserId);
             }
 
             System.Windows.MessageBox.Show($"تم فك ترحيل شهر {month.MonthName} بنجاح، وأصبحت الوردية قابلة للتعديل مجدداً.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -638,13 +661,16 @@ public partial class SalesViewModel : ObservableObject
             .GeneratePdf(filePath);
 
             // فتح الملف مباشرة
-            new System.Diagnostics.Process
+            using (var process = new System.Diagnostics.Process
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo(filePath)
                 {
                     UseShellExecute = true
                 }
-            }.Start();
+            })
+            {
+                process.Start();
+            }
         }
         catch (System.Exception ex)
         {
@@ -1030,7 +1056,7 @@ public partial class SalesViewModel : ObservableObject
             if (confirmResult != System.Windows.MessageBoxResult.Yes) return;
 
             var postingService = new MeezanPOS.Application.Services.PostingService(context);
-            var batchResult = await postingService.PostDailyJournalsBatchAsync(journalsInPeriod, "Admin", $"ترحيل جماعي للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
+            var batchResult = await postingService.PostDailyJournalsBatchAsync(journalsInPeriod, CurrentUserId, $"ترحيل جماعي للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
 
             if (batchResult.Success)
             {
@@ -1073,9 +1099,12 @@ public partial class SalesViewModel : ObservableObject
         {
             using var context = new AppDbContext();
             var movements = await context.CashMovements
-                .OrderBy(m => m.TransactionDate)
-                .ThenBy(m => m.Id)
+                .OrderByDescending(m => m.TransactionDate)
+                .ThenByDescending(m => m.Id)
+                .Take(150)
                 .ToListAsync();
+
+            movements.Reverse();
 
             // Add sequence numbers
             for (int i = 0; i < movements.Count; i++)
@@ -1143,6 +1172,177 @@ public partial class SalesViewModel : ObservableObject
             };
             detailsDialog.ShowDialog();
         });
+    }
+
+    [RelayCommand]
+    public async Task OpenSettleOwnerCashDialogAsync()
+    {
+        IsCashLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var cashLedgerService = new Services.CashLedgerService(context);
+            CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"خطأ في تحديث رصيد الخزينة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsCashLoading = false;
+        }
+
+        SettlePayoutInput = 0;
+        SettleNotesInput = $"تسوية نقدية للمالك - فترة {System.DateTime.Now:yyyy/MM/dd}";
+        IsSettleOwnerCashDialogOpen = true;
+    }
+
+    [RelayCommand]
+    public void CloseSettleOwnerCashDialog()
+    {
+        IsSettleOwnerCashDialogOpen = false;
+    }
+
+    [RelayCommand]
+    public async Task ConfirmSettleOwnerCashAsync()
+    {
+        if (SettlePayoutInput < 0)
+        {
+            System.Windows.MessageBox.Show("يجب إدخال مبلغ صحيح وموجب للتسوية.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+
+        var confirm = System.Windows.MessageBox.Show(
+            $"هل أنت متأكد من تأكيد تسوية الخزينة وسحب مبلغ للمالك؟\n\n" +
+            $"💰 السيولة النقدية المتوفرة: {CurrentCashBalance:N2} د.ل\n" +
+            $"💸 المبلغ المسحوب للمالك: {SettlePayoutInput:N2} د.ل\n" +
+            $"⚙️ السيولة المتبقية بالصندوق: {SettleKeepCalculation:N2} د.ل\n\n" +
+            $"سيتم ترحيل وتأكيد كافة اليوميات والمصاريف اليومية غير المرحلة وتجميدها نهائياً.",
+            "تأكيد تسوية الخزينة وإقفال الفترة",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Warning);
+
+        if (confirm != System.Windows.MessageBoxResult.Yes) return;
+
+        IsLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+
+            var batchResult = await postingService.SettleAndLockPeriodAsync(
+                payoutAmount: SettlePayoutInput,
+                keepAmount: SettleKeepCalculation,
+                notes: SettleNotesInput,
+                postedByUserId: CurrentUserId
+            );
+
+            if (batchResult.Success)
+            {
+                IsSettleOwnerCashDialogOpen = false;
+
+                // تحديث البيانات
+                await LoadCashMovementsAsync();
+                await LoadDataAsync();
+
+                var successMsg = $"تمت عملية التسوية بنجاح وتجميد الحركات السابقة!\n\n" +
+                                 $"🔹 الرصيد السابق: {batchResult.BalanceBefore:N2} د.ل\n" +
+                                 $"🔹 المسلم للمالك: {batchResult.PayoutAmount:N2} د.ل\n" +
+                                 $"🔹 المتبقي بالخزينة: {batchResult.KeepAmount:N2} د.ل\n" +
+                                 $"🔹 عدد اليوميات والمصاريف المقفلة: {batchResult.PostedCount}\n" +
+                                 $"🔹 معرف الجلسة: {batchResult.SessionGuid.ToString().Substring(0,8).ToUpper()}";
+
+                System.Windows.MessageBox.Show(successMsg, "نجاح تسوية الخزينة", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+
+                // فتح ملف الـ PDF تلقائياً للمستند المولد
+                if (!string.IsNullOrEmpty(batchResult.PdfPath) && System.IO.File.Exists(batchResult.PdfPath))
+                {
+                    using var process = new System.Diagnostics.Process
+                    {
+                        StartInfo = new System.Diagnostics.ProcessStartInfo(batchResult.PdfPath) { UseShellExecute = true }
+                    };
+                    process.Start();
+                }
+            }
+            else
+            {
+                var errors = string.Join("\n", batchResult.Errors);
+                System.Windows.MessageBox.Show($"فشلت عملية تسوية الخزينة:\n{errors}", "خطأ في التسوية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"حدث خطأ غير متوقع أثناء تسوية الخزينة: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenSettlementArchiveAsync()
+    {
+        IsLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var history = await postingService.GetSettlementHistoryAsync();
+            
+            SettlementHistory.Clear();
+            foreach (var item in history)
+            {
+                SettlementHistory.Add(item);
+            }
+            IsSettlementArchiveDialogOpen = true;
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"فشل تحميل أرشيف التسويات: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public void CloseSettlementArchive()
+    {
+        IsSettlementArchiveDialogOpen = false;
+    }
+
+    [RelayCommand]
+    public async Task RegenerateSettlementPdfAsync(SettlementHistoryItem item)
+    {
+        if (item == null) return;
+        
+        IsLoading = true;
+        try
+        {
+            using var context = new AppDbContext();
+            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            string pdfPath = await postingService.RegenerateSettlementPdfAsync(item.SessionId);
+
+            if (!string.IsNullOrEmpty(pdfPath) && System.IO.File.Exists(pdfPath))
+            {
+                using var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new System.Diagnostics.ProcessStartInfo(pdfPath) { UseShellExecute = true }
+                };
+                process.Start();
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"فشل إعادة توليد ملف PDF: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }
 

@@ -53,7 +53,7 @@ public class BankService : IBankService
         dbAccount.BankName = account.BankName;
         dbAccount.AccountNumber = account.AccountNumber;
         dbAccount.IsActive = account.IsActive;
-        dbAccount.UpdatedAt = DateTime.Now;
+        dbAccount.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         await RebuildAccountBalanceAsync(dbAccount.Id);
@@ -66,7 +66,7 @@ public class BankService : IBankService
             throw new Exception("الحساب البنكي غير موجود.");
 
         account.IsDeleted = true;
-        account.UpdatedAt = DateTime.Now;
+        account.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
@@ -86,11 +86,11 @@ public class BankService : IBankService
         if (account == null || account.IsDeleted)
             throw new Exception("الحساب البنكي غير موجود.");
 
-        var date = transactionDate ?? DateTime.Now;
+        var date = transactionDate ?? DateTime.UtcNow;
         decimal change = CalculateBalanceChange(type, amount);
 
         account.CurrentBalance += change;
-        account.UpdatedAt = DateTime.Now;
+        account.UpdatedAt = DateTime.UtcNow;
 
         var tx = new BankTransaction
         {
@@ -123,7 +123,7 @@ public class BankService : IBankService
 
             // 1. خصم من الحساب المصدر
             fromAccount.CurrentBalance -= amount;
-            fromAccount.UpdatedAt = DateTime.Now;
+            fromAccount.UpdatedAt = DateTime.UtcNow;
             var fromTx = new BankTransaction
             {
                 BankAccountId = fromAccountId,
@@ -132,13 +132,13 @@ public class BankService : IBankService
                 BalanceAfter = fromAccount.CurrentBalance,
                 TransactionDate = date,
                 Notes = notes ?? $"تحويل إلى {toAccount.FriendlyName}",
-                SourceType = "InternalTransfer"
+                SourceType = SourceTypes.InternalTransfer
             };
             _context.BankTransactions.Add(fromTx);
 
             // 2. إضافة للحساب المستلم
             toAccount.CurrentBalance += amount;
-            toAccount.UpdatedAt = DateTime.Now;
+            toAccount.UpdatedAt = DateTime.UtcNow;
             var toTx = new BankTransaction
             {
                 BankAccountId = toAccountId,
@@ -147,17 +147,21 @@ public class BankService : IBankService
                 BalanceAfter = toAccount.CurrentBalance,
                 TransactionDate = date,
                 Notes = notes ?? $"تحويل من {fromAccount.FriendlyName}",
-                SourceType = "InternalTransfer"
+                SourceType = SourceTypes.InternalTransfer
             };
             _context.BankTransactions.Add(toTx);
 
             await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
 
-            // حفظ معرفات الحركات لربطها
+            // ربط المراجع التبادلية قبل الـ Commit لضمان الذرية
             fromTx.SourceId = toTx.Id;
             toTx.SourceId = fromTx.Id;
             await _context.SaveChangesAsync();
+
+            var auditService = new AuditService(_context);
+            await auditService.LogAsync("Admin", "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
+
+            await transaction.CommitAsync();
         }
         catch
         {
@@ -217,7 +221,7 @@ public class BankService : IBankService
             recon.Status = CardPaymentStatus.Cleared;
             recon.ClearedDate = clearDate;
             recon.BankTransactionId = bankTx.Id;
-            recon.UpdatedAt = DateTime.Now;
+            recon.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -258,7 +262,7 @@ public class BankService : IBankService
         decimal balance = account.OpeningBalance;
         foreach (var tx in transactions)
         {
-            balance += CalculateBalanceChange(tx.Type, tx.Amount);
+            balance += CalculateBalanceChange(tx.Type, tx.Amount, tx.Notes);
         }
 
         return balance;
@@ -280,7 +284,7 @@ public class BankService : IBankService
 
         foreach (var tx in transactions)
         {
-            runningBalance += CalculateBalanceChange(tx.Type, tx.Amount);
+            runningBalance += CalculateBalanceChange(tx.Type, tx.Amount, tx.Notes);
             tx.BalanceAfter = runningBalance;
         }
 
@@ -299,7 +303,7 @@ public class BankService : IBankService
         foreach (var tx in transactions)
         {
             tx.IsDeleted = true;
-            tx.UpdatedAt = DateTime.Now;
+            tx.UpdatedAt = DateTime.UtcNow;
         }
 
         await _context.SaveChangesAsync();
@@ -327,12 +331,12 @@ public class BankService : IBankService
         decimal balance = account.OpeningBalance;
         foreach (var tx in priorTransactions)
         {
-            balance += CalculateBalanceChange(tx.Type, tx.Amount);
+            balance += CalculateBalanceChange(tx.Type, tx.Amount, tx.Notes);
         }
         return balance;
     }
 
-    private decimal CalculateBalanceChange(BankTransactionType type, decimal amount)
+    private decimal CalculateBalanceChange(BankTransactionType type, decimal amount, string? notes = null)
     {
         return type switch
         {
@@ -342,7 +346,11 @@ public class BankService : IBankService
             BankTransactionType.SupplierPayment => -amount,
             BankTransactionType.ExpensePayment => -amount,
             BankTransactionType.OwnerDebtSettlement => -amount,
-            BankTransactionType.InternalTransfer => -amount, // سيتم حساب الزيادة للحساب الآخر بشكل منفصل
+            // ⚠️ InternalTransfer: هذه القيمة (-amount) تعمل فقط مع الجانب المُرسِل.
+            // الجانب المستقبِل يُعالج في RecordInternalTransferAsync بشكل منفصل.
+            // عند Rebuild: حركات التحويل الداخلي المستقبَلة ستُخصم خطأً.
+            // TODO: فصل إلى InternalTransferOut / InternalTransferIn
+            BankTransactionType.InternalTransfer => (notes != null && (notes.StartsWith("تحويل من") || notes.Contains("من "))) ? amount : -amount,
             BankTransactionType.ExchangeDifference => amount, // يمكن أن يكون القيمة سالبة أو موجبة
             _ => 0
         };

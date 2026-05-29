@@ -11,10 +11,12 @@ namespace MeezanPOS.Application.Services
     public class PostingService : IPostingService
     {
         private readonly AppDbContext _context;
+        private readonly CashLedgerService _cashLedgerService;
 
         public PostingService(AppDbContext context)
         {
             _context = context;
+            _cashLedgerService = new CashLedgerService(context);
         }
 
         public async Task<bool> PostEntityAsync<T>(int entityId, string postedByUserId) where T : class
@@ -35,7 +37,7 @@ namespace MeezanPOS.Application.Services
 
                 // تحديث الحالة المالية
                 postableEntity.FinancialStatus = FinancialStatus.Posted;
-                postableEntity.PostedDate = DateTime.Now;
+                postableEntity.PostedDate = DateTime.UtcNow;
                 postableEntity.PostedByUserId = postedByUserId;
                 postableEntity.RowVersion++;
 
@@ -45,39 +47,29 @@ namespace MeezanPOS.Application.Services
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف الناتج عن تحديث نوع الحقل في SQLite
-                    var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-#pragma warning disable EF1002
-                    var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
-                    await _context.Database.ExecuteSqlRawAsync(sql, entityId);
-#pragma warning restore EF1002
-                    
-                    // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
-                    _context.Entry(entity).State = EntityState.Detached;
-                    entity = await _context.Set<T>().FindAsync(entityId);
-                    if (entity is IPostableEntity activeEntity)
+                    await SelfHealEntityAsync(entityId, entity, activeEntity =>
                     {
                         activeEntity.FinancialStatus = FinancialStatus.Posted;
-                        activeEntity.PostedDate = DateTime.Now;
+                        activeEntity.PostedDate = DateTime.UtcNow;
                         activeEntity.PostedByUserId = postedByUserId;
-                        activeEntity.RowVersion = 2; // تحديث النسخة
-                        await _context.SaveChangesAsync();
-                    }
+                    });
                 }
 
                 if (entity is DailyJournal finalJournal)
                 {
-                    var cashLedgerService = new CashLedgerService(_context);
                     decimal cashAmount = finalJournal.ActualCash - finalJournal.CashFloat;
-                    await cashLedgerService.RecordMovementAsync(
+                    await _cashLedgerService.RecordMovementAsync(
                         CashMovementType.CashIn,
                         cashAmount,
-                        "DailyJournal",
+                        SourceTypes.DailyJournal,
                         finalJournal.Id,
-                        $"إيراد وردية: {finalJournal.ShiftName} - الكاشير: {finalJournal.EmployeeName}",
+                        $"ترحيل وردية: {finalJournal.ShiftName} - الموظف: {finalJournal.EmployeeName}",
                         finalJournal.JournalDate
                     );
                 }
+
+                var auditService = new AuditService(_context);
+                await auditService.LogAsync(postedByUserId, "Post", typeof(T).Name, entityId, "Draft", "Posted");
 
                 await transaction.CommitAsync();
                 return true;
@@ -112,9 +104,9 @@ namespace MeezanPOS.Application.Services
                 var auditSession = new PostingSession
                 {
                     CreatedBy = unpostedByUserId,
-                    PostedUntilDate = DateTime.Now,
+                    PostedUntilDate = DateTime.UtcNow,
                     TotalAffectedRows = 1,
-                    Status = "Unpost",
+                    Status = PostingStatuses.Unpost,
                     Notes = $"فك ترحيل بسبب: {reason}"
                 };
 
@@ -143,35 +135,26 @@ namespace MeezanPOS.Application.Services
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف
-                    var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-#pragma warning disable EF1002
-                    var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
-                    await _context.Database.ExecuteSqlRawAsync(sql, entityId);
-#pragma warning restore EF1002
-                    
-                    _context.Entry(entity).State = EntityState.Detached;
-                    entity = await _context.Set<T>().FindAsync(entityId);
-                    if (entity is IPostableEntity activeEntity)
+                    await SelfHealEntityAsync(entityId, entity, activeEntity =>
                     {
                         activeEntity.FinancialStatus = FinancialStatus.Draft;
                         activeEntity.PostedDate = null;
                         activeEntity.PostingSessionId = null;
-                        activeEntity.RowVersion = 2;
-                        await _context.SaveChangesAsync();
-                    }
+                    });
                 }
 
                 if (entity is DailyJournal journal)
                 {
-                    var cashLedgerService = new CashLedgerService(_context);
                     var oldMovement = await _context.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == "DailyJournal" && m.SourceId == journal.Id && !m.IsReversed);
+                        .FirstOrDefaultAsync(m => m.SourceType == SourceTypes.DailyJournal && m.SourceId == journal.Id && !m.IsReversed);
                     if (oldMovement != null)
                     {
-                        await cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"فك ترحيل الوردية: {reason}");
+                        await _cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"إلغاء ترحيل الوردية: {reason}");
                     }
                 }
+
+                var auditService = new AuditService(_context);
+                await auditService.LogAsync(unpostedByUserId, "Unpost", typeof(T).Name, entityId, "Posted", "Draft");
 
                 await transaction.CommitAsync();
                 return true;
@@ -183,6 +166,7 @@ namespace MeezanPOS.Application.Services
             }
         }
 
+        [Obsolete("سيتم بناء الترحيل الجماعي (Batch) في المرحلة القادمة.")]
         public async Task<Guid> CreatePostingSessionAsync(DateTime untilDate, string postedByUserId, string notes)
         {
             // هذه دالة مستقبلية ستتولى تجميع كافة الحركات (مبيعات، مصاريف) 
@@ -240,7 +224,7 @@ namespace MeezanPOS.Application.Services
                 // حساب إجمالي الجلسة
                 decimal totalSales = journals.Sum(j => j.TotalSales);
                 decimal totalExpenses = journals.Sum(j => j.TotalExpenses);
-                DateTime maxJournalDate = journals.Any() ? journals.Max(j => j.JournalDate) : DateTime.Now;
+                DateTime maxJournalDate = journals.Any() ? journals.Max(j => j.JournalDate) : DateTime.UtcNow;
 
                 // 1. إنشاء الجلسة وإدخالها للحصول على المعرف التلقائي
                 var session = new PostingSession
@@ -259,7 +243,7 @@ namespace MeezanPOS.Application.Services
                 foreach (var journal in journals)
                 {
                     journal.FinancialStatus = FinancialStatus.Posted;
-                    journal.PostedDate = DateTime.Now;
+                    journal.PostedDate = DateTime.UtcNow;
                     journal.PostedByUserId = postedByUserId;
                     journal.PostingSessionId = session.Id;
                     journal.RowVersion++;
@@ -281,27 +265,13 @@ namespace MeezanPOS.Application.Services
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف في SQLite
-                    foreach (var journal in journals)
+                    await SelfHealBatchAsync(journals, j => j.Id, activeJournal =>
                     {
-                        await _context.Database.ExecuteSqlAsync($"UPDATE DailyJournals SET RowVersion = 1 WHERE Id = {journal.Id}");
-                    }
-
-                    // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
-                    foreach (var journal in journals)
-                    {
-                        _context.Entry(journal).State = EntityState.Detached;
-                        var activeJournal = await _context.DailyJournals.FindAsync(journal.Id);
-                        if (activeJournal != null)
-                        {
-                            activeJournal.FinancialStatus = FinancialStatus.Posted;
-                            activeJournal.PostedDate = DateTime.Now;
-                            activeJournal.PostedByUserId = postedByUserId;
-                            activeJournal.PostingSessionId = session.Id;
-                            activeJournal.RowVersion = 2; // نسخة جديدة بعد التصحيح
-                        }
-                    }
-                    await _context.SaveChangesAsync();
+                        activeJournal.FinancialStatus = FinancialStatus.Posted;
+                        activeJournal.PostedDate = DateTime.UtcNow;
+                        activeJournal.PostedByUserId = postedByUserId;
+                        activeJournal.PostingSessionId = session.Id;
+                    });
                 }
 
                 var cashLedgerService = new CashLedgerService(_context);
@@ -316,6 +286,12 @@ namespace MeezanPOS.Application.Services
                         $"إيراد وردية: {journal.ShiftName} - الكاشير: {journal.EmployeeName}",
                         journal.JournalDate
                     );
+                }
+
+                var auditService = new AuditService(_context);
+                foreach (var journal in journals)
+                {
+                    await auditService.LogAsync(postedByUserId, "PostBatch", "DailyJournal", journal.Id, "Draft", "Posted");
                 }
 
                 await transaction.CommitAsync();
@@ -382,7 +358,7 @@ namespace MeezanPOS.Application.Services
 
                 // حساب إجمالي الجلسة
                 decimal totalExpenses = expenses.Sum(e => e.Amount);
-                DateTime maxExpenseDate = expenses.Any() ? expenses.Max(e => e.PaymentDate) : DateTime.Now;
+                DateTime maxExpenseDate = expenses.Any() ? expenses.Max(e => e.PaymentDate) : DateTime.UtcNow;
 
                 // 1. إنشاء الجلسة وإدخالها للحصول على المعرف التلقائي
                 var session = new PostingSession
@@ -401,7 +377,7 @@ namespace MeezanPOS.Application.Services
                 foreach (var expense in expenses)
                 {
                     expense.FinancialStatus = FinancialStatus.Posted;
-                    expense.PostedDate = DateTime.Now;
+                    expense.PostedDate = DateTime.UtcNow;
                     expense.PostedByUserId = postedByUserId;
                     expense.PostingSessionId = session.Id;
                     expense.RowVersion++;
@@ -423,27 +399,19 @@ namespace MeezanPOS.Application.Services
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    // التحديث الذاتي (Self-Healing) لتعارض إصدار الصفوف في SQLite
-                    foreach (var expense in expenses)
+                    await SelfHealBatchAsync(expenses, e => e.Id, activeExpense =>
                     {
-                        await _context.Database.ExecuteSqlAsync($"UPDATE GeneralExpenses SET RowVersion = 1 WHERE Id = {expense.Id}");
-                    }
+                        activeExpense.FinancialStatus = FinancialStatus.Posted;
+                        activeExpense.PostedDate = DateTime.UtcNow;
+                        activeExpense.PostedByUserId = postedByUserId;
+                        activeExpense.PostingSessionId = session.Id;
+                    });
+                }
 
-                    // إعادة المحاولة بعد تعيين القيمة الصحيحة في قاعدة البيانات
-                    foreach (var expense in expenses)
-                    {
-                        _context.Entry(expense).State = EntityState.Detached;
-                        var activeExpense = await _context.GeneralExpenses.FindAsync(expense.Id);
-                        if (activeExpense != null)
-                        {
-                            activeExpense.FinancialStatus = FinancialStatus.Posted;
-                            activeExpense.PostedDate = DateTime.Now;
-                            activeExpense.PostedByUserId = postedByUserId;
-                            activeExpense.PostingSessionId = session.Id;
-                            activeExpense.RowVersion = 2; // نسخة جديدة بعد التصحيح
-                        }
-                    }
-                    await _context.SaveChangesAsync();
+                var auditService = new AuditService(_context);
+                foreach (var expense in expenses)
+                {
+                    await auditService.LogAsync(postedByUserId, "PostBatch", "GeneralExpense", expense.Id, "Draft", "Posted");
                 }
 
                 await transaction.CommitAsync();
@@ -464,6 +432,355 @@ namespace MeezanPOS.Application.Services
             }
 
             return result;
+        }
+
+        public async Task<PostingBatchResult> SettleAndLockPeriodAsync(decimal payoutAmount, decimal keepAmount, string notes, string postedByUserId)
+        {
+            var result = new PostingBatchResult
+            {
+                Success = false,
+                CorrelationId = Guid.NewGuid(),
+                Errors = new List<string>()
+            };
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            try
+            {
+                var cashLedgerService = new CashLedgerService(_context);
+                
+                // 1. ترحيل وتأكيد كافة اليوميات غير المرحلة حالياً لإدخال مبالغها في الخزينة
+                var draftJournals = await _context.DailyJournals
+                    .Include(j => j.ExpenseItems)
+                    .Include(j => j.BankingItems)
+                    .Include(j => j.Adjustments)
+                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate <= DateTime.UtcNow)
+                    .ToListAsync();
+
+                var draftExpenses = await _context.GeneralExpenses
+                    .Where(e => e.FinancialStatus == FinancialStatus.Draft && e.PaymentDate <= DateTime.UtcNow)
+                    .ToListAsync();
+
+                var totalSalesVal = draftJournals.Sum(j => j.TotalSales);
+                var totalExpensesVal = draftExpenses.Sum(e => e.Amount) + draftJournals.Sum(j => j.TotalExpenses);
+
+                // 2. إنشاء جلسة الترحيل والإقفال للتسوية
+                var session = new PostingSession
+                {
+                    CreatedBy = postedByUserId,
+                    PostedUntilDate = DateTime.UtcNow,
+                    TotalAffectedRows = draftJournals.Count + draftExpenses.Count,
+                    Status = "Settle",
+                    Notes = $"تسوية نقدية وإقفال دوري | سحب المالك: {payoutAmount:N2} د.ل | الاحتفاظ: {keepAmount:N2} د.ل | البيان: {notes}"
+                };
+
+                _context.PostingSessions.Add(session);
+                await _context.SaveChangesAsync();
+
+                // 3. ترحيل اليوميات (مع تسجيل حركات الوارد النقدي التابع لها بالخزينة)
+                foreach (var journal in draftJournals)
+                {
+                    journal.FinancialStatus = FinancialStatus.Posted;
+                    journal.PostedDate = DateTime.UtcNow;
+                    journal.PostedByUserId = postedByUserId;
+                    journal.PostingSessionId = session.Id;
+                    journal.RowVersion++;
+
+                    var detail = new PostingSessionDetail
+                    {
+                        PostingSessionId = session.Id,
+                        EntityType = "DailyJournal",
+                        EntityId = journal.Id,
+                        ActionType = "Posted"
+                    };
+                    _context.PostingSessionDetails.Add(detail);
+
+                    // تسجيل حركة الوارد النقدي بالخزينة للوردية
+                    decimal cashAmount = journal.ActualCash - journal.CashFloat;
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashIn,
+                        cashAmount,
+                        "DailyJournal",
+                        journal.Id,
+                        $"إيراد وردية (إقفال وتسوية): {journal.ShiftName} - الكاشير: {journal.EmployeeName}",
+                        journal.JournalDate
+                    );
+                }
+
+                // 4. ترحيل المصاريف العامة
+                foreach (var expense in draftExpenses)
+                {
+                    expense.FinancialStatus = FinancialStatus.Posted;
+                    expense.PostedDate = DateTime.UtcNow;
+                    expense.PostedByUserId = postedByUserId;
+                    expense.PostingSessionId = session.Id;
+                    expense.RowVersion++;
+
+                    var detail = new PostingSessionDetail
+                    {
+                        PostingSessionId = session.Id,
+                        EntityType = "GeneralExpense",
+                        EntityId = expense.Id,
+                        ActionType = "Posted"
+                    };
+                    _context.PostingSessionDetails.Add(detail);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // 5. التحقق من السيولة النقدية المتوفرة بالخزينة بعد الترحيل
+                decimal currentBalance = await cashLedgerService.GetCurrentBalanceAsync();
+                if (payoutAmount > currentBalance)
+                {
+                    throw new Exception($"المبلغ المطلوب تسليمه للمالك ({payoutAmount:N2} د.ل) يتجاوز السيولة النقدية المتوفرة حالياً بالخزينة ({currentBalance:N2} د.ل).");
+                }
+
+                // 6. تسجيل حركة مسحوبات المالك لتصفية أو خفض رصيد الصندوق
+                if (payoutAmount > 0)
+                {
+                    await cashLedgerService.RecordMovementAsync(
+                        CashMovementType.CashOut,
+                        payoutAmount,
+                        "OwnerWithdrawal",
+                        session.Id,
+                        $"سحب سيولة وتسليم كاش للمالك | البيان: {notes}",
+                        DateTime.UtcNow
+                    );
+                }
+
+                var auditService = new AuditService(_context);
+                await auditService.LogAsync(postedByUserId, "SettleAndLockPeriod", "FinancialPeriod", session.Id, "Active", "Settled");
+
+                await transaction.CommitAsync();
+
+                stopwatch.Stop();
+                result.Success = true;
+                result.SessionGuid = session.SessionId;
+                result.PostedCount = draftJournals.Count + draftExpenses.Count;
+                result.TotalSales = totalSalesVal;
+                result.TotalExpenses = totalExpensesVal;
+                result.Duration = stopwatch.Elapsed;
+                result.BalanceBefore = currentBalance;
+                result.PayoutAmount = payoutAmount;
+                result.KeepAmount = keepAmount;
+
+                // 7. توليد التقرير المالي للتسوية بصيغة PDF وتخزينه في المجلد المؤقت (خارج المعاملة لحماية سلامة البيانات)
+                try
+                {
+                    string fileName = $"إيصال_تسوية_مالك_{session.SessionId.ToString().Substring(0, 8).ToUpper()}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+                    string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
+                    
+                    SettlementPdfReport.GeneratePdf(
+                        tempPath,
+                        payoutAmount,
+                        keepAmount,
+                        currentBalance,
+                        notes,
+                        postedByUserId,
+                        draftJournals.Count + draftExpenses.Count,
+                        totalSalesVal,
+                        totalExpensesVal,
+                        session.SessionId
+                    );
+                    result.PdfPath = tempPath;
+                }
+                catch (Exception pdfEx)
+                {
+                    result.Errors.Add($"تمت التسوية المالية بنجاح، ولكن فشل توليد ملف PDF: {pdfEx.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                result.Success = false;
+                result.Errors.Add(ex.Message);
+            }
+
+            return result;
+        }
+
+        public async Task<List<SettlementHistoryItem>> GetSettlementHistoryAsync()
+        {
+            var sessions = await _context.PostingSessions
+                .Where(s => s.Status == "Settle")
+                .OrderByDescending(s => s.PostedUntilDate)
+                .ToListAsync();
+
+            var sessionIds = sessions.Select(s => s.Id).ToList();
+
+            // 1. جلب حركات مسحوبات المالك المرتبطة بكل الجلسات دفعة واحدة لتفادي استعلامات N+1
+            var withdrawals = await _context.CashMovements
+                .Where(m => m.SourceType == "OwnerWithdrawal" && m.SourceId.HasValue && sessionIds.Contains(m.SourceId.Value))
+                .ToListAsync();
+
+            var withdrawalsDict = withdrawals.ToDictionary(m => m.SourceId.GetValueOrDefault());
+
+            // 2. بالنسبة للجلسات التي ليس لها مسحوبات، سنقوم بجلب آخر حركة نقدية لها بكفاءة
+            var sessionsWithoutWithdrawal = sessions.Where(s => !withdrawalsDict.ContainsKey(s.Id)).ToList();
+            var keepBalancesDict = new Dictionary<int, decimal>();
+            
+            if (sessionsWithoutWithdrawal.Any())
+            {
+                foreach (var session in sessionsWithoutWithdrawal)
+                {
+                    var lastMovementBefore = await _context.CashMovements
+                        .Where(m => m.TransactionDate <= session.PostedUntilDate)
+                        .OrderByDescending(m => m.Sequence)
+                        .ThenByDescending(m => m.TransactionDate)
+                        .FirstOrDefaultAsync();
+                    
+                    keepBalancesDict[session.Id] = lastMovementBefore?.BalanceAfter ?? 0;
+                }
+            }
+
+            var historyList = new List<SettlementHistoryItem>();
+
+            foreach (var session in sessions)
+            {
+                withdrawalsDict.TryGetValue(session.Id, out var withdrawal);
+
+                decimal payout = withdrawal != null ? Math.Abs(withdrawal.Amount) : 0;
+                decimal keep = 0;
+
+                if (withdrawal != null)
+                {
+                    keep = withdrawal.BalanceAfter;
+                }
+                else
+                {
+                    keepBalancesDict.TryGetValue(session.Id, out keep);
+                }
+
+                string userNotes = ExtractUserNotes(session.Notes);
+
+                historyList.Add(new SettlementHistoryItem
+                {
+                    SessionId = session.Id,
+                    SessionGuid = session.SessionId,
+                    SettleDate = session.PostedUntilDate,
+                    CreatedBy = session.CreatedBy,
+                    PayoutAmount = payout,
+                    KeepAmount = keep,
+                    AffectedCount = session.TotalAffectedRows,
+                    Notes = userNotes
+                });
+            }
+
+            return historyList;
+        }
+
+        public async Task<string> RegenerateSettlementPdfAsync(int sessionId)
+        {
+            var session = await _context.PostingSessions
+                .FirstOrDefaultAsync(s => s.Id == sessionId);
+            
+            if (session == null)
+                throw new Exception("جلسة التسوية غير موجودة.");
+
+            var withdrawal = await _context.CashMovements
+                .FirstOrDefaultAsync(m => m.SourceType == "OwnerWithdrawal" && m.SourceId == sessionId);
+
+            decimal payoutAmount = withdrawal != null ? Math.Abs(withdrawal.Amount) : 0;
+            decimal keepAmount = withdrawal != null ? withdrawal.BalanceAfter : 0;
+
+            if (withdrawal == null)
+            {
+                var lastMovementBefore = await _context.CashMovements
+                    .Where(m => m.TransactionDate <= session.PostedUntilDate)
+                    .OrderByDescending(m => m.Sequence)
+                    .ThenByDescending(m => m.TransactionDate)
+                    .FirstOrDefaultAsync();
+                
+                keepAmount = lastMovementBefore?.BalanceAfter ?? 0;
+            }
+
+            decimal balanceBefore = payoutAmount + keepAmount;
+
+            var journals = await _context.DailyJournals
+                .Where(j => j.PostingSessionId == sessionId)
+                .ToListAsync();
+
+            var expenses = await _context.GeneralExpenses
+                .Where(e => e.PostingSessionId == sessionId)
+                .ToListAsync();
+
+            decimal totalSales = journals.Sum(j => j.TotalSales);
+            decimal totalExpenses = journals.Sum(j => j.TotalExpenses) + expenses.Sum(e => e.Amount);
+            int affectedCount = journals.Count + expenses.Count;
+
+            string userNotes = ExtractUserNotes(session.Notes);
+
+            string fileName = $"إيصال_تسوية_مالك_{session.SessionId.ToString().Substring(0, 8).ToUpper()}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
+
+            SettlementPdfReport.GeneratePdf(
+                tempPath,
+                payoutAmount,
+                keepAmount,
+                balanceBefore,
+                userNotes,
+                session.CreatedBy,
+                affectedCount,
+                totalSales,
+                totalExpenses,
+                session.SessionId
+            );
+
+            return tempPath;
+        }
+
+        private async Task SelfHealEntityAsync<T>(int entityId, T entity, Action<IPostableEntity> updateAction) where T : class
+        {
+            var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
+#pragma warning disable EF1002
+            var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
+            await _context.Database.ExecuteSqlRawAsync(sql, entityId);
+#pragma warning restore EF1002
+            
+            _context.Entry(entity).State = EntityState.Detached;
+            var activeEntity = await _context.Set<T>().FindAsync(entityId);
+            if (activeEntity is IPostableEntity postable)
+            {
+                updateAction(postable);
+                postable.RowVersion = 2;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SelfHealBatchAsync<T>(List<T> entities, Func<T, int> idSelector, Action<IPostableEntity> updateAction) where T : class
+        {
+            var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
+            
+            foreach (var entity in entities)
+            {
+                int id = idSelector(entity);
+#pragma warning disable EF1002
+                await _context.Database.ExecuteSqlRawAsync("UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}", id);
+#pragma warning restore EF1002
+            }
+
+            foreach (var entity in entities)
+            {
+                int id = idSelector(entity);
+                _context.Entry(entity).State = EntityState.Detached;
+                var activeEntity = await _context.Set<T>().FindAsync(id);
+                if (activeEntity is IPostableEntity postable)
+                {
+                    updateAction(postable);
+                    postable.RowVersion = 2;
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        private string ExtractUserNotes(string? rawNotes)
+        {
+            string userNotes = rawNotes ?? string.Empty;
+            if (userNotes.Contains(" | البيان: "))
+            {
+                userNotes = userNotes.Substring(userNotes.IndexOf(" | البيان: ") + " | البيان: ".Length);
+            }
+            return userNotes;
         }
     }
 }

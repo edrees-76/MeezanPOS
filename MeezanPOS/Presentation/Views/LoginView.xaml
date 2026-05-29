@@ -60,6 +60,7 @@
             <Setter Property="Height" Value="46"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="Padding" Value="15,0,15,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="CaretBrush" Value="White"/>
 
@@ -97,6 +98,7 @@
             <Setter Property="Height" Value="46"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="Padding" Value="15,0,15,0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
 
             <Setter Property="Template">
@@ -284,9 +286,9 @@
                                            Text="أدخل اسم المستخدم هنا"
                                            Foreground="#6A7FA8"
                                            FontSize="15"
-                                           Margin="0,0,18,0"
+                                           Margin="0"
                                            VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"
+                                           HorizontalAlignment="Center"
                                            IsHitTestVisible="False"/>
                             </Grid>
 
@@ -309,12 +311,12 @@
                             <Grid>
                                 <PasswordBox x:Name="txtPassword"
                                              Style="{StaticResource ModernPasswordStyle}"
-                                             Padding="15,0,45,0"
+                                             Padding="45,0,45,0"
                                              PasswordChanged="PasswordBox_PasswordChanged"/>
 
                                 <TextBox x:Name="txtVisiblePassword"
                                          Style="{StaticResource ModernTextBoxStyle}"
-                                         Padding="15,0,45,0"
+                                         Padding="45,0,45,0"
                                          Visibility="Collapsed"
                                          TextChanged="TxtVisiblePassword_TextChanged"/>
 
@@ -322,9 +324,9 @@
                                            Text="أدخل كلمة المرور هنا"
                                            Foreground="#6A7FA8"
                                            FontSize="15"
-                                           Margin="0,0,48,0"
+                                           Margin="0"
                                            VerticalAlignment="Center"
-                                           HorizontalAlignment="Right"
+                                           HorizontalAlignment="Center"
                                            IsHitTestVisible="False"/>
 
                                 <!-- Toggle Password Button (Right aligned in RTL) -->

@@ -229,7 +229,7 @@ public class WagesService : IWagesService
         if (attendance.AccruedWage <= 0) throw new Exception("يجب تحديد أجر مستحق أكبر من الصفر.");
 
         attendance.WorkerName = attendance.WorkerName.Trim();
-        attendance.CreatedAt = DateTime.Now;
+        attendance.CreatedAt = DateTime.UtcNow;
         _context.WorkerAttendances.Add(attendance);
         await _context.SaveChangesAsync();
     }
@@ -240,7 +240,7 @@ public class WagesService : IWagesService
         if (attendance != null)
         {
             attendance.IsDeleted = true;
-            attendance.UpdatedAt = DateTime.Now;
+            attendance.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
     }

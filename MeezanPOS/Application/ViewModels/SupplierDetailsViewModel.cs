@@ -60,8 +60,6 @@ public partial class UnifiedLedgerRow : ObservableObject
 
 public partial class SupplierDetailsViewModel : ObservableObject
 {
-    private readonly AppDbContext _context;
-    private readonly ILedgerService _ledgerService;
     private int? _editingInvoiceId;
     private int? _editingPaymentTransactionId;
     
@@ -202,8 +200,6 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         SupplierId = supplierId;
         SupplierName = supplierName;
-        _context = new AppDbContext();
-        _ledgerService = new LedgerService(_context);
         
         _ = LoadDataAsync();
         _ = LoadBankAccountsAndPartnersAsync();
@@ -213,10 +209,11 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         try
         {
-            var bankService = new BankService(_context);
+            using var context = new AppDbContext();
+            var bankService = new BankService(context);
             var accountsList = await bankService.GetAllAccountsAsync();
             
-            var ownerDebtService = new OwnerDebtService(_context, bankService);
+            var ownerDebtService = new OwnerDebtService(context, bankService);
             var namesList = await ownerDebtService.GetPartnerNamesAsync();
 
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -245,17 +242,20 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var supplier = await _context.Suppliers.FindAsync(SupplierId);
+            using var context = new AppDbContext();
+            var ledgerService = new LedgerService(context);
+
+            var supplier = await context.Suppliers.FindAsync(SupplierId);
             if (supplier != null) CurrentBalance = supplier.CurrentBalance;
 
-            var invoicesList = await _context.SupplierInvoices
+            var invoicesList = await context.SupplierInvoices
                 .Where(i => i.SupplierId == SupplierId && !i.IsDeleted)
                 .OrderByDescending(i => i.InvoiceDate)
                 .ThenByDescending(i => i.Id)
                 .ToListAsync();
             Invoices = new ObservableCollection<SupplierInvoice>(invoicesList);
 
-            var transactionsList = await _ledgerService.GetStatementAsync(SupplierId, DateTime.MinValue, DateTime.MaxValue);
+            var transactionsList = await ledgerService.GetStatementAsync(SupplierId, DateTime.MinValue, DateTime.MaxValue);
             Transactions = new ObservableCollection<SupplierTransaction>(transactionsList.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id));
 
             // Generate Unified Ledger
@@ -274,7 +274,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
     [RelayCommand]
     public void FilterStatement()
     {
-        if (_context.Suppliers.Find(SupplierId) is var supplier)
+        using var context = new AppDbContext();
+        if (context.Suppliers.Find(SupplierId) is var supplier)
         {
             var allTransactions = Transactions.OrderBy(t => t.TransactionDate).ThenBy(t => t.Id).ToList();
             GenerateUnifiedLedger(supplier?.OpeningBalance ?? 0, allTransactions);
@@ -489,6 +490,9 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
         try
         {
+            using var context = new AppDbContext();
+            var ledgerService = new LedgerService(context);
+
             if (_editingInvoiceId.HasValue)
             {
                 // تعديل فاتورة قائمة
@@ -499,13 +503,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     UnitPrice = item.UnitPrice
                 }).ToList();
 
-                await _ledgerService.UpdateInvoiceAsync(NewInvoice, listItems);
+                await ledgerService.UpdateInvoiceAsync(NewInvoice, listItems);
                 MessageBox.Show("تم تعديل الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
                 // إضافة فاتورة جديدة
-                await _ledgerService.PostInvoiceAsync(NewInvoice);
+                await ledgerService.PostInvoiceAsync(NewInvoice);
 
                 // حفظ تفاصيل الأصناف في قاعدة البيانات
                 if (InvoiceItems.Count > 0)
@@ -520,9 +524,9 @@ public partial class SupplierDetailsViewModel : ObservableObject
                             UnitPrice = item.UnitPrice,
                             TotalValue = item.TotalValue
                         };
-                        _context.SupplierInvoiceItems.Add(dbItem);
+                        context.SupplierInvoiceItems.Add(dbItem);
                     }
-                    await _context.SaveChangesAsync();
+                    await context.SaveChangesAsync();
                 }
                 MessageBox.Show("تم حفظ الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -613,10 +617,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
             else
                 finalNotes += " | سداد نقدي";
 
+            using var context = new AppDbContext();
+            var ledgerService = new LedgerService(context);
+
             if (_editingPaymentTransactionId.HasValue)
             {
                 // تعديل دفعة قائمة
-                await _ledgerService.UpdatePaymentAsync(
+                await ledgerService.UpdatePaymentAsync(
                     transactionId: _editingPaymentTransactionId.Value,
                     amount: PaymentAmount,
                     paymentDate: PaymentDate,
@@ -633,7 +640,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 // توجيه الدفعة لمحرك الدفتر (Ledger Engine)
                 var paymentId = int.TryParse(ReceiptNumber, out var rId) ? rId : 0;
 
-                await _ledgerService.PostPaymentAsync(
+                await ledgerService.PostPaymentAsync(
                     supplierId: SupplierId,
                     amount: PaymentAmount,
                     source: TransactionSourceType.ExternalPayment,
@@ -668,7 +675,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var invoice = await _context.SupplierInvoices
+            using var context = new AppDbContext();
+            var invoice = await context.SupplierInvoices
                 .Include(i => i.Items)
                 .FirstOrDefaultAsync(i => i.Id == row.SourceId);
 
@@ -725,7 +733,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var trans = await _context.SupplierTransactions
+            using var context = new AppDbContext();
+            var trans = await context.SupplierTransactions
                 .FirstOrDefaultAsync(t => t.Id == row.TransactionId);
 
             if (trans == null)
@@ -751,10 +760,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
             }
             else
             {
-                var bankTx = await _context.BankTransactions
+                var bankTx = await context.BankTransactions
                     .FirstOrDefaultAsync(t => t.SourceType == "SupplierTransaction" && t.SourceId == trans.Id && !t.IsDeleted);
 
-                var ownerDebt = await _context.OwnerDebts
+                var ownerDebt = await context.OwnerDebts
                     .FirstOrDefaultAsync(d => d.SourceType == "SupplierTransaction" && d.SourceId == trans.Id && !d.IsDeleted);
 
                 if (bankTx != null)
@@ -784,7 +793,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             // الفاتورة المرتبطة بالدفعة إن وجدت
             if (trans.SupplierInvoiceId.HasValue)
             {
-                SelectedInvoiceForPayment = await _context.SupplierInvoices.FindAsync(trans.SupplierInvoiceId.Value);
+                SelectedInvoiceForPayment = await context.SupplierInvoices.FindAsync(trans.SupplierInvoiceId.Value);
             }
             else
             {

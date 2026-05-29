@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using MeezanPOS.Domain.Entities;
 using System.Linq;
 
@@ -88,6 +89,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<GeneralExpense>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<WorkerAttendance>().HasQueryFilter(e => !e.IsDeleted);
         
+        // اليوميات وعناصرها الفرعية — كانت مفقودة سابقاً
+        modelBuilder.Entity<DailyJournal>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<DailyExpenseItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<BankingItem>().HasQueryFilter(e => !e.IsDeleted);
+        modelBuilder.Entity<OrderAdjustmentItem>().HasQueryFilter(e => !e.IsDeleted);
+
         // Financial Core
         modelBuilder.Entity<FinancialPeriod>().HasQueryFilter(e => !e.IsDeleted);
         modelBuilder.Entity<PostingSession>().HasQueryFilter(e => !e.IsDeleted);
@@ -139,7 +146,8 @@ public class AppDbContext : DbContext
                 );";
             cmd.ExecuteNonQuery();
         }
-        catch { }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1) { /* الجدول/العمود موجود مسبقاً */ }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"⚠️ خطأ غير متوقع أثناء إنشاء جدول: {ex.Message}"); }
 
         var alterCommands = new[]
         {
@@ -155,8 +163,122 @@ public class AppDbContext : DbContext
                 cmd.CommandText = sql;
                 cmd.ExecuteNonQuery();
             }
-            catch { /* العمود موجود بالفعل */ }
+            catch (SqliteException ex) when (ex.SqliteErrorCode == 1) { /* العمود موجود بالفعل */ }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"⚠️ خطأ غير متوقع أثناء ALTER TABLE: {ex.Message}"); }
         }
+
+        // Drop the old triggers to recreate them with the correct transition exemption
+        var dropCommands = new[]
+        {
+            "DROP TRIGGER IF EXISTS trg_PreventUpdatePostedDailyJournal;",
+            "DROP TRIGGER IF EXISTS trg_PreventUpdatePostedGeneralExpense;"
+        };
+        foreach (var sql in dropCommands)
+        {
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"⚠️ خطأ أثناء حذف trigger: {ex.Message}"); }
+        }
+
+        var triggerCommands = new[]
+        {
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventUpdatePostedDailyJournal
+              BEFORE UPDATE ON DailyJournals
+              FOR EACH ROW
+              WHEN OLD.FinancialStatus = 2 AND NEW.FinancialStatus = 2
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot update a posted daily journal.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventDeletePostedDailyJournal
+              BEFORE DELETE ON DailyJournals
+              FOR EACH ROW
+              WHEN OLD.FinancialStatus = 2
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot delete a posted daily journal.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventUpdatePostedGeneralExpense
+              BEFORE UPDATE ON GeneralExpenses
+              FOR EACH ROW
+              WHEN OLD.FinancialStatus = 2 AND NEW.FinancialStatus = 2
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot update a posted general expense.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventDeletePostedGeneralExpense
+              BEFORE DELETE ON GeneralExpenses
+              FOR EACH ROW
+              WHEN OLD.FinancialStatus = 2
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot delete a posted general expense.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventUpdatePostedSupplierTransaction_Journal
+              BEFORE UPDATE ON SupplierTransactions
+              FOR EACH ROW
+              WHEN OLD.SourceType = 3 AND EXISTS (
+                  SELECT 1 FROM DailyJournals j
+                  JOIN DailyExpenseItems e ON e.DailyJournalId = j.Id
+                  WHERE e.Id = OLD.SourceId AND j.FinancialStatus = 2
+              )
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot update a supplier transaction linked to a posted daily journal.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventDeletePostedSupplierTransaction_Journal
+              BEFORE DELETE ON SupplierTransactions
+              FOR EACH ROW
+              WHEN OLD.SourceType = 3 AND EXISTS (
+                  SELECT 1 FROM DailyJournals j
+                  JOIN DailyExpenseItems e ON e.DailyJournalId = j.Id
+                  WHERE e.Id = OLD.SourceId AND j.FinancialStatus = 2
+              )
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot delete a supplier transaction linked to a posted daily journal.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventUpdatePostedSupplierTransaction_Expense
+              BEFORE UPDATE ON SupplierTransactions
+              FOR EACH ROW
+              WHEN OLD.SourceType = 4 AND EXISTS (
+                  SELECT 1 FROM GeneralExpenses e
+                  WHERE e.Id = OLD.SourceId AND e.FinancialStatus = 2
+              )
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot update a supplier transaction linked to a posted general expense.');
+              END;",
+
+            @"CREATE TRIGGER IF NOT EXISTS trg_PreventDeletePostedSupplierTransaction_Expense
+              BEFORE DELETE ON SupplierTransactions
+              FOR EACH ROW
+              WHEN OLD.SourceType = 4 AND EXISTS (
+                  SELECT 1 FROM GeneralExpenses e
+                  WHERE e.Id = OLD.SourceId AND e.FinancialStatus = 2
+              )
+              BEGIN
+                  SELECT RAISE(FAIL, 'Cannot delete a supplier transaction linked to a posted general expense.');
+              END;"
+        };
+        foreach (var sql in triggerCommands)
+        {
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                // ⚠️ فشل إنشاء trigger = فقدان حماية السجلات المرحّلة — يجب عدم التجاهل
+                System.Diagnostics.Debug.WriteLine($"🔴 خطأ حرج أثناء إنشاء trigger حماية السجلات المرحّلة: {ex.Message}");
+            }
+        }
+
         conn.Close();
     }
 }

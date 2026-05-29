@@ -66,6 +66,15 @@ public class LedgerService : ILedgerService
         }
     }
 
+    /// <summary>
+    /// تسجيل دفعة سداد لمورد.
+    /// </summary>
+    /// <remarks>
+    /// SourceId يحمل معنى مزدوجاً في SupplierTransaction:
+    /// - عند الإنشاء: معرف المصدر الأصلي (sourceId parameter)
+    /// - بعد ربط المصروف/الدين: يُستبدل بمعرف GeneralExpense أو OwnerDebt
+    /// هذا السلوك مقصود لربط الحركة بالكيان المالي النهائي.
+    /// </remarks>
     public async Task PostPaymentAsync(int supplierId, decimal amount, TransactionSourceType source, int sourceId, DateTime paymentDate, int? targetInvoiceId = null, string? receiptNumber = null, string? notes = null, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
         using var transaction = await _context.Database.BeginTransactionAsync();
@@ -135,7 +144,7 @@ public class LedgerService : ILedgerService
                     BankAccountId = bankAccountId.Value,
                     Description = expenseNotes,
                     FinancialStatus = FinancialStatus.Draft,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 };
                 _context.GeneralExpenses.Add(expense);
                 await _context.SaveChangesAsync();
@@ -172,7 +181,7 @@ public class LedgerService : ILedgerService
                         PaymentMethod = PaymentMethodType.Cash,
                         Description = expenseNotes,
                         FinancialStatus = FinancialStatus.Draft,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.UtcNow
                     };
                     _context.GeneralExpenses.Add(expense);
                     await _context.SaveChangesAsync();
@@ -238,6 +247,10 @@ public class LedgerService : ILedgerService
         try
         {
             await RebuildSupplierLedgerInternalAsync(supplierId);
+
+            var auditService = new AuditService(_context);
+            await auditService.LogAsync("Admin", "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
+
             await transaction.CommitAsync();
         }
         catch
@@ -263,7 +276,7 @@ public class LedgerService : ILedgerService
             dbInvoice.InvoiceDate = invoice.InvoiceDate;
             dbInvoice.TotalAmount = invoice.TotalAmount;
             dbInvoice.Notes = invoice.Notes;
-            dbInvoice.UpdatedAt = DateTime.Now;
+            dbInvoice.UpdatedAt = DateTime.UtcNow;
 
             // حذف العناصر القديمة وإضافة الجديدة
             _context.SupplierInvoiceItems.RemoveRange(dbInvoice.Items);
@@ -295,7 +308,7 @@ public class LedgerService : ILedgerService
             {
                 ledgerTx.Amount = dbInvoice.TotalAmount;
                 ledgerTx.TransactionDate = dbInvoice.InvoiceDate;
-                ledgerTx.UpdatedAt = DateTime.Now;
+                ledgerTx.UpdatedAt = DateTime.UtcNow;
             }
             else
             {
@@ -337,6 +350,20 @@ public class LedgerService : ILedgerService
 
             if (ledgerTx == null) throw new Exception("الحركة المحاسبية غير موجودة.");
 
+            // التحقق من حالة الوردية المرتبطة بالدفعة إن وجدت
+            if (ledgerTx.SourceType == TransactionSourceType.DailyJournalPayment)
+            {
+                var expenseItem = await _context.DailyExpenseItems
+                    .Include(e => e.DailyJournal)
+                    .FirstOrDefaultAsync(e => e.Id == ledgerTx.SourceId);
+                if (expenseItem?.DailyJournal != null && 
+                    (expenseItem.DailyJournal.FinancialStatus == FinancialStatus.Posted || 
+                     expenseItem.DailyJournal.FinancialStatus == FinancialStatus.Archived))
+                {
+                    throw new Exception("لا يمكن تعديل حركة السداد لأن الوردية المرتبطة بها قد تم ترحيلها مالياً بالفعل.");
+                }
+            }
+
             var supplier = await _context.Suppliers.FindAsync(ledgerTx.SupplierId);
             if (supplier == null) throw new Exception("المورد غير موجود.");
 
@@ -347,7 +374,7 @@ public class LedgerService : ILedgerService
             ledgerTx.TransactionDate = paymentDate;
             ledgerTx.ReceiptNumber = receiptNumber;
             ledgerTx.Notes = notes;
-            ledgerTx.UpdatedAt = DateTime.Now;
+            ledgerTx.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -420,7 +447,7 @@ public class LedgerService : ILedgerService
                         oldBankTx.ReferenceNumber = bankReferenceNumber ?? receiptNumber;
                         oldBankTx.Notes = bankTxNotes;
                         oldBankTx.TransactionDate = paymentDate;
-                        oldBankTx.UpdatedAt = DateTime.Now;
+                        oldBankTx.UpdatedAt = DateTime.UtcNow;
 
                         await _context.SaveChangesAsync();
                         await _bankService.RebuildAccountBalanceAsync(bankAccountId.Value);
@@ -451,7 +478,7 @@ public class LedgerService : ILedgerService
                     oldExpense.PaymentMethod = PaymentMethodType.BankTransfer;
                     oldExpense.BankAccountId = bankAccountId.Value;
                     oldExpense.Description = expenseNotes;
-                    oldExpense.UpdatedAt = DateTime.Now;
+                    oldExpense.UpdatedAt = DateTime.UtcNow;
                 }
                 else
                 {
@@ -464,7 +491,7 @@ public class LedgerService : ILedgerService
                         BankAccountId = bankAccountId.Value,
                         Description = expenseNotes,
                         FinancialStatus = FinancialStatus.Draft,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.UtcNow
                     };
                     _context.GeneralExpenses.Add(expense);
                     await _context.SaveChangesAsync();
@@ -482,7 +509,7 @@ public class LedgerService : ILedgerService
                 if (oldExpense != null)
                 {
                     oldExpense.IsDeleted = true;
-                    oldExpense.UpdatedAt = DateTime.Now;
+                    oldExpense.UpdatedAt = DateTime.UtcNow;
                 }
 
                 var debtNotes = $"سداد شخصي للمورد: {supplier.Name}" + (string.IsNullOrEmpty(notes) ? "" : $" | {notes}");
@@ -493,7 +520,7 @@ public class LedgerService : ILedgerService
                     oldOwnerDebt.Amount = amount;
                     oldOwnerDebt.Notes = debtNotes;
                     oldOwnerDebt.TransactionDate = paymentDate;
-                    oldOwnerDebt.UpdatedAt = DateTime.Now;
+                    oldOwnerDebt.UpdatedAt = DateTime.UtcNow;
                     await _context.SaveChangesAsync();
                 }
                 else
@@ -534,7 +561,7 @@ public class LedgerService : ILedgerService
                         oldExpense.PaymentMethod = PaymentMethodType.Cash;
                         oldExpense.BankAccountId = null;
                         oldExpense.Description = expenseNotes;
-                        oldExpense.UpdatedAt = DateTime.Now;
+                        oldExpense.UpdatedAt = DateTime.UtcNow;
 
                         var cashLedgerService = new CashLedgerService(_context);
                         await cashLedgerService.RecordMovementAsync(
@@ -557,7 +584,7 @@ public class LedgerService : ILedgerService
                             PaymentMethod = PaymentMethodType.Cash,
                             Description = expenseNotes,
                             FinancialStatus = FinancialStatus.Draft,
-                            CreatedAt = DateTime.Now
+                            CreatedAt = DateTime.UtcNow
                         };
                         _context.GeneralExpenses.Add(expense);
                         await _context.SaveChangesAsync();
@@ -579,7 +606,7 @@ public class LedgerService : ILedgerService
                     if (oldExpense != null)
                     {
                         oldExpense.IsDeleted = true;
-                        oldExpense.UpdatedAt = DateTime.Now;
+                        oldExpense.UpdatedAt = DateTime.UtcNow;
                     }
                     ledgerTx.SourceId = 0;
                 }

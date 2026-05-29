@@ -1,0 +1,16 @@
+# User database file
+Meezan.db
+Meezan_backup_*.db
+
+# Build outputs
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# System / OS files
+.DS_Store
+Thumbs.db
+crash_log.txt

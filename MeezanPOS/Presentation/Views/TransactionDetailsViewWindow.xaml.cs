@@ -83,7 +83,7 @@ namespace MeezanPOS.Presentation.Views
         {
             InitializeComponent();
             _cashMovement = movement;
-            _sourceType = movement.SourceType;
+            _sourceType = movement.SourceType ?? string.Empty;
             _sourceId = movement.SourceId ?? 0;
             DataContext = this;
 

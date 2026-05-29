@@ -24,6 +24,10 @@ public class CashMovement : BaseEntity
     public string? Notes { get; set; }              // البيان والتفاصيل
     public bool IsReversed { get; set; }            // هل تم عكس الحركة؟
 
+    /// <summary>
+    /// تسلسل عرض مؤقت غير مخزن في قاعدة البيانات.
+    /// يُستخدم فقط لتسهيل قراءة الترتيب في واجهات العرض (UI).
+    /// </summary>
     [NotMapped]
     public int Sequence { get; set; }               // التسلسل (للعرض فقط)
 }

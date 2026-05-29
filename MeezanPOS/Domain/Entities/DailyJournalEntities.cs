@@ -24,6 +24,7 @@ public class DailyJournal : BaseEntity, IPostableEntity
     public decimal BankingTotal { get; set; }          // إجمالي الخدمات المصرفية (من الدفتر)
     
     // الحسابات التلقائية
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal CashSales => TotalSales - BankingTotal;  // المبيعات النقدية = الإجمالي - المصرفية
     // المرتجعات والطلبات المجانية
     public decimal ReturnsTotal { get; set; }
@@ -35,8 +36,10 @@ public class DailyJournal : BaseEntity, IPostableEntity
     public decimal TotalExpenses { get; set; }         // إجمالي المصروفات النثرية
 
     // المطابقة النهائية
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal ExpectedCash => CashFloat + CashSales - TotalExpenses - ReturnsTotal;  // النقد المتوقع
     public decimal ActualCash { get; set; }            // النقد الفعلي المستلم
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal Difference => ActualCash - ExpectedCash;  // الفرق (عجز أو زيادة)
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]

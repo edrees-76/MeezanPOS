@@ -41,16 +41,7 @@
     </Resource>
   </ItemGroup>
 
-  <Target Name="CopyIconBeforeBuild" BeforeTargets="PrepareForBuild">
-    <Copy SourceFiles="C:\Users\DELL\Downloads\mizan_3d_icon_final_transparent.png" 
-          DestinationFiles="..\mizan_3d_icon_final_transparent.png" 
-          SkipUnchangedFiles="true" 
-          Condition="Exists('C:\Users\DELL\Downloads\mizan_3d_icon_final_transparent.png')" />
-    <Copy SourceFiles="C:\Users\DELL\Downloads\perfect_login_bg.png" 
-          DestinationFiles="..\perfect_login_bg.png" 
-          SkipUnchangedFiles="true" 
-          Condition="Exists('C:\Users\DELL\Downloads\perfect_login_bg.png')" />
-  </Target>
+
 
   <UsingTask TaskName="PngToIco" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
@@ -95,7 +86,7 @@
     </Task>
   </UsingTask>
 
-  <Target Name="ConvertPngToIco" BeforeTargets="PrepareForBuild" DependsOnTargets="CopyIconBeforeBuild">
+  <Target Name="ConvertPngToIco" BeforeTargets="PrepareForBuild">
     <PngToIco PngPath="..\mizan_3d_icon_final_transparent.png" 
               IcoPath="..\mizan_3d_icon_final_transparent.ico" 
               Condition="Exists('..\mizan_3d_icon_final_transparent.png')" />

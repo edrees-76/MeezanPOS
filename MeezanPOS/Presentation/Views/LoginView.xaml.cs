@@ -91,6 +91,12 @@ namespace MeezanPOS.Presentation.Views
                             MessageBoxButton.OK,
                             MessageBoxImage.Error);
                     }
+                    else
+                    {
+                        vm.Password = string.Empty;
+                        txtPassword.Clear();
+                        txtVisiblePassword.Clear();
+                    }
                 }
             }
         }

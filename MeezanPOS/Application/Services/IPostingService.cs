@@ -1,8 +1,24 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MeezanPOS.Application.Services
 {
+    public class SettlementHistoryItem
+    {
+        public int SessionId { get; set; }
+        public Guid SessionGuid { get; set; }
+        public string ShortSessionGuid => SessionGuid.ToString().Substring(0, 8).ToUpper();
+        public DateTime SettleDate { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+        public decimal PayoutAmount { get; set; }
+        public decimal KeepAmount { get; set; }
+        public decimal BalanceBefore => PayoutAmount + KeepAmount;
+        public int AffectedCount { get; set; }
+        public string Notes { get; set; } = string.Empty;
+        public string? PdfPath { get; set; }
+    }
+
     public interface IPostingService
     {
         /// <summary>
@@ -29,5 +45,20 @@ namespace MeezanPOS.Application.Services
         /// ترحيل جماعي مخصص للمصاريف العامة مع التحقق المحاسبي وتوليد استجابة ترحيل متكاملة
         /// </summary>
         Task<PostingBatchResult> PostGeneralExpensesBatchAsync(List<int> expenseIds, string postedByUserId, string notes);
+
+        /// <summary>
+        /// تسوية نقدية وإقفال دوري متدحرج عند الطلب وتوليد استجابة تسوية مجمعة
+        /// </summary>
+        Task<PostingBatchResult> SettleAndLockPeriodAsync(decimal payoutAmount, decimal keepAmount, string notes, string postedByUserId);
+
+        /// <summary>
+        /// جلب سجل تسويات كاش المالك السابقة
+        /// </summary>
+        Task<List<SettlementHistoryItem>> GetSettlementHistoryAsync();
+
+        /// <summary>
+        /// إعادة توليد ملف PDF لإيصال تسوية سابق
+        /// </summary>
+        Task<string> RegenerateSettlementPdfAsync(int sessionId);
     }
 }

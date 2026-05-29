@@ -119,7 +119,7 @@ public class OwnerDebtService : IOwnerDebtService
             throw new Exception("لا يمكن حذف دين تم تسويته بالفعل. الرجاء حذف التسويات المرتبطة به أولاً.");
 
         debt.IsDeleted = true;
-        debt.UpdatedAt = DateTime.Now;
+        debt.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
     }
 
@@ -153,7 +153,7 @@ public class OwnerDebtService : IOwnerDebtService
                     throw new Exception("الدين المحدد غير موجود.");
 
                 debt.Status = OwnerDebtStatus.Paid;
-                debt.UpdatedAt = DateTime.Now;
+                debt.UpdatedAt = DateTime.UtcNow;
             }
 
             var settlement = new OwnerDebtSettlement
@@ -190,6 +190,10 @@ public class OwnerDebtService : IOwnerDebtService
             }
 
             await _context.SaveChangesAsync();
+
+            var auditService = new AuditService(_context);
+            await auditService.LogAsync("Admin", "RecordSettlement", "OwnerDebtSettlement", settlement.Id, null, $"Settlement for Partner {partnerName} Amount {amount} via {source}");
+
             await transaction.CommitAsync();
 
             return settlement;
@@ -217,7 +221,7 @@ public class OwnerDebtService : IOwnerDebtService
                 if (debt != null && !debt.IsDeleted)
                 {
                     debt.Status = OwnerDebtStatus.Unpaid;
-                    debt.UpdatedAt = DateTime.Now;
+                    debt.UpdatedAt = DateTime.UtcNow;
                 }
             }
 
@@ -229,9 +233,13 @@ public class OwnerDebtService : IOwnerDebtService
 
             // 3. حذف التسوية
             settlement.IsDeleted = true;
-            settlement.UpdatedAt = DateTime.Now;
+            settlement.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            var auditService = new AuditService(_context);
+            await auditService.LogAsync("Admin", "DeleteSettlement", "OwnerDebtSettlement", settlement.Id, $"Partner: {settlement.PartnerName}, Amount: {settlement.Amount}", "Deleted");
+
             await transaction.CommitAsync();
         }
         catch
@@ -295,13 +303,32 @@ public class OwnerDebtService : IOwnerDebtService
     // ────────────────────────────────────────────────────────────────
     public async Task<List<PartnerSummaryDto>> GetPartnersSummaryAsync()
     {
-        var partnerNames = await GetPartnerNamesAsync();
-        var summaries = new List<PartnerSummaryDto>();
+        // استعلامان فقط بدلاً من 2N استعلام (حيث N = عدد الشركاء)
+        var debtSums = await _context.OwnerDebts
+            .Where(d => !d.IsDeleted)
+            .GroupBy(d => d.PartnerName)
+            .Select(g => new { Name = g.Key, Total = g.Sum(d => d.Amount) })
+            .ToListAsync();
 
-        foreach (var name in partnerNames)
+        var settlementSums = await _context.OwnerDebtSettlements
+            .Where(s => !s.IsDeleted)
+            .GroupBy(s => s.PartnerName)
+            .Select(g => new { Name = g.Key, Total = g.Sum(s => s.Amount) })
+            .ToListAsync();
+
+        var debtDict = debtSums.ToDictionary(d => d.Name, d => d.Total);
+        var settlementDict = settlementSums.ToDictionary(s => s.Name, s => s.Total);
+
+        var allNames = debtDict.Keys
+            .Union(settlementDict.Keys)
+            .Where(n => !string.IsNullOrEmpty(n))
+            .OrderBy(n => n);
+
+        var summaries = new List<PartnerSummaryDto>();
+        foreach (var name in allNames)
         {
-            var debtsTotal = await GetTotalOwnerDebtsAsync(name);
-            var settlementsTotal = await GetTotalOwnerSettlementsAsync(name);
+            var debtsTotal = debtDict.GetValueOrDefault(name, 0m);
+            var settlementsTotal = settlementDict.GetValueOrDefault(name, 0m);
             var net = debtsTotal - settlementsTotal;
 
             var direction = net > 0
@@ -328,7 +355,7 @@ public class OwnerDebtService : IOwnerDebtService
             });
         }
 
-        return summaries.OrderBy(s => s.PartnerName).ToList();
+        return summaries;
     }
 
     // ────────────────────────────────────────────────────────────────
@@ -369,7 +396,7 @@ public class OwnerDebtService : IOwnerDebtService
                 Description = GenerateSettlementDescription(s.SettlementSource, s.BankAccount != null ? s.BankAccount.FriendlyName : null, s.Notes),
                 Amount = s.Amount,
                 IsSettlement = true,
-                SourceType = "OwnerDebtSettlement",
+                SourceType = SourceTypes.OwnerDebtSettlement,
                 SourceId = s.Id,
                 ReferenceNumber = s.Id.ToString(),
                 CanDelete = true
