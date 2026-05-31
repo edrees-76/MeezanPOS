@@ -25,6 +25,8 @@ namespace MeezanPOS.Domain.Entities
         [MaxLength(255)]
         public string CreatedBy { get; set; } = string.Empty;
 
+        public DateTime PostedUntilDate { get; set; } = DateTime.MinValue;
+
         public DateTime PeriodStartDate { get; set; }
         public DateTime PeriodEndDate { get; set; }
 
