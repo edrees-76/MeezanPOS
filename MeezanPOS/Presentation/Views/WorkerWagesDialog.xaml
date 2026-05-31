@@ -58,7 +58,7 @@
                             <DataTemplate>
                                 <CheckBox IsChecked="{Binding IsAttended, UpdateSourceTrigger=PropertyChanged}" 
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                          Style="{StaticResource MaterialDesignCheckBox}"
                                           Content="حاضر" FontSize="11" Foreground="#16a34a" FontWeight="SemiBold"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -70,7 +70,7 @@
                             <DataTemplate>
                                 <CheckBox IsChecked="{Binding IsAbsent, UpdateSourceTrigger=PropertyChanged}" 
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                          Style="{StaticResource MaterialDesignCheckBox}"
                                           Content="غائب" FontSize="11" Foreground="#dc2626" FontWeight="SemiBold"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
