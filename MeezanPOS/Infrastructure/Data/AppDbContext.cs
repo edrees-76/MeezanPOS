@@ -503,7 +503,7 @@ public class AppDbContext : DbContext
             if (entry.Entity is GeneralExpense ge)
             {
                 bool isDeleted = entry.State == EntityState.Deleted || ge.IsDeleted;
-                if (!isDeleted && ge.ExpenseType == GeneralExpenseType.Salaries && !string.IsNullOrWhiteSpace(ge.WorkerName))
+                if (!isDeleted && ge.ExpenseType == GeneralExpenseType.Salaries && !string.IsNullOrWhiteSpace(ge.WorkerName) && ge.WorkerName != "[متعدد]")
                 {
                     var worker = Workers.FirstOrDefault(w => w.WorkerName.Trim().ToLower() == ge.WorkerName.Trim().ToLower() && !w.IsDeleted);
                     if (worker != null)
@@ -558,7 +558,7 @@ public class AppDbContext : DbContext
             else if (entry.Entity is DailyExpenseItem dei)
             {
                 bool isDeleted = entry.State == EntityState.Deleted || dei.IsDeleted;
-                if (!isDeleted && dei.Type == ExpenseType.WorkerWage && !string.IsNullOrWhiteSpace(dei.WorkerName))
+                if (!isDeleted && dei.Type == ExpenseType.WorkerWage && !string.IsNullOrWhiteSpace(dei.WorkerName) && dei.WorkerName != "[متعدد]")
                 {
                     var worker = Workers.FirstOrDefault(w => w.WorkerName.Trim().ToLower() == dei.WorkerName.Trim().ToLower() && !w.IsDeleted);
                     if (worker != null)

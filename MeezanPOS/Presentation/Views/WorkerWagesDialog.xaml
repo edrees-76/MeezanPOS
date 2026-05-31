@@ -1,7 +1,227 @@
 <Window x:Class="MeezanPOS.Presentation.Views.WorkerWagesDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="تفصيل يومية العمال" Height="300" Width="300">
-    <Grid>
-    </Grid>
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="تفصيل يومية العمال" 
+        Height="550" Width="850"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        FlowDirection="RightToLeft"
+        MouseLeftButtonDown="DragWindow">
+
+    <Border Background="White" CornerRadius="16" BorderBrush="#cbd5e1" BorderThickness="1.5">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="3" Color="#0f172a" Opacity="0.15"/>
+        </Border.Effect>
+
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 1. Header -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="AccountMultipleOutline" Width="26" Height="26" Foreground="#4f46e5" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="تسجيل حضور وأجور العمال التفصيلي" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Cursor="Hand">
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                </Button>
+            </Grid>
+
+            <!-- Divider -->
+            <Separator Grid.Row="1" Margin="0,12" Background="#f1f5f9"/>
+
+            <!-- 2. Main DataGrid -->
+            <DataGrid Grid.Row="2" ItemsSource="{Binding WorkersList}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1" BorderBrush="#e2e8f0"
+                      HorizontalGridLinesBrush="#e2e8f0" VerticalGridLinesBrush="#e2e8f0" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc"
+                      materialDesign:DataGridAssist.CellPadding="6" materialDesign:DataGridAssist.ColumnHeaderPadding="8">
+                <DataGrid.Columns>
+                    
+                    <!-- حضور -->
+                    <DataGridTemplateColumn Header="حاضر" Width="75">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsAttended, UpdateSourceTrigger=PropertyChanged}" 
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                          Content="حاضر" FontSize="11" Foreground="#16a34a" FontWeight="SemiBold"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- غائب -->
+                    <DataGridTemplateColumn Header="غائب" Width="75">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsAbsent, UpdateSourceTrigger=PropertyChanged}" 
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                                          Style="{StaticResource MaterialDesignAccentCheckBox}"
+                                          Content="غائب" FontSize="11" Foreground="#dc2626" FontWeight="SemiBold"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- اسم العامل -->
+                    <DataGridTextColumn Header="اسم العامل" Binding="{Binding WorkerName}" IsReadOnly="True" Width="150"
+                                        ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+
+                    <!-- الأجرة الافتراضية -->
+                    <DataGridTextColumn Header="الأجرة الأساسية" Binding="{Binding DailyWage, StringFormat=N2}" IsReadOnly="True" Width="100"
+                                        ElementStyle="{StaticResource MaterialDesignDataGridTextColumnStyle}"/>
+
+                    <!-- أجر اليوم الفعلي -->
+                    <DataGridTemplateColumn Header="أجر اليوم" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding ActualWage, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
+                                         BorderThickness="0" Background="Transparent" Foreground="Black" Padding="4" FontSize="13" FontWeight="Bold"
+                                         IsEnabled="{Binding IsAttended}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- سلفة -->
+                    <DataGridTemplateColumn Header="سلفة اليوم" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Advance, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
+                                         BorderThickness="0" Background="Transparent" Foreground="#ea580c" Padding="4" FontSize="13"
+                                         IsEnabled="{Binding IsAttended}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- خصم -->
+                    <DataGridTemplateColumn Header="خصم اليوم" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Deduction, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
+                                         BorderThickness="0" Background="Transparent" Foreground="#ef4444" Padding="4" FontSize="13"
+                                         IsEnabled="{Binding IsAttended}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- المدفوع فعلياً -->
+                    <DataGridTemplateColumn Header="المدفوع" Width="95">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding AmountPaid, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
+                                         BorderThickness="0" Background="Transparent" Foreground="#10b981" Padding="4" FontSize="13" FontWeight="Bold"
+                                         IsEnabled="{Binding IsAttended}"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- ملاحظات -->
+                    <DataGridTemplateColumn Header="ملاحظات" Width="*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" 
+                                         BorderThickness="0" Background="Transparent" Foreground="Black" Padding="4" FontSize="13"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- 3. Totals and Summary Indicators -->
+            <Border Grid.Row="3" Background="#f8fafc" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="14,10" Margin="0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                        <TextBlock Text="إجمالي العمال النشطين" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalActiveWorkers}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <Separator Grid.Column="1" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+
+                    <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                        <TextBlock Text="حضور / غياب" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
+                            <TextBlock Text="{Binding TotalAttended}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
+                            <TextBlock Text=" / " FontSize="15" Foreground="#64748b"/>
+                            <TextBlock Text="{Binding TotalAbsent}" FontSize="15" FontWeight="Bold" Foreground="#dc2626"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Separator Grid.Column="3" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+
+                    <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                        <TextBlock Text="إجمالي أجور الحاضرين" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalActualWages, StringFormat=N2}" FontSize="15" FontWeight="Bold" Foreground="#4f46e5" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+
+                    <Separator Grid.Column="5" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+
+                    <StackPanel Grid.Column="6" HorizontalAlignment="Center">
+                        <TextBlock Text="إجمالي المدفوع للعمال" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalAmountPaid, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="#10b981" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- 4. Footer Buttons -->
+            <Grid Grid.Row="4" Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Confirm Button -->
+                <Button Grid.Column="0" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                        Style="{StaticResource MaterialDesignRaisedButton}" 
+                        Background="#4f46e5" BorderBrush="#4f46e5" Foreground="White"
+                        Height="42" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="10"/>
+                        </Style>
+                    </Button.Resources>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="CheckDecagram" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="تأكيد وحفظ الأجور" VerticalAlignment="Center" FontWeight="Bold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Cancel Button -->
+                <Button Grid.Column="2" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                        Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        Foreground="#64748b" BorderBrush="#cbd5e1"
+                        Height="42" Cursor="Hand">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="10"/>
+                        </Style>
+                    </Button.Resources>
+                    <TextBlock Text="إلغاء وتراجع" FontWeight="Bold"/>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

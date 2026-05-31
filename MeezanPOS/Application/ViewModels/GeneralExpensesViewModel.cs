@@ -175,6 +175,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
     [ObservableProperty]
     private string inputWorkerName = string.Empty;
 
+    [ObservableProperty]
+    private List<WorkerTransactionDetailDto>? _selectedWorkerWagesDetails;
+
     public ObservableCollection<string> AvailableWorkerNames { get; } = new();
 
     public ObservableCollection<BankAccount> BankAccounts { get; } = new();
@@ -469,9 +472,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
             return;
         }
 
-        if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && string.IsNullOrWhiteSpace(InputWorkerName))
+        if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && (SelectedWorkerWagesDetails == null || !SelectedWorkerWagesDetails.Any()))
         {
-            MessageBox.Show("يرجى إدخال اسم العامل للمصروف التفصيلي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("يرجى تحديد تفاصيل أجور حضور العمال.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         
@@ -529,13 +532,22 @@ public partial class GeneralExpensesViewModel : ObservableObject
                         await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل المصروف العام");
                     }
 
+                    // حذف كافة حركات العمال القديمة المرتبطة بهذا المصروف
+                    var oldWorkerTxs = await db.WorkerTransactions.Where(t => t.GeneralExpenseId == existing.Id && !t.IsDeleted).ToListAsync();
+                    foreach (var tx in oldWorkerTxs)
+                    {
+                        tx.IsDeleted = true;
+                        tx.UpdatedAt = DateTime.UtcNow;
+                    }
+                    await db.SaveChangesAsync();
+
                     existing.ExpenseType = SelectedExpenseType;
                     existing.CustomExpenseName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType.Trim() : null;
                     existing.Amount = InputAmount.Value;
                     existing.PaymentDate = InputPaymentDate;
                     existing.PaymentMethod = SelectedPaymentMethod;
                     existing.Description = InputDescription;
-                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? InputWorkerName.Trim() : null;
+                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? "[متعدد]" : null;
                     
                     if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
                     {
@@ -548,6 +560,78 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
                     existing.UpdatedAt = DateTime.Now;
                     await db.SaveChangesAsync();
+
+                    // إعادة إنشاء حركات العمال التفصيلية الجديدة
+                    if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && SelectedWorkerWagesDetails != null)
+                    {
+                        foreach (var d in SelectedWorkerWagesDetails)
+                        {
+                            if (d.IsAttended)
+                            {
+                                var accrualTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = InputPaymentDate,
+                                    Type = WorkerTransactionType.WageAccrual,
+                                    DebitAmount = 0m,
+                                    CreditAmount = d.ActualWage,
+                                    GeneralExpenseId = existing.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - مصروف عام" : $"استحقاق: {d.Notes}"
+                                };
+                                db.WorkerTransactions.Add(accrualTx);
+
+                                if (d.AmountPaid > 0)
+                                {
+                                    var payTx = new WorkerTransaction
+                                    {
+                                        WorkerId = d.WorkerId,
+                                        WorkerName = d.WorkerName,
+                                        TransactionDate = InputPaymentDate,
+                                        Type = WorkerTransactionType.Payment,
+                                        DebitAmount = d.AmountPaid,
+                                        CreditAmount = 0m,
+                                        GeneralExpenseId = existing.Id,
+                                        Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - مصروف عام" : $"سداد: {d.Notes}"
+                                    };
+                                    db.WorkerTransactions.Add(payTx);
+                                }
+                            }
+
+                            if (d.Advance > 0)
+                            {
+                                var advTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = InputPaymentDate,
+                                    Type = WorkerTransactionType.Advance,
+                                    DebitAmount = d.Advance,
+                                    CreditAmount = 0m,
+                                    GeneralExpenseId = existing.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - مصروف عام" : $"سلفة: {d.Notes}"
+                                };
+                                db.WorkerTransactions.Add(advTx);
+                            }
+
+                            if (d.Deduction > 0)
+                            {
+                                var dedTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = InputPaymentDate,
+                                    Type = WorkerTransactionType.Deduction,
+                                    DebitAmount = d.Deduction,
+                                    CreditAmount = 0m,
+                                    GeneralExpenseId = existing.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - مصروف عام" : $"خصم: {d.Notes}"
+                                };
+                                db.WorkerTransactions.Add(dedTx);
+                            }
+                        }
+                        await db.SaveChangesAsync();
+                    }
 
                     // تسجيل الحركة البنكية الجديدة
                     if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
@@ -607,11 +691,83 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     PaymentDate = InputPaymentDate,
                     PaymentMethod = SelectedPaymentMethod,
                     Description = InputDescription,
-                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? InputWorkerName.Trim() : null,
+                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? "[متعدد]" : null,
                     BankAccountId = (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null) ? SelectedBankAccountForExpense.Id : null
                 };
                 db.GeneralExpenses.Add(expense);
                 await db.SaveChangesAsync();
+
+                // حفظ حركات العمال التفصيلية
+                if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && SelectedWorkerWagesDetails != null)
+                {
+                    foreach (var d in SelectedWorkerWagesDetails)
+                    {
+                        if (d.IsAttended)
+                        {
+                            var accrualTx = new WorkerTransaction
+                            {
+                                WorkerId = d.WorkerId,
+                                WorkerName = d.WorkerName,
+                                TransactionDate = InputPaymentDate,
+                                Type = WorkerTransactionType.WageAccrual,
+                                DebitAmount = 0m,
+                                CreditAmount = d.ActualWage,
+                                GeneralExpenseId = expense.Id,
+                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - مصروف عام" : $"استحقاق: {d.Notes}"
+                            };
+                            db.WorkerTransactions.Add(accrualTx);
+
+                            if (d.AmountPaid > 0)
+                            {
+                                var payTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = InputPaymentDate,
+                                    Type = WorkerTransactionType.Payment,
+                                    DebitAmount = d.AmountPaid,
+                                    CreditAmount = 0m,
+                                    GeneralExpenseId = expense.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - مصروف عام" : $"سداد: {d.Notes}"
+                                };
+                                db.WorkerTransactions.Add(payTx);
+                            }
+                        }
+
+                        if (d.Advance > 0)
+                        {
+                            var advTx = new WorkerTransaction
+                            {
+                                WorkerId = d.WorkerId,
+                                WorkerName = d.WorkerName,
+                                TransactionDate = InputPaymentDate,
+                                Type = WorkerTransactionType.Advance,
+                                DebitAmount = d.Advance,
+                                CreditAmount = 0m,
+                                GeneralExpenseId = expense.Id,
+                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - مصروف عام" : $"سلفة: {d.Notes}"
+                            };
+                            db.WorkerTransactions.Add(advTx);
+                        }
+
+                        if (d.Deduction > 0)
+                        {
+                            var dedTx = new WorkerTransaction
+                            {
+                                WorkerId = d.WorkerId,
+                                WorkerName = d.WorkerName,
+                                TransactionDate = InputPaymentDate,
+                                Type = WorkerTransactionType.Deduction,
+                                DebitAmount = d.Deduction,
+                                CreditAmount = 0m,
+                                GeneralExpenseId = expense.Id,
+                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - مصروف عام" : $"خصم: {d.Notes}"
+                            };
+                            db.WorkerTransactions.Add(dedTx);
+                        }
+                    }
+                    await db.SaveChangesAsync();
+                }
 
                 // تسجيل الحركة البنكية
                 if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
@@ -698,6 +854,74 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputCustomExpenseType = item.CustomExpenseName ?? string.Empty;
         IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
         InputWorkerName = item.WorkerName ?? string.Empty;
+
+        if (IsDetailedWage)
+        {
+            using var db = new AppDbContext();
+            var txs = db.WorkerTransactions
+                .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
+                .ToList();
+
+            var grouped = txs.GroupBy(t => t.WorkerId);
+            SelectedWorkerWagesDetails = grouped.Select(g => {
+                var workerId = g.Key;
+                var workerName = g.First().WorkerName;
+                var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
+                var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
+                var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
+                var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
+
+                return new WorkerTransactionDetailDto
+                {
+                    WorkerId = workerId,
+                    WorkerName = workerName,
+                    IsAttended = accrual != null,
+                    ActualWage = accrual?.CreditAmount ?? 0m,
+                    Advance = advance?.DebitAmount ?? 0m,
+                    Deduction = deduction?.DebitAmount ?? 0m,
+                    AmountPaid = payment?.DebitAmount ?? 0m,
+                    Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
+                };
+            }).ToList();
+        }
+        else
+        {
+            SelectedWorkerWagesDetails = new List<WorkerTransactionDetailDto>();
+        }
+
+        if (IsDetailedWage)
+        {
+            using var db = new AppDbContext();
+            var txs = db.WorkerTransactions
+                .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
+                .ToList();
+
+            var grouped = txs.GroupBy(t => t.WorkerId);
+            SelectedWorkerWagesDetails = grouped.Select(g => {
+                var workerId = g.Key;
+                var workerName = g.First().WorkerName;
+                var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
+                var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
+                var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
+                var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
+
+                return new WorkerTransactionDetailDto
+                {
+                    WorkerId = workerId,
+                    WorkerName = workerName,
+                    IsAttended = accrual != null,
+                    ActualWage = accrual?.CreditAmount ?? 0m,
+                    Advance = advance?.DebitAmount ?? 0m,
+                    Deduction = deduction?.DebitAmount ?? 0m,
+                    AmountPaid = payment?.DebitAmount ?? 0m,
+                    Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
+                };
+            }).ToList();
+        }
+        else
+        {
+            SelectedWorkerWagesDetails = new List<WorkerTransactionDetailDto>();
+        }
 
         InputReferenceNumber = string.Empty;
         InputPartnerName = string.Empty;
@@ -867,6 +1091,21 @@ public partial class GeneralExpensesViewModel : ObservableObject
     private void CancelEdit()
     {
         ClearForm();
+    }
+
+    [RelayCommand]
+    private async System.Threading.Tasks.Task OpenWorkerWagesDialogAsync()
+    {
+        var dialog = new Presentation.Views.WorkerWagesDialog();
+        var vm = new WorkerWagesDialogViewModel();
+        await vm.LoadWorkersAsync(SelectedWorkerWagesDetails);
+        dialog.DataContext = vm;
+        dialog.Owner = System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive);
+        if (dialog.ShowDialog() == true)
+        {
+            SelectedWorkerWagesDetails = vm.ResultDetails;
+            InputAmount = vm.TotalAmountPaid;
+        }
     }
 
     [RelayCommand]
@@ -1078,6 +1317,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputCustomExpenseType = string.Empty;
         IsDetailedWage = false;
         InputWorkerName = string.Empty;
+        SelectedWorkerWagesDetails = new List<WorkerTransactionDetailDto>();
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault();
         InputReferenceNumber = string.Empty;
         InputPartnerName = string.Empty;

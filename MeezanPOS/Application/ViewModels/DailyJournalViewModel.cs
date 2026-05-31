@@ -65,6 +65,9 @@ public partial class ExpenseItemViewModel : ObservableObject
     private bool isDetailedWage = false;
 
     [ObservableProperty]
+    private System.Collections.Generic.List<WorkerTransactionDetailDto> selectedWorkerWagesDetails = new();
+
+    [ObservableProperty]
     private string notes = string.Empty;
 
     partial void OnIsDetailedWageChanged(bool value)
@@ -72,6 +75,7 @@ public partial class ExpenseItemViewModel : ObservableObject
         if (!value)
         {
             WorkerName = string.Empty;
+            SelectedWorkerWagesDetails = new();
         }
     }
 
@@ -583,6 +587,23 @@ public partial class DailyJournalViewModel : ObservableObject
         RefreshCalculations();
     }
 
+    [RelayCommand]
+    private async System.Threading.Tasks.Task OpenWorkerWagesDialogAsync(ExpenseItemViewModel item)
+    {
+        if (item == null) return;
+        var dialog = new Presentation.Views.WorkerWagesDialog();
+        var vm = new WorkerWagesDialogViewModel();
+        await vm.LoadWorkersAsync(item.SelectedWorkerWagesDetails);
+        dialog.DataContext = vm;
+        dialog.Owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(w => w.IsActive);
+        if (dialog.ShowDialog() == true)
+        {
+            item.SelectedWorkerWagesDetails = vm.ResultDetails;
+            item.Amount = vm.TotalAmountPaid;
+            RefreshCalculations();
+        }
+    }
+
     private void RenumberExpenseItems()
     {
         for (int i = 0; i < ExpenseItems.Count; i++)
@@ -739,6 +760,16 @@ public partial class DailyJournalViewModel : ObservableObject
             return;
         }
 
+        foreach (var exp in ExpenseItems)
+        {
+            if (exp.IsWorkerWage && exp.IsDetailedWage && (exp.SelectedWorkerWagesDetails == null || !exp.SelectedWorkerWagesDetails.Any()))
+            {
+                StatusMessage = $"يرجى تحديد تفاصيل أجور حضور العمال للمصروف رقم {exp.SequenceNumber}.";
+                System.Windows.MessageBox.Show($"يرجى تحديد تفاصيل أجور حضور العمال للمصروف رقم {exp.SequenceNumber}.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+        }
+
         try
         {
             using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
@@ -813,6 +844,14 @@ public partial class DailyJournalViewModel : ObservableObject
                 {
                     var linkedTxs = context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToList();
                     context.SupplierTransactions.RemoveRange(linkedTxs);
+
+                    // إزالة حركات العمال المرتبطة بالمصروفات المحذوفة
+                    var oldWorkerTxs = context.WorkerTransactions.Where(t => t.DailyExpenseItemId != null && oldExpenseIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted).ToList();
+                    foreach (var tx in oldWorkerTxs)
+                    {
+                        tx.IsDeleted = true;
+                        tx.UpdatedAt = System.DateTime.UtcNow;
+                    }
                 }
 
                 context.OrderAdjustmentItems.RemoveRange(journal.Adjustments);
@@ -895,7 +934,7 @@ public partial class DailyJournalViewModel : ObservableObject
                             SupplierName = exp.SupplierName,
                             Notes = exp.Notes,
                             InvoiceNumber = exp.InvoiceNumber,
-                            WorkerName = (exp.IsWorkerWage && exp.IsDetailedWage) ? exp.WorkerName?.Trim() : null,
+                            WorkerName = (exp.IsWorkerWage && exp.IsDetailedWage) ? "[متعدد]" : null,
                             CreatedAt = System.DateTime.Now
                         });
                     }
@@ -969,6 +1008,92 @@ public partial class DailyJournalViewModel : ObservableObject
                 context.DailyJournals.Add(journal);
             }
             await context.SaveChangesAsync();
+
+            // حفظ حركات العمال التفصيلية للوردية
+            bool hasWorkerDetailsToSave = false;
+            foreach (var exp in ExpenseItems)
+            {
+                if (exp.IsWorkerWage && exp.IsDetailedWage && exp.SelectedWorkerWagesDetails != null && exp.SelectedWorkerWagesDetails.Any())
+                {
+                    // Find the saved DailyExpenseItem matching this expense item by SequenceNumber
+                    var dei = journal.ExpenseItems.FirstOrDefault(e => e.SequenceNumber == exp.SequenceNumber);
+                    if (dei != null)
+                    {
+                        foreach (var d in exp.SelectedWorkerWagesDetails)
+                        {
+                            if (d.IsAttended)
+                            {
+                                var accrualTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = JournalDate,
+                                    Type = WorkerTransactionType.WageAccrual,
+                                    DebitAmount = 0m,
+                                    CreditAmount = d.ActualWage,
+                                    DailyExpenseItemId = dei.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - وردية يومية" : $"استحقاق: {d.Notes}"
+                                };
+                                context.WorkerTransactions.Add(accrualTx);
+
+                                if (d.AmountPaid > 0)
+                                {
+                                    var payTx = new WorkerTransaction
+                                    {
+                                        WorkerId = d.WorkerId,
+                                        WorkerName = d.WorkerName,
+                                        TransactionDate = JournalDate,
+                                        Type = WorkerTransactionType.Payment,
+                                        DebitAmount = d.AmountPaid,
+                                        CreditAmount = 0m,
+                                        DailyExpenseItemId = dei.Id,
+                                        Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - وردية يومية" : $"سداد: {d.Notes}"
+                                    };
+                                    context.WorkerTransactions.Add(payTx);
+                                }
+                            }
+
+                            if (d.Advance > 0)
+                            {
+                                var advTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = JournalDate,
+                                    Type = WorkerTransactionType.Advance,
+                                    DebitAmount = d.Advance,
+                                    CreditAmount = 0m,
+                                    DailyExpenseItemId = dei.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - وردية يومية" : $"سلفة: {d.Notes}"
+                                };
+                                context.WorkerTransactions.Add(advTx);
+                            }
+
+                            if (d.Deduction > 0)
+                            {
+                                var dedTx = new WorkerTransaction
+                                {
+                                    WorkerId = d.WorkerId,
+                                    WorkerName = d.WorkerName,
+                                    TransactionDate = JournalDate,
+                                    Type = WorkerTransactionType.Deduction,
+                                    DebitAmount = d.Deduction,
+                                    CreditAmount = 0m,
+                                    DailyExpenseItemId = dei.Id,
+                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - وردية يومية" : $"خصم: {d.Notes}"
+                                };
+                                context.WorkerTransactions.Add(dedTx);
+                            }
+                        }
+                        hasWorkerDetailsToSave = true;
+                    }
+                }
+            }
+
+            if (hasWorkerDetailsToSave)
+            {
+                await context.SaveChangesAsync();
+            }
 
             // تسجيل الدفعات المصرفية مباشرة في الحسابات البنكية المحددة
             if (journal.BankingItems.Any())
@@ -1178,6 +1303,7 @@ public partial class DailyJournalViewModel : ObservableObject
         ExpenseItems.Clear();
         if (journal.ExpenseItems != null)
         {
+            using var db = new AppDbContext();
             foreach (var e in journal.ExpenseItems)
             {
                 var item = new ExpenseItemViewModel
@@ -1192,6 +1318,40 @@ public partial class DailyJournalViewModel : ObservableObject
                     WorkerName = e.WorkerName ?? "",
                     IsDetailedWage = !string.IsNullOrEmpty(e.WorkerName)
                 };
+
+                if (e.WorkerName == "[متعدد]")
+                {
+                    var txs = db.WorkerTransactions
+                        .Where(t => t.DailyExpenseItemId == e.Id && !t.IsDeleted)
+                        .ToList();
+
+                    var grouped = txs.GroupBy(t => t.WorkerId);
+                    item.SelectedWorkerWagesDetails = grouped.Select(g => {
+                        var workerId = g.Key;
+                        var workerName = g.First().WorkerName;
+                        var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
+                        var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
+                        var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
+                        var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
+
+                        return new WorkerTransactionDetailDto
+                        {
+                            WorkerId = workerId,
+                            WorkerName = workerName,
+                            IsAttended = accrual != null,
+                            ActualWage = accrual?.CreditAmount ?? 0m,
+                            Advance = advance?.DebitAmount ?? 0m,
+                            Deduction = deduction?.DebitAmount ?? 0m,
+                            AmountPaid = payment?.DebitAmount ?? 0m,
+                            Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
+                        };
+                    }).ToList();
+                }
+                else
+                {
+                    item.SelectedWorkerWagesDetails = new System.Collections.Generic.List<WorkerTransactionDetailDto>();
+                }
+
                 item.PropertyChanged += (s, e) => RefreshCalculations();
                 ExpenseItems.Add(item);
             }

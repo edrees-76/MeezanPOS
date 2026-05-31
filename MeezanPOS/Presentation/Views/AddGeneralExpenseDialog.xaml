@@ -120,7 +120,7 @@
                                           Width="50" Height="26" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Worker name editable autocomplete Combo -->
+                        <!-- Multi-Worker wages details button -->
                         <StackPanel Grid.Column="2">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
@@ -132,13 +132,16 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="اسم العامل:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
-                            <ComboBox ItemsSource="{Binding AvailableWorkerNames}" 
-                                      Text="{Binding InputWorkerName, UpdateSourceTrigger=PropertyChanged}" 
-                                      IsEditable="True"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                      FontSize="14" VerticalContentAlignment="Center" Padding="12,10"
-                                      materialDesign:HintAssist.Hint="اكتب أو اختر اسم العامل"/>
+                            <TextBlock Text="تفاصيل الأجور والحضور:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <Button Command="{Binding OpenWorkerWagesDialogCommand}" 
+                                    Style="{StaticResource MaterialDesignRaisedButton}"
+                                    Background="#4f46e5" BorderBrush="#4f46e5" Foreground="White"
+                                    Height="40" Padding="8,4" ToolTip="فتح نافذة تسجيل حضور وأجور جميع العمال">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="تعديل وتفصيل أجور العمال" VerticalAlignment="Center" FontSize="12"/>
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Grid>
                 </StackPanel>
