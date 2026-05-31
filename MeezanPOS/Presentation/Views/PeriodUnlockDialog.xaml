@@ -51,7 +51,7 @@
             <StackPanel Grid.Row="2" VerticalAlignment="Top">
                 <!-- Standard Reason -->
                 <TextBlock Text="السبب القياسي لإلغاء القفل:" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
-                <ComboBox x:Name="CbReason" Height="45" VerticalContentAlignment="Center" 
+                <ComboBox x:Name="CbReason" Height="45" FontSize="13" Padding="10,6" VerticalContentAlignment="Center" 
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
                           Margin="0,0,0,16" Cursor="Hand">
                     <ComboBoxItem Content="خطأ إدخال البيانات" IsSelected="True"/>
