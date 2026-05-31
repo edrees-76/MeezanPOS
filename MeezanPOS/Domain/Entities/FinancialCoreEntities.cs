@@ -25,17 +25,22 @@ namespace MeezanPOS.Domain.Entities
         [MaxLength(255)]
         public string CreatedBy { get; set; } = string.Empty;
 
-        public DateTime PostedUntilDate { get; set; }
+        public DateTime PeriodStartDate { get; set; }
+        public DateTime PeriodEndDate { get; set; }
 
         public int TotalAffectedRows { get; set; }
 
-        [MaxLength(50)]
-        public string Status { get; set; } = "Posted"; // "Posted", "Unposted"
+        public PostingSessionType SessionType { get; set; } = PostingSessionType.Posting;
+        public PostingSessionStatus Status { get; set; } = PostingSessionStatus.Posted;
 
         [MaxLength(1000)]
         public string? Notes { get; set; }
 
+        [ConcurrencyCheck]
+        public long RowVersion { get; set; }
+
         public ICollection<PostingSessionDetail> Details { get; set; } = new List<PostingSessionDetail>();
+        public ICollection<PeriodUnlockHistory> UnlockHistories { get; set; } = new List<PeriodUnlockHistory>();
     }
 
     public class PostingSessionDetail : BaseEntity
@@ -43,13 +48,40 @@ namespace MeezanPOS.Domain.Entities
         public int PostingSessionId { get; set; }
         public PostingSession? PostingSession { get; set; }
 
-        [Required]
-        [MaxLength(255)]
-        public string EntityType { get; set; } = string.Empty; // e.g., "SaleHeader", "GeneralExpense"
+        public PostingEntityType EntityType { get; set; } = PostingEntityType.DailyJournal;
 
         public int EntityId { get; set; }
 
-        [MaxLength(50)]
-        public string ActionType { get; set; } = "Posted"; // "Posted", "Unposted"
+        public PostingActionType ActionType { get; set; } = PostingActionType.Posted;
+
+        public decimal TransactionAmount { get; set; }
+        public int? CashMovementId { get; set; }
+    }
+
+    public class PeriodUnlockHistory : BaseEntity
+    {
+        public int PostingSessionId { get; set; }
+        public PostingSession? PostingSession { get; set; }
+
+        public int UnlockSequence { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string UnlockedBy { get; set; } = string.Empty;
+
+        public DateTime UnlockDate { get; set; }
+
+        public PostingSessionStatus PreviousStatus { get; set; }
+
+        [Required]
+        [MaxLength(255)]
+        public string Reason { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(1000)]
+        public string DetailReason { get; set; } = string.Empty;
+
+        public bool IsReLocked { get; set; }
+        public DateTime? ReLockedDate { get; set; }
     }
 }

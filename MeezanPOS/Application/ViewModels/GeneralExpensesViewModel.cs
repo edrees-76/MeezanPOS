@@ -4,6 +4,8 @@ using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
 using MeezanPOS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using MeezanPOS.Application.Services;
+using MeezanPOS.Application.Interfaces;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -192,8 +194,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            var bankService = new Services.BankService(db);
+            var bankService = AppServiceProvider.Resolve<IBankService>();
             var accountsList = await bankService.GetAllAccountsAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -214,9 +215,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            var bankService = new Services.BankService(db);
-            var ownerDebtService = new Services.OwnerDebtService(db, bankService);
+            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
             var names = await ownerDebtService.GetPartnerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -497,8 +496,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
         try
         {
             using var db = new AppDbContext();
-            var bankService = new Services.BankService(db);
-            var ownerDebtService = new Services.OwnerDebtService(db, bankService);
+            var bankService = AppServiceProvider.Resolve<IBankService>();
+            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
 
             if (EditingId.HasValue)
             {
@@ -523,7 +522,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     }
 
                     // عكس الحركة النقدية القديمة إن وجدت
-                    var cashLedgerService = new Services.CashLedgerService(db);
+                    var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
                     var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
                     if (oldCashMovement != null)
                     {
@@ -646,7 +645,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
                 else if (SelectedPaymentMethod == PaymentMethodType.Cash)
                 {
-                    var cashLedgerService = new Services.CashLedgerService(db);
+                    var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
                     var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
                     var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                     await cashLedgerService.RecordMovementAsync(
@@ -902,11 +901,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
 
                 // حذف الحركة البنكية المرتبطة
-                var bankService = new Services.BankService(db);
+                var bankService = AppServiceProvider.Resolve<IBankService>();
                 await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
 
                 // حذف ديون المالك المرتبطة
-                var ownerDebtService = new Services.OwnerDebtService(db, bankService);
+                var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
                 var relatedDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
                 foreach (var debt in relatedDebts)
                 {
@@ -914,7 +913,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
 
                 // عكس الحركة النقدية المرتبطة إن وجدت
-                var cashLedgerService = new Services.CashLedgerService(db);
+                var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
                 var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
                 if (oldCashMovement != null)
                 {
@@ -946,9 +945,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var db = new AppDbContext();
-            var postingService = new Services.PostingService(db);
-            await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, "Admin"); // مستقبلا سيتم وضع اسم المستخدم الحالي
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, currentUserId);
             
             MessageBox.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
@@ -964,7 +963,55 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         if (item == null || !item.IsPosted) return;
 
-        var reason = "طلب فك ترحيل للمراجعة وتصحيح الخطأ"; // في الواقع يتم فتح نافذة صغيرة لطلب السبب
+        var sessionService = AppServiceProvider.Resolve<ISessionService>();
+        if (sessionService.CurrentUserId != "Admin")
+        {
+            MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
+        }
+
+        // تحقق إذا كان المصروف مرتبط بجلسة مقفلة/مسواة مالياً
+        using (var context = new AppDbContext())
+        {
+            var exp = await context.GeneralExpenses.FindAsync(item.Id);
+            if (exp != null && exp.PostingSessionId.HasValue)
+            {
+                var parentSession = await context.PostingSessions.FindAsync(exp.PostingSessionId.Value);
+                if (parentSession != null && 
+                    (parentSession.Status == PostingSessionStatus.Settled || parentSession.Status == PostingSessionStatus.ReSettled))
+                {
+                    MessageBox.Show(
+                        "هذا المصروف يقع ضمن فترة مقفلة ومسواة مالياً مسبقاً.\nيجب إلغاء قفل الفترة أولاً من شاشة المبيعات (الكاش الحالي -> أرشيف التسويات) قبل التمكن من فك الترحيل.",
+                        "فترة مغلقة ومسواة",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+            }
+        }
+
+        // إظهار نافذة إدخال سبب فك الترحيل
+        bool dialogResult = false;
+        string selectedReason = string.Empty;
+        string detailReason = string.Empty;
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var dialog = new Presentation.Views.PeriodUnlockDialog();
+            if (System.Windows.Application.Current.MainWindow != null)
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+            if (dialog.ShowDialog() == true)
+            {
+                selectedReason = dialog.SelectedReason;
+                detailReason = dialog.SelectedDetailReason;
+                dialogResult = true;
+            }
+        });
+
+        if (!dialogResult) return;
+
+        var reason = $"{selectedReason} - {detailReason}";
 
         var result = MessageBox.Show(
             $"هل أنت متأكد من فك ترحيل المصروف؟\nهذا الإجراء سيتم تسجيله في سجل التدقيق (Audit Log) باسمك.",
@@ -974,9 +1021,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var db = new AppDbContext();
-            var postingService = new Services.PostingService(db);
-            await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, "Admin");
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var currentUserId = sessionService.CurrentUserId;
+            await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, currentUserId);
             
             MessageBox.Show("تم فك الترحيل بنجاح وتم تسجيل العملية في سجل التدقيق.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
@@ -1152,10 +1199,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var context = new AppDbContext();
-            var postingService = new Services.PostingService(context);
-
-            var batchResult = await postingService.PostGeneralExpensesBatchAsync(selectedIds, "Admin", "ترحيل جماعي للمصاريف المحددة من الواجهة");
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            var batchResult = await postingService.PostGeneralExpensesBatchAsync(selectedIds, currentUserId, "ترحيل جماعي للمصاريف المحددة من الواجهة");
 
             if (batchResult.Success)
             {
@@ -1209,13 +1255,15 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var context = new AppDbContext();
-            
-            // جلب المصاريف المفتوحة فقط في هذه الفترة
-            var expensesInPeriod = await context.GeneralExpenses
-                .Where(e => e.PaymentDate.Date >= startDate && e.PaymentDate.Date <= endDate && e.FinancialStatus == FinancialStatus.Draft)
-                .Select(e => e.Id)
-                .ToListAsync();
+            List<int> expensesInPeriod;
+            using (var context = new AppDbContext())
+            {
+                // جلب المصاريف المفتوحة فقط في هذه الفترة
+                expensesInPeriod = await context.GeneralExpenses
+                    .Where(e => e.PaymentDate.Date >= startDate && e.PaymentDate.Date <= endDate && e.FinancialStatus == FinancialStatus.Draft)
+                    .Select(e => e.Id)
+                    .ToListAsync();
+            }
 
             if (!expensesInPeriod.Any())
             {
@@ -1238,8 +1286,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (confirmResult != MessageBoxResult.Yes) return;
 
-            var postingService = new Services.PostingService(context);
-            var batchResult = await postingService.PostGeneralExpensesBatchAsync(expensesInPeriod, "Admin", $"ترحيل جماعي للمصاريف للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            var batchResult = await postingService.PostGeneralExpensesBatchAsync(expensesInPeriod, currentUserId, $"ترحيل جماعي للمصاريف للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
 
             if (batchResult.Success)
             {
@@ -1276,7 +1325,10 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             using var db = new AppDbContext();
             var expenses = db.GeneralExpenses
-                .Where(e => !e.IsDeleted && (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
+                .Where(e => !e.IsDeleted && 
+                           e.PaymentDate.Date >= DateFrom.Date && 
+                           e.PaymentDate.Date <= DateTo.Date &&
+                           (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
                 .OrderBy(e => e.PaymentDate)
                 .ToList();
 
@@ -1285,15 +1337,19 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 .Select(g => {
                     var year = g.Key.Year;
                     var month = g.Key.Month;
-                    var isPosted = g.All(e => e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived);
+                    var postedCount = g.Count(e => e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived);
+                    var totalCount = g.Count();
+                    var isPosted = postedCount == totalCount;
+                    var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
                     return new GeneralExpenseMonthCard
                     {
                         Year = year,
                         Month = month,
                         MonthName = $"{ExpenseManagementViewModel.GetArabicMonthName(month)} {year}",
                         TotalExpenses = g.Sum(e => e.Amount),
-                        OperationsCount = g.Count(),
-                        IsPosted = isPosted
+                        OperationsCount = totalCount,
+                        IsPosted = isPosted,
+                        IsPartiallyPosted = isPartiallyPosted
                     };
                 })
                 .OrderByDescending(m => m.Year)
@@ -1369,10 +1425,21 @@ public partial class GeneralExpenseMonthCard : ObservableObject
     private int operationsCount;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusColor))]
+    [NotifyPropertyChangedFor(nameof(CardBackground))]
+    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
     private bool isPosted;
 
-    public string StatusText => IsPosted ? "مرحّل بالكامل" : "مفتوح";
-    public string StatusColor => IsPosted ? "#10b981" : "#3b82f6";
-    public string CardBackground => IsPosted ? "#f0fdf4" : "#f8faff";
-    public string CardBorderBrush => IsPosted ? "#dcfce7" : "#e5eeff";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusColor))]
+    [NotifyPropertyChangedFor(nameof(CardBackground))]
+    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
+    private bool isPartiallyPosted;
+
+    public string StatusText => IsPosted ? "مرحّل بالكامل" : (IsPartiallyPosted ? "مرحّل جزئياً" : "مفتوح");
+    public string StatusColor => IsPosted ? "#10b981" : (IsPartiallyPosted ? "#f59e0b" : "#3b82f6");
+    public string CardBackground => IsPosted ? "#f0fdf4" : (IsPartiallyPosted ? "#fffbeb" : "#f8faff");
+    public string CardBorderBrush => IsPosted ? "#dcfce7" : (IsPartiallyPosted ? "#fef3c7" : "#e5eeff");
 }

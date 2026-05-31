@@ -17,6 +17,14 @@ namespace MeezanPOS.Application.Services
         public int AffectedCount { get; set; }
         public string Notes { get; set; } = string.Empty;
         public string? PdfPath { get; set; }
+        public Domain.Enums.PostingSessionStatus Status { get; set; }
+        public string StatusText => Status switch
+        {
+            Domain.Enums.PostingSessionStatus.Settled => "مغلق ومسوى",
+            Domain.Enums.PostingSessionStatus.Unlocked => "ملغى القفل للمراجعة",
+            Domain.Enums.PostingSessionStatus.ReSettled => "معاد تسويته",
+            _ => Status.ToString()
+        };
     }
 
     public interface IPostingService
@@ -60,5 +68,15 @@ namespace MeezanPOS.Application.Services
         /// إعادة توليد ملف PDF لإيصال تسوية سابق
         /// </summary>
         Task<string> RegenerateSettlementPdfAsync(int sessionId);
+
+        /// <summary>
+        /// إلغاء قفل فترة مالية مسواة للسماح بتعديلها
+        /// </summary>
+        Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId);
+
+        /// <summary>
+        /// فك ترحيل فترة بالكامل كحزمة واحدة وعكس حركاتها النقدية مجمعة
+        /// </summary>
+        Task<bool> UnpostPeriodAsync(int sessionId, string reason, string unpostedByUserId);
     }
 }

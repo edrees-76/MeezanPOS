@@ -20,7 +20,6 @@ namespace MeezanPOS.Application.ViewModels;
 
 public partial class BankingServicesViewModel : ObservableObject
 {
-    private readonly AppDbContext _context;
     private readonly IBankService _bankService;
     private readonly IOwnerDebtService _ownerDebtService;
 
@@ -243,9 +242,8 @@ public partial class BankingServicesViewModel : ObservableObject
 
     public BankingServicesViewModel()
     {
-        _context = new AppDbContext();
-        _bankService = new BankService(_context);
-        _ownerDebtService = new OwnerDebtService(_context, _bankService);
+        _bankService = AppServiceProvider.Resolve<IBankService>();
+        _ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
 
         PartnerDebtsDashboard = new PartnerDebtsDashboardViewModel(_ownerDebtService);
 

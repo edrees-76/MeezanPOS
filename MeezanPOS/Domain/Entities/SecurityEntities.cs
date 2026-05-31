@@ -17,4 +17,11 @@ public class User : BaseEntity
     public string FullName { get; set; } = string.Empty;
     public int RoleId { get; set; }
     public Role? Role { get; set; }
+
+    // حقول أمنية
+    public bool IsActive { get; set; } = true;
+    public bool MustChangePassword { get; set; } = false;
+    public int FailedLoginAttempts { get; set; }
+    public DateTime? LockoutEnd { get; set; }
+    public DateTime? LastLoginAt { get; set; }
 }

@@ -14,6 +14,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 
 using MeezanPOS.Application.Services;
+using MeezanPOS.Application.Interfaces;
 
 namespace MeezanPOS.Application.ViewModels;
 
@@ -43,6 +44,7 @@ public partial class MonthSummaryCard : ObservableObject
     public string MonthName { get; set; } = string.Empty;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetProfit))]
     private decimal totalSales;
     
     [ObservableProperty]
@@ -52,6 +54,7 @@ public partial class MonthSummaryCard : ObservableObject
     private decimal totalBankingSales;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetProfit))]
     private decimal totalExpenses;
     
     public decimal NetProfit => TotalSales - TotalExpenses;
@@ -60,12 +63,23 @@ public partial class MonthSummaryCard : ObservableObject
     private int daysCount;
     
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusColor))]
+    [NotifyPropertyChangedFor(nameof(CardBackground))]
+    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
     private bool isPosted;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusColor))]
+    [NotifyPropertyChangedFor(nameof(CardBackground))]
+    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
+    private bool isPartiallyPosted;
     
-    public string StatusText => IsPosted ? "مرحّل بالكامل" : "مفتوح";
-    public string StatusColor => IsPosted ? "#10b981" : "#3b82f6";
-    public string CardBackground => IsPosted ? "#f0fdf4" : "#f8faff";
-    public string CardBorderBrush => IsPosted ? "#dcfce7" : "#e5eeff";
+    public string StatusText => IsPosted ? "مرحّل بالكامل" : (IsPartiallyPosted ? "مرحّل جزئياً" : "مفتوح");
+    public string StatusColor => IsPosted ? "#10b981" : (IsPartiallyPosted ? "#f59e0b" : "#3b82f6");
+    public string CardBackground => IsPosted ? "#f0fdf4" : (IsPartiallyPosted ? "#fffbeb" : "#f8faff");
+    public string CardBorderBrush => IsPosted ? "#dcfce7" : (IsPartiallyPosted ? "#fef3c7" : "#e5eeff");
 }
 
 public partial class SalesViewModel : ObservableObject
@@ -263,7 +277,10 @@ public partial class SalesViewModel : ObservableObject
                 .Select(g => {
                     var year = g.Key.Year;
                     var month = g.Key.Month;
-                    var isPosted = g.All(j => j.FinancialStatus == FinancialStatus.Posted);
+                    var postedCount = g.Count(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+                    var totalCount = g.Count();
+                    var isPosted = postedCount == totalCount;
+                    var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
                     return new MonthSummaryCard
                     {
                         Year = year,
@@ -274,7 +291,8 @@ public partial class SalesViewModel : ObservableObject
                         TotalBankingSales = g.Sum(j => j.BankingTotal),
                         TotalExpenses = g.Sum(j => j.TotalExpenses),
                         DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),
-                        IsPosted = isPosted
+                        IsPosted = isPosted,
+                        IsPartiallyPosted = isPartiallyPosted
                     };
                 })
                 .OrderByDescending(m => m.Year)
@@ -318,39 +336,22 @@ public partial class SalesViewModel : ObservableObject
     [RelayCommand]
     public void ApplyFilters()
     {
-        var filtered = _allJournals.AsEnumerable();
-
-        if (SelectedTab == 0)
-        {
-            // 🟢 العمل الحالي: نعرض فقط اليوميات المفتوحة (Draft)
-            filtered = filtered.Where(j => j.FinancialStatus == FinancialStatus.Draft);
-        }
-        else if (SelectedTab == 1 && SelectedArchivedMonth != null)
-        {
-            // 🗄️ الأرشيف: نعرض فقط اليوميات التابعة للشهر المحدد
-            filtered = filtered.Where(j => j.JournalDate.Year == SelectedArchivedMonth.Year && 
-                                           j.JournalDate.Month == SelectedArchivedMonth.Month);
-        }
-        else if (SelectedTab == 1 && SelectedArchivedMonth == null)
-        {
-            // مستوى الأشهر: لا نعرض حركات منفردة
-            filtered = Enumerable.Empty<DailyJournal>();
-        }
+        var commonFiltered = _allJournals.AsEnumerable();
 
         // تطبيق الفلاتر التقليدية
         if (!string.IsNullOrWhiteSpace(SelectedCashier) && SelectedCashier != "الكل")
         {
-            filtered = filtered.Where(j => j.EmployeeName.Equals(SelectedCashier, System.StringComparison.OrdinalIgnoreCase));
+            commonFiltered = commonFiltered.Where(j => j.EmployeeName.Equals(SelectedCashier, System.StringComparison.OrdinalIgnoreCase));
         }
 
         if (FilterStartDate.HasValue)
         {
-            filtered = filtered.Where(j => j.JournalDate.Date >= FilterStartDate.Value.Date);
+            commonFiltered = commonFiltered.Where(j => j.JournalDate.Date >= FilterStartDate.Value.Date);
         }
 
         if (FilterEndDate.HasValue)
         {
-            filtered = filtered.Where(j => j.JournalDate.Date <= FilterEndDate.Value.Date);
+            commonFiltered = commonFiltered.Where(j => j.JournalDate.Date <= FilterEndDate.Value.Date);
         }
 
         if (FilterShiftType != "الكل")
@@ -359,33 +360,33 @@ public partial class SalesViewModel : ObservableObject
             if (FilterShiftType == "مسائية") selectedShiftType = MeezanPOS.Domain.Enums.ShiftType.SecondShift;
             else if (FilterShiftType == "يوم كامل") selectedShiftType = MeezanPOS.Domain.Enums.ShiftType.FullDay;
 
-            filtered = filtered.Where(j => j.ShiftType == selectedShiftType);
+            commonFiltered = commonFiltered.Where(j => j.ShiftType == selectedShiftType);
         }
 
         if (SelectedDifferenceFilter != "الكل")
         {
             if (SelectedDifferenceFilter == "يوجد فروقات")
             {
-                filtered = filtered.Where(j => j.Difference != 0);
+                commonFiltered = commonFiltered.Where(j => j.Difference != 0);
             }
             else if (SelectedDifferenceFilter == "مطابق")
             {
-                filtered = filtered.Where(j => j.Difference == 0);
+                commonFiltered = commonFiltered.Where(j => j.Difference == 0);
             }
             else if (SelectedDifferenceFilter == "عجز")
             {
-                filtered = filtered.Where(j => j.Difference < 0);
+                commonFiltered = commonFiltered.Where(j => j.Difference < 0);
             }
             else if (SelectedDifferenceFilter == "زيادة")
             {
-                filtered = filtered.Where(j => j.Difference > 0);
+                commonFiltered = commonFiltered.Where(j => j.Difference > 0);
             }
         }
 
-        var resultList = filtered.ToList();
-
         if (SelectedTab == 0)
         {
+            var resultList = commonFiltered.Where(j => j.FinancialStatus == FinancialStatus.Draft).ToList();
+
             // إلغاء الاشتراك من العناصر القديمة
             if (Journals != null)
             {
@@ -404,18 +405,75 @@ public partial class SalesViewModel : ObservableObject
                 })
             );
             RecalculateTotals();
-        }
-        else
-        {
-            ArchivedJournals = new ObservableCollection<SelectableDailyJournal>(
-                resultList.Select((j, idx) => new SelectableDailyJournal(j) { Sequence = idx + 1 })
-            );
-        }
 
-        TotalSalesPeriod = resultList.Sum(j => j.TotalSales);
-        TotalCashSalesPeriod = resultList.Sum(j => j.CashSales);
-        TotalBankingSalesPeriod = resultList.Sum(j => j.BankingTotal);
-        TotalDifferencePeriod = resultList.Sum(j => j.Difference);
+            TotalSalesPeriod = resultList.Sum(j => j.TotalSales);
+            TotalCashSalesPeriod = resultList.Sum(j => j.CashSales);
+            TotalBankingSalesPeriod = resultList.Sum(j => j.BankingTotal);
+            TotalDifferencePeriod = resultList.Sum(j => j.Difference);
+        }
+        else // SelectedTab == 1 (Archive)
+        {
+            if (SelectedArchivedMonth != null)
+            {
+                var resultList = commonFiltered.Where(j => j.JournalDate.Year == SelectedArchivedMonth.Year && 
+                                                           j.JournalDate.Month == SelectedArchivedMonth.Month).ToList();
+
+                ArchivedJournals = new ObservableCollection<SelectableDailyJournal>(
+                    resultList.Select((j, idx) => new SelectableDailyJournal(j) { Sequence = idx + 1 })
+                );
+
+                TotalSalesPeriod = resultList.Sum(j => j.TotalSales);
+                TotalCashSalesPeriod = resultList.Sum(j => j.CashSales);
+                TotalBankingSalesPeriod = resultList.Sum(j => j.BankingTotal);
+                TotalDifferencePeriod = resultList.Sum(j => j.Difference);
+            }
+            else
+            {
+                // مستوى الأشهر: نقوم بتصفية قائمة الكروت
+                var gList = commonFiltered.ToList();
+                var grouped = gList
+                    .GroupBy(j => new { j.JournalDate.Year, j.JournalDate.Month })
+                    .Select(g => {
+                        var year = g.Key.Year;
+                        var month = g.Key.Month;
+                        var postedCount = g.Count(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
+                        var totalCount = g.Count();
+                        var isPosted = postedCount == totalCount;
+                        var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
+                        return new MonthSummaryCard
+                        {
+                            Year = year,
+                            Month = month,
+                            MonthName = $"{GetArabicMonthName(month)} {year}",
+                            TotalSales = g.Sum(j => j.TotalSales),
+                            TotalCashSales = g.Sum(j => j.CashSales),
+                            TotalBankingSales = g.Sum(j => j.BankingTotal),
+                            TotalExpenses = g.Sum(j => j.TotalExpenses),
+                            DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),
+                            IsPosted = isPosted,
+                            IsPartiallyPosted = isPartiallyPosted
+                        };
+                    })
+                    .OrderByDescending(m => m.Year)
+                    .ThenByDescending(m => m.Month)
+                    .Select((m, idx) => {
+                        m.Sequence = idx + 1;
+                        return m;
+                    })
+                    .ToList();
+
+                ArchivedMonths.Clear();
+                foreach (var m in grouped)
+                {
+                    ArchivedMonths.Add(m);
+                }
+
+                TotalSalesPeriod = 0;
+                TotalCashSalesPeriod = 0;
+                TotalBankingSalesPeriod = 0;
+                TotalDifferencePeriod = 0;
+            }
+        }
     }
 
     [RelayCommand]
@@ -455,7 +513,7 @@ public partial class SalesViewModel : ObservableObject
         {
             IsLoading = true;
             using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             await postingService.PostEntityAsync<DailyJournal>(journal.Id, CurrentUserId);
 
             System.Windows.MessageBox.Show("تم ترحيل الوردية وإقفالها مالياً بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -487,14 +545,15 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
-
-            var draftJournals = await context.DailyJournals
-                .Where(j => j.JournalDate.Year == month.Year && 
-                            j.JournalDate.Month == month.Month && 
-                            j.FinancialStatus == FinancialStatus.Draft)
-                .ToListAsync();
+            List<DailyJournal> draftJournals;
+            using (var context = new AppDbContext())
+            {
+                draftJournals = await context.DailyJournals
+                    .Where(j => j.JournalDate.Year == month.Year && 
+                                j.JournalDate.Month == month.Month && 
+                                j.FinancialStatus == FinancialStatus.Draft)
+                    .ToListAsync();
+            }
 
             if (!draftJournals.Any())
             {
@@ -502,6 +561,7 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             foreach (var j in draftJournals)
             {
                 await postingService.PostEntityAsync<DailyJournal>(j.Id, CurrentUserId);
@@ -531,7 +591,59 @@ public partial class SalesViewModel : ObservableObject
     {
         if (month == null) return;
 
-        var reason = "طلب فك ترحيل الشهر للمراجعة وإعادة التدقيق";
+        if (CurrentUserId != "Admin")
+        {
+            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            return;
+        }
+
+        // 1. تحقق مما إذا كان الشهر يحتوي على ورديات تابعة لفترة تمت تسويتها وإغلاقها مسبقاً
+        using (var context = new AppDbContext())
+        {
+            var settledSessionIds = await context.PostingSessions
+                .Where(s => s.Status == PostingSessionStatus.Settled || s.Status == PostingSessionStatus.ReSettled)
+                .Select(s => s.Id)
+                .ToListAsync();
+            
+            var hasSettled = await context.DailyJournals
+                .AnyAsync(j => j.JournalDate.Year == month.Year && 
+                               j.JournalDate.Month == month.Month && 
+                               j.PostingSessionId.HasValue && 
+                               settledSessionIds.Contains(j.PostingSessionId.Value));
+            
+            if (hasSettled)
+            {
+                System.Windows.MessageBox.Show(
+                    "عذراً، هذا الشهر يحتوي على ورديات تابعة لفترة تم تسويتها وإقفالها مسبقاً.\nيجب إلغاء قفل فترة التسوية المعنية أولاً من شاشة (الكاش الحالي -> أرشيف التسويات).",
+                    "فترة مغلقة ومسواة",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+        }
+
+        // 2. إظهار نافذة إدخال سبب فك الترحيل
+        bool dialogResult = false;
+        string selectedReason = string.Empty;
+        string detailReason = string.Empty;
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var dialog = new MeezanPOS.Presentation.Views.PeriodUnlockDialog();
+            if (System.Windows.Application.Current.MainWindow != null)
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+            if (dialog.ShowDialog() == true)
+            {
+                selectedReason = dialog.SelectedReason;
+                detailReason = dialog.SelectedDetailReason;
+                dialogResult = true;
+            }
+        });
+
+        if (!dialogResult) return;
+
+        var reason = $"{selectedReason} - {detailReason}";
 
         var result = System.Windows.MessageBox.Show(
             $"هل أنت متأكد من فك ترحيل شهر {month.MonthName} بالكامل؟\nسيتم فتح جميع ورديات هذا الشهر للتعديل مجدداً، وسيتم تسجيل هذا الإجراء في سجل التدقيق.",
@@ -544,14 +656,15 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
-
-            var postedJournals = await context.DailyJournals
-                .Where(j => j.JournalDate.Year == month.Year && 
-                            j.JournalDate.Month == month.Month && 
-                            j.FinancialStatus == FinancialStatus.Posted)
-                .ToListAsync();
+            List<DailyJournal> postedJournals;
+            using (var context = new AppDbContext())
+            {
+                postedJournals = await context.DailyJournals
+                    .Where(j => j.JournalDate.Year == month.Year && 
+                                j.JournalDate.Month == month.Month && 
+                                j.FinancialStatus == FinancialStatus.Posted)
+                    .ToListAsync();
+            }
 
             if (!postedJournals.Any())
             {
@@ -559,6 +672,7 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             foreach (var j in postedJournals)
             {
                 await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, CurrentUserId);
@@ -963,8 +1077,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
 
             var batchResult = await postingService.PostDailyJournalsBatchAsync(selectedIds, "Admin", "ترحيل جماعي لليوميات المحددة من الواجهة");
 
@@ -1026,13 +1139,15 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            using var context = new AppDbContext();
-            
-            // جلب اليوميات المفتوحة فقط في هذه الفترة
-            var journalsInPeriod = await context.DailyJournals
-                .Where(j => j.JournalDate.Date >= startDate && j.JournalDate.Date <= endDate && j.FinancialStatus == FinancialStatus.Draft)
-                .Select(j => j.Id)
-                .ToListAsync();
+            List<int> journalsInPeriod;
+            using (var context = new AppDbContext())
+            {
+                // جلب اليوميات المفتوحة فقط في هذه الفترة
+                journalsInPeriod = await context.DailyJournals
+                    .Where(j => j.JournalDate.Date >= startDate && j.JournalDate.Date <= endDate && j.FinancialStatus == FinancialStatus.Draft)
+                    .Select(j => j.Id)
+                    .ToListAsync();
+            }
 
             if (!journalsInPeriod.Any())
             {
@@ -1055,7 +1170,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (confirmResult != System.Windows.MessageBoxResult.Yes) return;
 
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             var batchResult = await postingService.PostDailyJournalsBatchAsync(journalsInPeriod, CurrentUserId, $"ترحيل جماعي للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
 
             if (batchResult.Success)
@@ -1114,7 +1229,7 @@ public partial class SalesViewModel : ObservableObject
 
             CashMovements = new ObservableCollection<CashMovement>(movements);
             
-            var cashLedgerService = new Services.CashLedgerService(context);
+            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
             IsRebuildRequired = await cashLedgerService.IsRebuildRequiredAsync();
         }
@@ -1143,7 +1258,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var cashLedgerService = new Services.CashLedgerService(context);
+            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
             await cashLedgerService.RebuildLedgerAsync();
             await LoadCashMovementsAsync();
             System.Windows.MessageBox.Show("تم إعادة بناء دفتر النقدية بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -1181,7 +1296,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var cashLedgerService = new Services.CashLedgerService(context);
+            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
         }
         catch (System.Exception ex)
@@ -1228,8 +1343,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
 
             var batchResult = await postingService.SettleAndLockPeriodAsync(
                 payoutAmount: SettlePayoutInput,
@@ -1287,8 +1401,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             var history = await postingService.GetSettlementHistoryAsync();
             
             SettlementHistory.Clear();
@@ -1315,6 +1428,158 @@ public partial class SalesViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task UnlockPeriodAsync(SettlementHistoryItem item)
+    {
+        if (item == null) return;
+        if (CurrentUserId != "Admin")
+        {
+            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            return;
+        }
+
+        bool dialogResult = false;
+        string reason = string.Empty;
+        string detailReason = string.Empty;
+
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            var dialog = new MeezanPOS.Presentation.Views.PeriodUnlockDialog();
+            if (System.Windows.Application.Current.MainWindow != null)
+                dialog.Owner = System.Windows.Application.Current.MainWindow;
+
+            if (dialog.ShowDialog() == true)
+            {
+                reason = dialog.SelectedReason;
+                detailReason = dialog.SelectedDetailReason;
+                dialogResult = true;
+            }
+        });
+
+        if (!dialogResult) return;
+
+        IsLoading = true;
+        try
+        {
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var success = await postingService.UnlockPeriodAsync(item.SessionId, reason, detailReason, CurrentUserId);
+
+            if (success)
+            {
+                System.Windows.MessageBox.Show("تم إلغاء قفل الفترة بنجاح للمراجعة والتدقيق.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                
+                // تحديث قائمة أرشيف التسويات
+                var history = await postingService.GetSettlementHistoryAsync();
+                SettlementHistory.Clear();
+                foreach (var h in history)
+                {
+                    SettlementHistory.Add(h);
+                }
+                await LoadDataAsync();
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"فشل إلغاء قفل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task UnpostPeriodAsync(SettlementHistoryItem item)
+    {
+        if (item == null) return;
+        if (CurrentUserId != "Admin")
+        {
+            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            return;
+        }
+
+        if (item.Status != PostingSessionStatus.Unlocked)
+        {
+            System.Windows.MessageBox.Show("يجب إلغاء قفل الفترة أولاً قبل البدء بفك الترحيل المجمع.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+
+        int journalsCount = 0;
+        int expensesCount = 0;
+        decimal totalReversedAmount = 0;
+
+        try
+        {
+            using (var context = new AppDbContext())
+            {
+                journalsCount = await context.DailyJournals.CountAsync(j => j.PostingSessionId == item.SessionId);
+                expensesCount = await context.GeneralExpenses.CountAsync(e => e.PostingSessionId == item.SessionId);
+                
+                var journalCash = await context.DailyJournals
+                    .Where(j => j.PostingSessionId == item.SessionId)
+                    .Select(j => j.ActualCash - j.CashFloat)
+                    .ToListAsync();
+                var expenseAmounts = await context.GeneralExpenses
+                    .Where(e => e.PostingSessionId == item.SessionId)
+                    .Select(e => e.Amount)
+                    .ToListAsync();
+
+                totalReversedAmount = journalCash.Sum() + expenseAmounts.Sum();
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"خطأ في جلب بيانات الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            return;
+        }
+
+        decimal currentBalance = CurrentCashBalance;
+        decimal expectedBalance = currentBalance - totalReversedAmount;
+
+        var confirmMsg = $"تنبيه: أنت على وشك فك ترحيل الفترة بالكامل كحزمة واحدة.\n\n" +
+                         $"📦 تفاصيل العملية العكسية:\n" +
+                         $"🔹 عدد اليوميات المتأثرة: {journalsCount} يومية\n" +
+                         $"🔹 عدد المصاريف المتأثرة: {expensesCount} مصروف\n" +
+                         $"🔹 إجمالي القيمة المسترجعة (عكس حركة الخزينة): {totalReversedAmount:N2} د.ل\n\n" +
+                         $"💰 الرصيد الحالي للخزينة: {currentBalance:N2} د.ل\n" +
+                         $"📉 الرصيد المتوقع بعد العكس: {expectedBalance:N2} د.ل\n\n" +
+                         $"هل تريد فك ترحيل الفترة وعكس حركات النقدية آلياً؟";
+
+        var confirmResult = System.Windows.MessageBox.Show(confirmMsg, "تأكيد العمليات العكسية وفك ترحيل الفترة", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+        if (confirmResult != System.Windows.MessageBoxResult.Yes) return;
+
+        IsLoading = true;
+        try
+        {
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var reason = $"إجراء فك ترحيل الفترة للجلسة {item.ShortSessionGuid} بواسطة المدير العام";
+            var success = await postingService.UnpostPeriodAsync(item.SessionId, reason, CurrentUserId);
+
+            if (success)
+            {
+                System.Windows.MessageBox.Show("تم فك ترحيل الفترة بالكامل وإلغاء وعكس حركات النقدية بنجاح.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                
+                // تحديث قائمة أرشيف التسويات
+                var history = await postingService.GetSettlementHistoryAsync();
+                SettlementHistory.Clear();
+                foreach (var h in history)
+                {
+                    SettlementHistory.Add(h);
+                }
+                await LoadDataAsync();
+                await LoadCashMovementsAsync();
+            }
+        }
+        catch (System.Exception ex)
+        {
+            System.Windows.MessageBox.Show($"فشل فك ترحيل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    [RelayCommand]
     public async Task RegenerateSettlementPdfAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
@@ -1322,8 +1587,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var postingService = new MeezanPOS.Application.Services.PostingService(context);
+            var postingService = AppServiceProvider.Resolve<IPostingService>();
             string pdfPath = await postingService.RegenerateSettlementPdfAsync(item.SessionId);
 
             if (!string.IsNullOrEmpty(pdfPath) && System.IO.File.Exists(pdfPath))

@@ -15,11 +15,13 @@ public class OwnerDebtService : IOwnerDebtService
 {
     private readonly AppDbContext _context;
     private readonly IBankService _bankService;
+    private readonly ISessionService _session;
 
-    public OwnerDebtService(AppDbContext context, IBankService bankService)
+    public OwnerDebtService(AppDbContext context, ISessionService session)
     {
         _context = context;
-        _bankService = bankService;
+        _bankService = new BankService(context, session);
+        _session = session;
     }
 
     public async Task<List<OwnerDebt>> GetDebtsAsync(string? partnerName = null, OwnerDebtStatus? status = null)
@@ -192,7 +194,7 @@ public class OwnerDebtService : IOwnerDebtService
             await _context.SaveChangesAsync();
 
             var auditService = new AuditService(_context);
-            await auditService.LogAsync("Admin", "RecordSettlement", "OwnerDebtSettlement", settlement.Id, null, $"Settlement for Partner {partnerName} Amount {amount} via {source}");
+            await auditService.LogAsync(_session.CurrentUsername, "RecordSettlement", "OwnerDebtSettlement", settlement.Id, null, $"Settlement for Partner {partnerName} Amount {amount} via {source}");
 
             await transaction.CommitAsync();
 
@@ -238,7 +240,7 @@ public class OwnerDebtService : IOwnerDebtService
             await _context.SaveChangesAsync();
 
             var auditService = new AuditService(_context);
-            await auditService.LogAsync("Admin", "DeleteSettlement", "OwnerDebtSettlement", settlement.Id, $"Partner: {settlement.PartnerName}, Amount: {settlement.Amount}", "Deleted");
+            await auditService.LogAsync(_session.CurrentUsername, "DeleteSettlement", "OwnerDebtSettlement", settlement.Id, $"Partner: {settlement.PartnerName}, Amount: {settlement.Amount}", "Deleted");
 
             await transaction.CommitAsync();
         }
@@ -304,17 +306,21 @@ public class OwnerDebtService : IOwnerDebtService
     public async Task<List<PartnerSummaryDto>> GetPartnersSummaryAsync()
     {
         // استعلامان فقط بدلاً من 2N استعلام (حيث N = عدد الشركاء)
-        var debtSums = await _context.OwnerDebts
+        var debtSums = (await _context.OwnerDebts
             .Where(d => !d.IsDeleted)
+            .Select(d => new { d.PartnerName, d.Amount })
+            .ToListAsync())
             .GroupBy(d => d.PartnerName)
             .Select(g => new { Name = g.Key, Total = g.Sum(d => d.Amount) })
-            .ToListAsync();
+            .ToList();
 
-        var settlementSums = await _context.OwnerDebtSettlements
+        var settlementSums = (await _context.OwnerDebtSettlements
             .Where(s => !s.IsDeleted)
+            .Select(s => new { s.PartnerName, s.Amount })
+            .ToListAsync())
             .GroupBy(s => s.PartnerName)
             .Select(g => new { Name = g.Key, Total = g.Sum(s => s.Amount) })
-            .ToListAsync();
+            .ToList();
 
         var debtDict = debtSums.ToDictionary(d => d.Name, d => d.Total);
         var settlementDict = settlementSums.ToDictionary(s => s.Name, s => s.Total);

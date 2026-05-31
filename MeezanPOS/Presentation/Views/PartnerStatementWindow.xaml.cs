@@ -17,9 +17,7 @@ public partial class PartnerStatementWindow : Window
         InitializeComponent();
 
         // إنشاء الخدمات والـ ViewModel
-        var dbContext = new AppDbContext();
-        var bankService = new BankService(dbContext);
-        var ownerDebtService = new OwnerDebtService(dbContext, bankService);
+        var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
         _vm = new PartnerStatementViewModel(ownerDebtService);
 
         DataContext = _vm;

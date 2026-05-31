@@ -209,11 +209,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         try
         {
-            using var context = new AppDbContext();
-            var bankService = new BankService(context);
+            var bankService = AppServiceProvider.Resolve<IBankService>();
             var accountsList = await bankService.GetAllAccountsAsync();
             
-            var ownerDebtService = new OwnerDebtService(context, bankService);
+            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
             var namesList = await ownerDebtService.GetPartnerNamesAsync();
 
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
@@ -243,7 +242,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var ledgerService = new LedgerService(context);
+            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
             var supplier = await context.Suppliers.FindAsync(SupplierId);
             if (supplier != null) CurrentBalance = supplier.CurrentBalance;
@@ -491,7 +490,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var ledgerService = new LedgerService(context);
+            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
             if (_editingInvoiceId.HasValue)
             {
@@ -618,7 +617,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 finalNotes += " | سداد نقدي";
 
             using var context = new AppDbContext();
-            var ledgerService = new LedgerService(context);
+            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
             if (_editingPaymentTransactionId.HasValue)
             {

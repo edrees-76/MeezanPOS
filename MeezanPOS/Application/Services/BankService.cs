@@ -13,10 +13,12 @@ namespace MeezanPOS.Application.Services;
 public class BankService : IBankService
 {
     private readonly AppDbContext _context;
+    private readonly ISessionService _session;
 
-    public BankService(AppDbContext context)
+    public BankService(AppDbContext context, ISessionService session)
     {
         _context = context;
+        _session = session;
     }
 
     public async Task<List<BankAccount>> GetAllAccountsAsync()
@@ -127,7 +129,7 @@ public class BankService : IBankService
             var fromTx = new BankTransaction
             {
                 BankAccountId = fromAccountId,
-                Type = BankTransactionType.InternalTransfer,
+                Type = BankTransactionType.InternalTransferOut,
                 Amount = amount,
                 BalanceAfter = fromAccount.CurrentBalance,
                 TransactionDate = date,
@@ -142,7 +144,7 @@ public class BankService : IBankService
             var toTx = new BankTransaction
             {
                 BankAccountId = toAccountId,
-                Type = BankTransactionType.InternalTransfer,
+                Type = BankTransactionType.InternalTransferIn,
                 Amount = amount,
                 BalanceAfter = toAccount.CurrentBalance,
                 TransactionDate = date,
@@ -159,7 +161,7 @@ public class BankService : IBankService
             await _context.SaveChangesAsync();
 
             var auditService = new AuditService(_context);
-            await auditService.LogAsync("Admin", "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
+            await auditService.LogAsync(_session.CurrentUserId, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
 
             await transaction.CommitAsync();
         }
@@ -346,12 +348,11 @@ public class BankService : IBankService
             BankTransactionType.SupplierPayment => -amount,
             BankTransactionType.ExpensePayment => -amount,
             BankTransactionType.OwnerDebtSettlement => -amount,
-            // ⚠️ InternalTransfer: هذه القيمة (-amount) تعمل فقط مع الجانب المُرسِل.
-            // الجانب المستقبِل يُعالج في RecordInternalTransferAsync بشكل منفصل.
-            // عند Rebuild: حركات التحويل الداخلي المستقبَلة ستُخصم خطأً.
-            // TODO: فصل إلى InternalTransferOut / InternalTransferIn
+            BankTransactionType.InternalTransferOut => -amount,
+            BankTransactionType.InternalTransferIn => amount,
+            // التوافق مع البيانات القديمة فقط:
             BankTransactionType.InternalTransfer => (notes != null && (notes.StartsWith("تحويل من") || notes.Contains("من "))) ? amount : -amount,
-            BankTransactionType.ExchangeDifference => amount, // يمكن أن يكون القيمة سالبة أو موجبة
+            BankTransactionType.ExchangeDifference => amount,
             _ => 0
         };
     }

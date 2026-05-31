@@ -9,6 +9,8 @@ using System.Linq;
 using System.Threading;
 using QuestPDF.Fluent;
 using Microsoft.EntityFrameworkCore;
+using MeezanPOS.Application.Services;
+using MeezanPOS.Application.Interfaces;
 
 namespace MeezanPOS.Application.ViewModels;
 
@@ -740,7 +742,7 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var bankService = new MeezanPOS.Application.Services.BankService(context);
+            var bankService = AppServiceProvider.Resolve<IBankService>();
             
             // Check for duplicate shifts on the same day
             var targetDate = JournalDate.Date;
@@ -1016,7 +1018,7 @@ public partial class DailyJournalViewModel : ObservableObject
             }
 
             // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
-            var ledgerService = new MeezanPOS.Application.Services.LedgerService(context);
+            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
             var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
 
             foreach (var newExp in journal.ExpenseItems.Where(e => e.SupplierId != null))

@@ -1,63 +1,54 @@
-namespace MeezanPOS.Domain.Enums;
+﻿namespace MeezanPOS.Domain.Enums;
 
 /// <summary>
-/// تصنيف ملكية الحساب البنكي
+/// أنواع الحسابات المصرفية المتاحة
 /// </summary>
 public enum BankAccountType
 {
-    Commercial = 1,   // حساب تجاري للمطعم
-    PersonalMixed = 2 // حساب شخصي للمالك / شريك (مختلط)
+    Commercial = 1,
+    PersonalMixed = 2
 }
 
 /// <summary>
-/// أنواع العمليات البنكية
+/// أنواع المعاملات المصرفية
 /// </summary>
 public enum BankTransactionType
 {
-    Deposit = 1,            // إيداع بنكي من النقدية
-    Withdrawal = 2,         // سحب بنكي لتغذية الصندوق
-    InternalTransfer = 3,   // تحويل داخلي بين الحسابات البنكية للمطعم
-    CardSalesDeposit = 4,   // إيداع تلقائي لمبيعات البطاقات (تأكيد عملية معلقة)
-    SupplierPayment = 5,    // سداد مورد عبر البنك
-    ExpensePayment = 6,     // دفع مصروف عام أو يومي عبر البنك
-    OwnerDebtSettlement = 7,// سداد مستحقات المالك الشخصية من البنك
-    ExchangeDifference = 8  // فروقات وعجز العمليات المصرفية
+    Deposit = 1,
+    Withdrawal = 2,
+    InternalTransfer = 3,
+    CardSalesDeposit = 4,
+    SupplierPayment = 5,
+    ExpensePayment = 6,
+    OwnerDebtSettlement = 7,
+    ExchangeDifference = 8,
+    InternalTransferOut = 9,
+    InternalTransferIn = 10,
 }
 
-/// <summary>
-/// حالة مبيعات البطاقات الإلكترونية
-/// </summary>
 public enum CardPaymentStatus
 {
-    Pending = 1, // تحت التحصيل
-    Cleared = 2  // مؤكدة ووصلت الحساب البنكي
+    Pending = 1,
+    Cleared = 2
 }
 
-/// <summary>
-/// حالة ديون المالك/الشركاء
-/// </summary>
 public enum OwnerDebtStatus
 {
-    Unpaid = 1, // غير مسدد (دين قائم)
-    Paid = 2    // تم التسوية (مسوّى)
+    Unpaid = 1,
+    Paid = 2
 }
 
-/// <summary>
-/// مصدر تمويل تسوية ديون المالك
-/// </summary>
 public enum OwnerDebtSettlementSource
 {
-    CashRegister = 1, // كاشير الوردية (الدرج)
-    Bank = 2,         // الحساب البنكي
-    PettyCash = 3     // النقدية المجمعة (الخزينة)
+    CashRegister = 1,
+    Bank = 2,
+    PettyCash = 3
 }
 
-/// <summary>
-/// ����� ������ ������ ������
-/// </summary>
 public enum PartnerBalanceDirection
 {
-    RestaurantOwesPartner = 1, // ������ ���� ������
-    PartnerOwesRestaurant = 2, // ������ ���� ������
-    Settled = 3                // ��� ������� / ���
+    RestaurantOwesPartner = 1,
+    PartnerOwesRestaurant = 2,
+    Settled = 3
 }
+

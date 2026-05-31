@@ -1,5 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MeezanPOS.Application.Interfaces;
+using MeezanPOS.Application.Services;
+using Serilog;
 using System.Windows;
 
 namespace MeezanPOS.Application.ViewModels;
@@ -70,7 +73,7 @@ public partial class LoginViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void Login()
+    private async Task LoginAsync()
     {
         ErrorMessage = string.Empty;
 
@@ -80,15 +83,34 @@ public partial class LoginViewModel : ObservableObject
             return;
         }
 
-        // Mock Authentication for demonstration
-        if (Username == "admin" && Password == "admin")
+        try
         {
+            var authService = AppServiceProvider.Resolve<IAuthenticationService>();
+            var user = await authService.AuthenticateAsync(Username, Password);
+
+            if (user == null)
+            {
+                ErrorMessage = "بيانات الدخول غير صحيحة أو الحساب مقفل.";
+                return;
+            }
+
+            // تسجيل الجلسة
+            var session = AppServiceProvider.Resolve<ISessionService>();
+            session.SetUser(user);
+
             SaveSettings();
+
+            // فحص MustChangePassword
+            if (user.MustChangePassword)
+            {
+                MessageBox.Show("يجب تغيير كلمة المرور عند أول دخول.", "تنبيه أمني",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
 
             var mainView = new Presentation.Views.MainView();
             System.Windows.Application.Current.MainWindow = mainView;
             mainView.Show();
-            
+
             // Close all other windows (like LoginView)
             foreach (Window window in System.Windows.Application.Current.Windows)
             {
@@ -98,9 +120,10 @@ public partial class LoginViewModel : ObservableObject
                 }
             }
         }
-        else
+        catch (Exception ex)
         {
-            ErrorMessage = "بيانات الدخول غير صحيحة.";
+            Log.Error(ex, "خطأ أثناء تسجيل الدخول");
+            ErrorMessage = "حدث خطأ أثناء تسجيل الدخول. الرجاء المحاولة مرة أخرى.";
         }
     }
 }

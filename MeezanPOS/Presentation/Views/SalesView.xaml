@@ -1,4 +1,4 @@
-<UserControl x:Class="MeezanPOS.Presentation.Views.SalesView"
+﻿<UserControl x:Class="MeezanPOS.Presentation.Views.SalesView"
 
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 
@@ -1314,32 +1314,54 @@
 
                         <StackPanel>
 
-                            <!-- Title Bar -->
-
-                            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
-
-                                <Grid>
-
-                                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-
-                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
-
-                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
-
-                                    </StackPanel>
-
-                                    <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الأرشيف" Command="{Binding LoadDataCommand}" Height="32"/>
-
-                                </Grid>
-
+                            <!-- Title Bar -->
+
+                            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
+
+                                <Grid>
+
+                                    <Grid.ColumnDefinitions>
+
+                                        <ColumnDefinition Width="Auto"/>
+
+                                        <ColumnDefinition Width="24"/>
+
+                                        <ColumnDefinition Width="*"/>
+
+                                        <ColumnDefinition Width="Auto"/>
+
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+
+                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                                        <TextBlock Text="ط£ط±ط´ظٹظپ ط§ظ„طھط±ط­ظٹظ„ ط§ظ„ط´ظ‡ط±ظٹ" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+                                    </StackPanel>
+
+                                    <!-- Date Filters -->
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+
+                                        <DatePicker SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="ظ…ظ† طھط§ط±ظٹط®..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+
+                                        <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="ط¥ظ„ظ‰ طھط§ط±ظٹط®..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
+
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="طھطµظپظٹط©" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="36" Width="80" Margin="0,0,6,0"/>
+
+                                        <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="36" Width="36" Padding="0">
+
+                                            <materialDesign:PackIcon Kind="FilterRemove" Width="18" Height="18"/>
+
+                                        </Button>
+
+                                    </StackPanel>
+
+                                    <Button Grid.Column="3" Style="{StaticResource MaterialDesignOutlinedButton}" Content="طھط­ط¯ظٹط« ط§ظ„ط£ط±ط´ظٹظپ" Command="{Binding LoadDataCommand}" Height="32"/>
+
+                                </Grid>
+
                             </Border>
 
 
@@ -2279,18 +2301,38 @@
                             <DataGridTextColumn Header="المسلم للمالك" Binding="{Binding PayoutAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
                             <DataGridTextColumn Header="السيولة المتبقية" Binding="{Binding KeepAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
                             <DataGridTextColumn Header="البيان والملاحظات" Binding="{Binding Notes}" Width="*" MinWidth="180"/>
-                            <DataGridTemplateColumn Header="إجراءات" Width="100">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Command="{Binding DataContext.RegenerateSettlementPdfCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}"
-                                                Style="{StaticResource MaterialDesignToolButton}"
-                                                Height="36" Width="36" Padding="0" Cursor="Hand"
-                                                ToolTip="تنزيل وعرض إيصال PDF">
-                                            <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#ef4444"/>
-                                        </Button>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
+                            <DataGridTextColumn Header="ط­ط§ظ„ط© ط§ظ„ظپطھط±ط©" Binding="{Binding StatusText}" Width="Auto" MinWidth="120"/>
+                            <DataGridTemplateColumn Header="ط¥ط¬ط±ط§ط،ط§طھ" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                            <!-- PDF Receipt -->
+                                            <Button Command="{Binding DataContext.RegenerateSettlementPdfCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignToolButton}"
+                                                    Height="36" Width="36" Padding="0" Cursor="Hand"
+                                                    ToolTip="طھظ†ط²ظٹظ„ ظˆط¹ط±ط¶ ط¥ظٹطµط§ظ„ PDF">
+                                                <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#ef4444"/>
+                                            </Button>
+                                            <!-- Unlock Period -->
+                                            <Button Command="{Binding DataContext.UnlockPeriodCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignToolButton}"
+                                                    Height="36" Width="36" Padding="0" Cursor="Hand"
+                                                    ToolTip="ط¥ظ„ط؛ط§ط، ظ‚ظپظ„ ط§ظ„ظپطھط±ط© ظ„ظ„ظ…ط±ط§ط¬ط¹ط©">
+                                                <materialDesign:PackIcon Kind="LockOpenOutline" Width="22" Height="22" Foreground="#f97316"/>
+                                            </Button>
+                                            <!-- Unpost Period -->
+                                            <Button Command="{Binding DataContext.UnpostPeriodCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignToolButton}"
+                                                    Height="36" Width="36" Padding="0" Cursor="Hand"
+                                                    ToolTip="ظپظƒ طھط±ط­ظٹظ„ ط§ظ„ظپطھط±ط© ط¨ط§ظ„ظƒط§ظ…ظ„ ظˆط¹ظƒط³ ط§ظ„ط­ط±ظƒط§طھ ط§ظ„ظ†ظ‚ط¯ظٹط©">
+                                                <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="22" Height="22" Foreground="#dc2626"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                         </DataGrid.Columns>
                     </DataGrid>

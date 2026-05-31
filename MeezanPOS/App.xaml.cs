@@ -2,6 +2,8 @@ using System.Configuration;
 using System.Data;
 using System.Windows;
 using Microsoft.EntityFrameworkCore;
+using MeezanPOS.Application.Services;
+using Serilog;
 namespace MeezanPOS;
 
 /// <summary>
@@ -23,7 +25,7 @@ public partial class App : System.Windows.Application
                 inner = inner.InnerException;
             }
 
-            System.Diagnostics.Debug.WriteLine($"🔴 FATAL: {fullError}");
+            Log.Fatal("FATAL: {Error}", fullError);
             try
             {
                 var logPath = System.IO.Path.Combine(
@@ -45,6 +47,10 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // تهيئة نظام التسجيل أولاً
+        AppLogger.Initialize();
+        Log.Information("بدء تشغيل منظومة ميزان POS");
+
         const string mutexName = "MeezanPOS_SingleInstance_Mutex";
         bool createdNew;
         _appMutex = new System.Threading.Mutex(true, mutexName, out createdNew);
@@ -87,7 +93,7 @@ public partial class App : System.Windows.Application
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات: {ex.Message}");
+                Log.Warning(ex, "خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات");
             }
         }
 
@@ -141,7 +147,7 @@ public partial class App : System.Windows.Application
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"خطأ أثناء تهيئة WAL Mode: {ex.Message}");
+                Log.Warning(ex, "خطأ أثناء تهيئة WAL Mode");
             }
 
             // تصحيح قيم RowVersion التالفة أو المخزنة كـ BLOB في SQLite لضمان نجاح الترحيل المالي وتجنب تعارض التزامن
@@ -153,12 +159,17 @@ public partial class App : System.Windows.Application
             }
             catch (System.Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"خطأ أثناء تصحيح حقول RowVersion: {ex.Message}");
+                Log.Warning(ex, "خطأ أثناء تصحيح حقول RowVersion");
             }
 
             // ملاحظة: جميع عمليات ALTER TABLE وإنشاء الأعمدة الجديدة تتم في AppDbContext.MigrateDatabase()
             // لا تضف أوامر ALTER TABLE هنا — أضفها هناك فقط لتجنب التكرار
         }
+
+        // تهيئة حاوية حقن التبعيات
+        AppServiceProvider.Initialize();
+        Log.Information("تم تهيئة حاوية الخدمات");
+
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));
     }
@@ -236,6 +247,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        Log.Information("إيقاف منظومة ميزان POS");
         if (_appMutex != null)
         {
             try
@@ -245,6 +257,7 @@ public partial class App : System.Windows.Application
             catch { }
             _appMutex.Dispose();
         }
+        Log.CloseAndFlush();
         base.OnExit(e);
     }
 }

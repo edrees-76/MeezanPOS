@@ -19,229 +19,407 @@ public class WagesService : IWagesService
         _context = context;
     }
 
-    public async Task<List<string>> GetUniqueWorkerNamesAsync()
+    // --- إدارة بيانات العمال (Worker CRUD) ---
+    public async Task<List<Worker>> GetAllWorkersAsync(bool includeInactive = false)
     {
-        // جلب الأسماء الفريدة من سجلات الحضور والمصاريف العامة والمصاريف اليومية
-        var namesFromAttendance = await _context.WorkerAttendances
-            .Where(w => !w.IsDeleted && !string.IsNullOrWhiteSpace(w.WorkerName))
-            .Select(w => w.WorkerName.Trim())
-            .Distinct()
+        return await _context.Workers
+            .Where(w => !w.IsDeleted && (includeInactive || w.IsActive))
+            .OrderBy(w => w.WorkerName)
+            .ToListAsync();
+    }
+
+    public async Task<Worker?> GetWorkerByIdAsync(int id)
+    {
+        return await _context.Workers.FirstOrDefaultAsync(w => w.Id == id && !w.IsDeleted);
+    }
+
+    public async Task SaveWorkerAsync(Worker worker)
+    {
+        if (worker == null) throw new ArgumentNullException(nameof(worker));
+        if (string.IsNullOrWhiteSpace(worker.WorkerName)) throw new Exception("اسم العامل مطلوب.");
+
+        worker.WorkerName = worker.WorkerName.Trim();
+
+        if (worker.Id == 0)
+        {
+            var exists = await _context.Workers.AnyAsync(w => w.WorkerName.ToLower() == worker.WorkerName.ToLower() && !w.IsDeleted);
+            if (exists) throw new Exception("اسم العامل مسجل مسبقاً.");
+
+            worker.CreatedAt = DateTime.UtcNow;
+            _context.Workers.Add(worker);
+        }
+        else
+        {
+            worker.UpdatedAt = DateTime.UtcNow;
+            _context.Entry(worker).State = EntityState.Modified;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task ToggleWorkerActiveStatusAsync(int workerId)
+    {
+        var worker = await _context.Workers.FindAsync(workerId);
+        if (worker != null)
+        {
+            worker.IsActive = !worker.IsActive;
+            worker.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task DeleteWorkerAsync(int workerId)
+    {
+        var worker = await _context.Workers.FindAsync(workerId);
+        if (worker != null)
+        {
+            worker.IsDeleted = true;
+            worker.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    // --- الحضور والغياب (Attendance) ---
+    public async Task<List<WorkerAttendance>> GetAttendanceForDateAsync(DateTime date)
+    {
+        var targetDate = date.Date;
+        var attendances = await _context.WorkerAttendances
+            .Where(a => a.WorkDate.Date == targetDate && !a.IsDeleted)
             .ToListAsync();
 
-        var namesFromGeneralExpenses = await _context.GeneralExpenses
-            .Where(e => !e.IsDeleted && !string.IsNullOrWhiteSpace(e.WorkerName))
-            .Select(e => e.WorkerName!.Trim())
-            .Distinct()
+        if (attendances.Any())
+        {
+            var attendanceIds = attendances.Select(a => a.Id).ToList();
+            var txs = await _context.WorkerTransactions
+                .Where(t => t.AttendanceId != null && attendanceIds.Contains(t.AttendanceId.Value) && !t.IsDeleted)
+                .ToListAsync();
+
+            foreach (var att in attendances)
+            {
+                var deductionTx = txs.FirstOrDefault(t => t.AttendanceId == att.Id && t.Type == WorkerTransactionType.Deduction);
+                if (deductionTx != null)
+                {
+                    att.DeductionAmount = deductionTx.DebitAmount;
+                }
+
+                var settlementTx = txs.FirstOrDefault(t => t.AttendanceId == att.Id && t.Type == WorkerTransactionType.Adjustment && t.Notes != null && t.Notes.Contains("تسوية سلفة"));
+                if (settlementTx != null)
+                {
+                    att.AdvanceDeducted = settlementTx.DebitAmount;
+                }
+            }
+        }
+
+        return attendances;
+    }
+
+    private string GetShiftNameArabic(ShiftType shift) => shift switch
+    {
+        ShiftType.FirstShift => "الوردية الأولى (صباحية)",
+        ShiftType.SecondShift => "الوردية الثانية (مسائية)",
+        _ => "يوم كامل"
+    };
+
+    public async Task SaveAttendanceBatchAsync(List<WorkerAttendance> attendances)
+    {
+        if (attendances == null || !attendances.Any()) return;
+
+        var targetDate = attendances.First().WorkDate.Date;
+
+        foreach (var att in attendances)
+        {
+            if (att.WorkerId == 0 || att.WorkerId == null) continue;
+
+            att.WorkDate = targetDate;
+            
+            // حساب الاستحقاق الفعلي بناء على حالة الحضور
+            att.AccruedWage = att.Status switch
+            {
+                AttendanceStatus.Present => att.SnapshotDailyWage,
+                AttendanceStatus.HalfDay => att.SnapshotDailyWage / 2m,
+                _ => 0m
+            };
+
+            if (att.Id == 0)
+            {
+                att.CreatedAt = DateTime.UtcNow;
+                _context.WorkerAttendances.Add(att);
+            }
+            else
+            {
+                att.UpdatedAt = DateTime.UtcNow;
+                _context.Entry(att).State = EntityState.Modified;
+            }
+        }
+
+        // حفظ التغيرات لتوليد المعرفات
+        await _context.SaveChangesAsync();
+
+        // ترحيل الحركات المالية إلى الأستاذ المساعد
+        foreach (var att in attendances)
+        {
+            if (att.WorkerId == null) continue;
+
+            // 1. حركة استحقاق الأجر (WageAccrual)
+            var existingAccrual = await _context.WorkerTransactions
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
+                                          t.AttendanceId == att.Id && 
+                                          t.Type == WorkerTransactionType.WageAccrual && 
+                                          !t.IsDeleted);
+
+            if (att.Status == AttendanceStatus.Present || att.Status == AttendanceStatus.HalfDay)
+            {
+                if (existingAccrual == null)
+                {
+                    var accrualTx = new WorkerTransaction
+                    {
+                        WorkerId = att.WorkerId.Value,
+                        WorkerName = att.WorkerName,
+                        TransactionDate = targetDate,
+                        Type = WorkerTransactionType.WageAccrual,
+                        CreditAmount = att.AccruedWage,
+                        DebitAmount = 0m,
+                        AttendanceId = att.Id,
+                        Notes = $"استحقاق أجر - {GetShiftNameArabic(att.ShiftType)} ({att.Status})"
+                    };
+                    _context.WorkerTransactions.Add(accrualTx);
+                }
+                else
+                {
+                    existingAccrual.CreditAmount = att.AccruedWage;
+                    existingAccrual.WorkerName = att.WorkerName;
+                    existingAccrual.Notes = $"استحقاق أجر - {GetShiftNameArabic(att.ShiftType)} ({att.Status})";
+                    existingAccrual.UpdatedAt = DateTime.UtcNow;
+                    _context.Entry(existingAccrual).State = EntityState.Modified;
+                }
+            }
+            else
+            {
+                if (existingAccrual != null)
+                {
+                    existingAccrual.IsDeleted = true;
+                    existingAccrual.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            // 2. حركة الخصم (Deduction)
+            var existingDeduction = await _context.WorkerTransactions
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
+                                          t.AttendanceId == att.Id && 
+                                          t.Type == WorkerTransactionType.Deduction && 
+                                          !t.IsDeleted);
+
+            if (att.DeductionAmount > 0)
+            {
+                if (existingDeduction == null)
+                {
+                    var deductionTx = new WorkerTransaction
+                    {
+                        WorkerId = att.WorkerId.Value,
+                        WorkerName = att.WorkerName,
+                        TransactionDate = targetDate,
+                        Type = WorkerTransactionType.Deduction,
+                        CreditAmount = 0m,
+                        DebitAmount = att.DeductionAmount,
+                        AttendanceId = att.Id,
+                        Notes = $"خصم/غرامة حضور وغياب - {GetShiftNameArabic(att.ShiftType)}"
+                    };
+                    _context.WorkerTransactions.Add(deductionTx);
+                }
+                else
+                {
+                    existingDeduction.DebitAmount = att.DeductionAmount;
+                    existingDeduction.WorkerName = att.WorkerName;
+                    existingDeduction.UpdatedAt = DateTime.UtcNow;
+                    _context.Entry(existingDeduction).State = EntityState.Modified;
+                }
+            }
+            else
+            {
+                if (existingDeduction != null)
+                {
+                    existingDeduction.IsDeleted = true;
+                    existingDeduction.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            // 3. حركة تسوية السلفة (Advance Settlement)
+            var existingAdvanceSettlement = await _context.WorkerTransactions
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
+                                          t.AttendanceId == att.Id && 
+                                          t.Type == WorkerTransactionType.Adjustment && 
+                                          t.Notes != null && t.Notes.Contains("تسوية سلفة") &&
+                                          !t.IsDeleted);
+
+            if (att.AdvanceDeducted > 0)
+            {
+                if (existingAdvanceSettlement == null)
+                {
+                    var settlementTx = new WorkerTransaction
+                    {
+                        WorkerId = att.WorkerId.Value,
+                        WorkerName = att.WorkerName,
+                        TransactionDate = targetDate,
+                        Type = WorkerTransactionType.Adjustment,
+                        CreditAmount = 0m,
+                        DebitAmount = att.AdvanceDeducted,
+                        AttendanceId = att.Id,
+                        Notes = $"تسوية سلفة من الحضور اليومي - {GetShiftNameArabic(att.ShiftType)}"
+                    };
+                    _context.WorkerTransactions.Add(settlementTx);
+                }
+                else
+                {
+                    existingAdvanceSettlement.DebitAmount = att.AdvanceDeducted;
+                    existingAdvanceSettlement.WorkerName = att.WorkerName;
+                    existingAdvanceSettlement.UpdatedAt = DateTime.UtcNow;
+                    _context.Entry(existingAdvanceSettlement).State = EntityState.Modified;
+                }
+            }
+            else
+            {
+                if (existingAdvanceSettlement != null)
+                {
+                    existingAdvanceSettlement.IsDeleted = true;
+                    existingAdvanceSettlement.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    // --- العمليات المالية والأستاذ المساعد ---
+    public async Task RecordTransactionAsync(WorkerTransaction transaction)
+    {
+        if (transaction == null) throw new ArgumentNullException(nameof(transaction));
+        if (transaction.WorkerId <= 0) throw new Exception("يجب تحديد العامل.");
+        if (transaction.DebitAmount < 0 || transaction.CreditAmount < 0) throw new Exception("المبالغ يجب أن تكون موجبة.");
+
+        var worker = await _context.Workers.FindAsync(transaction.WorkerId);
+        if (worker == null) throw new Exception("العامل غير موجود.");
+
+        transaction.WorkerName = worker.WorkerName;
+        if (transaction.Id == 0)
+        {
+            transaction.CreatedAt = DateTime.UtcNow;
+            _context.WorkerTransactions.Add(transaction);
+        }
+        else
+        {
+            transaction.UpdatedAt = DateTime.UtcNow;
+            _context.Entry(transaction).State = EntityState.Modified;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteTransactionAsync(int transactionId)
+    {
+        var tx = await _context.WorkerTransactions.FindAsync(transactionId);
+        if (tx != null)
+        {
+            tx.IsDeleted = true;
+            tx.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(int workerId)
+    {
+        var txs = await _context.WorkerTransactions
+            .Where(t => t.WorkerId == workerId && !t.IsDeleted)
+            .OrderBy(t => t.TransactionDate)
+            .ThenBy(t => t.Id)
             .ToListAsync();
 
-        var namesFromDailyExpenses = await _context.DailyExpenseItems
-            .Where(e => !e.IsDeleted && !string.IsNullOrWhiteSpace(e.WorkerName))
-            .Select(e => e.WorkerName!.Trim())
-            .Distinct()
-            .ToListAsync();
+        var ledger = new List<WorkerLedgerEntry>();
+        decimal runningBalance = 0;
 
-        return namesFromAttendance
-            .Union(namesFromGeneralExpenses)
-            .Union(namesFromDailyExpenses)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .OrderBy(name => name)
-            .ToList();
+        foreach (var t in txs)
+        {
+            runningBalance += t.CreditAmount - t.DebitAmount;
+
+            string source = t.Type switch
+            {
+                WorkerTransactionType.WageAccrual => "استحقاق حضور",
+                WorkerTransactionType.Payment => "سداد نقدي",
+                WorkerTransactionType.Advance => "سلفة عمال",
+                WorkerTransactionType.Deduction => "خصم وغرامة",
+                WorkerTransactionType.Adjustment => "تسوية يدوية",
+                _ => "أخرى"
+            };
+
+            string description = t.Notes ?? string.Empty;
+            if (string.IsNullOrEmpty(description))
+            {
+                description = t.Type switch
+                {
+                    WorkerTransactionType.WageAccrual => "استحقاق يومية العمل",
+                    WorkerTransactionType.Payment => "دفعة نقدية مسددة للعامِل",
+                    WorkerTransactionType.Advance => "صرف سلفة مالية",
+                    WorkerTransactionType.Deduction => "خصم/غرامة حضور وغياب",
+                    WorkerTransactionType.Adjustment => "تسوية رصيد حساب",
+                    _ => ""
+                };
+            }
+
+            ledger.Add(new WorkerLedgerEntry
+            {
+                Id = t.Id,
+                Date = t.TransactionDate,
+                Source = source,
+                Description = description,
+                AccruedAmount = t.CreditAmount,
+                PaidAmount = t.DebitAmount,
+                BalanceAfter = runningBalance,
+                Notes = t.Notes ?? string.Empty
+            });
+        }
+
+        return ledger;
     }
 
     public async Task<List<WorkerWageSummary>> GetWorkerSummariesAsync()
     {
-        // 1. تجميع الاستحقاقات من سجلات الحضور (استعلام خفيف للمستندات ثم التجميع بالذاكرة)
-        var attendances = await _context.WorkerAttendances
-            .Where(w => !w.IsDeleted && !string.IsNullOrWhiteSpace(w.WorkerName))
-            .Select(w => new { w.WorkerName, w.AccruedWage, w.WorkDate })
+        var workers = await _context.Workers.Where(w => !w.IsDeleted).ToListAsync();
+        var transactions = await _context.WorkerTransactions
+            .Where(t => !t.IsDeleted)
             .ToListAsync();
-
-        var attendanceGroup = attendances
-            .GroupBy(w => w.WorkerName.Trim(), StringComparer.OrdinalIgnoreCase)
-            .Select(g => new
-            {
-                WorkerName = g.Key,
-                TotalAccrued = g.Sum(x => x.AccruedWage),
-                LastActivity = g.Max(x => x.WorkDate)
-            })
-            .ToList();
-
-        // 2. تجميع المدفوعات من المصاريف العامة (نوع رواتب)
-        var generalExpenses = await _context.GeneralExpenses
-            .Where(e => !e.IsDeleted && e.ExpenseType == GeneralExpenseType.Salaries && !string.IsNullOrWhiteSpace(e.WorkerName))
-            .Select(e => new { e.WorkerName, e.Amount, e.PaymentDate })
-            .ToListAsync();
-
-        var generalExpenseGroup = generalExpenses
-            .GroupBy(e => e.WorkerName!.Trim(), StringComparer.OrdinalIgnoreCase)
-            .Select(g => new
-            {
-                WorkerName = g.Key,
-                TotalPaid = g.Sum(x => x.Amount),
-                LastActivity = g.Max(x => x.PaymentDate)
-            })
-            .ToList();
-
-        // 3. تجميع المدفوعات من مصاريف الورديات اليومية (نوع أجور عمال)
-        var dailyExpenses = await _context.DailyExpenseItems
-            .Include(e => e.DailyJournal)
-            .Where(e => !e.IsDeleted && e.Type == ExpenseType.WorkerWage && !string.IsNullOrWhiteSpace(e.WorkerName))
-            .Select(e => new { e.WorkerName, e.Amount, JournalDate = e.DailyJournal != null ? e.DailyJournal.JournalDate : e.CreatedAt })
-            .ToListAsync();
-
-        var dailyExpenseGroup = dailyExpenses
-            .GroupBy(e => e.WorkerName!.Trim(), StringComparer.OrdinalIgnoreCase)
-            .Select(g => new
-            {
-                WorkerName = g.Key,
-                TotalPaid = g.Sum(x => x.Amount),
-                LastActivity = g.Max(x => x.JournalDate)
-            })
-            .ToList();
-
-        // دمج النتائج
-        var allWorkerNames = attendanceGroup.Select(x => x.WorkerName)
-            .Union(generalExpenseGroup.Select(x => x.WorkerName))
-            .Union(dailyExpenseGroup.Select(x => x.WorkerName))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
 
         var summaries = new List<WorkerWageSummary>();
 
-        foreach (var name in allWorkerNames)
+        foreach (var w in workers)
         {
-            var att = attendanceGroup.FirstOrDefault(x => string.Equals(x.WorkerName, name, StringComparison.OrdinalIgnoreCase));
-            var gen = generalExpenseGroup.FirstOrDefault(x => string.Equals(x.WorkerName, name, StringComparison.OrdinalIgnoreCase));
-            var daily = dailyExpenseGroup.FirstOrDefault(x => string.Equals(x.WorkerName, name, StringComparison.OrdinalIgnoreCase));
+            var wTxs = transactions.Where(t => t.WorkerId == w.Id).ToList();
 
-            decimal totalAccrued = att?.TotalAccrued ?? 0;
-            decimal totalPaid = (gen?.TotalPaid ?? 0) + (daily?.TotalPaid ?? 0);
+            decimal totalAccrued = wTxs.Sum(t => t.CreditAmount);
+            decimal totalPaid = wTxs.Sum(t => t.DebitAmount);
 
-            // تحديد آخر تاريخ نشاط
-            var dates = new List<DateTime>();
-            if (att != null) dates.Add(att.LastActivity);
-            if (gen != null) dates.Add(gen.LastActivity);
-            if (daily != null) dates.Add(daily.LastActivity);
+            var lastTx = wTxs.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id).FirstOrDefault();
 
             summaries.Add(new WorkerWageSummary
             {
-                WorkerName = name,
+                WorkerId = w.Id,
+                WorkerName = w.WorkerName,
+                DailyWage = w.DailyWage,
+                IsActive = w.IsActive,
                 TotalAccrued = totalAccrued,
                 TotalPaid = totalPaid,
-                LastActivity = dates.Count > 0 ? dates.Max() : null
+                Notes = w.Notes ?? string.Empty,
+                LastActivity = lastTx?.TransactionDate
             });
         }
 
         return summaries.OrderByDescending(s => s.Balance != 0).ThenBy(s => s.WorkerName).ToList();
     }
 
-    public async Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(string workerName)
+    public async Task<List<string>> GetUniqueWorkerNamesAsync()
     {
-        if (string.IsNullOrWhiteSpace(workerName))
-            return new List<WorkerLedgerEntry>();
-
-        var trimmedName = workerName.Trim();
-
-        // 1. جلب استحقاقات الحضور
-        var attendances = await _context.WorkerAttendances
-            .Where(w => !w.IsDeleted && w.WorkerName.Trim().ToLower() == trimmedName.ToLower())
+        return await _context.Workers
+            .Where(w => !w.IsDeleted && w.IsActive)
+            .Select(w => w.WorkerName)
+            .OrderBy(name => name)
             .ToListAsync();
-
-        var attendanceEntries = attendances.Select(w =>
-        {
-            string shiftStr = w.ShiftType switch
-            {
-                ShiftType.FirstShift => "صباحية",
-                ShiftType.SecondShift => "مسائية",
-                _ => "يوم كامل"
-            };
-
-            return new WorkerLedgerEntry
-            {
-                Id = w.Id,
-                Date = w.WorkDate,
-                Source = "حضور واستحقاق",
-                Description = $"تسجيل حضور - وردية {shiftStr}",
-                AccruedAmount = w.AccruedWage,
-                PaidAmount = 0,
-                Notes = w.Notes ?? string.Empty
-            };
-        });
-
-        // 2. جلب المدفوعات من المصاريف العامة
-        var generalExpenses = await _context.GeneralExpenses
-            .Where(e => !e.IsDeleted && e.ExpenseType == GeneralExpenseType.Salaries &&
-                        e.WorkerName != null && e.WorkerName.Trim().ToLower() == trimmedName.ToLower())
-            .ToListAsync();
-
-        var genExpenseEntries = generalExpenses.Select(e => new WorkerLedgerEntry
-        {
-            Id = e.Id,
-            Date = e.PaymentDate,
-            Source = "مصروف عام",
-            Description = $"دفعة مسددة - {(e.PaymentMethod == PaymentMethodType.Cash ? "نقدي" : e.PaymentMethod == PaymentMethodType.BankTransfer ? "تحويل" : e.PaymentMethod == PaymentMethodType.PersonalPartner ? "شخصي (شريك)" : "شيك")}",
-            AccruedAmount = 0,
-            PaidAmount = e.Amount,
-            Notes = e.Description ?? string.Empty
-        });
-
-        // 3. جلب المدفوعات من مصاريف الورديات اليومية
-        var dailyExpenses = await _context.DailyExpenseItems
-            .Include(e => e.DailyJournal)
-            .Where(e => !e.IsDeleted && e.Type == ExpenseType.WorkerWage &&
-                        e.WorkerName != null && e.WorkerName.Trim().ToLower() == trimmedName.ToLower())
-            .ToListAsync();
-
-        var dailyExpenseEntries = dailyExpenses.Select(e => new WorkerLedgerEntry
-        {
-            Id = e.Id,
-            Date = e.DailyJournal?.JournalDate ?? e.CreatedAt,
-            Source = "وردية يومية",
-            Description = $"صرف نقدية من الصندوق - وردية {(e.DailyJournal?.ShiftType == ShiftType.FirstShift ? "صباحية" : e.DailyJournal?.ShiftType == ShiftType.SecondShift ? "مسائية" : "يوم كامل")}",
-            AccruedAmount = 0,
-            PaidAmount = e.Amount,
-            Notes = e.Description ?? e.Notes ?? string.Empty
-        });
-
-        // دمج وترتيب
-        var allEntries = attendanceEntries
-            .Concat(genExpenseEntries)
-            .Concat(dailyExpenseEntries)
-            .OrderBy(e => e.Date)
-            .ThenBy(e => e.Id)
-            .ToList();
-
-        // حساب الرصيد المتراكم
-        decimal runningBalance = 0;
-        foreach (var entry in allEntries)
-        {
-            runningBalance += entry.AccruedAmount - entry.PaidAmount;
-            entry.BalanceAfter = runningBalance;
-        }
-
-        return allEntries;
-    }
-
-    public async Task RecordAttendanceAsync(WorkerAttendance attendance)
-    {
-        if (attendance == null) throw new ArgumentNullException(nameof(attendance));
-        if (string.IsNullOrWhiteSpace(attendance.WorkerName)) throw new Exception("يجب تحديد اسم العامل.");
-        if (attendance.AccruedWage <= 0) throw new Exception("يجب تحديد أجر مستحق أكبر من الصفر.");
-
-        attendance.WorkerName = attendance.WorkerName.Trim();
-        attendance.CreatedAt = DateTime.UtcNow;
-        _context.WorkerAttendances.Add(attendance);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task DeleteAttendanceAsync(int attendanceId)
-    {
-        var attendance = await _context.WorkerAttendances.FindAsync(attendanceId);
-        if (attendance != null)
-        {
-            attendance.IsDeleted = true;
-            attendance.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-        }
     }
 }

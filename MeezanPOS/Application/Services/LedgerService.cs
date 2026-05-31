@@ -15,12 +15,16 @@ public class LedgerService : ILedgerService
     private readonly AppDbContext _context;
     private readonly IBankService _bankService;
     private readonly IOwnerDebtService _ownerDebtService;
+    private readonly ICashLedgerService _cashLedgerService;
+    private readonly ISessionService _session;
 
-    public LedgerService(AppDbContext context)
+    public LedgerService(AppDbContext context, ISessionService session)
     {
         _context = context;
-        _bankService = new BankService(_context);
-        _ownerDebtService = new OwnerDebtService(_context, _bankService);
+        _bankService = new BankService(context, session);
+        _ownerDebtService = new OwnerDebtService(context, session);
+        _cashLedgerService = new CashLedgerService(context, session);
+        _session = session;
     }
 
 
@@ -188,8 +192,7 @@ public class LedgerService : ILedgerService
 
                     ledgerTx.SourceId = expense.Id;
 
-                    var cashLedgerService = new CashLedgerService(_context);
-                    await cashLedgerService.RecordMovementAsync(
+                    await _cashLedgerService.RecordMovementAsync(
                         CashMovementType.CashOut,
                         amount,
                         "GeneralExpense",
@@ -249,7 +252,7 @@ public class LedgerService : ILedgerService
             await RebuildSupplierLedgerInternalAsync(supplierId);
 
             var auditService = new AuditService(_context);
-            await auditService.LogAsync("Admin", "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
+            await auditService.LogAsync(_session.CurrentUserId, "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
 
             await transaction.CommitAsync();
         }
@@ -404,11 +407,10 @@ public class LedgerService : ILedgerService
             // عكس الحركة النقدية القديمة للمصروف إن وجدت
             if (oldExpense != null)
             {
-                var cashLedgerService = new CashLedgerService(_context);
                 var oldCashMovement = await _context.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == oldExpense.Id && !m.IsReversed);
                 if (oldCashMovement != null)
                 {
-                    await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل دفعة المورد");
+                    await _cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل دفعة المورد");
                 }
             }
 
@@ -563,8 +565,7 @@ public class LedgerService : ILedgerService
                         oldExpense.Description = expenseNotes;
                         oldExpense.UpdatedAt = DateTime.UtcNow;
 
-                        var cashLedgerService = new CashLedgerService(_context);
-                        await cashLedgerService.RecordMovementAsync(
+                        await _cashLedgerService.RecordMovementAsync(
                             CashMovementType.CashOut,
                             amount,
                             "GeneralExpense",
@@ -590,8 +591,7 @@ public class LedgerService : ILedgerService
                         await _context.SaveChangesAsync();
                         ledgerTx.SourceId = expense.Id;
 
-                        var cashLedgerService = new CashLedgerService(_context);
-                        await cashLedgerService.RecordMovementAsync(
+                        await _cashLedgerService.RecordMovementAsync(
                             CashMovementType.CashOut,
                             amount,
                             "GeneralExpense",

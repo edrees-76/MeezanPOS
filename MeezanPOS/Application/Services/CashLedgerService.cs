@@ -13,11 +13,13 @@ namespace MeezanPOS.Application.Services;
 public class CashLedgerService : ICashLedgerService
 {
     private readonly AppDbContext _context;
+    private readonly ISessionService _session;
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    public CashLedgerService(AppDbContext context)
+    public CashLedgerService(AppDbContext context, ISessionService session)
     {
         _context = context;
+        _session = session;
     }
 
     /// <summary>
@@ -225,8 +227,7 @@ public class CashLedgerService : ICashLedgerService
             }
 
             // إضافة سجل التدقيق مباشرة قبل الحفظ لتجنب SaveChangesAsync مزدوج
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == "Admin");
-            int userId = user?.Id ?? 1;
+            int userId = _session.CurrentUser?.Id ?? 1;
             _context.AuditLogs.Add(new AuditLog
             {
                 UserId = userId,
