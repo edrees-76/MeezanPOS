@@ -1,1319 +1,2635 @@
-﻿<UserControl x:Class="MeezanPOS.Presentation.Views.SalesView"
-
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-
-             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-
-             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
-
-             mc:Ignorable="d" 
-
-             d:DesignHeight="800" d:DesignWidth="1100"
-
-             FlowDirection="RightToLeft"
-
-             Background="#f8fafc"
-
-             SnapsToDevicePixels="True"
-
-             UseLayoutRounding="True">
-
-
-
-    <UserControl.Resources>
-
-        <ResourceDictionary>
-
-            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-
-            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
-
-            
-
-            <!-- ستايل صندوق التحديد الاحترافي المغلق والكامل -->
-
-            <Style x:Key="PremiumCheckBoxStyle" TargetType="CheckBox">
-
-                <Setter Property="Background" Value="White"/>
-
-                <Setter Property="BorderBrush" Value="#cbd5e1"/>
-
-                <Setter Property="BorderThickness" Value="1.5"/>
-
-                <Setter Property="Width" Value="20"/>
-
-                <Setter Property="Height" Value="20"/>
-
-                <Setter Property="Cursor" Value="Hand"/>
-
-                <Setter Property="Template">
-
-                    <Setter.Value>
-
-                        <ControlTemplate TargetType="CheckBox">
-
-                            <Grid x:Name="RootGrid" Background="Transparent" SnapsToDevicePixels="True" UseLayoutRounding="True">
-
-                                <Border x:Name="BoxBorder" 
-
-                                        Width="18" Height="18"
-
-                                        Margin="1"
-
-                                        Background="{TemplateBinding Background}" 
-
-                                        BorderBrush="{TemplateBinding BorderBrush}" 
-
-                                        BorderThickness="{TemplateBinding BorderThickness}" 
-
-                                        CornerRadius="4"
-
-                                        SnapsToDevicePixels="True"
-
-                                        UseLayoutRounding="True"
-
-                                        HorizontalAlignment="Center"
-
-                                        VerticalAlignment="Center">
-
-                                    <materialDesign:PackIcon x:Name="CheckIcon" 
-
-                                                             Kind="Check" 
-
-                                                             Width="12" Height="12" 
-
-                                                             Foreground="White" 
-
-                                                             HorizontalAlignment="Center" 
-
-                                                             VerticalAlignment="Center" 
-
-                                                             Visibility="Collapsed"/>
-
-                                </Border>
-
-                            </Grid>
-
-                            <ControlTemplate.Triggers>
-
-                                <Trigger Property="IsChecked" Value="True">
-
-                                    <Setter TargetName="BoxBorder" Property="Background" Value="#3b82f6"/>
-
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
-
-                                    <Setter TargetName="CheckIcon" Property="Visibility" Value="Visible"/>
-
-                                </Trigger>
-
-                                <Trigger Property="IsMouseOver" Value="True">
-
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
-
-                                </Trigger>
-
-                            </ControlTemplate.Triggers>
-
-                        </ControlTemplate>
-
-                    </Setter.Value>
-
-                </Setter>
-
-            </Style>
-
-            
-
-            <!-- Tab Button Style -->
-
-            <Style x:Key="SleekTabButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
-
-                <Setter Property="Height" Value="40"/>
-
-                <Setter Property="Padding" Value="24,0"/>
-
-                <Setter Property="FontSize" Value="14"/>
-
-                <Setter Property="FontWeight" Value="SemiBold"/>
-
-                <Setter Property="Foreground" Value="#64748b"/>
-
-                <Setter Property="Background" Value="Transparent"/>
-
-                <Setter Property="BorderThickness" Value="0"/>
-
-                <Setter Property="Cursor" Value="Hand"/>
-
-                <Style.Resources>
-
-                    <!-- Overriding material design borders -->
-
-                    <Style TargetType="Border">
-
-                        <Setter Property="CornerRadius" Value="20"/>
-
-                    </Style>
-
-                </Style.Resources>
-
-            </Style>
-
-        </ResourceDictionary>
-
-    </UserControl.Resources>
-
-
-
-    <Grid Margin="24">
-
-        <Grid.RowDefinitions>
-
-            <!-- 0: Sleek Top Header / Navigation Tabs -->
-
-            <RowDefinition Height="Auto"/>
-
-            <RowDefinition Height="20"/>
-
-            <!-- 1: Summary Stats Cards (Sales, Cash, Banking) -->
-
-            <RowDefinition Height="Auto"/>
-
-            <RowDefinition Height="20"/>
-
-            <!-- 2: Primary Content Area (Switchable based on Tab) -->
-
-            <RowDefinition Height="*"/>
-
-        </Grid.RowDefinitions>
-
-
-
-        <!-- ==================== ROW 0: SLEEK TOP HEADER & TABS ==================== -->
-
-        <Grid Grid.Row="0">
-
-            <Grid.ColumnDefinitions>
-
-                <ColumnDefinition Width="*"/>
-
-                <ColumnDefinition Width="Auto"/>
-
-            </Grid.ColumnDefinitions>
-
-
-
-            <!-- Screen Title -->
-
-            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-
-                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="#0f172a"/>
-
-                <TextBlock Text="متابعة الحركات المالية، المصاريف اليومية، وإقفال الورديات والشهور" FontSize="13" Foreground="#64748b" Margin="0,4,0,0"/>
-
-            </StackPanel>
-
-
-
-            <!-- Gorgeous Segmented Control for Navigation -->
-
-            <Border Grid.Column="1" Background="#e2e8f0" CornerRadius="22" Padding="4" VerticalAlignment="Center">
-
-                <StackPanel Orientation="Horizontal">
-
-                    
-
-                    <!-- Tab 0: Active Work -->
-
-                    <Button Command="{Binding SetTabCommand}" CommandParameter="0">
-
-                        <Button.Style>
-
-                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
-
-                                <Style.Triggers>
-
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="0">
-
-                                        <Setter Property="Background" Value="White"/>
-
-                                        <Setter Property="Foreground" Value="#0f172a"/>
-
-                                        <Setter Property="Effect">
-
-                                            <Setter.Value>
-
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
-
-                                            </Setter.Value>
-
-                                        </Setter>
-
-                                    </DataTrigger>
-
-                                </Style.Triggers>
-
-                            </Style>
-
-                        </Button.Style>
-
-                        <Button.Resources>
-
-                            <Style TargetType="Border">
-
-                                <Setter Property="CornerRadius" Value="18"/>
-
-                            </Style>
-
-                        </Button.Resources>
-
-                        <StackPanel Orientation="Horizontal">
-
-                            <materialDesign:PackIcon Kind="CashRegister" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                            <TextBlock Text="العمل الحالي (الورديات المفتوحة)" VerticalAlignment="Center"/>
-
-                        </StackPanel>
-
-                    </Button>
-
-
-
-                    <!-- Tab 1: Archive -->
-
-                    <Button Command="{Binding SetTabCommand}" CommandParameter="1">
-
-                        <Button.Style>
-
-                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
-
-                                <Style.Triggers>
-
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="1">
-
-                                        <Setter Property="Background" Value="White"/>
-
-                                        <Setter Property="Foreground" Value="#0f172a"/>
-
-                                        <Setter Property="Effect">
-
-                                            <Setter.Value>
-
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
-
-                                            </Setter.Value>
-
-                                        </Setter>
-
-                                    </DataTrigger>
-
-                                </Style.Triggers>
-
-                            </Style>
-
-                        </Button.Style>
-
-                        <Button.Resources>
-
-                            <Style TargetType="Border">
-
-                                <Setter Property="CornerRadius" Value="18"/>
-
-                            </Style>
-
-                        </Button.Resources>
-
-                        <StackPanel Orientation="Horizontal">
-
-                            <materialDesign:PackIcon Kind="ArchiveOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                            <TextBlock Text="أرشيف الأشهر المرحّلة" VerticalAlignment="Center"/>
-
-                        </StackPanel>
-
-                    </Button>
-
-
-
-                    <!-- Tab 2: Current Cash -->
-
-                    <Button Command="{Binding SetTabCommand}" CommandParameter="2">
-
-                        <Button.Style>
-
-                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
-
-                                <Style.Triggers>
-
-                                    <DataTrigger Binding="{Binding SelectedTab}" Value="2">
-
-                                        <Setter Property="Background" Value="White"/>
-
-                                        <Setter Property="Foreground" Value="#0f172a"/>
-
-                                        <Setter Property="Effect">
-
-                                            <Setter.Value>
-
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
-
-                                            </Setter.Value>
-
-                                        </Setter>
-
-                                    </DataTrigger>
-
-                                </Style.Triggers>
-
-                            </Style>
-
-                        </Button.Style>
-
-                        <Button.Resources>
-
-                            <Style TargetType="Border">
-
-                                <Setter Property="CornerRadius" Value="18"/>
-
-                            </Style>
-
-                        </Button.Resources>
-
-                        <StackPanel Orientation="Horizontal">
-
-                            <materialDesign:PackIcon Kind="CashMultiple" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                            <TextBlock Text="الكاش الحالي" VerticalAlignment="Center"/>
-
-                        </StackPanel>
-
-                    </Button>
-
-                </StackPanel>
-
-            </Border>
-
-        </Grid>
-
-
-
-        <!-- ==================== ROW 2: SUMMARY CARDS ==================== -->
-
-        <!-- These cards reflect totals for the active tab list -->
-
-        <Grid Grid.Row="2">
-
-            <Grid.Style>
-
-                <Style TargetType="Grid">
-
-                    <Setter Property="Visibility" Value="Collapsed"/>
-
-                    <Style.Triggers>
-
-                        <!-- Only visible when on Active Work (Tab 0) OR on Archive (Tab 1) Day Level -->
-
-                        <DataTrigger Binding="{Binding SelectedTab}" Value="0">
-
-                            <Setter Property="Visibility" Value="Visible"/>
-
-                        </DataTrigger>
-
-                        <MultiDataTrigger>
-
-                            <MultiDataTrigger.Conditions>
-
-                                <Condition Binding="{Binding SelectedTab}" Value="1"/>
-
-                                <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
-
-                            </MultiDataTrigger.Conditions>
-
-                            <Setter Property="Visibility" Value="Visible"/>
-
-                        </MultiDataTrigger>
-
-                    </Style.Triggers>
-
-                </Style>
-
-            </Grid.Style>
-
-            <Grid.ColumnDefinitions>
-
-                <ColumnDefinition Width="*"/>
-
-                <ColumnDefinition Width="16"/>
-
-                <ColumnDefinition Width="*"/>
-
-                <ColumnDefinition Width="16"/>
-
-                <ColumnDefinition Width="*"/>
-
-                <ColumnDefinition Width="16"/>
-
-                <ColumnDefinition Width="*"/>
-
-            </Grid.ColumnDefinitions>
-
-
-
-            <!-- Total Sales -->
-
-            <Border Grid.Column="0" Background="#f8fafc" CornerRadius="16" Padding="20" BorderBrush="#e2e8f0" BorderThickness="1">
-
-                <StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-
-                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="#3b82f6" Margin="0,0,8,0"/>
-
-                        <TextBlock Text="إجمالي المبيعات بالفترة" FontSize="15" Foreground="#64748b" VerticalAlignment="Center" FontWeight="Medium"/>
-
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#0f172a"/>
-
-                </StackPanel>
-
-            </Border>
-
-
-
-            <!-- Total Cash Sales -->
-
-            <Border Grid.Column="2" Background="#f0fdf4" CornerRadius="16" Padding="20" BorderBrush="#dcfce7" BorderThickness="1">
-
-                <StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-
-                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#10b981" Margin="0,0,8,0"/>
-
-                        <TextBlock Text="إجمالي المبيعات النقدية" FontSize="15" Foreground="#15803d" VerticalAlignment="Center" FontWeight="Medium"/>
-
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding TotalCashSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#14532d"/>
-
-                </StackPanel>
-
-            </Border>
-
-
-
-            <!-- Total Banking Sales -->
-
-            <Border Grid.Column="4" Background="#faf5ff" CornerRadius="16" Padding="20" BorderBrush="#f3e8ff" BorderThickness="1">
-
-                <StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-
-                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="#a855f7" Margin="0,0,8,0"/>
-
-                        <TextBlock Text="إجمالي الخدمات المصرفية" FontSize="15" Foreground="#7e22ce" VerticalAlignment="Center" FontWeight="Medium"/>
-
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#581c87"/>
-
-                </StackPanel>
-
-            </Border>
-
-
-
-            <!-- Total Differences Card -->
-
-            <Border Grid.Column="6" CornerRadius="16" Padding="20" BorderThickness="1">
-
-                <Border.Style>
-
-                    <Style TargetType="Border">
-
-                        <!-- Default (Matched: Green) -->
-
-                        <Setter Property="Background" Value="#f0fdf4"/>
-
-                        <Setter Property="BorderBrush" Value="#dcfce7"/>
-
-                        <Style.Triggers>
-
-                            <!-- Deficit: Red -->
-
-                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
-
-                                <Setter Property="Background" Value="#fef2f2"/>
-
-                                <Setter Property="BorderBrush" Value="#fee2e2"/>
-
-                            </DataTrigger>
-
-                            <!-- Surplus: Blue -->
-
-                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
-
-                                <Setter Property="Background" Value="#eff6ff"/>
-
-                                <Setter Property="BorderBrush" Value="#dbeafe"/>
-
-                            </DataTrigger>
-
-                        </Style.Triggers>
-
-                    </Style>
-
-                </Border.Style>
-
-                <StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-
-                        <materialDesign:PackIcon Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center">
-
-                            <materialDesign:PackIcon.Style>
-
-                                <Style TargetType="materialDesign:PackIcon">
-
-                                    <!-- Default: Green -->
-
-                                    <Setter Property="Kind" Value="CheckCircleOutline"/>
-
-                                    <Setter Property="Foreground" Value="#10b981"/>
-
-                                    <Style.Triggers>
-
-                                        <!-- Deficit: Red -->
-
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
-
-                                            <Setter Property="Kind" Value="AlertCircleOutline"/>
-
-                                            <Setter Property="Foreground" Value="#ef4444"/>
-
-                                        </DataTrigger>
-
-                                        <!-- Surplus: Blue -->
-
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
-
-                                            <Setter Property="Kind" Value="TrendingUp"/>
-
-                                            <Setter Property="Foreground" Value="#3b82f6"/>
-
-                                        </DataTrigger>
-
-                                    </Style.Triggers>
-
-                                </Style>
-
-                            </materialDesign:PackIcon.Style>
-
-                        </materialDesign:PackIcon>
-
-                        <TextBlock Text="إجمالي الفروقات بالفترة" FontSize="15" VerticalAlignment="Center" FontWeight="Medium">
-
-                            <TextBlock.Style>
-
-                                <Style TargetType="TextBlock">
-
-                                    <!-- Default: Green -->
-
-                                    <Setter Property="Foreground" Value="#15803d"/>
-
-                                    <Style.Triggers>
-
-                                        <!-- Deficit: Red -->
-
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
-
-                                            <Setter Property="Foreground" Value="#b91c1c"/>
-
-                                        </DataTrigger>
-
-                                        <!-- Surplus: Blue -->
-
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
-
-                                            <Setter Property="Foreground" Value="#1d4ed8"/>
-
-                                        </DataTrigger>
-
-                                    </Style.Triggers>
-
-                                </Style>
-
-                            </TextBlock.Style>
-
-                        </TextBlock>
-
-                    </StackPanel>
-
-                    <TextBlock Text="{Binding TotalDifferenceText}" FontSize="26" FontWeight="Bold">
-
-                        <TextBlock.Style>
-
-                            <Style TargetType="TextBlock">
-
-                                <!-- Default: Green -->
-
-                                <Setter Property="Foreground" Value="#14532d"/>
-
-                                <Style.Triggers>
-
-                                    <!-- Deficit: Red -->
-
-                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
-
-                                        <Setter Property="Foreground" Value="#7f1d1d"/>
-
-                                    </DataTrigger>
-
-                                    <!-- Surplus: Blue -->
-
-                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
-
-                                        <Setter Property="Foreground" Value="#1e3a8a"/>
-
-                                    </DataTrigger>
-
-                                </Style.Triggers>
-
-                            </Style>
-
-                        </TextBlock.Style>
-
-                    </TextBlock>
-
-                </StackPanel>
-
-            </Border>
-
-        </Grid>
-
-
-
-        <!-- ==================== ROW 4: PRIMARY CONTENT AREA ==================== -->
-
-        <Grid Grid.Row="4">
-
-            
-
-            <!-- 🟢 VIEW A: ACTIVE WORK (TAB 0) -->
-
-            <Grid>
-
-                <Grid.Style>
-
-                    <Style TargetType="Grid">
-
-                        <Setter Property="Visibility" Value="Collapsed"/>
-
-                        <Style.Triggers>
-
-                            <DataTrigger Binding="{Binding SelectedTab}" Value="0">
-
-                                <Setter Property="Visibility" Value="Visible"/>
-
-                            </DataTrigger>
-
-                        </Style.Triggers>
-
-                    </Style>
-
-                </Grid.Style>
-
-
-
-                <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
-
-                    <Grid>
-
-                        <Grid.RowDefinitions>
-
-                            <RowDefinition Height="Auto"/>
-
-                            <RowDefinition Height="*"/>
-
-                            <RowDefinition Height="Auto"/>
-
-                        </Grid.RowDefinitions>
-
-
-
-                        <!-- Header & Filters -->
-
-                        <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
-
-                            <Grid>
-
-                                <Grid.RowDefinitions>
-
-                                    <RowDefinition Height="Auto"/>
-
-                                    <RowDefinition Height="12"/>
-
-                                    <RowDefinition Height="Auto"/>
-
-                                </Grid.RowDefinitions>
-
-                                
-
-                                <Grid Grid.Row="0">
-
-                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                    </Grid.ColumnDefinitions>
-
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
-
-                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="#3b82f6" VerticalAlignment="Center" Margin="0,0,8,0"/>
-
-                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
-
-                                    </StackPanel>
-
-                                    <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث البيانات" Command="{Binding LoadDataCommand}" Height="32"/>
-
-                                </Grid>
-
-
-
-                                <!-- Filters -->
-
-                                <Grid Grid.Row="2">
-
-                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="12"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="6"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="12"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="12"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="12"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                    </Grid.ColumnDefinitions>
-
-
-
-                                    <ComboBox Grid.Column="0" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" materialDesign:HintAssist.Hint="اختر اسم الكاشير..." Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
-
-                                    
-
-                                    <DatePicker Grid.Column="2" SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
-
-                                    <DatePicker Grid.Column="4" SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
-
-                                    
-
-                                    <ComboBox Grid.Column="6" ItemsSource="{Binding ShiftTypes}" SelectedItem="{Binding FilterShiftType}" materialDesign:HintAssist.Hint="نوع الوردية" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
-
-                                    
-
-                                    <ComboBox Grid.Column="8" ItemsSource="{Binding DifferenceFilters}" SelectedItem="{Binding SelectedDifferenceFilter}" materialDesign:HintAssist.Hint="فلتر الفروقات" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
-
-                                    
-
-                                    <StackPanel Grid.Column="10" Orientation="Horizontal">
-
-                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="45" Width="100" Margin="0,0,8,0"/>
-
-                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
-
-                                            <materialDesign:PackIcon Kind="FilterRemove" Width="20" Height="20"/>
-
-                                        </Button>
-
-                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="#6366f1" BorderBrush="#6366f1" Height="45" Cursor="Hand">
-
-                                            <StackPanel Orientation="Horizontal">
-
-                                                <materialDesign:PackIcon Kind="CalendarClock" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
-
-                                                <TextBlock Text="ترحيل وقفل الفترة" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                            </StackPanel>
-
-                                        </Button>
-
-                                    </StackPanel>
-
-                                </Grid>
-
-                            </Grid>
-
-                        </Border>
-
-
-
-                        <!-- Data Grid & Floating Action Bar Container -->
-
-                        <Grid Grid.Row="1">
-
-                            <!-- Data Grid -->
-
-                            <DataGrid Margin="0" 
-
-                                      ItemsSource="{Binding Journals}" 
-
-                                      SelectedItem="{Binding SelectedJournal}"
-
-                                      AutoGenerateColumns="False"
-
-                                      CanUserAddRows="False"
-
-                                      CanUserDeleteRows="False"
-
-                                      CanUserResizeColumns="False"
-
-                                      CanUserReorderColumns="False"
-
-                                      CanUserSortColumns="False"
-
-                                      IsReadOnly="True"
-
-                                      HeadersVisibility="Column"
-
-                                      Background="Transparent"
-
-                                      BorderThickness="0"
-
-                                      RowHeight="50"
-
-                                      GridLinesVisibility="Horizontal"
-
-                                      HorizontalScrollBarVisibility="Auto"
-
-                                      HorizontalGridLinesBrush="#f1f5f9">
-
-
-
-                                <DataGrid.Columns>
-
-                                    <!-- Checkbox Selection Column -->
-
-                                    <DataGridTemplateColumn Width="65">
-
-                                        <DataGridTemplateColumn.HeaderTemplate>
-
-                                            <DataTemplate>
-
-                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-
-                                                    <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
-
-                                                              IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
-
-                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                </Grid>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.HeaderTemplate>
-
-                                        <DataGridTemplateColumn.CellTemplate>
-
-                                            <DataTemplate>
-
-                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-
-                                                    <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
-
-                                                              IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
-
-                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                </Grid>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.CellTemplate>
-
-                                    </DataGridTemplateColumn>
-
-
-
-                                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Journal.JournalDate, StringFormat=\{0:dd-MM-yyyy\}}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="الوردية" Binding="{Binding Journal.ShiftName}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding Journal.EmployeeName}" Width="*" MinWidth="120"/>
-
-                                    <DataGridTextColumn Header="إجمالي المبيعات" Binding="{Binding Journal.TotalSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="100"/>
-
-                                    <DataGridTextColumn Header="مبيعات نقدية" Binding="{Binding Journal.CashSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
-
-                                    <DataGridTextColumn Header="خدمات مصرفية" Binding="{Binding Journal.BankingTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
-
-                                    <DataGridTextColumn Header="المرتجعات" Binding="{Binding Journal.ReturnsTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
-
-                                    <DataGridTextColumn Header="المصاريف" Binding="{Binding Journal.TotalExpenses, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
-
-                                    
-
-                                    <DataGridTemplateColumn Header="الفروقات" Width="Auto" MinWidth="90">
-
-                                        <DataGridTemplateColumn.CellTemplate>
-
-                                            <DataTemplate>
-
-                                                <TextBlock Text="{Binding Journal.DifferenceText}" Foreground="{Binding Journal.DifferenceColor}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.CellTemplate>
-
-                                    </DataGridTemplateColumn>
-
-
-
-                                    <DataGridTemplateColumn Header="إجراءات" Width="140">
-
-                                        <DataGridTemplateColumn.CellTemplate>
-
-                                            <DataTemplate>
-
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
-                                                    <!-- View Details -->
-
-                                                    <Button Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-
-                                                            CommandParameter="{Binding}"
-
-                                                            ToolTip="عرض التفاصيل"
-
-                                                            Style="{StaticResource MaterialDesignToolButton}" 
-
-                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
-
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
-
-                                                    </Button>
-
-                                                    <!-- Edit -->
-
-                                                    <Button Command="{Binding DataContext.EditJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-
-                                                            CommandParameter="{Binding}"
-
-                                                            ToolTip="تعديل الوردية"
-
-                                                            Style="{StaticResource MaterialDesignToolButton}" 
-
-                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
-
-                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
-
-                                                    </Button>
-
-                                                    <!-- Post / Lock -->
-
-                                                    <Button Command="{Binding DataContext.PostJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-
-                                                            CommandParameter="{Binding}"
-
-                                                            ToolTip="ترحيل وإقفال الوردية مالياً"
-
-                                                            Style="{StaticResource MaterialDesignToolButton}" 
-
-                                                            Height="32" Width="32" Padding="0" Cursor="Hand">
-
-                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="#ef4444"/>
-
-                                                    </Button>
-
-                                                </StackPanel>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.CellTemplate>
-
-                                    </DataGridTemplateColumn>
-
-                                </DataGrid.Columns>
-
-                            </DataGrid>
-
-
-
-                            <!-- Floating Glassmorphic Action Bar -->
-
-                            <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
-
-                                    Margin="24,0,24,20" Padding="20,12"
-
-                                    Background="#fcfdfd" BorderBrush="#cbd5e1" BorderThickness="1.5"
-
-                                    CornerRadius="24" Height="Auto" Width="Auto" MinWidth="750"
-
-                                    Visibility="{Binding HasSelectedJournals, Converter={StaticResource BooleanToVisibilityConverter}}">
-
-                                <Border.Effect>
-
-                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#0f172a" Opacity="0.18"/>
-
-                                </Border.Effect>
-
-                                
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                        <ColumnDefinition Width="24"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                        <ColumnDefinition Width="24"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                    </Grid.ColumnDefinitions>
-
-                                    
-
-                                    <!-- Selected Count -->
-
-                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                        <Border Background="#eff6ff" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
-
-                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3b82f6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                        </Border>
-
-                                        <StackPanel VerticalAlignment="Center">
-
-                                            <TextBlock Text="الورديات المحددة" FontSize="11" Foreground="#64748b" FontWeight="Medium"/>
-
-                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="#0f172a"/>
-
-                                        </StackPanel>
-
-                                    </StackPanel>
-
-                                    
-
-                                    <!-- Sales Aggregate -->
-
-                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                        <Border Background="#f0fdf4" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
-
-                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#10b981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                        </Border>
-
-                                        <StackPanel VerticalAlignment="Center">
-
-                                            <TextBlock Text="إجمالي مبيعات التحديد" FontSize="11" Foreground="#15803d" FontWeight="Medium"/>
-
-                                            <TextBlock Text="{Binding RunningSelectedSalesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#14532d"/>
-
-                                        </StackPanel>
-
-                                    </StackPanel>
-
-                                    
-
-                                    <!-- Expenses Aggregate -->
-
-                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                        <Border Background="#fdf2f8" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
-
-                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#db2777" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                        </Border>
-
-                                        <StackPanel VerticalAlignment="Center">
-
-                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="#be185d" FontWeight="Medium"/>
-
-                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#831843"/>
-
-                                        </StackPanel>
-
-                                    </StackPanel>
-
-                                    
-
-                                    <!-- Post Selected Button -->
-
-                                    <Button Grid.Column="6" 
-
-                                            Command="{Binding PostSelectedJournalsCommand}"
-
-                                            Style="{StaticResource MaterialDesignRaisedButton}"
-
-                                            Background="#0f172a" BorderBrush="#0f172a" Foreground="White"
-
-                                            Height="42" Padding="20,0" VerticalAlignment="Center" Cursor="Hand">
-
-                                        <Button.Resources>
-
-                                            <Style TargetType="Border">
-
-                                                <Setter Property="CornerRadius" Value="21"/>
-
-                                            </Style>
-
-                                        </Button.Resources>
-
-                                        <StackPanel Orientation="Horizontal">
-
-                                            <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                            <TextBlock Text="ترحيل وإقفال الورديات المحددة مالياً" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                        </StackPanel>
-
-                                    </Button>
-
-                                </Grid>
-
-                            </Border>
-
-                        </Grid>
-
-
-
-                        <!-- Loading overlay -->
-
-                        <ProgressBar Grid.Row="1" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
-
-
-
-                        <!-- Footer Actions -->
-
-                        <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
-
-                            <Grid>
-
-                                <Button Command="{Binding ExportPdfCommand}" 
-
-                                        HorizontalAlignment="Right"
-
-                                        Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                        Background="White"
-
-                                        BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
-
-                                    <StackPanel Orientation="Horizontal">
-
-                                        <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                        <TextBlock Text="تصدير السجل المفتوح كملف PDF" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                    </StackPanel>
-
-                                </Button>
-
-                            </Grid>
-
-                        </Border>
-
-                    </Grid>
-
-                </Border>
-
-            </Grid>
-
-
-
-            <!-- 🗄️ VIEW B: ARCHIVE (TAB 1) -->
-
-            <Grid>
-
-                <Grid.Style>
-
-                    <Style TargetType="Grid">
-
-                        <Setter Property="Visibility" Value="Collapsed"/>
-
-                        <Style.Triggers>
-
-                            <DataTrigger Binding="{Binding SelectedTab}" Value="1">
-
-                                <Setter Property="Visibility" Value="Visible"/>
-
-                            </DataTrigger>
-
-                        </Style.Triggers>
-
-                    </Style>
-
-                </Grid.Style>
-
-
-
-                <!-- 🗂️ ARCHIVE LEVEL 0: MONTH CARDS -->
-
-                <Grid>
-
-                    <Grid.Style>
-
-                        <Style TargetType="Grid">
-
-                            <Setter Property="Visibility" Value="Collapsed"/>
-
-                            <Style.Triggers>
-
-                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="0">
-
-                                    <Setter Property="Visibility" Value="Visible"/>
-
-                                </DataTrigger>
-
-                            </Style.Triggers>
-
-                        </Style>
-
-                    </Grid.Style>
-
-
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-
-                        <StackPanel>
-
+﻿<UserControl x:Class="MeezanPOS.Presentation.Views.SalesView"
+
+
+
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+
+
+
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
+
+
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+
+
+
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+
+
+
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+
+
+
+             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
+
+
+
+             mc:Ignorable="d" 
+
+
+
+             d:DesignHeight="800" d:DesignWidth="1100"
+
+
+
+             FlowDirection="RightToLeft"
+
+
+
+             Background="#f8fafc"
+
+
+
+             SnapsToDevicePixels="True"
+
+
+
+             UseLayoutRounding="True">
+
+
+
+
+
+
+
+    <UserControl.Resources>
+
+
+
+        <ResourceDictionary>
+
+
+
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+
+
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+
+
+
+            
+
+
+
+            <!-- ستايل صندوق التحديد الاحترافي المغلق والكامل -->
+
+
+
+            <Style x:Key="PremiumCheckBoxStyle" TargetType="CheckBox">
+
+
+
+                <Setter Property="Background" Value="White"/>
+
+
+
+                <Setter Property="BorderBrush" Value="#cbd5e1"/>
+
+
+
+                <Setter Property="BorderThickness" Value="1.5"/>
+
+
+
+                <Setter Property="Width" Value="20"/>
+
+
+
+                <Setter Property="Height" Value="20"/>
+
+
+
+                <Setter Property="Cursor" Value="Hand"/>
+
+
+
+                <Setter Property="Template">
+
+
+
+                    <Setter.Value>
+
+
+
+                        <ControlTemplate TargetType="CheckBox">
+
+
+
+                            <Grid x:Name="RootGrid" Background="Transparent" SnapsToDevicePixels="True" UseLayoutRounding="True">
+
+
+
+                                <Border x:Name="BoxBorder" 
+
+
+
+                                        Width="18" Height="18"
+
+
+
+                                        Margin="1"
+
+
+
+                                        Background="{TemplateBinding Background}" 
+
+
+
+                                        BorderBrush="{TemplateBinding BorderBrush}" 
+
+
+
+                                        BorderThickness="{TemplateBinding BorderThickness}" 
+
+
+
+                                        CornerRadius="4"
+
+
+
+                                        SnapsToDevicePixels="True"
+
+
+
+                                        UseLayoutRounding="True"
+
+
+
+                                        HorizontalAlignment="Center"
+
+
+
+                                        VerticalAlignment="Center">
+
+
+
+                                    <materialDesign:PackIcon x:Name="CheckIcon" 
+
+
+
+                                                             Kind="Check" 
+
+
+
+                                                             Width="12" Height="12" 
+
+
+
+                                                             Foreground="White" 
+
+
+
+                                                             HorizontalAlignment="Center" 
+
+
+
+                                                             VerticalAlignment="Center" 
+
+
+
+                                                             Visibility="Collapsed"/>
+
+
+
+                                </Border>
+
+
+
+                            </Grid>
+
+
+
+                            <ControlTemplate.Triggers>
+
+
+
+                                <Trigger Property="IsChecked" Value="True">
+
+
+
+                                    <Setter TargetName="BoxBorder" Property="Background" Value="#3b82f6"/>
+
+
+
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+
+
+
+                                    <Setter TargetName="CheckIcon" Property="Visibility" Value="Visible"/>
+
+
+
+                                </Trigger>
+
+
+
+                                <Trigger Property="IsMouseOver" Value="True">
+
+
+
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+
+
+
+                                </Trigger>
+
+
+
+                            </ControlTemplate.Triggers>
+
+
+
+                        </ControlTemplate>
+
+
+
+                    </Setter.Value>
+
+
+
+                </Setter>
+
+
+
+            </Style>
+
+
+
+            
+
+
+
+            <!-- Tab Button Style -->
+
+
+
+            <Style x:Key="SleekTabButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+
+
+
+                <Setter Property="Height" Value="40"/>
+
+
+
+                <Setter Property="Padding" Value="24,0"/>
+
+
+
+                <Setter Property="FontSize" Value="14"/>
+
+
+
+                <Setter Property="FontWeight" Value="SemiBold"/>
+
+
+
+                <Setter Property="Foreground" Value="#64748b"/>
+
+
+
+                <Setter Property="Background" Value="Transparent"/>
+
+
+
+                <Setter Property="BorderThickness" Value="0"/>
+
+
+
+                <Setter Property="Cursor" Value="Hand"/>
+
+
+
+                <Style.Resources>
+
+
+
+                    <!-- Overriding material design borders -->
+
+
+
+                    <Style TargetType="Border">
+
+
+
+                        <Setter Property="CornerRadius" Value="20"/>
+
+
+
+                    </Style>
+
+
+
+                </Style.Resources>
+
+
+
+            </Style>
+
+
+
+        </ResourceDictionary>
+
+
+
+    </UserControl.Resources>
+
+
+
+
+
+
+
+    <Grid Margin="24">
+
+
+
+        <Grid.RowDefinitions>
+
+
+
+            <!-- 0: Sleek Top Header / Navigation Tabs -->
+
+
+
+            <RowDefinition Height="Auto"/>
+
+
+
+            <RowDefinition Height="20"/>
+
+
+
+            <!-- 1: Summary Stats Cards (Sales, Cash, Banking) -->
+
+
+
+            <RowDefinition Height="Auto"/>
+
+
+
+            <RowDefinition Height="20"/>
+
+
+
+            <!-- 2: Primary Content Area (Switchable based on Tab) -->
+
+
+
+            <RowDefinition Height="*"/>
+
+
+
+        </Grid.RowDefinitions>
+
+
+
+
+
+
+
+        <!-- ==================== ROW 0: SLEEK TOP HEADER & TABS ==================== -->
+
+
+
+        <Grid Grid.Row="0">
+
+
+
+            <Grid.ColumnDefinitions>
+
+
+
+                <ColumnDefinition Width="*"/>
+
+
+
+                <ColumnDefinition Width="Auto"/>
+
+
+
+            </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+            <!-- Screen Title -->
+
+
+
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+
+
+
+                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="#0f172a"/>
+
+
+
+                <TextBlock Text="متابعة الحركات المالية، المصاريف اليومية، وإقفال الورديات والشهور" FontSize="13" Foreground="#64748b" Margin="0,4,0,0"/>
+
+
+
+            </StackPanel>
+
+
+
+
+
+
+
+            <!-- Gorgeous Segmented Control for Navigation -->
+
+
+
+            <Border Grid.Column="1" Background="#e2e8f0" CornerRadius="22" Padding="4" VerticalAlignment="Center">
+
+
+
+                <StackPanel Orientation="Horizontal">
+
+
+
+                    
+
+
+
+                    <!-- Tab 0: Active Work -->
+
+
+
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="0">
+
+
+
+                        <Button.Style>
+
+
+
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+
+
+
+                                <Style.Triggers>
+
+
+
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="0">
+
+
+
+                                        <Setter Property="Background" Value="White"/>
+
+
+
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+
+
+
+                                        <Setter Property="Effect">
+
+
+
+                                            <Setter.Value>
+
+
+
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+
+
+
+                                            </Setter.Value>
+
+
+
+                                        </Setter>
+
+
+
+                                    </DataTrigger>
+
+
+
+                                </Style.Triggers>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Style>
+
+
+
+                        <Button.Resources>
+
+
+
+                            <Style TargetType="Border">
+
+
+
+                                <Setter Property="CornerRadius" Value="18"/>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Resources>
+
+
+
+                        <StackPanel Orientation="Horizontal">
+
+
+
+                            <materialDesign:PackIcon Kind="CashRegister" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                            <TextBlock Text="العمل الحالي (الورديات المفتوحة)" VerticalAlignment="Center"/>
+
+
+
+                        </StackPanel>
+
+
+
+                    </Button>
+
+
+
+
+
+
+
+                    <!-- Tab 1: Archive -->
+
+
+
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="1">
+
+
+
+                        <Button.Style>
+
+
+
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+
+
+
+                                <Style.Triggers>
+
+
+
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="1">
+
+
+
+                                        <Setter Property="Background" Value="White"/>
+
+
+
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+
+
+
+                                        <Setter Property="Effect">
+
+
+
+                                            <Setter.Value>
+
+
+
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+
+
+
+                                            </Setter.Value>
+
+
+
+                                        </Setter>
+
+
+
+                                    </DataTrigger>
+
+
+
+                                </Style.Triggers>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Style>
+
+
+
+                        <Button.Resources>
+
+
+
+                            <Style TargetType="Border">
+
+
+
+                                <Setter Property="CornerRadius" Value="18"/>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Resources>
+
+
+
+                        <StackPanel Orientation="Horizontal">
+
+
+
+                            <materialDesign:PackIcon Kind="ArchiveOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                            <TextBlock Text="أرشيف الأشهر المرحّلة" VerticalAlignment="Center"/>
+
+
+
+                        </StackPanel>
+
+
+
+                    </Button>
+
+
+
+
+
+
+
+                    <!-- Tab 2: Current Cash -->
+
+
+
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="2">
+
+
+
+                        <Button.Style>
+
+
+
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+
+
+
+                                <Style.Triggers>
+
+
+
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="2">
+
+
+
+                                        <Setter Property="Background" Value="White"/>
+
+
+
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+
+
+
+                                        <Setter Property="Effect">
+
+
+
+                                            <Setter.Value>
+
+
+
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+
+
+
+                                            </Setter.Value>
+
+
+
+                                        </Setter>
+
+
+
+                                    </DataTrigger>
+
+
+
+                                </Style.Triggers>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Style>
+
+
+
+                        <Button.Resources>
+
+
+
+                            <Style TargetType="Border">
+
+
+
+                                <Setter Property="CornerRadius" Value="18"/>
+
+
+
+                            </Style>
+
+
+
+                        </Button.Resources>
+
+
+
+                        <StackPanel Orientation="Horizontal">
+
+
+
+                            <materialDesign:PackIcon Kind="CashMultiple" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                            <TextBlock Text="الكاش الحالي" VerticalAlignment="Center"/>
+
+
+
+                        </StackPanel>
+
+
+
+                    </Button>
+
+
+
+                </StackPanel>
+
+
+
+            </Border>
+
+
+
+        </Grid>
+
+
+
+
+
+
+
+        <!-- ==================== ROW 2: SUMMARY CARDS ==================== -->
+
+
+
+        <!-- These cards reflect totals for the active tab list -->
+
+
+
+        <Grid Grid.Row="2">
+
+
+
+            <Grid.Style>
+
+
+
+                <Style TargetType="Grid">
+
+
+
+                    <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                    <Style.Triggers>
+
+
+
+                        <!-- Only visible when on Active Work (Tab 0) OR on Archive (Tab 1) Day Level -->
+
+
+
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="0">
+
+
+
+                            <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                        </DataTrigger>
+
+
+
+                        <MultiDataTrigger>
+
+
+
+                            <MultiDataTrigger.Conditions>
+
+
+
+                                <Condition Binding="{Binding SelectedTab}" Value="1"/>
+
+
+
+                                <Condition Binding="{Binding ArchiveLevel}" Value="1"/>
+
+
+
+                            </MultiDataTrigger.Conditions>
+
+
+
+                            <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                        </MultiDataTrigger>
+
+
+
+                    </Style.Triggers>
+
+
+
+                </Style>
+
+
+
+            </Grid.Style>
+
+
+
+            <Grid.ColumnDefinitions>
+
+
+
+                <ColumnDefinition Width="*"/>
+
+
+
+                <ColumnDefinition Width="16"/>
+
+
+
+                <ColumnDefinition Width="*"/>
+
+
+
+                <ColumnDefinition Width="16"/>
+
+
+
+                <ColumnDefinition Width="*"/>
+
+
+
+                <ColumnDefinition Width="16"/>
+
+
+
+                <ColumnDefinition Width="*"/>
+
+
+
+            </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+            <!-- Total Sales -->
+
+
+
+            <Border Grid.Column="0" Background="#f8fafc" CornerRadius="16" Padding="20" BorderBrush="#e2e8f0" BorderThickness="1">
+
+
+
+                <StackPanel>
+
+
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+
+
+
+                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="#3b82f6" Margin="0,0,8,0"/>
+
+
+
+                        <TextBlock Text="إجمالي المبيعات بالفترة" FontSize="15" Foreground="#64748b" VerticalAlignment="Center" FontWeight="Medium"/>
+
+
+
+                    </StackPanel>
+
+
+
+                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#0f172a"/>
+
+
+
+                </StackPanel>
+
+
+
+            </Border>
+
+
+
+
+
+
+
+            <!-- Total Cash Sales -->
+
+
+
+            <Border Grid.Column="2" Background="#f0fdf4" CornerRadius="16" Padding="20" BorderBrush="#dcfce7" BorderThickness="1">
+
+
+
+                <StackPanel>
+
+
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+
+
+
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#10b981" Margin="0,0,8,0"/>
+
+
+
+                        <TextBlock Text="إجمالي المبيعات النقدية" FontSize="15" Foreground="#15803d" VerticalAlignment="Center" FontWeight="Medium"/>
+
+
+
+                    </StackPanel>
+
+
+
+                    <TextBlock Text="{Binding TotalCashSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#14532d"/>
+
+
+
+                </StackPanel>
+
+
+
+            </Border>
+
+
+
+
+
+
+
+            <!-- Total Banking Sales -->
+
+
+
+            <Border Grid.Column="4" Background="#faf5ff" CornerRadius="16" Padding="20" BorderBrush="#f3e8ff" BorderThickness="1">
+
+
+
+                <StackPanel>
+
+
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+
+
+
+                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="#a855f7" Margin="0,0,8,0"/>
+
+
+
+                        <TextBlock Text="إجمالي الخدمات المصرفية" FontSize="15" Foreground="#7e22ce" VerticalAlignment="Center" FontWeight="Medium"/>
+
+
+
+                    </StackPanel>
+
+
+
+                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#581c87"/>
+
+
+
+                </StackPanel>
+
+
+
+            </Border>
+
+
+
+
+
+
+
+            <!-- Total Differences Card -->
+
+
+
+            <Border Grid.Column="6" CornerRadius="16" Padding="20" BorderThickness="1">
+
+
+
+                <Border.Style>
+
+
+
+                    <Style TargetType="Border">
+
+
+
+                        <!-- Default (Matched: Green) -->
+
+
+
+                        <Setter Property="Background" Value="#f0fdf4"/>
+
+
+
+                        <Setter Property="BorderBrush" Value="#dcfce7"/>
+
+
+
+                        <Style.Triggers>
+
+
+
+                            <!-- Deficit: Red -->
+
+
+
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+
+
+
+                                <Setter Property="Background" Value="#fef2f2"/>
+
+
+
+                                <Setter Property="BorderBrush" Value="#fee2e2"/>
+
+
+
+                            </DataTrigger>
+
+
+
+                            <!-- Surplus: Blue -->
+
+
+
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+
+
+
+                                <Setter Property="Background" Value="#eff6ff"/>
+
+
+
+                                <Setter Property="BorderBrush" Value="#dbeafe"/>
+
+
+
+                            </DataTrigger>
+
+
+
+                        </Style.Triggers>
+
+
+
+                    </Style>
+
+
+
+                </Border.Style>
+
+
+
+                <StackPanel>
+
+
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+
+
+
+                        <materialDesign:PackIcon Width="24" Height="24" Margin="0,0,8,0" VerticalAlignment="Center">
+
+
+
+                            <materialDesign:PackIcon.Style>
+
+
+
+                                <Style TargetType="materialDesign:PackIcon">
+
+
+
+                                    <!-- Default: Green -->
+
+
+
+                                    <Setter Property="Kind" Value="CheckCircleOutline"/>
+
+
+
+                                    <Setter Property="Foreground" Value="#10b981"/>
+
+
+
+                                    <Style.Triggers>
+
+
+
+                                        <!-- Deficit: Red -->
+
+
+
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+
+
+
+                                            <Setter Property="Kind" Value="AlertCircleOutline"/>
+
+
+
+                                            <Setter Property="Foreground" Value="#ef4444"/>
+
+
+
+                                        </DataTrigger>
+
+
+
+                                        <!-- Surplus: Blue -->
+
+
+
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+
+
+
+                                            <Setter Property="Kind" Value="TrendingUp"/>
+
+
+
+                                            <Setter Property="Foreground" Value="#3b82f6"/>
+
+
+
+                                        </DataTrigger>
+
+
+
+                                    </Style.Triggers>
+
+
+
+                                </Style>
+
+
+
+                            </materialDesign:PackIcon.Style>
+
+
+
+                        </materialDesign:PackIcon>
+
+
+
+                        <TextBlock Text="إجمالي الفروقات بالفترة" FontSize="15" VerticalAlignment="Center" FontWeight="Medium">
+
+
+
+                            <TextBlock.Style>
+
+
+
+                                <Style TargetType="TextBlock">
+
+
+
+                                    <!-- Default: Green -->
+
+
+
+                                    <Setter Property="Foreground" Value="#15803d"/>
+
+
+
+                                    <Style.Triggers>
+
+
+
+                                        <!-- Deficit: Red -->
+
+
+
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+
+
+
+                                            <Setter Property="Foreground" Value="#b91c1c"/>
+
+
+
+                                        </DataTrigger>
+
+
+
+                                        <!-- Surplus: Blue -->
+
+
+
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+
+
+
+                                            <Setter Property="Foreground" Value="#1d4ed8"/>
+
+
+
+                                        </DataTrigger>
+
+
+
+                                    </Style.Triggers>
+
+
+
+                                </Style>
+
+
+
+                            </TextBlock.Style>
+
+
+
+                        </TextBlock>
+
+
+
+                    </StackPanel>
+
+
+
+                    <TextBlock Text="{Binding TotalDifferenceText}" FontSize="26" FontWeight="Bold">
+
+
+
+                        <TextBlock.Style>
+
+
+
+                            <Style TargetType="TextBlock">
+
+
+
+                                <!-- Default: Green -->
+
+
+
+                                <Setter Property="Foreground" Value="#14532d"/>
+
+
+
+                                <Style.Triggers>
+
+
+
+                                    <!-- Deficit: Red -->
+
+
+
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+
+
+
+                                        <Setter Property="Foreground" Value="#7f1d1d"/>
+
+
+
+                                    </DataTrigger>
+
+
+
+                                    <!-- Surplus: Blue -->
+
+
+
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+
+
+
+                                        <Setter Property="Foreground" Value="#1e3a8a"/>
+
+
+
+                                    </DataTrigger>
+
+
+
+                                </Style.Triggers>
+
+
+
+                            </Style>
+
+
+
+                        </TextBlock.Style>
+
+
+
+                    </TextBlock>
+
+
+
+                </StackPanel>
+
+
+
+            </Border>
+
+
+
+        </Grid>
+
+
+
+
+
+
+
+        <!-- ==================== ROW 4: PRIMARY CONTENT AREA ==================== -->
+
+
+
+        <Grid Grid.Row="4">
+
+
+
+            
+
+
+
+            <!-- 🟢 VIEW A: ACTIVE WORK (TAB 0) -->
+
+
+
+            <Grid>
+
+
+
+                <Grid.Style>
+
+
+
+                    <Style TargetType="Grid">
+
+
+
+                        <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                        <Style.Triggers>
+
+
+
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="0">
+
+
+
+                                <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                            </DataTrigger>
+
+
+
+                        </Style.Triggers>
+
+
+
+                    </Style>
+
+
+
+                </Grid.Style>
+
+
+
+
+
+
+
+                <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+
+
+
+                    <Grid>
+
+
+
+                        <Grid.RowDefinitions>
+
+
+
+                            <RowDefinition Height="Auto"/>
+
+
+
+                            <RowDefinition Height="*"/>
+
+
+
+                            <RowDefinition Height="Auto"/>
+
+
+
+                        </Grid.RowDefinitions>
+
+
+
+
+
+
+
+                        <!-- Header & Filters -->
+
+
+
+                        <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+
+
+
+                            <Grid>
+
+
+
+                                <Grid.RowDefinitions>
+
+
+
+                                    <RowDefinition Height="Auto"/>
+
+
+
+                                    <RowDefinition Height="12"/>
+
+
+
+                                    <RowDefinition Height="Auto"/>
+
+
+
+                                </Grid.RowDefinitions>
+
+
+
+                                
+
+
+
+                                <Grid Grid.Row="0">
+
+
+
+                                    <Grid.ColumnDefinitions>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                    </Grid.ColumnDefinitions>
+
+
+
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+
+
+
+                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="#3b82f6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+
+
+                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+
+
+                                    </StackPanel>
+
+
+
+                                    <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث البيانات" Command="{Binding LoadDataCommand}" Height="32"/>
+
+
+
+                                </Grid>
+
+
+
+
+
+
+
+                                <!-- Filters -->
+
+
+
+                                <Grid Grid.Row="2">
+
+
+
+                                    <Grid.ColumnDefinitions>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="12"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="6"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="12"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="12"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="12"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                    </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+                                    <ComboBox Grid.Column="0" ItemsSource="{Binding CashierNames}" SelectedItem="{Binding SelectedCashier}" materialDesign:HintAssist.Hint="اختر اسم الكاشير..." Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
+
+
+
+                                    
+
+
+
+                                    <DatePicker Grid.Column="2" SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
+
+
+
+                                    <DatePicker Grid.Column="4" SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
+
+
+
+                                    
+
+
+
+                                    <ComboBox Grid.Column="6" ItemsSource="{Binding ShiftTypes}" SelectedItem="{Binding FilterShiftType}" materialDesign:HintAssist.Hint="نوع الوردية" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
+
+
+
+                                    
+
+
+
+                                    <ComboBox Grid.Column="8" ItemsSource="{Binding DifferenceFilters}" SelectedItem="{Binding SelectedDifferenceFilter}" materialDesign:HintAssist.Hint="فلتر الفروقات" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="45" VerticalContentAlignment="Center"/>
+
+
+
+                                    
+
+
+
+                                    <StackPanel Grid.Column="10" Orientation="Horizontal">
+
+
+
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="45" Width="100" Margin="0,0,8,0"/>
+
+
+
+                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
+
+
+
+                                            <materialDesign:PackIcon Kind="FilterRemove" Width="20" Height="20"/>
+
+
+
+                                        </Button>
+
+
+
+                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="#6366f1" BorderBrush="#6366f1" Height="45" Cursor="Hand">
+
+
+
+                                            <StackPanel Orientation="Horizontal">
+
+
+
+                                                <materialDesign:PackIcon Kind="CalendarClock" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
+
+
+
+                                                <TextBlock Text="ترحيل وقفل الفترة" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                            </StackPanel>
+
+
+
+                                        </Button>
+
+
+
+                                    </StackPanel>
+
+
+
+                                </Grid>
+
+
+
+                            </Grid>
+
+
+
+                        </Border>
+
+
+
+
+
+
+
+                        <!-- Data Grid & Floating Action Bar Container -->
+
+
+
+                        <Grid Grid.Row="1">
+
+
+
+                            <!-- Data Grid -->
+
+
+
+                            <DataGrid Margin="0" 
+
+
+
+                                      ItemsSource="{Binding Journals}" 
+
+
+
+                                      SelectedItem="{Binding SelectedJournal}"
+
+
+
+                                      AutoGenerateColumns="False"
+
+
+
+                                      CanUserAddRows="False"
+
+
+
+                                      CanUserDeleteRows="False"
+
+
+
+                                      CanUserResizeColumns="False"
+
+
+
+                                      CanUserReorderColumns="False"
+
+
+
+                                      CanUserSortColumns="False"
+
+
+
+                                      IsReadOnly="True"
+
+
+
+                                      HeadersVisibility="Column"
+
+
+
+                                      Background="Transparent"
+
+
+
+                                      BorderThickness="0"
+
+
+
+                                      RowHeight="50"
+
+
+
+                                      GridLinesVisibility="Horizontal"
+
+
+
+                                      HorizontalScrollBarVisibility="Auto"
+
+
+
+                                      HorizontalGridLinesBrush="#f1f5f9">
+
+
+
+
+
+
+
+                                <DataGrid.Columns>
+
+
+
+                                    <!-- Checkbox Selection Column -->
+
+
+
+                                    <DataGridTemplateColumn Width="65">
+
+
+
+                                        <DataGridTemplateColumn.HeaderTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+
+
+
+                                                    <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
+
+
+
+                                                              IsChecked="{Binding DataContext.IsAllSelected, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
+
+
+
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                                </Grid>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.HeaderTemplate>
+
+
+
+                                        <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+
+
+
+                                                    <CheckBox Style="{StaticResource PremiumCheckBoxStyle}" 
+
+
+
+                                                              IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" 
+
+
+
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                                </Grid>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                    </DataGridTemplateColumn>
+
+
+
+
+
+
+
+                                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Journal.JournalDate, StringFormat=\{0:dd-MM-yyyy\}}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="الوردية" Binding="{Binding Journal.ShiftName}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding Journal.EmployeeName}" Width="*" MinWidth="120"/>
+
+
+
+                                    <DataGridTextColumn Header="إجمالي المبيعات" Binding="{Binding Journal.TotalSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="100"/>
+
+
+
+                                    <DataGridTextColumn Header="مبيعات نقدية" Binding="{Binding Journal.CashSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
+
+
+
+                                    <DataGridTextColumn Header="خدمات مصرفية" Binding="{Binding Journal.BankingTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
+
+
+
+                                    <DataGridTextColumn Header="المرتجعات" Binding="{Binding Journal.ReturnsTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
+
+
+
+                                    <DataGridTextColumn Header="المصاريف" Binding="{Binding Journal.TotalExpenses, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
+
+
+
+                                    
+
+
+
+                                    <DataGridTemplateColumn Header="الفروقات" Width="Auto" MinWidth="90">
+
+
+
+                                        <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <TextBlock Text="{Binding Journal.DifferenceText}" Foreground="{Binding Journal.DifferenceColor}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                    </DataGridTemplateColumn>
+
+
+
+
+
+
+
+                                    <DataGridTemplateColumn Header="إجراءات" Width="140">
+
+
+
+                                        <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+
+
+                                                    <!-- View Details -->
+
+
+
+                                                    <Button Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            ToolTip="عرض التفاصيل"
+
+
+
+                                                            Style="{StaticResource MaterialDesignToolButton}" 
+
+
+
+                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
+
+
+
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
+
+
+
+                                                    </Button>
+
+
+
+                                                    <!-- Edit -->
+
+
+
+                                                    <Button Command="{Binding DataContext.EditJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            ToolTip="تعديل الوردية"
+
+
+
+                                                            Style="{StaticResource MaterialDesignToolButton}" 
+
+
+
+                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
+
+
+
+                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
+
+
+
+                                                    </Button>
+
+
+
+                                                    <!-- Post / Lock -->
+
+
+
+                                                    <Button Command="{Binding DataContext.PostJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            ToolTip="ترحيل وإقفال الوردية مالياً"
+
+
+
+                                                            Style="{StaticResource MaterialDesignToolButton}" 
+
+
+
+                                                            Height="32" Width="32" Padding="0" Cursor="Hand">
+
+
+
+                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="#ef4444"/>
+
+
+
+                                                    </Button>
+
+
+
+                                                </StackPanel>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                    </DataGridTemplateColumn>
+
+
+
+                                </DataGrid.Columns>
+
+
+
+                            </DataGrid>
+
+
+
+
+
+
+
+                            <!-- Floating Glassmorphic Action Bar -->
+
+
+
+                            <Border VerticalAlignment="Bottom" HorizontalAlignment="Center"
+
+
+
+                                    Margin="24,0,24,20" Padding="20,12"
+
+
+
+                                    Background="#fcfdfd" BorderBrush="#cbd5e1" BorderThickness="1.5"
+
+
+
+                                    CornerRadius="24" Height="Auto" Width="Auto" MinWidth="750"
+
+
+
+                                    Visibility="{Binding HasSelectedJournals, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+
+
+                                <Border.Effect>
+
+
+
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#0f172a" Opacity="0.18"/>
+
+
+
+                                </Border.Effect>
+
+
+
+                                
+
+
+
+                                <Grid>
+
+
+
+                                    <Grid.ColumnDefinitions>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                        <ColumnDefinition Width="24"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                        <ColumnDefinition Width="24"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                    </Grid.ColumnDefinitions>
+
+
+
+                                    
+
+
+
+                                    <!-- Selected Count -->
+
+
+
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                        <Border Background="#eff6ff" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+
+
+
+                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3b82f6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                        </Border>
+
+
+
+                                        <StackPanel VerticalAlignment="Center">
+
+
+
+                                            <TextBlock Text="الورديات المحددة" FontSize="11" Foreground="#64748b" FontWeight="Medium"/>
+
+
+
+                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="#0f172a"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </StackPanel>
+
+
+
+                                    
+
+
+
+                                    <!-- Sales Aggregate -->
+
+
+
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                        <Border Background="#f0fdf4" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+
+
+
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#10b981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                        </Border>
+
+
+
+                                        <StackPanel VerticalAlignment="Center">
+
+
+
+                                            <TextBlock Text="إجمالي مبيعات التحديد" FontSize="11" Foreground="#15803d" FontWeight="Medium"/>
+
+
+
+                                            <TextBlock Text="{Binding RunningSelectedSalesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#14532d"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </StackPanel>
+
+
+
+                                    
+
+
+
+                                    <!-- Expenses Aggregate -->
+
+
+
+                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                        <Border Background="#fdf2f8" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+
+
+
+                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#db2777" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                        </Border>
+
+
+
+                                        <StackPanel VerticalAlignment="Center">
+
+
+
+                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="#be185d" FontWeight="Medium"/>
+
+
+
+                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#831843"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </StackPanel>
+
+
+
+                                    
+
+
+
+                                    <!-- Post Selected Button -->
+
+
+
+                                    <Button Grid.Column="6" 
+
+
+
+                                            Command="{Binding PostSelectedJournalsCommand}"
+
+
+
+                                            Style="{StaticResource MaterialDesignRaisedButton}"
+
+
+
+                                            Background="#0f172a" BorderBrush="#0f172a" Foreground="White"
+
+
+
+                                            Height="42" Padding="20,0" VerticalAlignment="Center" Cursor="Hand">
+
+
+
+                                        <Button.Resources>
+
+
+
+                                            <Style TargetType="Border">
+
+
+
+                                                <Setter Property="CornerRadius" Value="21"/>
+
+
+
+                                            </Style>
+
+
+
+                                        </Button.Resources>
+
+
+
+                                        <StackPanel Orientation="Horizontal">
+
+
+
+                                            <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                            <TextBlock Text="ترحيل وإقفال الورديات المحددة مالياً" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </Button>
+
+
+
+                                </Grid>
+
+
+
+                            </Border>
+
+
+
+                        </Grid>
+
+
+
+
+
+
+
+                        <!-- Loading overlay -->
+
+
+
+                        <ProgressBar Grid.Row="1" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
+
+
+
+
+
+
+
+                        <!-- Footer Actions -->
+
+
+
+                        <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
+
+
+
+                            <Grid>
+
+
+
+                                <Button Command="{Binding ExportPdfCommand}" 
+
+
+
+                                        HorizontalAlignment="Right"
+
+
+
+                                        Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                        Background="White"
+
+
+
+                                        BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
+
+
+
+                                    <StackPanel Orientation="Horizontal">
+
+
+
+                                        <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                        <TextBlock Text="تصدير السجل المفتوح كملف PDF" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                    </StackPanel>
+
+
+
+                                </Button>
+
+
+
+                            </Grid>
+
+
+
+                        </Border>
+
+
+
+                    </Grid>
+
+
+
+                </Border>
+
+
+
+            </Grid>
+
+
+
+
+
+
+
+            <!-- 🗄️ VIEW B: ARCHIVE (TAB 1) -->
+
+
+
+            <Grid>
+
+
+
+                <Grid.Style>
+
+
+
+                    <Style TargetType="Grid">
+
+
+
+                        <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                        <Style.Triggers>
+
+
+
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="1">
+
+
+
+                                <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                            </DataTrigger>
+
+
+
+                        </Style.Triggers>
+
+
+
+                    </Style>
+
+
+
+                </Grid.Style>
+
+
+
+
+
+
+
+                <!-- 🗂️ ARCHIVE LEVEL 0: MONTH CARDS -->
+
+
+
+                <Grid>
+
+
+
+                    <Grid.Style>
+
+
+
+                        <Style TargetType="Grid">
+
+
+
+                            <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                            <Style.Triggers>
+
+
+
+                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="0">
+
+
+
+                                    <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                                </DataTrigger>
+
+
+
+                            </Style.Triggers>
+
+
+
+                        </Style>
+
+
+
+                    </Grid.Style>
+
+
+
+
+
+
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+
+
+                        <StackPanel>
+
+
+
                             <!-- Title Bar -->
 
                             <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
@@ -1336,7 +2652,7 @@
 
                                         <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-                                        <TextBlock Text="ط£ط±ط´ظٹظپ ط§ظ„طھط±ط­ظٹظ„ ط§ظ„ط´ظ‡ط±ظٹ" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
 
                                     </StackPanel>
 
@@ -1358,951 +2674,1890 @@
 
                                     </StackPanel>
 
-                                    <Button Grid.Column="3" Style="{StaticResource MaterialDesignOutlinedButton}" Content="طھط­ط¯ظٹط« ط§ظ„ط£ط±ط´ظٹظپ" Command="{Binding LoadDataCommand}" Height="32"/>
+                                    <Button Grid.Column="3" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الأرشيف" Command="{Binding LoadDataCommand}" Height="32"/>
 
                                 </Grid>
 
-                            </Border>
-
-
-
-                            <!-- Months Grid -->
-
-                            <ItemsControl ItemsSource="{Binding ArchivedMonths}">
-
-                                <ItemsControl.ItemsPanel>
-
-                                    <ItemsPanelTemplate>
-
-                                        <StackPanel Orientation="Vertical"/>
-
-                                    </ItemsPanelTemplate>
-
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-
-                                    <DataTemplate>
-
-                                        <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,12" Margin="0,0,0,12">
-
-                                            <Border.Effect>
-
-                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
-
-                                            </Border.Effect>
-
-                                            <Grid>
-
-                                                <Grid.ColumnDefinitions>
-
-                                                    <!-- 0. Month Name + Badge -->
-
-                                                    <ColumnDefinition Width="240"/>
-
-                                                    <!-- 1. Metrics: Sales -->
-
-                                                    <ColumnDefinition Width="160"/>
-
-                                                    <!-- 2. Metrics: Expenses -->
-
-                                                    <ColumnDefinition Width="160"/>
-
-                                                    <!-- 3. Metrics: Profit -->
-
-                                                    <ColumnDefinition Width="180"/>
-
-                                                    <!-- 4. Days Count -->
-
-                                                    <ColumnDefinition Width="130"/>
-
-                                                    <!-- Spacer -->
-
-                                                    <ColumnDefinition Width="*"/>
-
-                                                    <!-- 5. Action Buttons -->
-
-                                                            <ColumnDefinition Width="Auto"/>
-
-                                                </Grid.ColumnDefinitions>
-
-
-
-                                                <!-- Month Name + Badge -->
-
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
-
-                                                        <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                                    </Border>
-
-                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#8b5cf6" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                                                    <Border Background="{Binding StatusColor}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
-
-                                                        <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
-
-                                                    </Border>
-
-                                                </StackPanel>
-
-
-
-                                                <!-- Sales -->
-
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <TextBlock Text="المبيعات: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#10b981" VerticalAlignment="Center"/>
-
-                                                </StackPanel>
-
-
-
-                                                <!-- Expenses -->
-
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <TextBlock Text="المصاريف: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-
-                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#ef4444" VerticalAlignment="Center"/>
-
-                                                </StackPanel>
-
-
-
-                                                <!-- Profit -->
-
-                                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-
-                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
-
-                                                </StackPanel>
-
-
-
-                                                <!-- Days Count -->
-
-                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <TextBlock Text="الأيام: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-
-                                                    <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="#64748b" FontWeight="Bold" VerticalAlignment="Center"/>
-
-                                                </StackPanel>
-
-
-
-                                                <!-- Footer Actions -->
-
-                                                <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                                    <!-- Details -->
-
-                                                    <Button Content="عرض كشف التفاصيل" 
-
-                                                            Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-
-                                                            CommandParameter="{Binding}"
-
-                                                            Style="{StaticResource MaterialDesignRaisedButton}" 
-
-                                                            Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Cursor="Hand" Margin="0,0,10,0">
-
-                                                        <Button.Resources>
-
-                                                            <Style TargetType="Border">
-
-                                                                <Setter Property="CornerRadius" Value="8"/>
-
-                                                            </Style>
-
-                                                        </Button.Resources>
-
-                                                    </Button>
-
-
-
-                                                    <!-- Lock/Unlock batch -->
-
-                                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                                            Height="36" Width="36" Padding="0" Cursor="Hand" Margin="0,0,4,0"
-
-                                                            Command="{Binding DataContext.PostMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-
-                                                            CommandParameter="{Binding}"
-
-                                                            Visibility="{Binding IsPosted, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
-
-                                                            ToolTip="ترحيل وإقفال هذا الشهر بالكامل">
-
-                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="#3b82f6"/>
-
-                                                    </Button>
-
-
-
-                                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                                            Height="36" Width="36" Padding="0" Cursor="Hand"
-
-                                                            Command="{Binding DataContext.UnpostMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-
-                                                            CommandParameter="{Binding}"
-
-                                                            Visibility="{Binding IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
-
-                                                            ToolTip="فك ترحيل هذا الشهر بالكامل">
-
-                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="#10b981"/>
-
-                                                    </Button>
-
-                                                </StackPanel>
-
-                                            </Grid>
-
-                                        </Border>
-
-                                    </DataTemplate>
-
-                                </ItemsControl.ItemTemplate>
-
-                            </ItemsControl>
-
-                        </StackPanel>
-
-                    </ScrollViewer>
-
-                </Grid>
-
-
-
-                <!-- 🗂️ ARCHIVE LEVEL 1: JOURNALS OF SELECTED MONTH -->
-
-                <Grid>
-
-                    <Grid.Style>
-
-                        <Style TargetType="Grid">
-
-                            <Setter Property="Visibility" Value="Collapsed"/>
-
-                            <Style.Triggers>
-
-                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="1">
-
-                                    <Setter Property="Visibility" Value="Visible"/>
-
-                                </DataTrigger>
-
-                            </Style.Triggers>
-
-                        </Style>
-
-                    </Grid.Style>
-
-
-
-                    <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
-
-                        <Grid>
-
-                            <Grid.RowDefinitions>
-
-                                <RowDefinition Height="Auto"/>
-
-                                <RowDefinition Height="*"/>
-
-                                <RowDefinition Height="Auto"/>
-
-                            </Grid.RowDefinitions>
-
-
-
-                            <!-- Header with Breadcrumb -->
-
-                            <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
-
-                                <Grid>
-
-                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                        <ColumnDefinition Width="12"/>
-
-                                        <ColumnDefinition Width="*"/>
-
-                                        <ColumnDefinition Width="Auto"/>
-
-                                    </Grid.ColumnDefinitions>
-
-
-
-                                    <!-- Go Back Button -->
-
-                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3b82f6" Height="36" Padding="8,0">
-
-                                        <StackPanel Orientation="Horizontal">
-
-                                            <materialDesign:PackIcon Kind="ArrowRight" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                            <TextBlock Text="العودة لقائمة الأشهر" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                        </StackPanel>
-
-                                    </Button>
-
-
-
-                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
-
-
-
-                                    <!-- Batch actions inside selected month -->
-
-                                    <StackPanel Grid.Column="3" Orientation="Horizontal">
-
-                                        
-
-
-
-                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الحركات" Command="{Binding LoadDataCommand}" Height="36"/>
-
-                                    </StackPanel>
-
-                                </Grid>
-
-                            </Border>
-
-
-
-                            <!-- Data Grid (Read Only) -->
-
-                            <DataGrid Grid.Row="1" Margin="0" 
-
-                                      ItemsSource="{Binding ArchivedJournals}" 
-
-                                      SelectedItem="{Binding SelectedJournal}"
-
-                                      AutoGenerateColumns="False"
-
-                                      CanUserAddRows="False"
-
-                                      CanUserDeleteRows="False"
-
-                                      CanUserResizeColumns="False"
-
-                                      CanUserReorderColumns="False"
-
-                                      CanUserSortColumns="False"
-
-                                      IsReadOnly="True"
-
-                                      HeadersVisibility="Column"
-
-                                      Background="Transparent"
-
-                                      BorderThickness="0"
-
-                                      RowHeight="50"
-
-                                      GridLinesVisibility="Horizontal"
-
-                                      HorizontalScrollBarVisibility="Auto"
-
-                                      HorizontalGridLinesBrush="#f1f5f9">
-
-
-
-                                <DataGrid.Columns>
-
-                                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Journal.JournalDate, StringFormat=\{0:dd-MM-yyyy\}}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="الوردية" Binding="{Binding Journal.ShiftName}" Width="Auto"/>
-
-                                    <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding Journal.EmployeeName}" Width="*" MinWidth="120"/>
-
-                                    <DataGridTextColumn Header="إجمالي المبيعات" Binding="{Binding Journal.TotalSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="100"/>
-
-                                    <DataGridTextColumn Header="مبيعات نقدية" Binding="{Binding Journal.CashSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
-
-                                    <DataGridTextColumn Header="خدمات مصرفية" Binding="{Binding Journal.BankingTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
-
-                                    <DataGridTextColumn Header="المرتجعات" Binding="{Binding Journal.ReturnsTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
-
-                                    <DataGridTextColumn Header="المصاريف" Binding="{Binding Journal.TotalExpenses, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
-
-                                    
-
-                                    <DataGridTemplateColumn Header="الفروقات" Width="Auto" MinWidth="90">
-
-                                        <DataGridTemplateColumn.CellTemplate>
-
-                                            <DataTemplate>
-
-                                                <TextBlock Text="{Binding Journal.DifferenceText}" Foreground="{Binding Journal.DifferenceColor}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.CellTemplate>
-
-                                    </DataGridTemplateColumn>
-
-
-
-                                    <DataGridTemplateColumn Header="إجراءات" Width="100">
-
-                                        <DataGridTemplateColumn.CellTemplate>
-
-                                            <DataTemplate>
-
-                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
-                                                    <!-- View Details (Always Allowed) -->
-
-                                                    <Button Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-
-                                                            CommandParameter="{Binding}"
-
-                                                            ToolTip="عرض التفاصيل"
-
-                                                            Style="{StaticResource MaterialDesignToolButton}" 
-
-                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
-
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
-
-                                                    </Button>
-
-                                                     <!-- Edit (Only visible if open/Draft) -->
-
-                                                     <Button Command="{Binding DataContext.EditJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-
-                                                             CommandParameter="{Binding}"
-
-                                                             ToolTip="تعديل الوردية"
-
-                                                             Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
-
-                                                         <Button.Style>
-
-                                                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignToolButton}">
-
-                                                                 <Setter Property="Visibility" Value="Collapsed"/>
-
-                                                                 <Style.Triggers>
-
-                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Draft">
-
-                                                                         <Setter Property="Visibility" Value="Visible"/>
-
-                                                                     </DataTrigger>
-
-                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Reviewed">
-
-                                                                         <Setter Property="Visibility" Value="Visible"/>
-
-                                                                     </DataTrigger>
-
-                                                                 </Style.Triggers>
-
-                                                             </Style>
-
-                                                         </Button.Style>
-
-                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
-
-                                                     </Button>
-
-                                                </StackPanel>
-
-                                            </DataTemplate>
-
-                                        </DataGridTemplateColumn.CellTemplate>
-
-                                    </DataGridTemplateColumn>
-
-                                </DataGrid.Columns>
-
-                            </DataGrid>
-
-
-
-                            <ProgressBar Grid.Row="1" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
-
-
-
-                            <!-- Footer Export -->
-
-                            <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
-
-                                <Grid>
-
-                                    <Button Command="{Binding ExportPdfCommand}" 
-
-                                            HorizontalAlignment="Right"
-
-                                            Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                            Background="White"
-
-                                            BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
-
-                                        <StackPanel Orientation="Horizontal">
-
-                                            <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                            <TextBlock Text="تصدير هذا الشهر كملف PDF" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                        </StackPanel>
-
-                                    </Button>
-
-                                </Grid>
-
-                            </Border>
-
-                        </Grid>
-
-                    </Border>
-
-                </Grid>
-
-            </Grid>
-
-        </Grid>
-
-        <!-- ==================== TAB 2: CURRENT CASH ==================== -->
-
-        <Grid Grid.Row="2">
-
-            <Grid.Style>
-
-                <Style TargetType="Grid">
-
-                    <Setter Property="Visibility" Value="Collapsed"/>
-
-                    <Style.Triggers>
-
-                        <DataTrigger Binding="{Binding SelectedTab}" Value="2">
-
-                            <Setter Property="Visibility" Value="Visible"/>
-
-                        </DataTrigger>
-
-                    </Style.Triggers>
-
-                </Style>
-
-            </Grid.Style>
-
-
-
-            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
-
-                <Grid>
-
-                    <Grid.RowDefinitions>
-
-                        <RowDefinition Height="Auto"/>
-
-                        <RowDefinition Height="*"/>
-
-                    </Grid.RowDefinitions>
-
-
-
-                    <!-- Header & Summary Card -->
-
-                    <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
-
-                        <Grid>
-
-                            <Grid.ColumnDefinitions>
-
-                                <ColumnDefinition Width="Auto"/>
-
-                                <ColumnDefinition Width="*"/>
-
-                                <ColumnDefinition Width="Auto"/>
-
-                            </Grid.ColumnDefinitions>
-
-
-
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#10b981" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                                <StackPanel VerticalAlignment="Center">
-
-                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="#64748b" FontWeight="Medium"/>
-
-                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#14532d"/>
-
-                                </StackPanel>
-
-                            </StackPanel>
-
-
-
-                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-
-                                 <!-- Rebuild Warning Alert -->
-
-                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
-
-                                         Height="40" Width="140" Padding="0" Margin="0,0,10,0"
-
-                                         Background="#dc2626" BorderBrush="#dc2626"
-
-                                         Cursor="Help"
-
-                                         Visibility="{Binding IsRebuildRequired, Converter={StaticResource BooleanToVisibilityConverter}}"
-
-                                         ToolTip="تنبيه: يجب إعادة بناء الدفتر بسبب تسجيل حركة بتاريخ سابق أو تعديل مصروف/سداد بأثر رجعي!">
-
-                                     <Grid Width="140">
-
-                                        <materialDesign:PackIcon Kind="Alert" Width="28" Height="28" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
-                                     </Grid>
-
-                                 </Button>
-
-
-
-                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                        Content="إعادة بناء الدفتر" 
-
-                                        Command="{Binding RebuildCashLedgerCommand}" 
-
-                                        BorderBrush="#f59e0b" Foreground="#d97706"
-
-                                        Height="40" Width="140" Margin="0,0,10,0" Cursor="Hand" ToolTip="إعادة حساب الأرصدة التراكمية لتصحيح أي خلل"/>
-
-
-
-                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
-
-                                         Command="{Binding OpenSettleOwnerCashDialogCommand}" 
-
-                                         Background="#6366f1" BorderBrush="#6366f1"
-
-                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
-
-                                      <StackPanel Orientation="Horizontal">
-
-                                          <materialDesign:PackIcon Kind="CashCheck" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                          <TextBlock Text="تسوية كاش المالك" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                      </StackPanel>
-
-                                  </Button>
-
-
-
-                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
-
-                                         Command="{Binding OpenSettlementArchiveCommand}" 
-
-                                         BorderBrush="#64748b" Foreground="#64748b"
-
-                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
-
-                                      <StackPanel Orientation="Horizontal">
-
-                                          <materialDesign:PackIcon Kind="History" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                                          <TextBlock Text="أرشيف التسويات" VerticalAlignment="Center" FontWeight="Bold"/>
-
-                                      </StackPanel>
-
-                                  </Button>
-
-
-
-                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
-
-                                        Content="تحديث البيانات" 
-
-                                        Command="{Binding LoadCashMovementsCommand}" 
-
-                                        Background="#10b981" BorderBrush="#10b981"
-
-                                        Height="40" Cursor="Hand"/>
-
-                            </StackPanel>
-
-                        </Grid>
-
-                    </Border>
-
-
-
-                    <!-- Cash Movements DataGrid -->
-
-                    <Grid Grid.Row="1">
-
-                        <DataGrid Margin="0" 
-
-                                  ItemsSource="{Binding CashMovements}" 
-
-                                  AutoGenerateColumns="False"
-
-                                  CanUserAddRows="False" 
-
-                                  IsReadOnly="True"
-
-                                  HeadersVisibility="Column"
-
-                                  Background="Transparent"
-
-                                  BorderThickness="0"
-
-                                  RowHeight="50"
-
-                                  GridLinesVisibility="Horizontal"
-
-                                  HorizontalScrollBarVisibility="Auto"
-
-                                  HorizontalGridLinesBrush="#f1f5f9">
-
-                            <DataGrid.Columns>
-
-                                <DataGridTextColumn Header="م" Binding="{Binding Sequence}" Width="Auto" MinWidth="40"/>
-
-                                <DataGridTextColumn Header="التاريخ" Binding="{Binding TransactionDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="150"/>
-
-                                <DataGridTextColumn Header="البيان" Binding="{Binding Notes}" Width="*" MinWidth="250"/>
-
-                                <DataGridTemplateColumn Header="المبلغ" Width="Auto" MinWidth="120">
-
-                                    <DataGridTemplateColumn.CellTemplate>
-
-                                        <DataTemplate>
-
-                                            <Button Command="{Binding DataContext.ViewCashMovementDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-
-                                                    CommandParameter="{Binding}"
-
-                                                    Style="{StaticResource MaterialDesignFlatButton}"
-
-                                                    Cursor="Hand" Padding="4,0" Height="Auto"
-
-                                                    ToolTip="اضغط لعرض التفاصيل">
-
-                                                <TextBlock Text="{Binding Amount, StringFormat=\{0:N2\} د.ل}" 
-
-                                                           FontWeight="Bold" Foreground="#3b82f6" 
-
-                                                           TextDecorations="Underline"/>
-
-                                            </Button>
-
-                                        </DataTemplate>
-
-                                    </DataGridTemplateColumn.CellTemplate>
-
-                                </DataGridTemplateColumn>
-
-                                <DataGridTextColumn Header="الرصيد بعد الحركة" Binding="{Binding BalanceAfter, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
-
-                            </DataGrid.Columns>
-
-                        </DataGrid>
-
-                    </Grid>
-
-                </Grid>
-
-            </Border>
-
-        </Grid>
-
-
-
-
-    <!-- Settle Owner Cash Dialog Overlay -->
-    <Grid Panel.ZIndex="1000" Background="#900f172a" 
-          Visibility="{Binding IsSettleOwnerCashDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-        <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="#cbd5e1" BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
-            </Border.Effect>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="24"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Title -->
-                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
-                </StackPanel>
-
-                <!-- Current Balance Info Box -->
-                <Border Grid.Row="2" Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="الرصيد النقدي الحالي بالصندوق" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
-                            <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="22" FontWeight="Bold" Foreground="#1e293b"/>
-                        </StackPanel>
-                        <materialDesign:PackIcon Grid.Column="1" Kind="Safe" Width="38" Height="38" Foreground="#94a3b8" VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-
-                <!-- Inputs & Calculations -->
-                <StackPanel Grid.Row="4">
-                    <!-- Payout Input -->
-                    <TextBlock Text="المبلغ المراد تسليمه للمالك كاش (د.ل)" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding SettlePayoutInput, UpdateSourceTrigger=PropertyChanged}" 
-                             FontSize="16" FontWeight="Bold" Padding="12,10" Margin="0,0,0,16"
-                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
-                             materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                             materialDesign:TextFieldAssist.TextBoxViewMargin="0"
-                             Style="{StaticResource MaterialDesignTextBox}"/>
-
-                    <!-- Keep Amount (ReadOnly Calculation) -->
-                    <Border Background="#f0fdf4" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="السيولة التشغيلية المتبقية بالصندوق" FontSize="11" Foreground="#166534" Margin="0,0,0,2"/>
-                                <TextBlock Text="{Binding SettleKeepCalculation, StringFormat=\{0:N2\} د.ل}" FontSize="16" FontWeight="Bold" Foreground="#15803d"/>
-                            </StackPanel>
-                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingUp" Width="24" Height="24" Foreground="#15803d" VerticalAlignment="Center"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Notes Input -->
-                    <TextBlock Text="ملاحظات والتفاصيل" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding SettleNotesInput, UpdateSourceTrigger=PropertyChanged}" 
-                             FontSize="14" Padding="12,10" Height="70" TextWrapping="Wrap" AcceptsReturn="True"
-                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
-                             materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                             materialDesign:TextFieldAssist.TextBoxViewMargin="0"
-                             Style="{StaticResource MaterialDesignTextBox}"/>
-                </StackPanel>
-
-                <!-- Warning Alert -->
-                <Border Grid.Row="6" Background="#fffbeb" BorderBrush="#fef3c7" BorderThickness="1" CornerRadius="8" Padding="12">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon Grid.Column="0" Kind="AlertCircle" Width="20" Height="20" Foreground="#d97706" Margin="0,0,10,0" VerticalAlignment="Top"/>
-                        <TextBlock Grid.Column="1" Text="تنبيه: سيتم ترحيل وتأكيد كافة اليوميات والمصاريف اليومية وتجميدها نهائياً لمنع أي تعديل لاحق." 
-                                   FontSize="11.5" Foreground="#b45309" TextWrapping="Wrap" LineHeight="16"/>
-                    </Grid>
-                </Border>
-
-                <!-- Buttons -->
-                <Grid Grid.Row="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="12"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="تأكيد وإقفال" Command="{Binding ConfirmSettleOwnerCashCommand}" 
-                            Background="#6366f1" BorderBrush="#6366f1" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
-                    <Button Grid.Column="2" Content="إلغاء" Command="{Binding CloseSettleOwnerCashDialogCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="42" Cursor="Hand" FontWeight="Bold"/>
-                </Grid>
-            </Grid>
-        </Border>
-    </Grid>
-
-    <!-- Settlement Archive Dialog Overlay -->
-    <Grid Panel.ZIndex="1000" Background="#900f172a" 
-          Visibility="{Binding IsSettlementArchiveDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-        <Border Background="White" CornerRadius="16" Width="900" MaxHeight="650" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24" BorderBrush="#cbd5e1" BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
-            </Border.Effect>
-            <Grid>
-                <Grid.RowDefinitions>
-                    <!-- 0: Header with Close Button -->
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="16"/>
-                    <!-- 1: History DataGrid -->
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="16"/>
-                    <!-- 2: Footer / Close Button -->
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Header -->
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Orientation="Horizontal" Grid.Column="0">
-                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <Button Grid.Column="1" Command="{Binding CloseSettlementArchiveCommand}" Style="{StaticResource MaterialDesignToolButton}" Width="36" Height="36" Padding="0" Cursor="Hand" ToolTip="إغلاق">
-                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="#64748b"/>
-                    </Button>
-                </Grid>
-
-                <!-- History DataGrid -->
-                <Grid Grid.Row="2">
-                    <DataGrid Margin="0" 
-                              ItemsSource="{Binding SettlementHistory}" 
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False" 
-                              IsReadOnly="True"
-                              HeadersVisibility="Column"
-                              Background="Transparent"
-                              BorderThickness="0"
-                              RowHeight="50"
-                              MaxHeight="450"
-                              GridLinesVisibility="Horizontal"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalGridLinesBrush="#f1f5f9">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="جلسة التسوية" Binding="{Binding ShortSessionGuid}" Width="Auto" MinWidth="80"/>
-                            <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding SettleDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="140"/>
-                            <DataGridTextColumn Header="بواسطة" Binding="{Binding CreatedBy}" Width="Auto" MinWidth="90"/>
-                            <DataGridTextColumn Header="الرصيد الكلي للفترة" Binding="{Binding BalanceBefore, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
-                            <DataGridTextColumn Header="المسلم للمالك" Binding="{Binding PayoutAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
-                            <DataGridTextColumn Header="السيولة المتبقية" Binding="{Binding KeepAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
-                            <DataGridTextColumn Header="البيان والملاحظات" Binding="{Binding Notes}" Width="*" MinWidth="180"/>
-                            <DataGridTextColumn Header="ط­ط§ظ„ط© ط§ظ„ظپطھط±ط©" Binding="{Binding StatusText}" Width="Auto" MinWidth="120"/>
-                            <DataGridTemplateColumn Header="ط¥ط¬ط±ط§ط،ط§طھ" Width="150">
+                            </Border>
+
+
+
+
+
+
+
+                            <!-- Months Grid -->
+
+
+
+                            <ItemsControl ItemsSource="{Binding ArchivedMonths}">
+
+
+
+                                <ItemsControl.ItemsPanel>
+
+
+
+                                    <ItemsPanelTemplate>
+
+
+
+                                        <StackPanel Orientation="Vertical"/>
+
+
+
+                                    </ItemsPanelTemplate>
+
+
+
+                                </ItemsControl.ItemsPanel>
+
+
+
+                                <ItemsControl.ItemTemplate>
+
+
+
+                                    <DataTemplate>
+
+
+
+                                        <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,12" Margin="0,0,0,12">
+
+
+
+                                            <Border.Effect>
+
+
+
+                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
+
+
+
+                                            </Border.Effect>
+
+
+
+                                            <Grid>
+
+
+
+                                                <Grid.ColumnDefinitions>
+
+
+
+                                                    <!-- 0. Month Name + Badge -->
+
+
+
+                                                    <ColumnDefinition Width="240"/>
+
+
+
+                                                    <!-- 1. Metrics: Sales -->
+
+
+
+                                                    <ColumnDefinition Width="160"/>
+
+
+
+                                                    <!-- 2. Metrics: Expenses -->
+
+
+
+                                                    <ColumnDefinition Width="160"/>
+
+
+
+                                                    <!-- 3. Metrics: Profit -->
+
+
+
+                                                    <ColumnDefinition Width="180"/>
+
+
+
+                                                    <!-- 4. Days Count -->
+
+
+
+                                                    <ColumnDefinition Width="130"/>
+
+
+
+                                                    <!-- Spacer -->
+
+
+
+                                                    <ColumnDefinition Width="*"/>
+
+
+
+                                                    <!-- 5. Action Buttons -->
+
+
+
+                                                            <ColumnDefinition Width="Auto"/>
+
+
+
+                                                </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+                                                <!-- Month Name + Badge -->
+
+
+
+                                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
+
+
+
+                                                        <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                                    </Border>
+
+
+
+                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#8b5cf6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+
+
+                                                    <Border Background="{Binding StatusColor}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+
+
+
+                                                        <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
+
+
+
+                                                    </Border>
+
+
+
+                                                </StackPanel>
+
+
+
+
+
+
+
+                                                <!-- Sales -->
+
+
+
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <TextBlock Text="المبيعات: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+
+
+
+                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#10b981" VerticalAlignment="Center"/>
+
+
+
+                                                </StackPanel>
+
+
+
+
+
+
+
+                                                <!-- Expenses -->
+
+
+
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <TextBlock Text="المصاريف: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+
+
+
+                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#ef4444" VerticalAlignment="Center"/>
+
+
+
+                                                </StackPanel>
+
+
+
+
+
+
+
+                                                <!-- Profit -->
+
+
+
+                                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+
+
+
+                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+
+
+                                                </StackPanel>
+
+
+
+
+
+
+
+                                                <!-- Days Count -->
+
+
+
+                                                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <TextBlock Text="الأيام: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+
+
+
+                                                    <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="#64748b" FontWeight="Bold" VerticalAlignment="Center"/>
+
+
+
+                                                </StackPanel>
+
+
+
+
+
+
+
+                                                <!-- Footer Actions -->
+
+
+
+                                                <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                                    <!-- Details -->
+
+
+
+                                                    <Button Content="عرض كشف التفاصيل" 
+
+
+
+                                                            Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            Style="{StaticResource MaterialDesignRaisedButton}" 
+
+
+
+                                                            Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Cursor="Hand" Margin="0,0,10,0">
+
+
+
+                                                        <Button.Resources>
+
+
+
+                                                            <Style TargetType="Border">
+
+
+
+                                                                <Setter Property="CornerRadius" Value="8"/>
+
+
+
+                                                            </Style>
+
+
+
+                                                        </Button.Resources>
+
+
+
+                                                    </Button>
+
+
+
+
+
+
+
+                                                    <!-- Lock/Unlock batch -->
+
+
+
+                                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                                            Height="36" Width="36" Padding="0" Cursor="Hand" Margin="0,0,4,0"
+
+
+
+                                                            Command="{Binding DataContext.PostMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            Visibility="{Binding IsPosted, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+
+
+
+                                                            ToolTip="ترحيل وإقفال هذا الشهر بالكامل">
+
+
+
+                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="#3b82f6"/>
+
+
+
+                                                    </Button>
+
+
+
+
+
+
+
+                                                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                                            Height="36" Width="36" Padding="0" Cursor="Hand"
+
+
+
+                                                            Command="{Binding DataContext.UnpostMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            Visibility="{Binding IsPosted, Converter={StaticResource BooleanToVisibilityConverter}}"
+
+
+
+                                                            ToolTip="فك ترحيل هذا الشهر بالكامل">
+
+
+
+                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="#10b981"/>
+
+
+
+                                                    </Button>
+
+
+
+                                                </StackPanel>
+
+
+
+                                            </Grid>
+
+
+
+                                        </Border>
+
+
+
+                                    </DataTemplate>
+
+
+
+                                </ItemsControl.ItemTemplate>
+
+
+
+                            </ItemsControl>
+
+
+
+                        </StackPanel>
+
+
+
+                    </ScrollViewer>
+
+
+
+                </Grid>
+
+
+
+
+
+
+
+                <!-- 🗂️ ARCHIVE LEVEL 1: JOURNALS OF SELECTED MONTH -->
+
+
+
+                <Grid>
+
+
+
+                    <Grid.Style>
+
+
+
+                        <Style TargetType="Grid">
+
+
+
+                            <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                            <Style.Triggers>
+
+
+
+                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="1">
+
+
+
+                                    <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                                </DataTrigger>
+
+
+
+                            </Style.Triggers>
+
+
+
+                        </Style>
+
+
+
+                    </Grid.Style>
+
+
+
+
+
+
+
+                    <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+
+
+
+                        <Grid>
+
+
+
+                            <Grid.RowDefinitions>
+
+
+
+                                <RowDefinition Height="Auto"/>
+
+
+
+                                <RowDefinition Height="*"/>
+
+
+
+                                <RowDefinition Height="Auto"/>
+
+
+
+                            </Grid.RowDefinitions>
+
+
+
+
+
+
+
+                            <!-- Header with Breadcrumb -->
+
+
+
+                            <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+
+
+
+                                <Grid>
+
+
+
+                                    <Grid.ColumnDefinitions>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                        <ColumnDefinition Width="12"/>
+
+
+
+                                        <ColumnDefinition Width="*"/>
+
+
+
+                                        <ColumnDefinition Width="Auto"/>
+
+
+
+                                    </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+                                    <!-- Go Back Button -->
+
+
+
+                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3b82f6" Height="36" Padding="8,0">
+
+
+
+                                        <StackPanel Orientation="Horizontal">
+
+
+
+                                            <materialDesign:PackIcon Kind="ArrowRight" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                            <TextBlock Text="العودة لقائمة الأشهر" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </Button>
+
+
+
+
+
+
+
+                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+
+
+
+
+
+
+                                    <!-- Batch actions inside selected month -->
+
+
+
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+
+
+
+                                        
+
+
+
+
+
+
+
+                                        <Button Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الحركات" Command="{Binding LoadDataCommand}" Height="36"/>
+
+
+
+                                    </StackPanel>
+
+
+
+                                </Grid>
+
+
+
+                            </Border>
+
+
+
+
+
+
+
+                            <!-- Data Grid (Read Only) -->
+
+
+
+                            <DataGrid Grid.Row="1" Margin="0" 
+
+
+
+                                      ItemsSource="{Binding ArchivedJournals}" 
+
+
+
+                                      SelectedItem="{Binding SelectedJournal}"
+
+
+
+                                      AutoGenerateColumns="False"
+
+
+
+                                      CanUserAddRows="False"
+
+
+
+                                      CanUserDeleteRows="False"
+
+
+
+                                      CanUserResizeColumns="False"
+
+
+
+                                      CanUserReorderColumns="False"
+
+
+
+                                      CanUserSortColumns="False"
+
+
+
+                                      IsReadOnly="True"
+
+
+
+                                      HeadersVisibility="Column"
+
+
+
+                                      Background="Transparent"
+
+
+
+                                      BorderThickness="0"
+
+
+
+                                      RowHeight="50"
+
+
+
+                                      GridLinesVisibility="Horizontal"
+
+
+
+                                      HorizontalScrollBarVisibility="Auto"
+
+
+
+                                      HorizontalGridLinesBrush="#f1f5f9">
+
+
+
+
+
+
+
+                                <DataGrid.Columns>
+
+
+
+                                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="التاريخ" Binding="{Binding Journal.JournalDate, StringFormat=\{0:dd-MM-yyyy\}}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="الوردية" Binding="{Binding Journal.ShiftName}" Width="Auto"/>
+
+
+
+                                    <DataGridTextColumn Header="اسم الكاشير" Binding="{Binding Journal.EmployeeName}" Width="*" MinWidth="120"/>
+
+
+
+                                    <DataGridTextColumn Header="إجمالي المبيعات" Binding="{Binding Journal.TotalSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="100"/>
+
+
+
+                                    <DataGridTextColumn Header="مبيعات نقدية" Binding="{Binding Journal.CashSales, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
+
+
+
+                                    <DataGridTextColumn Header="خدمات مصرفية" Binding="{Binding Journal.BankingTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="90"/>
+
+
+
+                                    <DataGridTextColumn Header="المرتجعات" Binding="{Binding Journal.ReturnsTotal, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
+
+
+
+                                    <DataGridTextColumn Header="المصاريف" Binding="{Binding Journal.TotalExpenses, StringFormat=\{0:N2\}}" Width="Auto" MinWidth="80"/>
+
+
+
+                                    
+
+
+
+                                    <DataGridTemplateColumn Header="الفروقات" Width="Auto" MinWidth="90">
+
+
+
+                                        <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <TextBlock Text="{Binding Journal.DifferenceText}" Foreground="{Binding Journal.DifferenceColor}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                    </DataGridTemplateColumn>
+
+
+
+
+
+
+
+                                    <DataGridTemplateColumn Header="إجراءات" Width="100">
+
+
+
+                                        <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                            <DataTemplate>
+
+
+
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+
+
+                                                    <!-- View Details (Always Allowed) -->
+
+
+
+                                                    <Button Command="{Binding DataContext.ViewDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+
+
+
+                                                            CommandParameter="{Binding}"
+
+
+
+                                                            ToolTip="عرض التفاصيل"
+
+
+
+                                                            Style="{StaticResource MaterialDesignToolButton}" 
+
+
+
+                                                            Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
+
+
+
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
+
+
+
+                                                    </Button>
+
+
+
+                                                     <!-- Edit (Only visible if open/Draft) -->
+
+
+
+                                                     <Button Command="{Binding DataContext.EditJournalCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+
+
+
+                                                             CommandParameter="{Binding}"
+
+
+
+                                                             ToolTip="تعديل الوردية"
+
+
+
+                                                             Height="32" Width="32" Padding="0" Cursor="Hand" Margin="0,0,4,0">
+
+
+
+                                                         <Button.Style>
+
+
+
+                                                             <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignToolButton}">
+
+
+
+                                                                 <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                                                                 <Style.Triggers>
+
+
+
+                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Draft">
+
+
+
+                                                                         <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                                                                     </DataTrigger>
+
+
+
+                                                                     <DataTrigger Binding="{Binding Journal.FinancialStatus}" Value="Reviewed">
+
+
+
+                                                                         <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                                                                     </DataTrigger>
+
+
+
+                                                                 </Style.Triggers>
+
+
+
+                                                             </Style>
+
+
+
+                                                         </Button.Style>
+
+
+
+                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
+
+
+
+                                                     </Button>
+
+
+
+                                                </StackPanel>
+
+
+
+                                            </DataTemplate>
+
+
+
+                                        </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                    </DataGridTemplateColumn>
+
+
+
+                                </DataGrid.Columns>
+
+
+
+                            </DataGrid>
+
+
+
+
+
+
+
+                            <ProgressBar Grid.Row="1" IsIndeterminate="True" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" Width="40" Height="40" Style="{StaticResource MaterialDesignCircularProgressBar}"/>
+
+
+
+
+
+
+
+                            <!-- Footer Export -->
+
+
+
+                            <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
+
+
+
+                                <Grid>
+
+
+
+                                    <Button Command="{Binding ExportPdfCommand}" 
+
+
+
+                                            HorizontalAlignment="Right"
+
+
+
+                                            Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                            Background="White"
+
+
+
+                                            BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
+
+
+
+                                        <StackPanel Orientation="Horizontal">
+
+
+
+                                            <materialDesign:PackIcon Kind="FilePdfBox" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                            <TextBlock Text="تصدير هذا الشهر كملف PDF" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                        </StackPanel>
+
+
+
+                                    </Button>
+
+
+
+                                </Grid>
+
+
+
+                            </Border>
+
+
+
+                        </Grid>
+
+
+
+                    </Border>
+
+
+
+                </Grid>
+
+
+
+            </Grid>
+
+
+
+        </Grid>
+
+
+
+        <!-- ==================== TAB 2: CURRENT CASH ==================== -->
+
+
+
+        <Grid Grid.Row="2">
+
+
+
+            <Grid.Style>
+
+
+
+                <Style TargetType="Grid">
+
+
+
+                    <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                    <Style.Triggers>
+
+
+
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="2">
+
+
+
+                            <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                        </DataTrigger>
+
+
+
+                    </Style.Triggers>
+
+
+
+                </Style>
+
+
+
+            </Grid.Style>
+
+
+
+
+
+
+
+            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+
+
+
+                <Grid>
+
+
+
+                    <Grid.RowDefinitions>
+
+
+
+                        <RowDefinition Height="Auto"/>
+
+
+
+                        <RowDefinition Height="*"/>
+
+
+
+                    </Grid.RowDefinitions>
+
+
+
+
+
+
+
+                    <!-- Header & Summary Card -->
+
+
+
+                    <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+
+
+
+                        <Grid>
+
+
+
+                            <Grid.ColumnDefinitions>
+
+
+
+                                <ColumnDefinition Width="Auto"/>
+
+
+
+                                <ColumnDefinition Width="*"/>
+
+
+
+                                <ColumnDefinition Width="Auto"/>
+
+
+
+                            </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#10b981" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+
+
+                                <StackPanel VerticalAlignment="Center">
+
+
+
+                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="#64748b" FontWeight="Medium"/>
+
+
+
+                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#14532d"/>
+
+
+
+                                </StackPanel>
+
+
+
+                            </StackPanel>
+
+
+
+
+
+
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                 <!-- Rebuild Warning Alert -->
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
+
+
+
+                                         Height="40" Width="140" Padding="0" Margin="0,0,10,0"
+
+
+
+                                         Background="#dc2626" BorderBrush="#dc2626"
+
+
+
+                                         Cursor="Help"
+
+
+
+                                         Visibility="{Binding IsRebuildRequired, Converter={StaticResource BooleanToVisibilityConverter}}"
+
+
+
+                                         ToolTip="تنبيه: يجب إعادة بناء الدفتر بسبب تسجيل حركة بتاريخ سابق أو تعديل مصروف/سداد بأثر رجعي!">
+
+
+
+                                     <Grid Width="140">
+
+
+
+                                        <materialDesign:PackIcon Kind="Alert" Width="28" Height="28" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                     </Grid>
+
+
+
+                                 </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                        Content="إعادة بناء الدفتر" 
+
+
+
+                                        Command="{Binding RebuildCashLedgerCommand}" 
+
+
+
+                                        BorderBrush="#f59e0b" Foreground="#d97706"
+
+
+
+                                        Height="40" Width="140" Margin="0,0,10,0" Cursor="Hand" ToolTip="إعادة حساب الأرصدة التراكمية لتصحيح أي خلل"/>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+
+
+
+                                         Command="{Binding OpenSettleOwnerCashDialogCommand}" 
+
+
+
+                                         Background="#6366f1" BorderBrush="#6366f1"
+
+
+
+                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
+
+
+
+                                      <StackPanel Orientation="Horizontal">
+
+
+
+                                          <materialDesign:PackIcon Kind="CashCheck" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                          <TextBlock Text="تسوية كاش المالك" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                      </StackPanel>
+
+
+
+                                  </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                         Command="{Binding OpenSettlementArchiveCommand}" 
+
+
+
+                                         BorderBrush="#64748b" Foreground="#64748b"
+
+
+
+                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
+
+
+
+                                      <StackPanel Orientation="Horizontal">
+
+
+
+                                          <materialDesign:PackIcon Kind="History" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                          <TextBlock Text="أرشيف التسويات" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                      </StackPanel>
+
+
+
+                                  </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+
+
+
+                                        Content="تحديث البيانات" 
+
+
+
+                                        Command="{Binding LoadCashMovementsCommand}" 
+
+
+
+                                        Background="#10b981" BorderBrush="#10b981"
+
+
+
+                                        Height="40" Cursor="Hand"/>
+
+
+
+                            </StackPanel>
+
+
+
+                        </Grid>
+
+
+
+                    </Border>
+
+
+
+
+
+
+
+                    <!-- Cash Movements DataGrid -->
+
+
+
+                    <Grid Grid.Row="1">
+
+
+
+                        <DataGrid Margin="0" 
+
+
+
+                                  ItemsSource="{Binding CashMovements}" 
+
+
+
+                                  AutoGenerateColumns="False"
+
+
+
+                                  CanUserAddRows="False" 
+
+
+
+                                  IsReadOnly="True"
+
+
+
+                                  HeadersVisibility="Column"
+
+
+
+                                  Background="Transparent"
+
+
+
+                                  BorderThickness="0"
+
+
+
+                                  RowHeight="50"
+
+
+
+                                  GridLinesVisibility="Horizontal"
+
+
+
+                                  HorizontalScrollBarVisibility="Auto"
+
+
+
+                                  HorizontalGridLinesBrush="#f1f5f9">
+
+
+
+                            <DataGrid.Columns>
+
+
+
+                                <DataGridTextColumn Header="م" Binding="{Binding Sequence}" Width="Auto" MinWidth="40"/>
+
+
+
+                                <DataGridTextColumn Header="التاريخ" Binding="{Binding TransactionDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="150"/>
+
+
+
+                                <DataGridTextColumn Header="البيان" Binding="{Binding Notes}" Width="*" MinWidth="250"/>
+
+
+
+                                <DataGridTemplateColumn Header="المبلغ" Width="Auto" MinWidth="120">
+
+
+
+                                    <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                        <DataTemplate>
+
+
+
+                                            <Button Command="{Binding DataContext.ViewCashMovementDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+
+
+
+                                                    CommandParameter="{Binding}"
+
+
+
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+
+
+
+                                                    Cursor="Hand" Padding="4,0" Height="Auto"
+
+
+
+                                                    ToolTip="اضغط لعرض التفاصيل">
+
+
+
+                                                <TextBlock Text="{Binding Amount, StringFormat=\{0:N2\} د.ل}" 
+
+
+
+                                                           FontWeight="Bold" Foreground="#3b82f6" 
+
+
+
+                                                           TextDecorations="Underline"/>
+
+
+
+                                            </Button>
+
+
+
+                                        </DataTemplate>
+
+
+
+                                    </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                </DataGridTemplateColumn>
+
+
+
+                                <DataGridTextColumn Header="الرصيد بعد الحركة" Binding="{Binding BalanceAfter, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
+
+
+
+                            </DataGrid.Columns>
+
+
+
+                        </DataGrid>
+
+
+
+                    </Grid>
+
+
+
+                </Grid>
+
+
+
+            </Border>
+
+
+
+        </Grid>
+
+
+
+
+
+
+
+
+
+    <!-- Settle Owner Cash Dialog Overlay -->
+
+    <Grid Panel.ZIndex="1000" Background="#900f172a" 
+
+          Visibility="{Binding IsSettleOwnerCashDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+        <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="#cbd5e1" BorderThickness="1">
+
+            <Border.Effect>
+
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
+
+            </Border.Effect>
+
+            <Grid>
+
+                <Grid.RowDefinitions>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="20"/>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="20"/>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="20"/>
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="24"/>
+
+                    <RowDefinition Height="Auto"/>
+
+                </Grid.RowDefinitions>
+
+
+
+                <!-- Title -->
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
+
+                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+                </StackPanel>
+
+
+
+                <!-- Current Balance Info Box -->
+
+                <Border Grid.Row="2" Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="*"/>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+
+                            <TextBlock Text="الرصيد النقدي الحالي بالصندوق" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
+
+                            <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="22" FontWeight="Bold" Foreground="#1e293b"/>
+
+                        </StackPanel>
+
+                        <materialDesign:PackIcon Grid.Column="1" Kind="Safe" Width="38" Height="38" Foreground="#94a3b8" VerticalAlignment="Center"/>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- Inputs & Calculations -->
+
+                <StackPanel Grid.Row="4">
+
+                    <!-- Payout Input -->
+
+                    <TextBlock Text="المبلغ المراد تسليمه للمالك كاش (د.ل)" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+
+                    <TextBox Text="{Binding SettlePayoutInput, UpdateSourceTrigger=PropertyChanged}" 
+
+                             FontSize="16" FontWeight="Bold" Padding="12,10" Margin="0,0,0,16"
+
+                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
+
+                             materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+
+                             materialDesign:TextFieldAssist.TextBoxViewMargin="0"
+
+                             Style="{StaticResource MaterialDesignTextBox}"/>
+
+
+
+                    <!-- Keep Amount (ReadOnly Calculation) -->
+
+                    <Border Background="#f0fdf4" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
+
+                        <Grid>
+
+                            <Grid.ColumnDefinitions>
+
+                                <ColumnDefinition Width="*"/>
+
+                                <ColumnDefinition Width="Auto"/>
+
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+
+                                <TextBlock Text="السيولة التشغيلية المتبقية بالصندوق" FontSize="11" Foreground="#166534" Margin="0,0,0,2"/>
+
+                                <TextBlock Text="{Binding SettleKeepCalculation, StringFormat=\{0:N2\} د.ل}" FontSize="16" FontWeight="Bold" Foreground="#15803d"/>
+
+                            </StackPanel>
+
+                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingUp" Width="24" Height="24" Foreground="#15803d" VerticalAlignment="Center"/>
+
+                        </Grid>
+
+                    </Border>
+
+
+
+                    <!-- Notes Input -->
+
+                    <TextBlock Text="ملاحظات والتفاصيل" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+
+                    <TextBox Text="{Binding SettleNotesInput, UpdateSourceTrigger=PropertyChanged}" 
+
+                             FontSize="14" Padding="12,10" Height="70" TextWrapping="Wrap" AcceptsReturn="True"
+
+                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
+
+                             materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
+
+                             materialDesign:TextFieldAssist.TextBoxViewMargin="0"
+
+                             Style="{StaticResource MaterialDesignTextBox}"/>
+
+                </StackPanel>
+
+
+
+                <!-- Warning Alert -->
+
+                <Border Grid.Row="6" Background="#fffbeb" BorderBrush="#fef3c7" BorderThickness="1" CornerRadius="8" Padding="12">
+
+                    <Grid>
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="Auto"/>
+
+                            <ColumnDefinition Width="*"/>
+
+                        </Grid.ColumnDefinitions>
+
+                        <materialDesign:PackIcon Grid.Column="0" Kind="AlertCircle" Width="20" Height="20" Foreground="#d97706" Margin="0,0,10,0" VerticalAlignment="Top"/>
+
+                        <TextBlock Grid.Column="1" Text="تنبيه: سيتم ترحيل وتأكيد كافة اليوميات والمصاريف اليومية وتجميدها نهائياً لمنع أي تعديل لاحق." 
+
+                                   FontSize="11.5" Foreground="#b45309" TextWrapping="Wrap" LineHeight="16"/>
+
+                    </Grid>
+
+                </Border>
+
+
+
+                <!-- Buttons -->
+
+                <Grid Grid.Row="8">
+
+                    <Grid.ColumnDefinitions>
+
+                        <ColumnDefinition Width="*"/>
+
+                        <ColumnDefinition Width="12"/>
+
+                        <ColumnDefinition Width="*"/>
+
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Content="تأكيد وإقفال" Command="{Binding ConfirmSettleOwnerCashCommand}" 
+
+                            Background="#6366f1" BorderBrush="#6366f1" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
+
+                    <Button Grid.Column="2" Content="إلغاء" Command="{Binding CloseSettleOwnerCashDialogCommand}" 
+
+                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="42" Cursor="Hand" FontWeight="Bold"/>
+
+                </Grid>
+
+            </Grid>
+
+        </Border>
+
+    </Grid>
+
+
+
+    <!-- Settlement Archive Dialog Overlay -->
+
+    <Grid Panel.ZIndex="1000" Background="#900f172a" 
+
+          Visibility="{Binding IsSettlementArchiveDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+        <Border Background="White" CornerRadius="16" Width="900" MaxHeight="650" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24" BorderBrush="#cbd5e1" BorderThickness="1">
+
+            <Border.Effect>
+
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
+
+            </Border.Effect>
+
+            <Grid>
+
+                <Grid.RowDefinitions>
+
+                    <!-- 0: Header with Close Button -->
+
+                    <RowDefinition Height="Auto"/>
+
+                    <RowDefinition Height="16"/>
+
+                    <!-- 1: History DataGrid -->
+
+                    <RowDefinition Height="*"/>
+
+                    <RowDefinition Height="16"/>
+
+                    <!-- 2: Footer / Close Button -->
+
+                    <RowDefinition Height="Auto"/>
+
+                </Grid.RowDefinitions>
+
+
+
+                <!-- Header -->
+
+                <Grid Grid.Row="0">
+
+                    <Grid.ColumnDefinitions>
+
+                        <ColumnDefinition Width="*"/>
+
+                        <ColumnDefinition Width="Auto"/>
+
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Grid.Column="0">
+
+                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
+
+                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Command="{Binding CloseSettlementArchiveCommand}" Style="{StaticResource MaterialDesignToolButton}" Width="36" Height="36" Padding="0" Cursor="Hand" ToolTip="إغلاق">
+
+                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="#64748b"/>
+
+                    </Button>
+
+                </Grid>
+
+
+
+                <!-- History DataGrid -->
+
+                <Grid Grid.Row="2">
+
+                    <DataGrid Margin="0" 
+
+                              ItemsSource="{Binding SettlementHistory}" 
+
+                              AutoGenerateColumns="False"
+
+                              CanUserAddRows="False" 
+
+                              IsReadOnly="True"
+
+                              HeadersVisibility="Column"
+
+                              Background="Transparent"
+
+                              BorderThickness="0"
+
+                              RowHeight="50"
+
+                              MaxHeight="450"
+
+                              GridLinesVisibility="Horizontal"
+
+                              HorizontalScrollBarVisibility="Auto"
+
+                              VerticalScrollBarVisibility="Auto"
+
+                              HorizontalGridLinesBrush="#f1f5f9">
+
+                        <DataGrid.Columns>
+
+                            <DataGridTextColumn Header="جلسة التسوية" Binding="{Binding ShortSessionGuid}" Width="Auto" MinWidth="80"/>
+
+                            <DataGridTextColumn Header="التاريخ والوقت" Binding="{Binding SettleDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="140"/>
+
+                            <DataGridTextColumn Header="بواسطة" Binding="{Binding CreatedBy}" Width="Auto" MinWidth="90"/>
+
+                            <DataGridTextColumn Header="الرصيد الكلي للفترة" Binding="{Binding BalanceBefore, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
+
+                            <DataGridTextColumn Header="المسلم للمالك" Binding="{Binding PayoutAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
+
+                            <DataGridTextColumn Header="السيولة المتبقية" Binding="{Binding KeepAmount, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="110"/>
+
+                            <DataGridTextColumn Header="البيان والملاحظات" Binding="{Binding Notes}" Width="*" MinWidth="180"/>
+
+                            <DataGridTextColumn Header="حالة الفترة" Binding="{Binding StatusText}" Width="Auto" MinWidth="120"/>
+                            <DataGridTemplateColumn Header="إجراءات" Width="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -2311,7 +4566,7 @@
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
-                                                    ToolTip="طھظ†ط²ظٹظ„ ظˆط¹ط±ط¶ ط¥ظٹطµط§ظ„ PDF">
+                                                    ToolTip="تنزيل وعرض إيصال PDF">
                                                 <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#ef4444"/>
                                             </Button>
                                             <!-- Unlock Period -->
@@ -2319,7 +4574,7 @@
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
-                                                    ToolTip="ط¥ظ„ط؛ط§ط، ظ‚ظپظ„ ط§ظ„ظپطھط±ط© ظ„ظ„ظ…ط±ط§ط¬ط¹ط©">
+                                                    ToolTip="إلغاء قفل الفترة للمراجعة">
                                                 <materialDesign:PackIcon Kind="LockOpenOutline" Width="22" Height="22" Foreground="#f97316"/>
                                             </Button>
                                             <!-- Unpost Period -->
@@ -2327,27 +4582,45 @@
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
-                                                    ToolTip="ظپظƒ طھط±ط­ظٹظ„ ط§ظ„ظپطھط±ط© ط¨ط§ظ„ظƒط§ظ…ظ„ ظˆط¹ظƒط³ ط§ظ„ط­ط±ظƒط§طھ ط§ظ„ظ†ظ‚ط¯ظٹط©">
+                                                    ToolTip="فك ترحيل الفترة بالكامل وعكس الحركات النقدية">
                                                 <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="22" Height="22" Foreground="#dc2626"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
-
-                <!-- Footer Buttons -->
-                <Grid Grid.Row="4">
-                    <Button HorizontalAlignment="Right" Content="إغلاق الأرشيف" Command="{Binding CloseSettlementArchiveCommand}" 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="40" Padding="20,0" Cursor="Hand" FontWeight="Bold"/>
-                </Grid>
-            </Grid>
-        </Border>
-    </Grid>
-
-    </Grid>
-
-</UserControl>
-
+                            </DataGridTemplateColumn>
+
+                        </DataGrid.Columns>
+
+                    </DataGrid>
+
+                </Grid>
+
+
+
+                <!-- Footer Buttons -->
+
+                <Grid Grid.Row="4">
+
+                    <Button HorizontalAlignment="Right" Content="إغلاق الأرشيف" Command="{Binding CloseSettlementArchiveCommand}" 
+
+                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="40" Padding="20,0" Cursor="Hand" FontWeight="Bold"/>
+
+                </Grid>
+
+            </Grid>
+
+        </Border>
+
+    </Grid>
+
+
+
+    </Grid>
+
+
+
+</UserControl>
+
+
+
