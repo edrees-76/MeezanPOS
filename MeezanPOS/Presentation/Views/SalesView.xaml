@@ -1654,11 +1654,11 @@
 
 
 
-                                        <DatePicker Grid.Column="2" SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
+                                        <DatePicker Grid.Column="2" SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" Padding="8,4" FontSize="12" VerticalContentAlignment="Center"/>
 
 
 
-                                        <DatePicker Grid.Column="4" SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" VerticalContentAlignment="Center"/>
+                                        <DatePicker Grid.Column="4" SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="45" Padding="8,4" FontSize="12" VerticalContentAlignment="Center"/>
 
 
 
@@ -2660,9 +2660,9 @@
 
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
 
-                                        <DatePicker SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
+                                        <DatePicker SelectedDate="{Binding FilterStartDate}" materialDesign:HintAssist.Hint="من تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" Padding="8,4" FontSize="12" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
 
-                                        <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
+                                        <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" Padding="8,4" FontSize="12" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
 
                                         <Button Command="{Binding ApplyFiltersCommand}" Content="تصفية" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="36" Width="80" Margin="0,0,6,0"/>
 
