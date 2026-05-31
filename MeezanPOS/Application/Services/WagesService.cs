@@ -13,10 +13,12 @@ namespace MeezanPOS.Application.Services;
 public class WagesService : IWagesService
 {
     private readonly AppDbContext _context;
+    private readonly ISessionService? _sessionService;
 
-    public WagesService(AppDbContext context)
+    public WagesService(AppDbContext context, ISessionService? sessionService = null)
     {
         _context = context;
+        _sessionService = sessionService;
     }
 
     // --- إدارة بيانات العمال (Worker CRUD) ---
@@ -314,13 +316,45 @@ public class WagesService : IWagesService
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteTransactionAsync(int transactionId)
+    public async Task DeleteTransactionAsync(int transactionId, string reason, string deletedBy, int? deletedByUserId)
     {
-        var tx = await _context.WorkerTransactions.FindAsync(transactionId);
+        var tx = await _context.WorkerTransactions
+            .Include(t => t.GeneralExpense)
+            .Include(t => t.DailyExpenseItem)
+                .ThenInclude(d => d.DailyJournal)
+            .FirstOrDefaultAsync(t => t.Id == transactionId);
+
         if (tx != null)
         {
+            bool isPosted = false;
+            if (tx.GeneralExpense != null && (tx.GeneralExpense.FinancialStatus == FinancialStatus.Posted || tx.GeneralExpense.FinancialStatus == FinancialStatus.Archived))
+            {
+                isPosted = true;
+            }
+            else if (tx.DailyExpenseItem != null && tx.DailyExpenseItem.DailyJournal != null && (tx.DailyExpenseItem.DailyJournal.FinancialStatus == FinancialStatus.Posted || tx.DailyExpenseItem.DailyJournal.FinancialStatus == FinancialStatus.Archived))
+            {
+                isPosted = true;
+            }
+
+            bool isManualDirect = tx.AttendanceId == null && tx.DailyExpenseItemId == null && tx.GeneralExpenseId == null;
+
+            if (isPosted)
+            {
+                throw new InvalidOperationException("لا يمكن حذف حركة مالية مرحّلة مالياً.");
+            }
+
+            if (!isManualDirect)
+            {
+                throw new InvalidOperationException("لا يمكن حذف حركات النظام التلقائية من شاشة كشف حساب العامل مباشرة.");
+            }
+
             tx.IsDeleted = true;
+            tx.DeletedReason = reason;
+            tx.DeletedBy = deletedBy;
+            tx.DeletedByUserId = deletedByUserId;
+            tx.DeletedAt = DateTime.UtcNow;
             tx.UpdatedAt = DateTime.UtcNow;
+
             await _context.SaveChangesAsync();
         }
     }
@@ -328,6 +362,9 @@ public class WagesService : IWagesService
     public async Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(int workerId)
     {
         var txs = await _context.WorkerTransactions
+            .Include(t => t.GeneralExpense)
+            .Include(t => t.DailyExpenseItem)
+                .ThenInclude(d => d.DailyJournal)
             .Where(t => t.WorkerId == workerId && !t.IsDeleted)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)
@@ -364,6 +401,18 @@ public class WagesService : IWagesService
                 };
             }
 
+            bool isPosted = false;
+            if (t.GeneralExpense != null && (t.GeneralExpense.FinancialStatus == FinancialStatus.Posted || t.GeneralExpense.FinancialStatus == FinancialStatus.Archived))
+            {
+                isPosted = true;
+            }
+            else if (t.DailyExpenseItem != null && t.DailyExpenseItem.DailyJournal != null && (t.DailyExpenseItem.DailyJournal.FinancialStatus == FinancialStatus.Posted || t.DailyExpenseItem.DailyJournal.FinancialStatus == FinancialStatus.Archived))
+            {
+                isPosted = true;
+            }
+
+            bool isManualDirect = t.AttendanceId == null && t.DailyExpenseItemId == null && t.GeneralExpenseId == null;
+
             ledger.Add(new WorkerLedgerEntry
             {
                 Id = t.Id,
@@ -373,7 +422,9 @@ public class WagesService : IWagesService
                 AccruedAmount = t.CreditAmount,
                 PaidAmount = t.DebitAmount,
                 BalanceAfter = runningBalance,
-                Notes = t.Notes ?? string.Empty
+                Notes = (t.Notes != description) ? (t.Notes ?? string.Empty) : string.Empty,
+                IsPosted = isPosted,
+                IsManualDirect = isManualDirect
             });
         }
 

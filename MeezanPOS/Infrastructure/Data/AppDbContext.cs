@@ -235,6 +235,10 @@ public class AppDbContext : DbContext
                     DailyExpenseItemId INTEGER,
                     GeneralExpenseId INTEGER,
                     Notes TEXT,
+                    DeletedReason TEXT,
+                    DeletedBy TEXT,
+                    DeletedByUserId INTEGER,
+                    DeletedAt TEXT,
                     FOREIGN KEY (WorkerId) REFERENCES Workers(Id) ON DELETE RESTRICT,
                     FOREIGN KEY (AttendanceId) REFERENCES WorkerAttendances(Id) ON DELETE RESTRICT,
                     FOREIGN KEY (DailyExpenseItemId) REFERENCES DailyExpenseItems(Id) ON DELETE RESTRICT,
@@ -295,7 +299,12 @@ public class AppDbContext : DbContext
             "ALTER TABLE PostingSessions ADD COLUMN SessionType TEXT NOT NULL DEFAULT 'Posting';",
             "ALTER TABLE PostingSessions ADD COLUMN RowVersion INTEGER NOT NULL DEFAULT 0;",
             "ALTER TABLE PostingSessionDetails ADD COLUMN TransactionAmount REAL NOT NULL DEFAULT 0.0;",
-            "ALTER TABLE PostingSessionDetails ADD COLUMN CashMovementId INTEGER;"
+            "ALTER TABLE PostingSessionDetails ADD COLUMN CashMovementId INTEGER;",
+            // حقول تدقيق حذف معاملات العمال
+            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedReason TEXT;",
+            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedBy TEXT;",
+            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedByUserId INTEGER;",
+            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedAt TEXT;"
         };
         foreach (var sql in alterCommands)
         {

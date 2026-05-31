@@ -78,6 +78,24 @@ public partial class WagesManagementViewModel : ObservableObject
     [ObservableProperty]
     private decimal selectedWorkerTotalPaid;
 
+    [ObservableProperty]
+    private WorkerLedgerFilter activeTimelineFilter = WorkerLedgerFilter.All;
+
+    [ObservableProperty]
+    private System.ComponentModel.ICollectionView? workerLedgerView;
+
+    [ObservableProperty]
+    private DateTime? workerFirstTransactionDate;
+
+    [ObservableProperty]
+    private DateTime? workerLastTransactionDate;
+
+    [ObservableProperty]
+    private int workerTotalTransactionsCount;
+
+    [ObservableProperty]
+    private bool autoOpenPdfAfterExport = true;
+
     // حقول الدفع والسلف والتسويات
     [ObservableProperty]
     private decimal inputPaymentAmount;
@@ -96,13 +114,39 @@ public partial class WagesManagementViewModel : ObservableObject
     private string searchQuery = string.Empty;
 
     [ObservableProperty]
+    private string timelineSearchQuery = string.Empty;
+
+    partial void OnTimelineSearchQueryChanged(string value)
+    {
+        WorkerLedgerView?.Refresh();
+    }
+
+    [ObservableProperty]
     private decimal totalOutstandingBalance;
 
+    [ObservableProperty]
+    private int totalWorkersCount;
+
+    [ObservableProperty]
+    private int activeWorkersCount;
+
+    [ObservableProperty]
+    private decimal totalDailyWagesCost;
+
+    [ObservableProperty]
+    private string workerSearchQuery = string.Empty;
+
+    partial void OnWorkerSearchQueryChanged(string value)
+    {
+        ApplyWorkerFilter();
+    }
+
+    private List<Worker> _allWorkers = new();
     private List<WorkerWageSummary> _allSummaries = new();
 
     public WagesManagementViewModel()
     {
-        _wagesService = new WagesService(new AppDbContext());
+        _wagesService = AppServiceProvider.Resolve<IWagesService>();
 
         InitializeShiftTypes();
         SelectedAttendanceShift = ShiftTypes.First(s => s.Type == ShiftType.FullDay);
@@ -127,6 +171,7 @@ public partial class WagesManagementViewModel : ObservableObject
         {
             // 1. تحميل قائمة ملفات العمال (التبويب الثاني)
             var workers = await _wagesService.GetAllWorkersAsync(includeInactive: true);
+            _allWorkers = workers;
             
             // 2. تحميل ملخصات أرصدة العمال (التبويب الثالث)
             var summaries = await _wagesService.GetWorkerSummariesAsync();
@@ -134,12 +179,11 @@ public partial class WagesManagementViewModel : ObservableObject
 
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                WorkersList.Clear();
-                foreach (var worker in workers)
-                {
-                    WorkersList.Add(worker);
-                }
+                TotalWorkersCount = workers.Count;
+                ActiveWorkersCount = workers.Count(w => w.IsActive);
+                TotalDailyWagesCost = workers.Where(w => w.IsActive).Sum(w => w.DailyWage);
 
+                ApplyWorkerFilter();
                 ApplyFilter();
                 TotalOutstandingBalance = _allSummaries.Sum(s => s.Balance);
             });
@@ -336,6 +380,48 @@ public partial class WagesManagementViewModel : ObservableObject
         _ = LoadWorkerLedgerAsync();
     }
 
+    [RelayCommand]
+    public async Task ClearSelectedWorkerAsync()
+    {
+        SelectedWorkerSummary = null;
+        await ReloadWorkerBalancesAsync();
+    }
+
+    [RelayCommand]
+    public void ChangeTimelineFilter(WorkerLedgerFilter filter)
+    {
+        ActiveTimelineFilter = filter;
+        WorkerLedgerView?.Refresh();
+    }
+
+    private bool FilterLedgerEntries(object item)
+    {
+        if (item is not WorkerLedgerEntry entry) return false;
+        
+        bool matchesFilter = ActiveTimelineFilter switch
+        {
+            WorkerLedgerFilter.All => true,
+            WorkerLedgerFilter.WageAccrual => entry.Source == "استحقاق حضور",
+            WorkerLedgerFilter.Payment => entry.Source == "سداد نقدي",
+            WorkerLedgerFilter.Advance => entry.Source == "سلفة عمال",
+            WorkerLedgerFilter.Deduction => entry.Source == "خصم وغرامة",
+            WorkerLedgerFilter.Adjustment => entry.Source == "تسوية يدوية",
+            _ => true
+        };
+
+        if (!matchesFilter) return false;
+
+        if (!string.IsNullOrWhiteSpace(TimelineSearchQuery))
+        {
+            string query = TimelineSearchQuery.Trim();
+            bool descMatch = entry.Description.Contains(query, StringComparison.OrdinalIgnoreCase);
+            bool notesMatch = entry.Notes != null && entry.Notes.Contains(query, StringComparison.OrdinalIgnoreCase);
+            return descMatch || notesMatch;
+        }
+
+        return true;
+    }
+
     private async Task LoadWorkerLedgerAsync()
     {
         if (SelectedWorkerSummary == null)
@@ -346,6 +432,9 @@ public partial class WagesManagementViewModel : ObservableObject
                 SelectedWorkerBalance = 0;
                 SelectedWorkerTotalAccrued = 0;
                 SelectedWorkerTotalPaid = 0;
+                WorkerFirstTransactionDate = null;
+                WorkerLastTransactionDate = null;
+                WorkerTotalTransactionsCount = 0;
             });
             return;
         }
@@ -357,14 +446,30 @@ public partial class WagesManagementViewModel : ObservableObject
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 WorkerLedger.Clear();
-                foreach (var entry in ledger)
+                // نعرض الحركات من الأحدث إلى الأقدم في الـ Timeline
+                foreach (var entry in ledger.OrderByDescending(x => x.Date).ThenByDescending(x => x.Id))
                 {
                     WorkerLedger.Add(entry);
                 }
 
-                SelectedWorkerBalance = SelectedWorkerSummary.Balance;
-                SelectedWorkerTotalAccrued = SelectedWorkerSummary.TotalAccrued;
-                SelectedWorkerTotalPaid = SelectedWorkerSummary.TotalPaid;
+                if (WorkerLedgerView == null)
+                {
+                    WorkerLedgerView = System.Windows.Data.CollectionViewSource.GetDefaultView(WorkerLedger);
+                    WorkerLedgerView.Filter = FilterLedgerEntries;
+                }
+                else
+                {
+                    WorkerLedgerView.Refresh();
+                }
+
+                // Single Source of Truth
+                SelectedWorkerTotalAccrued = ledger.Sum(x => x.AccruedAmount);
+                SelectedWorkerTotalPaid = ledger.Sum(x => x.PaidAmount);
+                SelectedWorkerBalance = SelectedWorkerTotalAccrued - SelectedWorkerTotalPaid;
+
+                WorkerFirstTransactionDate = ledger.OrderBy(x => x.Date).FirstOrDefault()?.Date;
+                WorkerLastTransactionDate = ledger.OrderBy(x => x.Date).LastOrDefault()?.Date;
+                WorkerTotalTransactionsCount = ledger.Count;
             });
         }
         catch (Exception ex)
@@ -555,37 +660,93 @@ public partial class WagesManagementViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task ReloadWorkerBalancesAsync()
+    {
+        try
+        {
+            var summaries = await _wagesService.GetWorkerSummariesAsync();
+            _allSummaries = summaries;
+
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                ApplyFilter();
+                TotalOutstandingBalance = _allSummaries.Sum(s => s.Balance);
+            });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ في تحديث أرصدة العمال: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
     public async Task DeleteLedgerItemAsync(WorkerLedgerEntry entry)
     {
         if (entry == null) return;
 
-        if (entry.Source != "استحقاق حضور" && entry.Source != "سلفة عمال" && entry.Source != "تسوية يدوية")
+        if (!entry.CanDelete)
         {
-            MessageBox.Show("الحركات المالية الناتجة من الكاشير أو المصاريف العامة يجب حذفها وتعديلها من شاشاتها المخصصة لضمان تطابق الصندوق.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("الحركات المالية الناتجة عن الحضور والغياب أو الكاشير أو المصاريف العامة لا يمكن حذفها يدوياً من هنا لضمان تطابق الصناديق واليوميات الحسابية. يرجى حذفها أو تسويتها من شاشاتها المخصصة.", "تنبيه (منع الحذف)", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var result = MessageBox.Show($"هل أنت متأكد من حذف المعاملة المالية ({entry.Source}) بتاريخ {entry.Date:yyyy/MM/dd} بقيمة {(entry.AccruedAmount > 0 ? entry.AccruedAmount : entry.PaidAmount)}؟", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        if (result != MessageBoxResult.Yes) return;
+        var dialog = new MeezanPOS.Presentation.Views.DeleteReasonDialog();
+        dialog.Owner = System.Windows.Application.Current.MainWindow;
+        if (dialog.ShowDialog() != true) return;
 
         try
         {
-            await _wagesService.DeleteTransactionAsync(entry.Id);
+            string reason = $"{dialog.SelectedReason} - {dialog.SelectedDetailReason}";
+            var session = AppServiceProvider.Resolve<ISessionService>();
+            string deletedBy = session.CurrentUsername;
+            int? deletedByUserId = session.CurrentUser?.Id;
+
+            await _wagesService.DeleteTransactionAsync(entry.Id, reason, deletedBy, deletedByUserId);
 
             int currentWorkerId = SelectedWorkerSummary?.WorkerId ?? 0;
 
-            await LoadAllDataAsync();
+            await ReloadWorkerBalancesAsync();
 
             if (currentWorkerId > 0)
             {
                 SelectedWorkerSummary = _allSummaries.FirstOrDefault(s => s.WorkerId == currentWorkerId);
             }
 
-            MessageBox.Show("تم حذف المعاملة المالية وتحديث كشف الحساب التراكمي بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("تم حذف المعاملة المالية وتوثيق العملية في سجل التدقيق بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             MessageBox.Show($"خطأ أثناء حذف المعاملة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    [RelayCommand]
+    public void ExportWorkerLedgerPdf()
+    {
+        if (SelectedWorkerSummary == null) return;
+
+        try
+        {
+            string tempFolder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MeezanPOS");
+            System.IO.Directory.CreateDirectory(tempFolder);
+            string fileName = $"كشف_حساب_{SelectedWorkerSummary.WorkerName.Replace(" ", "_")}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string filePath = System.IO.Path.Combine(tempFolder, fileName);
+
+            // نمرر الحركات مرتبة تصاعدياً ليظهر الرصيد التراكمي التاريخي بشكل منطقي
+            var pdfTransactions = WorkerLedger.OrderBy(x => x.Date).ThenBy(x => x.Id).ToList();
+
+            WorkerStatementPdfReport.GeneratePdf(
+                filePath,
+                SelectedWorkerSummary.WorkerName,
+                SelectedWorkerTotalAccrued,
+                SelectedWorkerTotalPaid,
+                SelectedWorkerBalance,
+                pdfTransactions,
+                true);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"خطأ أثناء فتح تقرير PDF: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -595,6 +756,63 @@ public partial class WagesManagementViewModel : ObservableObject
     partial void OnSearchQueryChanged(string value)
     {
         ApplyFilter();
+    }
+
+    [RelayCommand]
+    public async Task OpenWorkerStatementAsync(WorkerWageSummary summary)
+    {
+        if (summary == null) return;
+        var window = new MeezanPOS.Presentation.Views.WorkerStatementWindow(summary)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        window.ShowDialog();
+        await LoadAllDataAsync();
+    }
+
+    [RelayCommand]
+    public async Task OpenAddWorkerDialogAsync()
+    {
+        var dialog = new MeezanPOS.Presentation.Views.WorkerEditDialog(null)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            await LoadAllDataAsync();
+        }
+    }
+
+    [RelayCommand]
+    public async Task OpenEditWorkerDialogAsync(Worker worker)
+    {
+        if (worker == null) return;
+        var dialog = new MeezanPOS.Presentation.Views.WorkerEditDialog(worker)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            await LoadAllDataAsync();
+        }
+    }
+
+    private void ApplyWorkerFilter()
+    {
+        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        {
+            WorkersList.Clear();
+            var filtered = _allWorkers;
+            if (!string.IsNullOrWhiteSpace(WorkerSearchQuery))
+            {
+                string query = WorkerSearchQuery.Trim();
+                filtered = filtered.Where(w => w.WorkerName.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            foreach (var w in filtered)
+            {
+                WorkersList.Add(w);
+            }
+        });
     }
 
     private void ApplyFilter()

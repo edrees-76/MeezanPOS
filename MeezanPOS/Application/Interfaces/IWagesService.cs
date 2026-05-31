@@ -28,6 +28,9 @@ public class WorkerLedgerEntry
     public decimal PaidAmount { get; set; }    // مبلغ مدفوع (عليه) - Debit
     public decimal BalanceAfter { get; set; }  // الرصيد التراكمي بعد الحركة
     public string Notes { get; set; } = string.Empty;
+    public bool IsPosted { get; set; }
+    public bool IsManualDirect { get; set; }
+    public bool CanDelete => !IsPosted && IsManualDirect;
 }
 
 public interface IWagesService
@@ -45,7 +48,7 @@ public interface IWagesService
 
     // --- العمليات المالية والأستاذ المساعد (Transactions & Ledger) ---
     Task RecordTransactionAsync(WorkerTransaction transaction);
-    Task DeleteTransactionAsync(int transactionId);
+    Task DeleteTransactionAsync(int transactionId, string reason, string deletedBy, int? deletedByUserId);
     Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(int workerId);
     Task<List<WorkerWageSummary>> GetWorkerSummariesAsync();
     

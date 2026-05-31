@@ -30,4 +30,10 @@ public class WorkerTransaction : BaseEntity
     public GeneralExpense? GeneralExpense { get; set; }
 
     public string? Notes { get; set; }
+
+    // حقول التدقيق للحذف المنطقي
+    public string? DeletedReason { get; set; }
+    public string? DeletedBy { get; set; }
+    public int? DeletedByUserId { get; set; }
+    public DateTime? DeletedAt { get; set; }
 }

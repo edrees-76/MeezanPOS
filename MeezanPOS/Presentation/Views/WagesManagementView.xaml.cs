@@ -1,5 +1,8 @@
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MeezanPOS.Application.ViewModels;
+using MeezanPOS.Application.Interfaces;
 
 namespace MeezanPOS.Presentation.Views;
 
@@ -12,5 +15,23 @@ public partial class WagesManagementView : UserControl
     {
         InitializeComponent();
         DataContext = new WagesManagementViewModel();
+    }
+
+    /// <summary>
+    /// يفتح نافذة كشف حساب العامل عند النقر المزدوج على صف العامل
+    /// </summary>
+    private void WorkerRow_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement element)
+        {
+            WorkerWageSummary? summary = element.DataContext as WorkerWageSummary ?? element.Tag as WorkerWageSummary;
+            if (summary != null)
+            {
+                if (DataContext is WagesManagementViewModel vm && vm.OpenWorkerStatementCommand.CanExecute(summary))
+                {
+                    vm.OpenWorkerStatementCommand.Execute(summary);
+                }
+            }
+        }
     }
 }
