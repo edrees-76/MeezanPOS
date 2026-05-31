@@ -33,6 +33,9 @@ public partial class WagesManagementViewModel : ObservableObject
 
     public ObservableCollection<ShiftOption> ShiftTypes { get; } = new();
 
+    public System.Collections.Generic.List<AttendanceStatus> AttendanceStatuses { get; } = 
+        System.Enum.GetValues(typeof(AttendanceStatus)).Cast<AttendanceStatus>().ToList();
+
     // ==========================================
     // التبويب الثاني: ملفات العمال وإدارة البيانات
     // ==========================================

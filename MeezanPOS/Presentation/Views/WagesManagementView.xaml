@@ -132,7 +132,7 @@
                                 <DataGridTemplateColumn Header="حالة الحضور" Width="150">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <ComboBox ItemsSource="{Binding Source={StaticResource AttendanceStatusEnum}}"
+                                            <ComboBox ItemsSource="{Binding DataContext.AttendanceStatuses, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                       SelectedItem="{Binding Status, UpdateSourceTrigger=PropertyChanged}"
                                                       Style="{StaticResource MaterialDesignComboBox}"
                                                       VerticalAlignment="Center">
