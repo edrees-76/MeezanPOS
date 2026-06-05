@@ -446,8 +446,8 @@ public class WagesService : IWagesService
             .Select(g => new
             {
                 WorkerId = g.Key,
-                TotalAccrued = g.Sum(t => t.CreditAmount),
-                TotalPaid = g.Sum(t => t.DebitAmount),
+                TotalAccrued = (decimal)g.Sum(t => (double)t.CreditAmount),
+                TotalPaid = (decimal)g.Sum(t => (double)t.DebitAmount),
                 LastActivity = g.Max(t => (DateTime?)t.TransactionDate)
             })
             .ToDictionaryAsync(b => b.WorkerId);

@@ -47,6 +47,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
         // تهيئة نظام التسجيل أولاً
         AppLogger.Initialize();
         Log.Information("بدء تشغيل منظومة ميزان POS");
@@ -102,50 +104,6 @@ public partial class App : System.Windows.Application
                     {
                         Log.Warning(ex, "خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات");
                     }
-                }
-                // حماية ضد الهجرات المتكررة لكي لا تفشل الترقية عند وجود حقول مضافة مسبقاً يدوياً
-                try
-                {
-                    bool columnExists = false;
-                    using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={dbPath}"))
-                    {
-                        conn.Open();
-                        using (var cmd = conn.CreateCommand())
-                        {
-                            cmd.CommandText = "PRAGMA table_info(WorkerAttendances);";
-                            using (var reader = cmd.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    var columnName = reader["name"].ToString();
-                                    if (columnName == "SnapshotDailyWage")
-                                    {
-                                        columnExists = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (columnExists)
-                        {
-                            using (var cmd = conn.CreateCommand())
-                            {
-                                cmd.CommandText = @"
-                                    CREATE TABLE IF NOT EXISTS ""__EFMigrationsHistory"" (
-                                        ""MigrationId"" TEXT NOT NULL CONSTRAINT ""PK___EFMigrationsHistory"" PRIMARY KEY,
-                                        ""ProductVersion"" TEXT NOT NULL
-                                    );
-                                    INSERT OR IGNORE INTO ""__EFMigrationsHistory"" (MigrationId, ProductVersion) 
-                                    VALUES ('20260605110517_AddWorkerIdToExpenses', '8.0.0');";
-                                cmd.ExecuteNonQuery();
-                            }
-                        }
-                    }
-                }
-                catch (System.Exception ex)
-                {
-                    Log.Warning(ex, "خطأ أثناء التحقق من الهجرة السابقة لقاعدة البيانات");
                 }
 
                 using (var context = new MeezanPOS.Infrastructure.Data.AppDbContext())
@@ -221,13 +179,16 @@ public partial class App : System.Windows.Application
                 AppServiceProvider.Initialize();
                 Log.Information("تم تهيئة حاوية الخدمات");
 
+                Log.Information("جاري فتح شاشة تسجيل الدخول...");
                 // إغلاق شاشة الانتظار وفتح واجهة تسجيل الدخول على خيط واجهة المستخدم الرئيسي
                 Dispatcher.Invoke(() =>
                 {
-                    splash.Close();
                     var loginView = new MeezanPOS.Presentation.Views.LoginView();
                     loginView.Show();
+                    ShutdownMode = ShutdownMode.OnLastWindowClose;
+                    splash.Close();
                 });
+                Log.Information("تم فتح شاشة تسجيل الدخول بنجاح.");
             }
             catch (System.Exception ex)
             {

@@ -279,48 +279,35 @@ public class AppDbContext : DbContext
         }
         catch (Exception ex) { Log.Warning(ex, "خطأ أثناء إنشاء جدول PeriodUnlockHistories"); }
 
-        var alterCommands = new[]
-        {
-            "ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;",
-            "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;",
-            "ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;",
-            // حقول أمنية جديدة للمستخدمين
-            "ALTER TABLE Users ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;",
-            "ALTER TABLE Users ADD COLUMN MustChangePassword INTEGER NOT NULL DEFAULT 0;",
-            "ALTER TABLE Users ADD COLUMN FailedLoginAttempts INTEGER NOT NULL DEFAULT 0;",
-            "ALTER TABLE Users ADD COLUMN LockoutEnd TEXT;",
-            "ALTER TABLE Users ADD COLUMN LastLoginAt TEXT;",
-            // حقول حضور العمال الجديدة
-            "ALTER TABLE WorkerAttendances ADD COLUMN WorkerId INTEGER;",
-            "ALTER TABLE WorkerAttendances ADD COLUMN Status INTEGER NOT NULL DEFAULT 0;",
-            "ALTER TABLE WorkerAttendances ADD COLUMN SnapshotDailyWage REAL NOT NULL DEFAULT 0.0;",
-            // حقول المصاريف والعلاقة بالعمال
-            "ALTER TABLE GeneralExpenses ADD COLUMN WorkerId INTEGER;",
-            "ALTER TABLE DailyExpenseItems ADD COLUMN WorkerId INTEGER;",
-            // حقول جلسات الترحيل والتفاصيل
-            "ALTER TABLE PostingSessions ADD COLUMN PeriodStartDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';",
-            "ALTER TABLE PostingSessions ADD COLUMN PeriodEndDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';",
-            "ALTER TABLE PostingSessions ADD COLUMN SessionType TEXT NOT NULL DEFAULT 'Posting';",
-            "ALTER TABLE PostingSessions ADD COLUMN RowVersion INTEGER NOT NULL DEFAULT 0;",
-            "ALTER TABLE PostingSessionDetails ADD COLUMN TransactionAmount REAL NOT NULL DEFAULT 0.0;",
-            "ALTER TABLE PostingSessionDetails ADD COLUMN CashMovementId INTEGER;",
-            // حقول تدقيق حذف معاملات العمال
-            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedReason TEXT;",
-            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedBy TEXT;",
-            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedByUserId INTEGER;",
-            "ALTER TABLE WorkerTransactions ADD COLUMN DeletedAt TEXT;"
-        };
-        foreach (var sql in alterCommands)
-        {
-            try
-            {
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = sql;
-                cmd.ExecuteNonQuery();
-            }
-            catch (SqliteException ex) when (ex.SqliteErrorCode == 1) { /* العمود موجود بالفعل */ }
-            catch (Exception ex) { Log.Warning(ex, "خطأ غير متوقع أثناء ALTER TABLE"); }
-        }
+        // إضافة الأعمدة الجديدة إن لم تكن موجودة
+        ExecuteSqlIfColumnMissing(context, "OwnerDebts", "PaymentMethod", "ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;");
+        ExecuteSqlIfColumnMissing(context, "OwnerDebts", "TransferReference", "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;");
+        ExecuteSqlIfColumnMissing(context, "GeneralExpenses", "CustomExpenseName", "ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;");
+        // حقول أمنية جديدة للمستخدمين
+        ExecuteSqlIfColumnMissing(context, "Users", "IsActive", "ALTER TABLE Users ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;");
+        ExecuteSqlIfColumnMissing(context, "Users", "MustChangePassword", "ALTER TABLE Users ADD COLUMN MustChangePassword INTEGER NOT NULL DEFAULT 0;");
+        ExecuteSqlIfColumnMissing(context, "Users", "FailedLoginAttempts", "ALTER TABLE Users ADD COLUMN FailedLoginAttempts INTEGER NOT NULL DEFAULT 0;");
+        ExecuteSqlIfColumnMissing(context, "Users", "LockoutEnd", "ALTER TABLE Users ADD COLUMN LockoutEnd TEXT;");
+        ExecuteSqlIfColumnMissing(context, "Users", "LastLoginAt", "ALTER TABLE Users ADD COLUMN LastLoginAt TEXT;");
+        // حقول حضور العمال الجديدة
+        ExecuteSqlIfColumnMissing(context, "WorkerAttendances", "WorkerId", "ALTER TABLE WorkerAttendances ADD COLUMN WorkerId INTEGER;");
+        ExecuteSqlIfColumnMissing(context, "WorkerAttendances", "Status", "ALTER TABLE WorkerAttendances ADD COLUMN Status INTEGER NOT NULL DEFAULT 0;");
+        ExecuteSqlIfColumnMissing(context, "WorkerAttendances", "SnapshotDailyWage", "ALTER TABLE WorkerAttendances ADD COLUMN SnapshotDailyWage REAL NOT NULL DEFAULT 0.0;");
+        // حقول المصاريف والعلاقة بالعمال
+        ExecuteSqlIfColumnMissing(context, "GeneralExpenses", "WorkerId", "ALTER TABLE GeneralExpenses ADD COLUMN WorkerId INTEGER;");
+        ExecuteSqlIfColumnMissing(context, "DailyExpenseItems", "WorkerId", "ALTER TABLE DailyExpenseItems ADD COLUMN WorkerId INTEGER;");
+        // حقول جلسات الترحيل والتفاصيل
+        ExecuteSqlIfColumnMissing(context, "PostingSessions", "PeriodStartDate", "ALTER TABLE PostingSessions ADD COLUMN PeriodStartDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';");
+        ExecuteSqlIfColumnMissing(context, "PostingSessions", "PeriodEndDate", "ALTER TABLE PostingSessions ADD COLUMN PeriodEndDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';");
+        ExecuteSqlIfColumnMissing(context, "PostingSessions", "SessionType", "ALTER TABLE PostingSessions ADD COLUMN SessionType TEXT NOT NULL DEFAULT 'Posting';");
+        ExecuteSqlIfColumnMissing(context, "PostingSessions", "RowVersion", "ALTER TABLE PostingSessions ADD COLUMN RowVersion INTEGER NOT NULL DEFAULT 0;");
+        ExecuteSqlIfColumnMissing(context, "PostingSessionDetails", "TransactionAmount", "ALTER TABLE PostingSessionDetails ADD COLUMN TransactionAmount REAL NOT NULL DEFAULT 0.0;");
+        ExecuteSqlIfColumnMissing(context, "PostingSessionDetails", "CashMovementId", "ALTER TABLE PostingSessionDetails ADD COLUMN CashMovementId INTEGER;");
+        // حقول تدقيق حذف معاملات العمال
+        ExecuteSqlIfColumnMissing(context, "WorkerTransactions", "DeletedReason", "ALTER TABLE WorkerTransactions ADD COLUMN DeletedReason TEXT;");
+        ExecuteSqlIfColumnMissing(context, "WorkerTransactions", "DeletedBy", "ALTER TABLE WorkerTransactions ADD COLUMN DeletedBy TEXT;");
+        ExecuteSqlIfColumnMissing(context, "WorkerTransactions", "DeletedByUserId", "ALTER TABLE WorkerTransactions ADD COLUMN DeletedByUserId INTEGER;");
+        ExecuteSqlIfColumnMissing(context, "WorkerTransactions", "DeletedAt", "ALTER TABLE WorkerTransactions ADD COLUMN DeletedAt TEXT;");
 
         // Drop the old triggers to recreate them with the correct transition exemption
         var dropCommands = new[]
@@ -502,6 +489,33 @@ public class AppDbContext : DbContext
         }
 
         conn.Close();
+    }
+
+    private static void ExecuteSqlIfColumnMissing(AppDbContext context, string table, string column, string sql)
+    {
+        try
+        {
+            var conn = context.Database.GetDbConnection();
+            var wasClosed = conn.State == System.Data.ConnectionState.Closed;
+            if (wasClosed) conn.Open();
+
+            bool exists = false;
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{table}') WHERE name='{column}'";
+                var result = cmd.ExecuteScalar();
+                exists = result != null && System.Convert.ToInt32(result) > 0;
+            }
+
+            if (!exists)
+            {
+                context.Database.ExecuteSqlRaw(sql);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "خطأ أثناء تنفيذ ALTER TABLE للجدول {Table} والعمود {Column}", table, column);
+        }
     }
 
     private void SyncWorkerTransactions()

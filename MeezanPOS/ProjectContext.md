@@ -92,6 +92,13 @@ MeezanPOS/
 * **التعديل:**
   * استبدال الأسطر اليدوية بحلقة Reflection واحدة تمر على كل نوع يرث من `BaseEntity` في الكود البرمجي وتطبق عليه الفلتر تلقائياً، مع تغطية الكيانات الثلاثة التي كانت تفتقد الفلتر يدوياً (`Setting`, `AuditLog`, `UserActionLog`).
 
+### ل. إصلاح نظام ترقية قاعدة البيانات (Migration Safety)
+* **المشكلة:** أوامر ALTER TABLE وCreateTable وCreateIndex كانت تُنفَّذ في كل إقلاع بدون تحقق مسبق مما يسبب duplicate column name.
+* **الإصلاح:** إنشاء دالتين مساعدتين:
+  * `ExecuteSqlIfColumnMissing` في [AppDbContext.cs](file:///d:/Meezan%20sys/MeezanPOS/Infrastructure/Data/AppDbContext.cs)
+  * `ColumnExists` + `TableExists` + `IndexExists` في ملف الهجرة
+* **القاعدة الإلزامية:** أي إضافة مستقبلية لأعمدة أو جداول أو فهارس يجب أن تستخدم هذه الدوال حصراً.
+
 ---
 
 ## 3. القرارات التقنية الكبرى (Architectural Decisions)
@@ -115,6 +122,8 @@ MeezanPOS/
 3. **ترقيات قاعدة البيانات (SQLite Limitations):** قاعدة بيانات SQLite لا تدعم بعض عمليات `ALTER TABLE` المعقدة (مثل تغيير نوع عمود أو حذف عمود). في الترقيات القادمة، تأكد من توافق الأوامر البرمجية المكتوبة بداخل `MigrateDatabase()` مع محرك SQLite لضمان حماية بيانات العملاء.
 4. **تجنب الإنشاء اليدوي (Manual Instantiation):** تجنب استخدام الكلمة المفتاحية `new` لإنشاء كائنات من الخدمات المالية المسجلة بداخل `AppServiceProvider`. اعتمد دائماً على حقن الاعتماديات عبر المنشئ (Constructor Injection).
 5. **Batching في RebuildLedger:** عند تجاوز حركات الخزينة 10,000 سجل، يجب تطبيق Batch Processing في RebuildLedgerAsync وRebuildAccountBalanceAsync.
+6. **نمط ملفات الهجرة (Migration Safety Pattern):** يمنع استخدام `migrationBuilder.AddColumn` أو `CreateTable` أو `CreateIndex` مباشرة — استخدم دوال `ColumnExists` و`TableExists` و`IndexExists` الموجودة في ملف [20260605110517_AddWorkerIdToExpenses.cs](file:///d:/Meezan%20sys/MeezanPOS/Migrations/20260605110517_AddWorkerIdToExpenses.cs) كنموذج إلزامي.
+7. **ShutdownMode في WPF:** عند استخدام Splash Screen، يجب ضبط `ShutdownMode = ShutdownMode.OnExplicitShutdown` في بداية `OnStartup` ثم إعادته إلى `ShutdownMode.OnLastWindowClose` بعد فتح النافذة الرئيسية مباشرةً — وإلا سيغلق WPF التطبيق عند إغلاق Splash.
 
 ---
 
