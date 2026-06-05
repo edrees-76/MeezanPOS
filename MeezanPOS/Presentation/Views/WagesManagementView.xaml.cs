@@ -17,6 +17,14 @@ public partial class WagesManagementView : UserControl
         DataContext = new WagesManagementViewModel();
     }
 
+    private void UserControl_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is WagesManagementViewModel vm && vm.LoadedCommand.CanExecute(null))
+        {
+            vm.LoadedCommand.Execute(null);
+        }
+    }
+
     /// <summary>
     /// يفتح نافذة كشف حساب العامل عند النقر المزدوج على صف العامل
     /// </summary>

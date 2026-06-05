@@ -12,7 +12,8 @@
              d:DesignHeight="800" d:DesignWidth="1200"
              FlowDirection="RightToLeft"
              Background="#f8f9ff"
-             Padding="32,24">
+             Padding="32,24"
+             Loaded="UserControl_Loaded">
     
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

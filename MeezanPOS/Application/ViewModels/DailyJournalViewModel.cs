@@ -62,6 +62,9 @@ public partial class ExpenseItemViewModel : ObservableObject
     private string workerName = string.Empty;
 
     [ObservableProperty]
+    private int? workerId;
+
+    [ObservableProperty]
     private bool isDetailedWage = false;
 
     [ObservableProperty]
@@ -934,7 +937,8 @@ public partial class DailyJournalViewModel : ObservableObject
                             SupplierName = exp.SupplierName,
                             Notes = exp.Notes,
                             InvoiceNumber = exp.InvoiceNumber,
-                            WorkerName = (exp.IsWorkerWage && exp.IsDetailedWage) ? "[متعدد]" : null,
+                            WorkerName = exp.IsWorkerWage ? (exp.IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(exp.WorkerName) ? exp.WorkerName : null)) : null,
+                            WorkerId = (exp.IsWorkerWage && !exp.IsDetailedWage) ? exp.WorkerId : null,
                             CreatedAt = System.DateTime.Now
                         });
                     }
@@ -1316,7 +1320,8 @@ public partial class DailyJournalViewModel : ObservableObject
                     InvoiceNumber = e.InvoiceNumber ?? "",
                     Notes = e.Notes ?? "",
                     WorkerName = e.WorkerName ?? "",
-                    IsDetailedWage = !string.IsNullOrEmpty(e.WorkerName)
+                    WorkerId = e.WorkerId,
+                    IsDetailedWage = e.WorkerName == "[متعدد]"
                 };
 
                 if (e.WorkerName == "[متعدد]")

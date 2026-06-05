@@ -103,6 +103,8 @@ public class DailyExpenseItem : BaseEntity
     public Supplier? Supplier { get; set; }
     public string? SupplierName { get; set; }  // اسم المورد (للموردين غير المسجلين)
     public string? WorkerName { get; set; }    // اسم العامل (اختياري) في حال كان المصروف أجور تفصيلية من الصندوق
+    public int? WorkerId { get; set; }        // معرف العامل (اختياري) للربط المالي
+    public Worker? Worker { get; set; }
     public string? Notes { get; set; }
     public string? InvoiceNumber { get; set; }
 }

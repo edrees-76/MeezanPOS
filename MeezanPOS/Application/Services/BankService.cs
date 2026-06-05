@@ -14,11 +14,13 @@ public class BankService : IBankService
 {
     private readonly AppDbContext _context;
     private readonly ISessionService _session;
+    private readonly AuditService _auditService;
 
-    public BankService(AppDbContext context, ISessionService session)
+    public BankService(AppDbContext context, ISessionService session, AuditService auditService)
     {
         _context = context;
         _session = session;
+        _auditService = auditService;
     }
 
     public async Task<List<BankAccount>> GetAllAccountsAsync()
@@ -160,8 +162,7 @@ public class BankService : IBankService
             toTx.SourceId = fromTx.Id;
             await _context.SaveChangesAsync();
 
-            var auditService = new AuditService(_context);
-            await auditService.LogAsync(_session.CurrentUserId, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
+            await _auditService.LogAsync(_session.CurrentUserId, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
 
             await transaction.CommitAsync();
         }

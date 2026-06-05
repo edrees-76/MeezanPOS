@@ -13,11 +13,13 @@ namespace MeezanPOS.Application.Services
     {
         private readonly AppDbContext _context;
         private readonly ICashLedgerService _cashLedgerService;
+        private readonly AuditService _auditService;
 
-        public PostingService(AppDbContext context, ISessionService session)
+        public PostingService(AppDbContext context, ICashLedgerService cashLedgerService, AuditService auditService)
         {
             _context = context;
-            _cashLedgerService = new CashLedgerService(context, session);
+            _cashLedgerService = cashLedgerService;
+            _auditService = auditService;
         }
 
         public async Task<bool> PostEntityAsync<T>(int entityId, string postedByUserId) where T : class
@@ -77,8 +79,7 @@ namespace MeezanPOS.Application.Services
                     await CheckAndAutoReSettleSessionAsync(expense.PaymentDate);
                 }
 
-                var auditService = new AuditService(_context);
-                await auditService.LogAsync(postedByUserId, "Post", typeof(T).Name, entityId, "Draft", "Posted | Qty: " + transactionAmt);
+                await _auditService.LogAsync(postedByUserId, "Post", typeof(T).Name, entityId, "Draft", "Posted | Qty: " + transactionAmt);
 
                 await transaction.CommitAsync();
                 return true;
@@ -197,8 +198,7 @@ namespace MeezanPOS.Application.Services
                     }
                 }
 
-                var auditService = new AuditService(_context);
-                await auditService.LogAsync(unpostedByUserId, "Unpost", typeof(T).Name, entityId, "Posted | Qty: " + originalAmt, "Draft | Reason: " + reason);
+                await _auditService.LogAsync(unpostedByUserId, "Unpost", typeof(T).Name, entityId, "Posted | Qty: " + originalAmt, "Draft | Reason: " + reason);
 
                 await transaction.CommitAsync();
                 return true;
@@ -337,10 +337,9 @@ namespace MeezanPOS.Application.Services
                     await CheckAndAutoReSettleSessionAsync(journal.JournalDate);
                 }
 
-                var auditService = new AuditService(_context);
                 foreach (var journal in journals)
                 {
-                    await auditService.LogAsync(postedByUserId, "PostBatch", "DailyJournal", journal.Id, "Draft", "Posted");
+                    await _auditService.LogAsync(postedByUserId, "PostBatch", "DailyJournal", journal.Id, "Draft", "Posted");
                 }
 
                 await transaction.CommitAsync();
@@ -461,10 +460,9 @@ namespace MeezanPOS.Application.Services
                     });
                 }
 
-                var auditService = new AuditService(_context);
                 foreach (var expense in expenses)
                 {
-                    await auditService.LogAsync(postedByUserId, "PostBatch", "GeneralExpense", expense.Id, "Draft", "Posted");
+                    await _auditService.LogAsync(postedByUserId, "PostBatch", "GeneralExpense", expense.Id, "Draft", "Posted");
                     await CheckAndAutoReSettleSessionAsync(expense.PaymentDate);
                 }
 
@@ -619,8 +617,7 @@ namespace MeezanPOS.Application.Services
                     );
                 }
 
-                var auditService = new AuditService(_context);
-                await auditService.LogAsync(postedByUserId, "SettleAndLockPeriod", "FinancialPeriod", session.Id, "Active", "Settled");
+                await _auditService.LogAsync(postedByUserId, "SettleAndLockPeriod", "FinancialPeriod", session.Id, "Active", "Settled");
 
                 await transaction.CommitAsync();
 
@@ -844,8 +841,7 @@ namespace MeezanPOS.Application.Services
                 _context.PeriodUnlockHistories.Add(history);
                 await _context.SaveChangesAsync();
 
-                var auditService = new AuditService(_context);
-                await auditService.LogAsync(unlockedByUserId, "UnlockPeriod", "PostingSession", sessionId, prevStatus.ToString(), "Unlocked | Reason: " + reason);
+                await _auditService.LogAsync(unlockedByUserId, "UnlockPeriod", "PostingSession", sessionId, prevStatus.ToString(), "Unlocked | Reason: " + reason);
 
                 await transaction.CommitAsync();
                 return true;
@@ -968,8 +964,7 @@ namespace MeezanPOS.Application.Services
 
                 await _context.SaveChangesAsync();
 
-                var auditService = new AuditService(_context);
-                await auditService.LogAsync(unpostedByUserId, "UnpostPeriod", "PostingSession", sessionId, prevStatus.ToString(), "Unposted | Reversed Amount: " + totalReversedAmount);
+                await _auditService.LogAsync(unpostedByUserId, "UnpostPeriod", "PostingSession", sessionId, prevStatus.ToString(), "Unposted | Reversed Amount: " + totalReversedAmount);
 
                 await transaction.CommitAsync();
                 return true;
@@ -1027,43 +1022,43 @@ namespace MeezanPOS.Application.Services
 
         private async Task SelfHealEntityAsync<T>(int entityId, T entity, Action<IPostableEntity> updateAction) where T : class
         {
-            var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-#pragma warning disable EF1002
-            var sql = "UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}";
-            await _context.Database.ExecuteSqlRawAsync(sql, entityId);
-#pragma warning restore EF1002
-            
-            _context.Entry(entity).State = EntityState.Detached;
-            var activeEntity = await _context.Set<T>().FindAsync(entityId);
-            if (activeEntity is IPostableEntity postable)
+            var entry = _context.Entry(entity);
+            var databaseValues = await entry.GetDatabaseValuesAsync();
+            if (databaseValues == null)
+            {
+                throw new Exception("تم حذف الحركة من قبل مستخدم آخر.");
+            }
+
+            entry.OriginalValues.SetValues(databaseValues);
+
+            if (entity is IPostableEntity postable)
             {
                 updateAction(postable);
-                postable.RowVersion = 2;
-                await _context.SaveChangesAsync();
+                var currentDbRowVersion = databaseValues.GetValue<long>("RowVersion");
+                postable.RowVersion = currentDbRowVersion + 1;
             }
+
+            await _context.SaveChangesAsync();
         }
 
         private async Task SelfHealBatchAsync<T>(List<T> entities, Func<T, int> idSelector, Action<IPostableEntity> updateAction) where T : class
         {
-            var tableName = _context.Model.FindEntityType(typeof(T))?.GetTableName() ?? typeof(T).Name;
-            
             foreach (var entity in entities)
             {
-                int id = idSelector(entity);
-#pragma warning disable EF1002
-                await _context.Database.ExecuteSqlRawAsync("UPDATE " + tableName + " SET RowVersion = 1 WHERE Id = {0}", id);
-#pragma warning restore EF1002
-            }
+                var entry = _context.Entry(entity);
+                var databaseValues = await entry.GetDatabaseValuesAsync();
+                if (databaseValues == null)
+                {
+                    throw new Exception("تم حذف أحد السجلات من قبل مستخدم آخر.");
+                }
 
-            foreach (var entity in entities)
-            {
-                int id = idSelector(entity);
-                _context.Entry(entity).State = EntityState.Detached;
-                var activeEntity = await _context.Set<T>().FindAsync(id);
-                if (activeEntity is IPostableEntity postable)
+                entry.OriginalValues.SetValues(databaseValues);
+
+                if (entity is IPostableEntity postable)
                 {
                     updateAction(postable);
-                    postable.RowVersion = 2;
+                    var currentDbRowVersion = databaseValues.GetValue<long>("RowVersion");
+                    postable.RowVersion = currentDbRowVersion + 1;
                 }
             }
             await _context.SaveChangesAsync();

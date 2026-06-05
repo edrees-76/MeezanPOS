@@ -16,12 +16,14 @@ public class OwnerDebtService : IOwnerDebtService
     private readonly AppDbContext _context;
     private readonly IBankService _bankService;
     private readonly ISessionService _session;
+    private readonly AuditService _auditService;
 
-    public OwnerDebtService(AppDbContext context, ISessionService session)
+    public OwnerDebtService(AppDbContext context, ISessionService session, IBankService bankService, AuditService auditService)
     {
         _context = context;
-        _bankService = new BankService(context, session);
+        _bankService = bankService;
         _session = session;
+        _auditService = auditService;
     }
 
     public async Task<List<OwnerDebt>> GetDebtsAsync(string? partnerName = null, OwnerDebtStatus? status = null)
@@ -193,8 +195,7 @@ public class OwnerDebtService : IOwnerDebtService
 
             await _context.SaveChangesAsync();
 
-            var auditService = new AuditService(_context);
-            await auditService.LogAsync(_session.CurrentUsername, "RecordSettlement", "OwnerDebtSettlement", settlement.Id, null, $"Settlement for Partner {partnerName} Amount {amount} via {source}");
+            await _auditService.LogAsync(_session.CurrentUsername, "RecordSettlement", "OwnerDebtSettlement", settlement.Id, null, $"Settlement for Partner {partnerName} Amount {amount} via {source}");
 
             await transaction.CommitAsync();
 
@@ -239,8 +240,7 @@ public class OwnerDebtService : IOwnerDebtService
 
             await _context.SaveChangesAsync();
 
-            var auditService = new AuditService(_context);
-            await auditService.LogAsync(_session.CurrentUsername, "DeleteSettlement", "OwnerDebtSettlement", settlement.Id, $"Partner: {settlement.PartnerName}, Amount: {settlement.Amount}", "Deleted");
+            await _auditService.LogAsync(_session.CurrentUsername, "DeleteSettlement", "OwnerDebtSettlement", settlement.Id, $"Partner: {settlement.PartnerName}, Amount: {settlement.Amount}", "Deleted");
 
             await transaction.CommitAsync();
         }

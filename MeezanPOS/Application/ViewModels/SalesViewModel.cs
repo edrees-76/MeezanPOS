@@ -84,7 +84,7 @@ public partial class MonthSummaryCard : ObservableObject
 
 public partial class SalesViewModel : ObservableObject
 {
-    private string CurrentUserId => "Admin"; // TODO: استبدالها بمستخدم الجلسة الحالي عند دعم تعدد المستخدمين
+    private string CurrentUserId => AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
 
     [ObservableProperty]
     private ObservableCollection<CashMovement> cashMovements = new();

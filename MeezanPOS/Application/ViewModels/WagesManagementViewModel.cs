@@ -150,8 +150,6 @@ public partial class WagesManagementViewModel : ObservableObject
 
         InitializeShiftTypes();
         SelectedAttendanceShift = ShiftTypes.First(s => s.Type == ShiftType.FullDay);
-
-        _ = LoadAllDataAsync();
     }
 
     private void InitializeShiftTypes()
@@ -193,8 +191,15 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تحميل البيانات: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تحميل البيانات في إدارة الأجور");
+            MessageBox.Show("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى أو الاتصال بالدعم الفني.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    [RelayCommand]
+    public async Task LoadedAsync()
+    {
+        await LoadAllDataAsync();
     }
 
     // ==========================================
@@ -253,7 +258,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في تحميل كشف الحضور: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تحميل كشف الحضور لليوم المحدد");
+            MessageBox.Show("تعذر تحميل كشف الحضور لليوم المحدد.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -273,7 +279,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حفظ كشف الحضور: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء حفظ كشف حضور العمال وتثبيت الأجور");
+            MessageBox.Show("حدث خطأ أثناء حفظ كشف الحضور.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -312,7 +319,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء حفظ ملف العامل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء حفظ ملف العامل");
+            MessageBox.Show("حدث خطأ أثناء حفظ ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -338,7 +346,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في تعديل حالة النشاط: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تعديل حالة نشاط العامل");
+            MessageBox.Show("حدث خطأ أثناء تعديل حالة النشاط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -358,7 +367,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء حذف ملف الموظف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء حذف ملف العامل");
+            MessageBox.Show("حدث خطأ أثناء حذف ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -474,7 +484,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تحميل كشف حساب الموظف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تحميل كشف حساب العامل");
+            MessageBox.Show("حدث خطأ أثناء تحميل كشف حساب الموظف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -521,6 +532,7 @@ public partial class WagesManagementViewModel : ObservableObject
                     Description = !string.IsNullOrWhiteSpace(InputPaymentNotes) ? InputPaymentNotes.Trim() : $"صرف مستحقات للعامل {SelectedWorkerSummary.WorkerName}",
                     Type = ExpenseType.WorkerWage,
                     WorkerName = SelectedWorkerSummary.WorkerName,
+                    WorkerId = SelectedWorkerSummary.WorkerId,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -537,6 +549,7 @@ public partial class WagesManagementViewModel : ObservableObject
                     PaymentMethod = PaymentMethodType.Cash,
                     Description = !string.IsNullOrWhiteSpace(InputPaymentNotes) ? InputPaymentNotes.Trim() : $"صرف مستحقات للعامل {SelectedWorkerSummary.WorkerName}",
                     WorkerName = SelectedWorkerSummary.WorkerName,
+                    WorkerId = SelectedWorkerSummary.WorkerId,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -560,7 +573,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تسجيل عملية الصرف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تسجيل صرف مستحقات العامل");
+            MessageBox.Show("حدث خطأ أثناء تسجيل عملية الصرف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -606,7 +620,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تسجيل السلفة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تسجيل سلفة العامل");
+            MessageBox.Show("حدث خطأ أثناء تسجيل السلفة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -655,7 +670,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء حفظ التسوية اليدوية: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء حفظ التسوية اليدوية لحساب العامل");
+            MessageBox.Show("حدث خطأ أثناء حفظ التسوية اليدوية.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -675,7 +691,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في تحديث أرصدة العمال: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تحديث أرصدة وملخصات العمال");
+            MessageBox.Show("حدث خطأ أثناء تحديث الأرصدة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -716,7 +733,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء حذف المعاملة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء حذف المعاملة المالية للعامل");
+            MessageBox.Show("حدث خطأ أثناء حذف المعاملة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -746,7 +764,8 @@ public partial class WagesManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء فتح تقرير PDF: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Serilog.Log.Error(ex, "خطأ أثناء تصدير أو فتح كشف الحساب كـ PDF");
+            MessageBox.Show("حدث خطأ أثناء توليد أو فتح تقرير الـ PDF.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

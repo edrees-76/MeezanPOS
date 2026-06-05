@@ -4,8 +4,7 @@
              xmlns:local="clr-namespace:MeezanPOS"
              xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
              xmlns:views="clr-namespace:MeezanPOS.Presentation.Views"
-             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
-             StartupUri="Presentation/Views/LoginView.xaml">
+             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

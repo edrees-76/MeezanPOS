@@ -35,6 +35,7 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
     public string PaymentMethodName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string? WorkerName { get; set; }
+    public int? WorkerId { get; set; }
     public int? BankAccountId { get; set; }
 
     // --- Posting System Properties ---
@@ -174,6 +175,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
     [ObservableProperty]
     private string inputWorkerName = string.Empty;
+
+    [ObservableProperty]
+    private int? inputWorkerId;
 
     [ObservableProperty]
     private List<WorkerTransactionDetailDto>? _selectedWorkerWagesDetails;
@@ -398,6 +402,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     PaymentMethodName = GetPaymentMethodName(item.PaymentMethod),
                     Description = item.Description,
                     WorkerName = item.WorkerName,
+                    WorkerId = item.WorkerId,
                     BankAccountId = item.BankAccountId,
                     FinancialStatus = item.FinancialStatus
                 };
@@ -547,7 +552,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     existing.PaymentDate = InputPaymentDate;
                     existing.PaymentMethod = SelectedPaymentMethod;
                     existing.Description = InputDescription;
-                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? "[متعدد]" : null;
+                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries) ? (IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(InputWorkerName) ? InputWorkerName : null)) : null;
+                    existing.WorkerId = (SelectedExpenseType == GeneralExpenseType.Salaries && !IsDetailedWage) ? InputWorkerId : null;
                     
                     if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
                     {
@@ -691,7 +697,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     PaymentDate = InputPaymentDate,
                     PaymentMethod = SelectedPaymentMethod,
                     Description = InputDescription,
-                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage) ? "[متعدد]" : null,
+                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries) ? (IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(InputWorkerName) ? InputWorkerName : null)) : null,
+                    WorkerId = (SelectedExpenseType == GeneralExpenseType.Salaries && !IsDetailedWage) ? InputWorkerId : null,
                     BankAccountId = (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null) ? SelectedBankAccountForExpense.Id : null
                 };
                 db.GeneralExpenses.Add(expense);
@@ -852,8 +859,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
         InputDescription = item.Description;
         InputCustomExpenseType = item.CustomExpenseName ?? string.Empty;
-        IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
+        IsDetailedWage = item.WorkerName == "[متعدد]";
         InputWorkerName = item.WorkerName ?? string.Empty;
+        InputWorkerId = item.WorkerId;
 
         if (IsDetailedWage)
         {
@@ -970,8 +978,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault(b => b.Id == item.BankAccountId);
         InputDescription = item.Description;
         InputCustomExpenseType = item.CustomExpenseName ?? string.Empty;
-        IsDetailedWage = !string.IsNullOrEmpty(item.WorkerName);
+        IsDetailedWage = item.WorkerName == "[متعدد]";
         InputWorkerName = item.WorkerName ?? string.Empty;
+        InputWorkerId = item.WorkerId;
 
         InputReferenceNumber = string.Empty;
         InputPartnerName = string.Empty;
@@ -1317,6 +1326,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputCustomExpenseType = string.Empty;
         IsDetailedWage = false;
         InputWorkerName = string.Empty;
+        InputWorkerId = null;
         SelectedWorkerWagesDetails = new List<WorkerTransactionDetailDto>();
         SelectedBankAccountForExpense = BankAccounts.FirstOrDefault();
         InputReferenceNumber = string.Empty;

@@ -1,0 +1,128 @@
+<!-- ========================================================= -->
+<!-- File: SplashView.xaml                                     -->
+<!-- Project: Mizan Restaurants System                         -->
+<!-- Technology: WPF + .NET 8 + XAML                          -->
+<!-- ========================================================= -->
+
+<Window x:Class="MeezanPOS.Presentation.Views.SplashView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="ميزان المطاعم - جاري التحميل"
+        Height="400"
+        Width="550"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        FlowDirection="RightToLeft">
+
+    <Window.Resources>
+        <Color x:Key="PrimaryBlue">#071D49</Color>
+        <Color x:Key="SecondaryBlue">#102B61</Color>
+        <Color x:Key="GoldColor">#C9A65B</Color>
+        <Color x:Key="WhiteText">#F3F3F3</Color>
+
+        <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource PrimaryBlue}"/>
+        <SolidColorBrush x:Key="SecondaryBlueBrush" Color="{StaticResource SecondaryBlue}"/>
+        <SolidColorBrush x:Key="GoldBrush" Color="{StaticResource GoldColor}"/>
+        <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteText}"/>
+    </Window.Resources>
+
+    <Border BorderBrush="#C7AA6C"
+            BorderThickness="2"
+            CornerRadius="20"
+            Background="{StaticResource BlueBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Main Content Area -->
+            <StackPanel Grid.Row="0" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Center" 
+                        Margin="0,30,0,10">
+                
+                <!-- Logo -->
+                <Image Source="/Assets/Images/mizan_3d_icon_final_transparent.png" 
+                       Width="140" 
+                       Height="140" 
+                       Stretch="Uniform" 
+                       HorizontalAlignment="Center">
+                    <Image.Effect>
+                        <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.25" Color="Black"/>
+                    </Image.Effect>
+                </Image>
+
+                <!-- App Name -->
+                <TextBlock Text="منظومة ميزان للمطاعم"
+                           Foreground="{StaticResource GoldBrush}"
+                           FontSize="24"
+                           FontWeight="ExtraBold"
+                           FontFamily="Segoe UI"
+                           HorizontalAlignment="Center"
+                           Margin="0,15,0,5"
+                           TextAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="2" Opacity="0.15" Color="Black"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+
+                <!-- Loading status -->
+                <TextBlock Text="جاري تحميل النظام..."
+                           Foreground="#A5B4FC"
+                           FontSize="15"
+                           FontWeight="Medium"
+                           FontFamily="Segoe UI"
+                           HorizontalAlignment="Center"
+                           Margin="0,5,0,15"
+                           TextAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Progress Indicator Panel -->
+            <StackPanel Grid.Row="1" 
+                        Margin="40,0,40,40" 
+                        VerticalAlignment="Bottom">
+                <ProgressBar x:Name="ProgressBar"
+                             Height="6"
+                             IsIndeterminate="True"
+                             Background="#1E3A8A"
+                             Foreground="{StaticResource GoldBrush}"
+                             BorderThickness="0">
+                    <ProgressBar.Resources>
+                        <!-- Ensure border radius on ProgressBar control template -->
+                        <Style TargetType="ProgressBar">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ProgressBar">
+                                        <Grid x:Name="TemplateRoot">
+                                            <Border Background="{TemplateBinding Background}" 
+                                                    CornerRadius="3"/>
+                                            <Border x:Name="PART_Track" 
+                                                    Background="{TemplateBinding Background}" 
+                                                    CornerRadius="3"/>
+                                            <Decorator x:Name="PART_Indicator" 
+                                                       HorizontalAlignment="Left">
+                                                <Grid x:Name="IndicatorGrid">
+                                                    <Border x:Name="Indicator" 
+                                                            Background="{TemplateBinding Foreground}" 
+                                                            CornerRadius="3"/>
+                                                </Grid>
+                                            </Decorator>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ProgressBar.Resources>
+                </ProgressBar>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

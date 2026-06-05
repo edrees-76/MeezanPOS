@@ -66,109 +66,140 @@ public partial class App : System.Windows.Application
 
         base.OnStartup(e);
 
-        // التأكد من تطبيق كل التحديثات على قاعدة البيانات عند بدء التشغيل
-        // استخدام المسار الموحد من AppDbContext لضمان عدم ضياع البيانات
-        var dbPath = MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath();
-        if (System.IO.File.Exists(dbPath))
+        // إظهار واجهة الانتظار (Splash Screen) فوراً لمنع تجميد التطبيق
+        var splash = new MeezanPOS.Presentation.Views.SplashView();
+        splash.Show();
+
+        // تشغيل عمليات الترقية والتهيئة الثقيلة في خيط خلفي لمنع تجميد واجهة المستخدم
+        System.Threading.Tasks.Task.Run(() =>
         {
             try
             {
-                var backupDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dbPath)!, "Backups");
-                if (!System.IO.Directory.Exists(backupDir))
-                {
-                    System.IO.Directory.CreateDirectory(backupDir);
-                }
-                var backupPath = System.IO.Path.Combine(backupDir, $"Meezan_backup_{System.DateTime.Now:yyyyMMdd_HHmmss}.db");
-                System.IO.File.Copy(dbPath, backupPath, true);
-
-                // الاحتفاظ بآخر 10 نسخ احتياطية فقط وحذف الأقدم
-                var oldBackups = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
-                    .Select(f => new System.IO.FileInfo(f))
-                    .OrderByDescending(f => f.CreationTime)
-                    .Skip(10);
-                foreach (var file in oldBackups)
-                {
-                    file.Delete();
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Log.Warning(ex, "خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات");
-            }
-        }
-
-        using (var context = new MeezanPOS.Infrastructure.Data.AppDbContext())
-        {
-            try
-            {
-                context.Database.Migrate();
-                MeezanPOS.Infrastructure.Data.AppDbContext.MigrateDatabase();
-            }
-            catch (System.Exception ex)
-            {
-                var dbDir = System.IO.Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!;
-                var backupDir = System.IO.Path.Combine(dbDir, "Backups");
-                var latestBackup = System.IO.Directory.Exists(backupDir)
-                    ? System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
-                        .Select(f => new System.IO.FileInfo(f))
-                        .OrderByDescending(f => f.CreationTime)
-                        .FirstOrDefault()
-                    : null;
-
-                string restoreMessage = "";
-                if (latestBackup != null)
+                var dbPath = MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath();
+                if (System.IO.File.Exists(dbPath))
                 {
                     try
                     {
-                        System.IO.File.Copy(latestBackup.FullName, dbPath, true);
-                        restoreMessage = "\nتم استعادة آخر نسخة احتياطية سليمة لقاعدة البيانات تلقائياً.";
+                        var backupDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dbPath)!, "Backups");
+                        if (!System.IO.Directory.Exists(backupDir))
+                        {
+                            System.IO.Directory.CreateDirectory(backupDir);
+                        }
+                        var backupPath = System.IO.Path.Combine(backupDir, $"Meezan_backup_{System.DateTime.Now:yyyyMMdd_HHmmss}.db");
+                        System.IO.File.Copy(dbPath, backupPath, true);
+
+                        // الاحتفاظ بآخر 10 نسخ احتياطية فقط وحذف الأقدم
+                        var oldBackups = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
+                            .Select(f => new System.IO.FileInfo(f))
+                            .OrderByDescending(f => f.CreationTime)
+                            .Skip(10);
+                        foreach (var file in oldBackups)
+                        {
+                            file.Delete();
+                        }
                     }
-                    catch (System.Exception restoreEx)
+                    catch (System.Exception ex)
                     {
-                        restoreMessage = $"\nفشلت محاولة الاستعادة التلقائية: {restoreEx.Message}";
+                        Log.Warning(ex, "خطأ أثناء أخذ نسخة احتياطية من قاعدة البيانات");
                     }
                 }
 
-                MessageBox.Show(
-                    $"خطأ فادح أثناء ترقية قاعدة البيانات:\n{ex.Message}{restoreMessage}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
-                    "خطأ ترقية قاعدة البيانات",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                
-                System.Windows.Application.Current.Shutdown();
-                return;
-            }
+                using (var context = new MeezanPOS.Infrastructure.Data.AppDbContext())
+                {
+                    try
+                    {
+                        context.Database.Migrate();
+                        MeezanPOS.Infrastructure.Data.AppDbContext.MigrateDatabase();
+                    }
+                    catch (System.Exception ex)
+                    {
+                        var dbDir = System.IO.Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!;
+                        var backupDir = System.IO.Path.Combine(dbDir, "Backups");
+                        var latestBackup = System.IO.Directory.Exists(backupDir)
+                            ? System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
+                                .Select(f => new System.IO.FileInfo(f))
+                                .OrderByDescending(f => f.CreationTime)
+                                .FirstOrDefault()
+                            : null;
 
-            // تسريع أداء قاعدة بيانات SQLite وتفعيل نمط WAL للوصول المتوازي دون إقفال الملف
-            try
-            {
-                context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-                context.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+                        string restoreMessage = "";
+                        if (latestBackup != null)
+                        {
+                            try
+                            {
+                                System.IO.File.Copy(latestBackup.FullName, dbPath, true);
+                                restoreMessage = "\nتم استعادة آخر نسخة احتياطية سليمة لقاعدة البيانات تلقائياً.";
+                            }
+                            catch (System.Exception restoreEx)
+                            {
+                                restoreMessage = $"\nفشلت محاولة الاستعادة التلقائية: {restoreEx.Message}";
+                            }
+                        }
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            MessageBox.Show(
+                                $"خطأ فادح أثناء ترقية قاعدة البيانات:\n{ex.Message}{restoreMessage}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                                "خطأ ترقية قاعدة البيانات",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Error);
+                            
+                            System.Windows.Application.Current.Shutdown();
+                        });
+                        return;
+                    }
+
+                    // تسريع أداء قاعدة بيانات SQLite وتفعيل نمط WAL للوصول المتوازي دون إقفال الملف
+                    try
+                    {
+                        context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+                        context.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Log.Warning(ex, "خطأ أثناء تهيئة WAL Mode");
+                    }
+
+                    // تصحيح قيم RowVersion التالفة أو المخزنة كـ BLOB في SQLite لضمان نجاح الترحيل المالي وتجنب تعارض التزامن
+                    try
+                    {
+                        context.Database.ExecuteSqlRaw("UPDATE DailyJournals SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
+                        context.Database.ExecuteSqlRaw("UPDATE SaleHeaders SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
+                        context.Database.ExecuteSqlRaw("UPDATE GeneralExpenses SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Log.Warning(ex, "خطأ أثناء تصحيح حقول RowVersion");
+                    }
+                }
+
+                // تهيئة حاوية حقن التبعيات
+                AppServiceProvider.Initialize();
+                Log.Information("تم تهيئة حاوية الخدمات");
+
+                // إغلاق شاشة الانتظار وفتح واجهة تسجيل الدخول على خيط واجهة المستخدم الرئيسي
+                Dispatcher.Invoke(() =>
+                {
+                    splash.Close();
+                    var loginView = new MeezanPOS.Presentation.Views.LoginView();
+                    loginView.Show();
+                });
             }
             catch (System.Exception ex)
             {
-                Log.Warning(ex, "خطأ أثناء تهيئة WAL Mode");
+                Log.Fatal(ex, "خطأ غير متوقع أثناء تهيئة التطبيق في الخلفية");
+                Dispatcher.Invoke(() =>
+                {
+                    try { splash.Close(); } catch { }
+                    MessageBox.Show(
+                        $"حدث خطأ غير متوقع أثناء بدء تشغيل التطبيق:\n{ex.Message}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                        "خطأ بدء التشغيل",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                    System.Windows.Application.Current.Shutdown();
+                });
             }
-
-            // تصحيح قيم RowVersion التالفة أو المخزنة كـ BLOB في SQLite لضمان نجاح الترحيل المالي وتجنب تعارض التزامن
-            try
-            {
-                context.Database.ExecuteSqlRaw("UPDATE DailyJournals SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
-                context.Database.ExecuteSqlRaw("UPDATE SaleHeaders SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
-                context.Database.ExecuteSqlRaw("UPDATE GeneralExpenses SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
-            }
-            catch (System.Exception ex)
-            {
-                Log.Warning(ex, "خطأ أثناء تصحيح حقول RowVersion");
-            }
-
-            // ملاحظة: جميع عمليات ALTER TABLE وإنشاء الأعمدة الجديدة تتم في AppDbContext.MigrateDatabase()
-            // لا تضف أوامر ALTER TABLE هنا — أضفها هناك فقط لتجنب التكرار
-        }
-
-        // تهيئة حاوية حقن التبعيات
-        AppServiceProvider.Initialize();
-        Log.Information("تم تهيئة حاوية الخدمات");
+        });
 
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));

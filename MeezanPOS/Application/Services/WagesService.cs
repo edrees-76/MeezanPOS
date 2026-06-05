@@ -85,7 +85,9 @@ public class WagesService : IWagesService
     public async Task<List<WorkerAttendance>> GetAttendanceForDateAsync(DateTime date)
     {
         var targetDate = date.Date;
+        // ملاحظة: لا يمكن استخدام .Include() هنا لدمج الاستعلامين لأن الكيان WorkerAttendance لا يحتوي على خاصية ربط (Navigation Property) لجدول الحركات WorkerTransaction.
         var attendances = await _context.WorkerAttendances
+            .AsNoTracking()
             .Where(a => a.WorkDate.Date == targetDate && !a.IsDeleted)
             .ToListAsync();
 
@@ -93,6 +95,7 @@ public class WagesService : IWagesService
         {
             var attendanceIds = attendances.Select(a => a.Id).ToList();
             var txs = await _context.WorkerTransactions
+                .AsNoTracking()
                 .Where(t => t.AttendanceId != null && attendanceIds.Contains(t.AttendanceId.Value) && !t.IsDeleted)
                 .ToListAsync();
 
@@ -321,7 +324,7 @@ public class WagesService : IWagesService
         var tx = await _context.WorkerTransactions
             .Include(t => t.GeneralExpense)
             .Include(t => t.DailyExpenseItem)
-                .ThenInclude(d => d.DailyJournal)
+                .ThenInclude(d => d!.DailyJournal) // تفادي تحذير CS8602 (إلغاء إشارة مرجعية فارغة محتملة) باستخدام معامل السماح بالقيم الفارغة (!)
             .FirstOrDefaultAsync(t => t.Id == transactionId);
 
         if (tx != null)
@@ -362,9 +365,10 @@ public class WagesService : IWagesService
     public async Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(int workerId)
     {
         var txs = await _context.WorkerTransactions
+            .AsNoTracking()
             .Include(t => t.GeneralExpense)
             .Include(t => t.DailyExpenseItem)
-                .ThenInclude(d => d.DailyJournal)
+                .ThenInclude(d => d!.DailyJournal) // تفادي تحذير CS8602 (إلغاء إشارة مرجعية فارغة محتملة) باستخدام معامل السماح بالقيم الفارغة (!)
             .Where(t => t.WorkerId == workerId && !t.IsDeleted)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.Id)
@@ -433,21 +437,26 @@ public class WagesService : IWagesService
 
     public async Task<List<WorkerWageSummary>> GetWorkerSummariesAsync()
     {
-        var workers = await _context.Workers.Where(w => !w.IsDeleted).ToListAsync();
-        var transactions = await _context.WorkerTransactions
+        var workers = await _context.Workers.AsNoTracking().Where(w => !w.IsDeleted).ToListAsync();
+        
+        var balances = await _context.WorkerTransactions
+            .AsNoTracking()
             .Where(t => !t.IsDeleted)
-            .ToListAsync();
+            .GroupBy(t => t.WorkerId)
+            .Select(g => new
+            {
+                WorkerId = g.Key,
+                TotalAccrued = g.Sum(t => t.CreditAmount),
+                TotalPaid = g.Sum(t => t.DebitAmount),
+                LastActivity = g.Max(t => (DateTime?)t.TransactionDate)
+            })
+            .ToDictionaryAsync(b => b.WorkerId);
 
         var summaries = new List<WorkerWageSummary>();
 
         foreach (var w in workers)
         {
-            var wTxs = transactions.Where(t => t.WorkerId == w.Id).ToList();
-
-            decimal totalAccrued = wTxs.Sum(t => t.CreditAmount);
-            decimal totalPaid = wTxs.Sum(t => t.DebitAmount);
-
-            var lastTx = wTxs.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id).FirstOrDefault();
+            balances.TryGetValue(w.Id, out var bal);
 
             summaries.Add(new WorkerWageSummary
             {
@@ -455,10 +464,10 @@ public class WagesService : IWagesService
                 WorkerName = w.WorkerName,
                 DailyWage = w.DailyWage,
                 IsActive = w.IsActive,
-                TotalAccrued = totalAccrued,
-                TotalPaid = totalPaid,
+                TotalAccrued = bal?.TotalAccrued ?? 0,
+                TotalPaid = bal?.TotalPaid ?? 0,
                 Notes = w.Notes ?? string.Empty,
-                LastActivity = lastTx?.TransactionDate
+                LastActivity = bal?.LastActivity
             });
         }
 

@@ -17,14 +17,22 @@ public class LedgerService : ILedgerService
     private readonly IOwnerDebtService _ownerDebtService;
     private readonly ICashLedgerService _cashLedgerService;
     private readonly ISessionService _session;
+    private readonly AuditService _auditService;
 
-    public LedgerService(AppDbContext context, ISessionService session)
+    public LedgerService(
+        AppDbContext context,
+        ISessionService session,
+        IBankService bankService,
+        IOwnerDebtService ownerDebtService,
+        ICashLedgerService cashLedgerService,
+        AuditService auditService)
     {
         _context = context;
-        _bankService = new BankService(context, session);
-        _ownerDebtService = new OwnerDebtService(context, session);
-        _cashLedgerService = new CashLedgerService(context, session);
         _session = session;
+        _bankService = bankService;
+        _ownerDebtService = ownerDebtService;
+        _cashLedgerService = cashLedgerService;
+        _auditService = auditService;
     }
 
 
@@ -251,8 +259,7 @@ public class LedgerService : ILedgerService
         {
             await RebuildSupplierLedgerInternalAsync(supplierId);
 
-            var auditService = new AuditService(_context);
-            await auditService.LogAsync(_session.CurrentUserId, "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
+            await _auditService.LogAsync(_session.CurrentUserId, "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
 
             await transaction.CommitAsync();
         }

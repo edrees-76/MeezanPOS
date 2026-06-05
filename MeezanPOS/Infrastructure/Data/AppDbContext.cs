@@ -70,6 +70,21 @@ public class AppDbContext : DbContext
         return System.IO.Path.Combine(appDataDir, "Meezan.db");
     }
 
+    private static T ParseEnumWithFallback<T>(string value, T fallbackValue) where T : struct, System.Enum
+    {
+        if (System.Enum.TryParse<T>(value, out var result))
+        {
+            return result;
+        }
+        Log.Warning("Failed to parse enum {EnumType} from value '{Value}'. Falling back to default: {Fallback}", typeof(T).Name, value, fallbackValue);
+        return fallbackValue;
+    }
+
+    private static void SetGlobalQueryFilter<TEntity>(ModelBuilder modelBuilder) where TEntity : BaseEntity
+    {
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => !e.IsDeleted);
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         optionsBuilder.UseSqlite($"Data Source={GetDatabasePath()};Default Timeout=30");
@@ -79,46 +94,28 @@ public class AppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Global Query Filter for Soft Delete
-        modelBuilder.Entity<Role>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<User>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SaleHeader>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SaleItem>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<CashSession>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<CashTransaction>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Expense>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Supplier>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SupplierInvoice>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SupplierInvoiceItem>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<SupplierTransaction>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<GeneralExpense>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<WorkerAttendance>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<Worker>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<WorkerTransaction>().HasQueryFilter(e => !e.IsDeleted);
+        // Apply Global Query Filter for all entities inheriting from BaseEntity via Reflection
+        var filterMethod = typeof(AppDbContext).GetMethod(nameof(SetGlobalQueryFilter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (entityType.ClrType != null && typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
+            {
+                var genericMethod = filterMethod!.MakeGenericMethod(entityType.ClrType);
+                genericMethod.Invoke(null, new object[] { modelBuilder });
+            }
+        }
 
         modelBuilder.Entity<WorkerTransaction>()
             .HasIndex(t => new { t.WorkerId, t.AttendanceId, t.Type })
             .IsUnique()
             .HasFilter("AttendanceId IS NOT NULL AND IsDeleted = 0");
         
-        // اليوميات وعناصرها الفرعية — كانت مفقودة سابقاً
-        modelBuilder.Entity<DailyJournal>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<DailyExpenseItem>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<BankingItem>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<OrderAdjustmentItem>().HasQueryFilter(e => !e.IsDeleted);
-
-        // Financial Core
-        modelBuilder.Entity<FinancialPeriod>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PostingSession>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PostingSessionDetail>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<PeriodUnlockHistory>().HasQueryFilter(e => !e.IsDeleted);
-
         // Value converters for Enums stored as strings
         modelBuilder.Entity<PostingSession>()
             .Property(s => s.SessionType)
             .HasConversion(
                 v => v.ToString(),
-                v => (PostingSessionType)System.Enum.Parse(typeof(PostingSessionType), v));
+                v => ParseEnumWithFallback<PostingSessionType>(v, PostingSessionType.Posting));
 
         modelBuilder.Entity<PostingSession>()
             .Property(s => s.Status)
@@ -126,35 +123,39 @@ public class AppDbContext : DbContext
                 v => v.ToString(),
                 v => v == "Settle" ? PostingSessionStatus.Settled :
                      v == "Unpost" ? PostingSessionStatus.Unlocked :
-                     (PostingSessionStatus)System.Enum.Parse(typeof(PostingSessionStatus), v));
+                     ParseEnumWithFallback<PostingSessionStatus>(v, PostingSessionStatus.Draft));
 
         modelBuilder.Entity<PostingSessionDetail>()
             .Property(d => d.EntityType)
             .HasConversion(
                 v => v.ToString(),
-                v => (PostingEntityType)System.Enum.Parse(typeof(PostingEntityType), v));
+                v => ParseEnumWithFallback<PostingEntityType>(v, PostingEntityType.DailyJournal));
 
         modelBuilder.Entity<PostingSessionDetail>()
             .Property(d => d.ActionType)
             .HasConversion(
                 v => v.ToString(),
                 v => v == "Unposted" ? PostingActionType.Unposted :
-                     (PostingActionType)System.Enum.Parse(typeof(PostingActionType), v));
+                     ParseEnumWithFallback<PostingActionType>(v, PostingActionType.Posted));
 
         modelBuilder.Entity<PeriodUnlockHistory>()
             .Property(h => h.PreviousStatus)
             .HasConversion(
                 v => v.ToString(),
-                v => (PostingSessionStatus)System.Enum.Parse(typeof(PostingSessionStatus), v));
+                v => ParseEnumWithFallback<PostingSessionStatus>(v, PostingSessionStatus.Draft));
 
-        // الخدمات المصرفية والبنكية
-        modelBuilder.Entity<BankAccount>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<BankTransaction>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<CardPaymentReconciliation>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<OwnerDebt>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<OwnerDebtSettlement>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<DailyJournalBankSale>().HasQueryFilter(e => !e.IsDeleted);
-        modelBuilder.Entity<CashMovement>().HasQueryFilter(e => !e.IsDeleted);
+        // تكوين علاقات أجور العمال بالمصروفات
+        modelBuilder.Entity<GeneralExpense>()
+            .HasOne(e => e.Worker)
+            .WithMany()
+            .HasForeignKey(e => e.WorkerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<DailyExpenseItem>()
+            .HasOne(e => e.Worker)
+            .WithMany()
+            .HasForeignKey(e => e.WorkerId)
+            .OnDelete(DeleteBehavior.Restrict);
         
         // Disable cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
@@ -293,6 +294,9 @@ public class AppDbContext : DbContext
             "ALTER TABLE WorkerAttendances ADD COLUMN WorkerId INTEGER;",
             "ALTER TABLE WorkerAttendances ADD COLUMN Status INTEGER NOT NULL DEFAULT 0;",
             "ALTER TABLE WorkerAttendances ADD COLUMN SnapshotDailyWage REAL NOT NULL DEFAULT 0.0;",
+            // حقول المصاريف والعلاقة بالعمال
+            "ALTER TABLE GeneralExpenses ADD COLUMN WorkerId INTEGER;",
+            "ALTER TABLE DailyExpenseItems ADD COLUMN WorkerId INTEGER;",
             // حقول جلسات الترحيل والتفاصيل
             "ALTER TABLE PostingSessions ADD COLUMN PeriodStartDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';",
             "ALTER TABLE PostingSessions ADD COLUMN PeriodEndDate TEXT NOT NULL DEFAULT '0001-01-01 00:00:00';",
@@ -512,9 +516,9 @@ public class AppDbContext : DbContext
             if (entry.Entity is GeneralExpense ge)
             {
                 bool isDeleted = entry.State == EntityState.Deleted || ge.IsDeleted;
-                if (!isDeleted && ge.ExpenseType == GeneralExpenseType.Salaries && !string.IsNullOrWhiteSpace(ge.WorkerName) && ge.WorkerName != "[متعدد]")
+                if (!isDeleted && ge.ExpenseType == GeneralExpenseType.Salaries && ge.WorkerId.HasValue)
                 {
-                    var worker = Workers.FirstOrDefault(w => w.WorkerName.Trim().ToLower() == ge.WorkerName.Trim().ToLower() && !w.IsDeleted);
+                    var worker = Workers.FirstOrDefault(w => w.Id == ge.WorkerId.Value && !w.IsDeleted);
                     if (worker != null)
                     {
                         WorkerTransaction? tx = null;
@@ -567,9 +571,9 @@ public class AppDbContext : DbContext
             else if (entry.Entity is DailyExpenseItem dei)
             {
                 bool isDeleted = entry.State == EntityState.Deleted || dei.IsDeleted;
-                if (!isDeleted && dei.Type == ExpenseType.WorkerWage && !string.IsNullOrWhiteSpace(dei.WorkerName) && dei.WorkerName != "[متعدد]")
+                if (!isDeleted && dei.Type == ExpenseType.WorkerWage && dei.WorkerId.HasValue)
                 {
-                    var worker = Workers.FirstOrDefault(w => w.WorkerName.Trim().ToLower() == dei.WorkerName.Trim().ToLower() && !w.IsDeleted);
+                    var worker = Workers.FirstOrDefault(w => w.Id == dei.WorkerId.Value && !w.IsDeleted);
                     if (worker != null)
                     {
                         var journal = DailyJournals.FirstOrDefault(j => j.Id == dei.DailyJournalId);
