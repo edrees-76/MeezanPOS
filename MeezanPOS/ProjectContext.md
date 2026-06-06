@@ -99,6 +99,12 @@ MeezanPOS/
   * `ColumnExists` + `TableExists` + `IndexExists` في ملف الهجرة
 * **القاعدة الإلزامية:** أي إضافة مستقبلية لأعمدة أو جداول أو فهارس يجب أن تستخدم هذه الدوال حصراً.
 
+### م. إصلاح ShutdownMode وتوافق decimal مع SQLite
+* **المشكلة الأولى:** WPF يغلق التطبيق عند إغلاق Splash Screen لأنه يعتبرها الـ MainWindow.
+  * **الإصلاح:** ضبط `ShutdownMode.OnExplicitShutdown` في بداية `OnStartup` وإعادته إلى `OnLastWindowClose` بعد فتح `LoginView`.
+* **المشكلة الثانية:** SQLite لا يدعم `Sum` على نوع `decimal` مباشرة في `GroupBy`.
+  * **الإصلاح:** تحويل القيم إلى `double` قبل `Sum` ثم إعادتها إلى `decimal`.
+
 ---
 
 ## 3. القرارات التقنية الكبرى (Architectural Decisions)
@@ -123,7 +129,8 @@ MeezanPOS/
 4. **تجنب الإنشاء اليدوي (Manual Instantiation):** تجنب استخدام الكلمة المفتاحية `new` لإنشاء كائنات من الخدمات المالية المسجلة بداخل `AppServiceProvider`. اعتمد دائماً على حقن الاعتماديات عبر المنشئ (Constructor Injection).
 5. **Batching في RebuildLedger:** عند تجاوز حركات الخزينة 10,000 سجل، يجب تطبيق Batch Processing في RebuildLedgerAsync وRebuildAccountBalanceAsync.
 6. **نمط ملفات الهجرة (Migration Safety Pattern):** يمنع استخدام `migrationBuilder.AddColumn` أو `CreateTable` أو `CreateIndex` مباشرة — استخدم دوال `ColumnExists` و`TableExists` و`IndexExists` الموجودة في ملف [20260605110517_AddWorkerIdToExpenses.cs](file:///d:/Meezan%20sys/MeezanPOS/Migrations/20260605110517_AddWorkerIdToExpenses.cs) كنموذج إلزامي.
-7. **ShutdownMode في WPF:** عند استخدام Splash Screen، يجب ضبط `ShutdownMode = ShutdownMode.OnExplicitShutdown` في بداية `OnStartup` ثم إعادته إلى `ShutdownMode.OnLastWindowClose` بعد فتح النافذة الرئيسية مباشرةً — وإلا سيغلق WPF التطبيق عند إغلاق Splash.
+7. **ShutdownMode في WPF:** عند استخدام Splash Screen يجب ضبط `ShutdownMode.OnExplicitShutdown` في بداية `OnStartup` ثم إعادته إلى `OnLastWindowClose` بعد فتح النافذة الرئيسية.
+8. **decimal مع SQLite GroupBy:** SQLite لا يدعم `Sum` و`Average` على نوع `decimal` مباشرة — استخدم `(decimal)g.Sum(t => (double)t.Field)` دائماً.
 
 ---
 
