@@ -243,7 +243,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            var service = new Services.WagesService(new AppDbContext());
+            var service = AppServiceProvider.Resolve<IWagesService>();
             var names = await service.GetUniqueWorkerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -564,7 +564,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                         existing.BankAccountId = null;
                     }
 
-                    existing.UpdatedAt = DateTime.Now;
+                    existing.UpdatedAt = DateTime.UtcNow;
                     await db.SaveChangesAsync();
 
                     // إعادة إنشاء حركات العمال التفصيلية الجديدة
@@ -1169,7 +1169,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
 
                 existing.IsDeleted = true;
-                existing.UpdatedAt = DateTime.Now;
+                existing.UpdatedAt = DateTime.UtcNow;
                 await db.SaveChangesAsync();
             }
             LoadExpenses();
@@ -1212,7 +1212,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         if (item == null || !item.IsPosted) return;
 
         var sessionService = AppServiceProvider.Resolve<ISessionService>();
-        if (sessionService.CurrentUserId != "Admin")
+        if (!sessionService.HasPermission("UnpostFinancial"))
         {
             MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Error);
             return;

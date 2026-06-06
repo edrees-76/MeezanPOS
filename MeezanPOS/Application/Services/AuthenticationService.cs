@@ -16,7 +16,7 @@ public class AuthenticationService : IAuthenticationService
     {
         var user = await _context.Users
             .Include(u => u.Role)
-            .FirstOrDefaultAsync(u => u.Username == username && !u.IsDeleted);
+            .FirstOrDefaultAsync(u => u.Username == username && !u.IsDeleted && u.IsActive);
 
         if (user == null)
         {

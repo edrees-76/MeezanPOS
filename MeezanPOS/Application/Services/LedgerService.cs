@@ -259,7 +259,7 @@ public class LedgerService : ILedgerService
         {
             await RebuildSupplierLedgerInternalAsync(supplierId);
 
-            await _auditService.LogAsync(_session.CurrentUserId, "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
+            await _auditService.LogAsync(_session.CurrentUsername, "RebuildSupplierLedger", "Supplier", supplierId, null, "Rebuilt");
 
             await transaction.CommitAsync();
         }

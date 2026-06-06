@@ -35,6 +35,9 @@ public class CashLedgerService : ICashLedgerService
     /// </remarks>
     public async Task<CashMovement> RecordMovementAsync(CashMovementType type, decimal amount, string? sourceType, int? sourceId, string? notes, DateTime? date = null)
     {
+        if (amount <= 0)
+            throw new ArgumentException("المبلغ يجب أن يكون أكبر من صفر.", nameof(amount));
+
         await _semaphore.WaitAsync();
         var hasActiveTransaction = _context.Database.CurrentTransaction != null;
         bool startedRawTransaction = false;
@@ -156,7 +159,7 @@ public class CashLedgerService : ICashLedgerService
                 SourceType = original.SourceType,
                 SourceId = original.SourceId,
                 Notes = $"عكس حركة رقم {original.Id} - السبب: {reason ?? "إلغاء العملية"}",
-                IsReversed = true
+                IsReversed = false // هذه حركة عكسية صالحة وليست ملغاة
             };
 
             _context.CashMovements.Add(reversal);

@@ -1275,7 +1275,7 @@ public partial class BankingServicesViewModel : ObservableObject
                 if (dbItem != null)
                 {
                     dbItem.IsReconciled = item.IsReconciled;
-                    dbItem.UpdatedAt = DateTime.Now;
+                    dbItem.UpdatedAt = DateTime.UtcNow;
                     context.SaveChanges();
                 }
             });

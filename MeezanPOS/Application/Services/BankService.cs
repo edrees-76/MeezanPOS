@@ -162,7 +162,7 @@ public class BankService : IBankService
             toTx.SourceId = fromTx.Id;
             await _context.SaveChangesAsync();
 
-            await _auditService.LogAsync(_session.CurrentUserId, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
+            await _auditService.LogAsync(_session.CurrentUsername, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
 
             await transaction.CommitAsync();
         }

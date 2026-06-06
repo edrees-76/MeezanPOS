@@ -591,7 +591,7 @@ public partial class SalesViewModel : ObservableObject
     {
         if (month == null) return;
 
-        if (CurrentUserId != "Admin")
+        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
@@ -1328,6 +1328,12 @@ public partial class SalesViewModel : ObservableObject
             return;
         }
 
+        if (SettlePayoutInput > CurrentCashBalance)
+        {
+            System.Windows.MessageBox.Show("المبلغ المطلوب أكبر من الرصيد المتاح في الخزينة.", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            return;
+        }
+
         var confirm = System.Windows.MessageBox.Show(
             $"هل أنت متأكد من تأكيد تسوية الخزينة وسحب مبلغ للمالك؟\n\n" +
             $"💰 السيولة النقدية المتوفرة: {CurrentCashBalance:N2} د.ل\n" +
@@ -1431,7 +1437,7 @@ public partial class SalesViewModel : ObservableObject
     public async Task UnlockPeriodAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
-        if (CurrentUserId != "Admin")
+        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
@@ -1491,7 +1497,7 @@ public partial class SalesViewModel : ObservableObject
     public async Task UnpostPeriodAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
-        if (CurrentUserId != "Admin")
+        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;

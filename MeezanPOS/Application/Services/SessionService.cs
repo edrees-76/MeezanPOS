@@ -20,7 +20,7 @@ public class SessionService : ISessionService
         return CurrentUser.Role.Type switch
         {
             RoleType.Admin => true,
-            RoleType.Manager => operation != "DeleteSystem",
+            RoleType.Manager => operation is not "DeleteSystem" and not "UnpostFinancial",
             RoleType.Cashier => operation is "CreateJournal" or "ViewSales" or "ViewDashboard",
             _ => false
         };

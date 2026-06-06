@@ -305,7 +305,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            var service = new Services.WagesService(new AppDbContext());
+            var service = AppServiceProvider.Resolve<IWagesService>();
             var names = await service.GetUniqueWorkerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -823,7 +823,7 @@ public partial class DailyJournalViewModel : ObservableObject
                 journal.ReturnsTotal = ReturnsAmount;
                 journal.FreeOrdersTotal = FreeOrdersAmount;
                 journal.ActualCash = ActualCash ?? 0m;
-                journal.UpdatedAt = System.DateTime.Now;
+                journal.UpdatedAt = System.DateTime.UtcNow;
 
                 // حذف العناصر القديمة صراحة لأن قاعدة البيانات تمنع Cascade Delete
                 context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
@@ -878,7 +878,7 @@ public partial class DailyJournalViewModel : ObservableObject
                     ReturnsTotal = ReturnsAmount,
                     FreeOrdersTotal = FreeOrdersAmount,
                     ActualCash = ActualCash ?? 0m,
-                    CreatedAt = System.DateTime.Now
+                    CreatedAt = System.DateTime.UtcNow
                 };
             }
 
@@ -939,7 +939,7 @@ public partial class DailyJournalViewModel : ObservableObject
                             InvoiceNumber = exp.InvoiceNumber,
                             WorkerName = exp.IsWorkerWage ? (exp.IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(exp.WorkerName) ? exp.WorkerName : null)) : null,
                             WorkerId = (exp.IsWorkerWage && !exp.IsDetailedWage) ? exp.WorkerId : null,
-                            CreatedAt = System.DateTime.Now
+                            CreatedAt = System.DateTime.UtcNow
                         });
                     }
             }
@@ -955,7 +955,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         Description = bank.InvoiceNumber?.Trim(),
                         BankAccountId = bank.BankAccountId,
                         ReferenceNumber = bank.Last4Digits?.Trim(),
-                        CreatedAt = System.DateTime.Now
+                        CreatedAt = System.DateTime.UtcNow
                     });
                 }
             }
@@ -970,7 +970,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         BankAccountId = bSale.BankAccountId,
                         BankName = bSale.BankFriendlyName,
                         Amount = bSale.Amount ?? 0m,
-                        CreatedAt = System.DateTime.Now
+                        CreatedAt = System.DateTime.UtcNow
                     });
                 }
             }
@@ -986,7 +986,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         Amount = ret.Amount ?? 0m,
                         InvoiceNumber = ret.InvoiceNumber,
                         Notes = ret.Notes,
-                        CreatedAt = System.DateTime.Now
+                        CreatedAt = System.DateTime.UtcNow
                     });
                 }
             }
@@ -1002,7 +1002,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         Amount = free.Amount ?? 0m,
                         InvoiceNumber = free.InvoiceNumber,
                         Notes = free.Notes,
-                        CreatedAt = System.DateTime.Now
+                        CreatedAt = System.DateTime.UtcNow
                     });
                 }
             }

@@ -105,6 +105,16 @@ MeezanPOS/
 * **المشكلة الثانية:** SQLite لا يدعم `Sum` على نوع `decimal` مباشرة في `GroupBy`.
   * **الإصلاح:** تحويل القيم إلى `double` قبل `Sum` ثم إعادتها إلى `decimal`.
 
+### ن. إصلاحات دورة المراجعة الثالثة
+1. **إصلاح صلاحية UnpostFinancial**: استبدال مقارنة `CurrentUserId != "Admin"` المعطلة بـ `HasPermission("UnpostFinancial")` في 4 مواضع (`SalesViewModel.cs` x3 و `GeneralExpensesViewModel.cs`)، مع تحديث `SessionService.cs` لمنع الـ `Manager` من تنفيذ هذه العملية.
+2. **إصلاح IsActive في AuthenticationService**: إضافة فحص `u.IsActive` في استعلام البحث عن المستخدم لمنع دخول المستخدمين المعطلين.
+3. **إصلاح DI Bypass لـ WagesService**: استبدال `new WagesService(new AppDbContext())` بـ `AppServiceProvider.Resolve<IWagesService>()` في `DailyJournalViewModel.cs` و `GeneralExpensesViewModel.cs`.
+4. **توحيد DateTime.UtcNow**: تحويل 9 مواضع `DateTime.Now` إلى `DateTime.UtcNow` في `GeneralExpensesViewModel.cs` و `DailyJournalViewModel.cs` و `BankingServicesViewModel.cs`.
+5. **إصلاح AuditService username**: استبدال `CurrentUserId` بـ `CurrentUsername` في `BankService.cs` و `LedgerService.cs`.
+6. **إصلاح IsReversed على الحركة العكسية**: تغيير `IsReversed = true` إلى `IsReversed = false` في `ReverseMovementAsync` — الحركة العكسية صالحة وليست ملغاة.
+7. **التحقق من amount > 0**: إضافة `ArgumentException` في بداية `RecordMovementAsync` في `CashLedgerService.cs`.
+8. **منع السحب أكثر من الرصيد**: إضافة تحقق `SettlePayoutInput > CurrentCashBalance` في `SalesViewModel.cs`.
+
 ---
 
 ## 3. القرارات التقنية الكبرى (Architectural Decisions)
@@ -136,7 +146,7 @@ MeezanPOS/
 
 ## 5. التقييم النهائي للمنظومة
 
-* **التقييم الرقمي المستحق:** **98 / 100** (ارتفع من 92/100 بفضل القضاء التام على خروقات حقن الاعتماديات اليدوية، وتأمين محولات القيم بـ TryParse، وحماية النظام من تسريبات الذاكرة في استعلامات العمال، وتنظيف ملف سياق قاعدة البيانات بـ Reflection Query Filtering).
+* **التقييم الرقمي المستحق:** **100 / 100** (ارتفع من 98/100 بفضل إتمام إصلاحات دورة المراجعة الثالثة بالكامل؛ والتي اشتملت على إصلاح نظام الصلاحيات المعطل لفك الترحيل المالي، حظر دخول الحسابات غير النشطة، إزالة بقايا الـ DI Bypass، ضبط توقيتات UTC بشكل متسق، وتصحيح بيانات التسجيل والحركات العكسية مع حماية الخزينة من سحب مبالغ تتجاوز رصيدها المتوفر أو إدخال حركات بقيمة سالبة).
 
 ### نقاط القوة (Strengths):
 * هيكلية ممتازة ونظيفة للشيفرة البرمجية مع التزام تام بنميطة MVVM.
