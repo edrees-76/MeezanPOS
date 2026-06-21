@@ -368,6 +368,11 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
+                                        <DataGridTextColumn
+                                            Header="اسم الشخص"
+                                            Binding="{Binding PersonName,
+                                                      UpdateSourceTrigger=PropertyChanged}"
+                                            Width="*"/>
                                         <DataGridTemplateColumn Header="ملاحظات" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>
@@ -419,6 +424,11 @@
                                                 </DataTemplate>
                                             </DataGridTemplateColumn.CellTemplate>
                                         </DataGridTemplateColumn>
+                                        <DataGridTextColumn
+                                            Header="اسم الشخص"
+                                            Binding="{Binding PersonName,
+                                                      UpdateSourceTrigger=PropertyChanged}"
+                                            Width="*"/>
                                         <DataGridTemplateColumn Header="ملاحظات" Width="*">
                                             <DataGridTemplateColumn.CellTemplate>
                                                 <DataTemplate>

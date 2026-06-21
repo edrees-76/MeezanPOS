@@ -1,0 +1,692 @@
+<UserControl x:Class="MeezanPOS.Presentation.Views.FreeOrdersReturnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1100"
+             FlowDirection="RightToLeft"
+             Background="#f8f9ff"
+             Loaded="UserControl_Loaded">
+    
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            
+            <!-- Tab Button Style -->
+            <Style x:Key="SleekTabButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="Padding" Value="24,0"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Foreground" Value="#64748b"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Style.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="20"/>
+                    </Style>
+                </Style.Resources>
+            </Style>
+
+            <!-- Premium Grid Styles -->
+            <Style x:Key="PremiumDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="Background" Value="White"/>
+                <Setter Property="RowBackground" Value="White"/>
+                <Setter Property="AlternatingRowBackground" Value="#f8fafc"/>
+                <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+                <Setter Property="HeadersVisibility" Value="Column"/>
+                <Setter Property="AutoGenerateColumns" Value="False"/>
+                <Setter Property="CanUserAddRows" Value="False"/>
+                <Setter Property="CanUserDeleteRows" Value="False"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="HorizontalGridLinesBrush" Value="#f1f5f9"/>
+                <Setter Property="RowHeight" Value="52"/>
+                <Setter Property="materialDesign:DataGridAssist.CellPadding" Value="16,10"/>
+                <Setter Property="materialDesign:DataGridAssist.ColumnHeaderPadding" Value="16,12"/>
+            </Style>
+
+            <Style x:Key="PremiumHeaderStyle" TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                <Setter Property="Background" Value="#f1f5f9"/>
+                <Setter Property="Foreground" Value="#1e293b"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="BorderBrush" Value="#cbd5e1"/>
+            </Style>
+
+            <Style x:Key="CenterGridTextStyle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignTextBlock}">
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="CenterCellStyle" TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}">
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <Grid Margin="24" x:Name="RootGrid">
+        <Grid.RowDefinitions>
+            <!-- 0: Header & Tabs -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="24"/>
+            <!-- 1: Content -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- ==================== Header & Tabs ==================== -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Screen Title -->
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="الطلبات المجانية والمرتجعات" FontSize="24" FontWeight="Bold" Foreground="#0f172a"/>
+                <TextBlock Text="عرض إحصائيات وتفاصيل الطلبات المجانية والمرتجع للوردية" FontSize="13" Foreground="#64748b" Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- Gorgeous Segmented Control -->
+            <Border Grid.Column="1" Background="#e2e8f0" CornerRadius="22" Padding="4" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    
+                    <!-- Tab 0: Active Work -->
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="0">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="18"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="GiftOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="العمل الحالي (الورديات المفتوحة)" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Tab 1: Archive -->
+                    <Button Command="{Binding SetTabCommand}" CommandParameter="1">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SleekTabButtonStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedTab}" Value="1">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Effect">
+                                            <Setter.Value>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="18"/>
+                            </Style>
+                        </Button.Resources>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ArchiveOutline" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="أرشيف الأشهر المرحلة" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ==================== Content Area ==================== -->
+        <Grid Grid.Row="2">
+            <!-- Loading Indicator -->
+            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" 
+                         Value="0" IsIndeterminate="True" 
+                         Width="48" Height="48"
+                         Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         Panel.ZIndex="10" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+            <!-- TAB 0: Current Work -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <materialDesign:Card Grid.Row="0" UniformCornerRadius="16" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <Border BorderBrush="#f1f5f9" BorderThickness="0,0,0,1" Padding="20,16">
+                            <TextBlock Text="يوميات ورديات العمل المفتوحة (غير المرحلة)" FontWeight="Bold" FontSize="16" Foreground="#0f172a"/>
+                        </Border>
+
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding CurrentJournals}" Style="{StaticResource PremiumDataGridStyle}" ColumnHeaderStyle="{StaticResource PremiumHeaderStyle}" CellStyle="{StaticResource CenterCellStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="تسلسل" Width="0.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Sequence}" Style="{StaticResource CenterGridTextStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="التاريخ" Width="1.5*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DateDisplay}" Style="{StaticResource CenterGridTextStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <DataGridTemplateColumn Header="الطلب المجاني الإجمالي" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding FreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                    Command="{Binding DataContext.ShowDayFreeDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Foreground="#ca8a04" BorderBrush="#fef9c3" Background="#fefff5"
+                                                    HorizontalAlignment="Center" MinWidth="130" Height="36"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="المرتجعات الإجمالية" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding ReturnsTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                    Command="{Binding DataContext.ShowDayReturnDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#fff5f5"
+                                                    HorizontalAlignment="Center" MinWidth="130" Height="36"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </materialDesign:Card>
+
+                <!-- Statistics Card for Current Work -->
+                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,16,0,0" BorderBrush="#e2e8f0" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="1.8*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Column 0: Free Orders Total & Average -->
+                        <StackPanel Grid.Column="0" Margin="10,0">
+                            <TextBlock Text="إجمالي الطلبات المجانية" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MonthlyFreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#ca8a04" Margin="0,4,0,8"/>
+                            <TextBlock Text="{Binding DailyAvgFreeOrders, StringFormat='متوسط يومي: {0:N2} د.ل'}" FontSize="13" Foreground="#475569" FontWeight="Medium"/>
+                        </StackPanel>
+
+                        <!-- Column 1: Returns Total & Average -->
+                        <StackPanel Grid.Column="1" Margin="10,0">
+                            <TextBlock Text="إجمالي المرتجعات" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MonthlyReturnsTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#dc2626" Margin="0,4,0,8"/>
+                            <TextBlock Text="{Binding DailyAvgReturns, StringFormat='متوسط يومي: {0:N2} د.ل'}" FontSize="13" Foreground="#475569" FontWeight="Medium"/>
+                        </StackPanel>
+
+                        <!-- Column 2: Peak Days -->
+                        <StackPanel Grid.Column="2" Margin="10,0">
+                            <TextBlock Text="أعلى الأيام قيمة" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <Grid Margin="0,2">
+                                <TextBlock Text="أعلى مجاني:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Margin="0,2">
+                                <TextBlock Text="أعلى مرتجع:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Column 3: Top Free Order Recipients -->
+                        <StackPanel Grid.Column="3" Margin="10,0">
+                            <TextBlock Text="أكثر مستلمي المجاني (توب 5)" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding TopFreeOrderRecipients}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" FontSize="13" Foreground="#ca8a04" FontWeight="Bold" HorizontalAlignment="Left"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="لا يوجد بيانات حالياً" FontSize="13" Foreground="#94a3b8" HorizontalAlignment="Center" Margin="0,10,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TopFreeOrderRecipients.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- TAB 1: Archive -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTab}" Value="1">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Sub-level 0: Month Cards / List -->
+                <Grid Grid.Row="0">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <materialDesign:Card UniformCornerRadius="16" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <Border BorderBrush="#f1f5f9" BorderThickness="0,0,0,1" Padding="20,16">
+                                <TextBlock Text="أرشيف الأشهر المرحلة" FontWeight="Bold" FontSize="16" Foreground="#0f172a"/>
+                            </Border>
+
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding ArchiveMonths}" Style="{StaticResource PremiumDataGridStyle}" ColumnHeaderStyle="{StaticResource PremiumHeaderStyle}" CellStyle="{StaticResource CenterCellStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Header="تسلسل" Width="0.8*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Sequence}" Style="{StaticResource CenterGridTextStyle}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Header="الشهر" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding MonthName}" Style="{StaticResource CenterGridTextStyle}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    
+                                    <DataGridTemplateColumn Header="إجمالي الطلبات المجانية" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding FreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}" Style="{StaticResource CenterGridTextStyle}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    
+                                    <DataGridTemplateColumn Header="إجمالي المرتجعات" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding ReturnsTotal, StringFormat='{}{0:N2} د.ل'}" Style="{StaticResource CenterGridTextStyle}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    
+                                    <DataGridTemplateColumn Header="عدد أيام الوردية" Width="1.5*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding DaysCount}" Style="{StaticResource CenterGridTextStyle}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTemplateColumn Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="عرض"
+                                                        Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding}"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Foreground="#4f46e5"
+                                                        FontWeight="Bold"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </materialDesign:Card>
+                </Grid>
+
+                <!-- Sub-level 1: Days within selected Month -->
+                <Grid Grid.Row="0">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ArchiveLevel}" Value="1">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header Row with Back Button -->
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="12"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="#0f172a" Background="#e2e8f0" Width="36" Height="36" Padding="0">
+                            <materialDesign:PackIcon Kind="ArrowRight" Width="22" Height="22"/>
+                        </Button>
+                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchiveMonth.MonthName, StringFormat='تفاصيل شهر: {0}'}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                    </Grid>
+
+                    <materialDesign:Card Grid.Row="2" UniformCornerRadius="16" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
+                        <DataGrid ItemsSource="{Binding ArchivedJournals}" Style="{StaticResource PremiumDataGridStyle}" ColumnHeaderStyle="{StaticResource PremiumHeaderStyle}" CellStyle="{StaticResource CenterCellStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <DataGrid.Columns>
+                                <DataGridTemplateColumn Header="تسلسل" Width="0.8*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Sequence}" Style="{StaticResource CenterGridTextStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="التاريخ" Width="1.5*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding DateDisplay}" Style="{StaticResource CenterGridTextStyle}"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                
+                                <DataGridTemplateColumn Header="الطلب المجاني الإجمالي" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding FreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                    Command="{Binding DataContext.ShowDayFreeDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Foreground="#ca8a04" BorderBrush="#fef9c3" Background="#fefff5"
+                                                    HorizontalAlignment="Center" MinWidth="130" Height="36"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <DataGridTemplateColumn Header="المرتجعات الإجمالية" Width="2*">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Content="{Binding ReturnsTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                    Command="{Binding DataContext.ShowDayReturnDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    CommandParameter="{Binding}"
+                                                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#fff5f5"
+                                                    HorizontalAlignment="Center" MinWidth="130" Height="36"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </materialDesign:Card>
+                </Grid>
+
+                <!-- Monthly Stats Cards -->
+                <Border Grid.Row="1" Background="White" CornerRadius="12" Padding="20" Margin="0,16,0,0" BorderBrush="#e2e8f0" BorderThickness="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.2*"/>
+                            <ColumnDefinition Width="1.8*"/>
+                            <ColumnDefinition Width="2*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Column 0: Free Orders Total & Average -->
+                        <StackPanel Grid.Column="0" Margin="10,0">
+                            <TextBlock Text="إجمالي الطلبات المجانية" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MonthlyFreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#ca8a04" Margin="0,4,0,8"/>
+                            <TextBlock Text="{Binding DailyAvgFreeOrders, StringFormat='متوسط يومي: {0:N2} د.ل'}" FontSize="13" Foreground="#475569" FontWeight="Medium"/>
+                        </StackPanel>
+
+                        <!-- Column 1: Returns Total & Average -->
+                        <StackPanel Grid.Column="1" Margin="10,0">
+                            <TextBlock Text="إجمالي المرتجعات" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MonthlyReturnsTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#dc2626" Margin="0,4,0,8"/>
+                            <TextBlock Text="{Binding DailyAvgReturns, StringFormat='متوسط يومي: {0:N2} د.ل'}" FontSize="13" Foreground="#475569" FontWeight="Medium"/>
+                        </StackPanel>
+
+                        <!-- Column 2: Peak Days -->
+                        <StackPanel Grid.Column="2" Margin="10,0">
+                            <TextBlock Text="أعلى الأيام قيمة" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <Grid Margin="0,2">
+                                <TextBlock Text="أعلى مجاني:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                            </Grid>
+                            <Grid Margin="0,2">
+                                <TextBlock Text="أعلى مرتجع:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Column 3: Top Free Order Recipients -->
+                        <StackPanel Grid.Column="3" Margin="10,0">
+                            <TextBlock Text="أكثر مستلمي المجاني (توب 5)" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding TopFreeOrderRecipients}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" FontSize="13" Foreground="#ca8a04" FontWeight="Bold" HorizontalAlignment="Left"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="لا يوجد بيانات حالياً" FontSize="13" Foreground="#94a3b8" HorizontalAlignment="Center" Margin="0,10,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding TopFreeOrderRecipients.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ==================== POPUPS ==================== -->
+        
+        <!-- Day Shifts Popup -->
+        <Popup IsOpen="{Binding IsShiftPopupOpen}" Placement="Center" StaysOpen="False" AllowsTransparency="True" PlacementTarget="{Binding ElementName=RootGrid}">
+            <Border DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=Popup}}" Background="White" CornerRadius="16" Padding="24" MinWidth="600" BorderBrush="#cbd5e1" BorderThickness="1" FlowDirection="RightToLeft">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="#000" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="{Binding SelectedDayTitle}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" Margin="0,0,0,16"/>
+                    <DataGrid ItemsSource="{Binding SelectedDayShifts}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
+                              HorizontalGridLinesBrush="#f1f5f9" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc" RowHeight="46"
+                              materialDesign:DataGridAssist.CellPadding="16,10" materialDesign:DataGridAssist.ColumnHeaderPadding="16,12"
+                              CellStyle="{StaticResource CenterCellStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="نوع الوردية" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding ShiftName}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            
+                            <DataGridTemplateColumn Header="الكاشير" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding EmployeeName}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            
+                            <!-- Free Orders Button -->
+                            <DataGridTemplateColumn Header="الطلبات المجانية" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding FreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                Command="{Binding DataContext.ShowShiftFreeDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Foreground="#ca8a04" FontWeight="Bold"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Returns Button -->
+                            <DataGridTemplateColumn Header="المرتجعات" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="{Binding ReturnsTotal, StringFormat='{}{0:N2} د.ل'}"
+                                                Command="{Binding DataContext.ShowShiftReturnDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatButton}"
+                                                Foreground="#dc2626" FontWeight="Bold"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+                    <Button Content="إغلاق" Command="{Binding CloseShiftPopupCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#64748b" Height="40" Margin="0,16,0,0" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+        <!-- Adjustment Details Popup -->
+        <Popup IsOpen="{Binding IsDetailPopupOpen}" Placement="Center" StaysOpen="False" AllowsTransparency="True" PlacementTarget="{Binding ElementName=RootGrid}">
+            <Border DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=Popup}}" Background="White" CornerRadius="16" Padding="24" Width="850" BorderBrush="#cbd5e1" BorderThickness="1" FlowDirection="RightToLeft">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="#000" Opacity="0.15"/>
+                </Border.Effect>
+                <StackPanel>
+                    <TextBlock Text="{Binding SelectedShiftTitle}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" Margin="0,0,0,16"/>
+                    <DataGrid ItemsSource="{Binding SelectedShiftDetails}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
+                              HorizontalGridLinesBrush="#f1f5f9" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc" RowHeight="46"
+                              materialDesign:DataGridAssist.CellPadding="16,10" materialDesign:DataGridAssist.ColumnHeaderPadding="16,12"
+                              CellStyle="{StaticResource CenterCellStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="تسلسل" Width="70">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SequenceNumber}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="رقم الطلبية" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding InvoiceNumber}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="اسم الشخص" Width="140">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding PersonName}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="القيمة" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Amount, StringFormat='{}{0:N2} د.ل'}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="الملاحظات" Width="320">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Notes}" Style="{StaticResource CenterGridTextStyle}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+                    <Button Content="إغلاق" Command="{Binding CloseDetailPopupCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#64748b" Height="40" Margin="0,16,0,0" FontWeight="Bold"/>
+                </StackPanel>
+            </Border>
+        </Popup>
+
+    </Grid>
+</UserControl>

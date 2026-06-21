@@ -281,20 +281,24 @@ public partial class SalesViewModel : ObservableObject
                     var totalCount = g.Count();
                     var isPosted = postedCount == totalCount;
                     var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
+                    
+                    var postedJournals = g.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived).ToList();
+                    
                     return new MonthSummaryCard
                     {
                         Year = year,
                         Month = month,
                         MonthName = $"{GetArabicMonthName(month)} {year}",
-                        TotalSales = g.Sum(j => j.TotalSales),
-                        TotalCashSales = g.Sum(j => j.CashSales),
-                        TotalBankingSales = g.Sum(j => j.BankingTotal),
-                        TotalExpenses = g.Sum(j => j.TotalExpenses),
-                        DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),
+                        TotalSales = postedJournals.Sum(j => j.TotalSales),
+                        TotalCashSales = postedJournals.Sum(j => j.CashSales),
+                        TotalBankingSales = postedJournals.Sum(j => j.BankingTotal),
+                        TotalExpenses = postedJournals.Sum(j => j.TotalExpenses),
+                        DaysCount = postedJournals.Select(j => j.JournalDate.Date).Distinct().Count(),
                         IsPosted = isPosted,
                         IsPartiallyPosted = isPartiallyPosted
                     };
                 })
+                .Where(m => m.IsPosted || m.IsPartiallyPosted) // Only show months with at least one posted/archived journal
                 .OrderByDescending(m => m.Year)
                 .ThenByDescending(m => m.Month)
                 .Select((m, idx) => {
@@ -416,7 +420,8 @@ public partial class SalesViewModel : ObservableObject
             if (SelectedArchivedMonth != null)
             {
                 var resultList = commonFiltered.Where(j => j.JournalDate.Year == SelectedArchivedMonth.Year && 
-                                                           j.JournalDate.Month == SelectedArchivedMonth.Month).ToList();
+                                                           j.JournalDate.Month == SelectedArchivedMonth.Month &&
+                                                           (j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)).ToList();
 
                 ArchivedJournals = new ObservableCollection<SelectableDailyJournal>(
                     resultList.Select((j, idx) => new SelectableDailyJournal(j) { Sequence = idx + 1 })
@@ -440,20 +445,24 @@ public partial class SalesViewModel : ObservableObject
                         var totalCount = g.Count();
                         var isPosted = postedCount == totalCount;
                         var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
+                        
+                        var postedJournals = g.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived).ToList();
+                        
                         return new MonthSummaryCard
                         {
                             Year = year,
                             Month = month,
                             MonthName = $"{GetArabicMonthName(month)} {year}",
-                            TotalSales = g.Sum(j => j.TotalSales),
-                            TotalCashSales = g.Sum(j => j.CashSales),
-                            TotalBankingSales = g.Sum(j => j.BankingTotal),
-                            TotalExpenses = g.Sum(j => j.TotalExpenses),
-                            DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),
+                            TotalSales = postedJournals.Sum(j => j.TotalSales),
+                            TotalCashSales = postedJournals.Sum(j => j.CashSales),
+                            TotalBankingSales = postedJournals.Sum(j => j.BankingTotal),
+                            TotalExpenses = postedJournals.Sum(j => j.TotalExpenses),
+                            DaysCount = postedJournals.Select(j => j.JournalDate.Date).Distinct().Count(),
                             IsPosted = isPosted,
                             IsPartiallyPosted = isPartiallyPosted
                         };
                     })
+                    .Where(m => m.IsPosted || m.IsPartiallyPosted) // Only show months with at least one posted/archived journal
                     .OrderByDescending(m => m.Year)
                     .ThenByDescending(m => m.Month)
                     .Select((m, idx) => {

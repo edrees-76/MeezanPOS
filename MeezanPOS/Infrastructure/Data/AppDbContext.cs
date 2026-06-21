@@ -282,6 +282,7 @@ public class AppDbContext : DbContext
         // إضافة الأعمدة الجديدة إن لم تكن موجودة
         ExecuteSqlIfColumnMissing(context, "OwnerDebts", "PaymentMethod", "ALTER TABLE OwnerDebts ADD COLUMN PaymentMethod TEXT;");
         ExecuteSqlIfColumnMissing(context, "OwnerDebts", "TransferReference", "ALTER TABLE OwnerDebts ADD COLUMN TransferReference TEXT;");
+        ExecuteSqlIfColumnMissing(context, "OrderAdjustmentItems", "PersonName", "ALTER TABLE OrderAdjustmentItems ADD COLUMN PersonName TEXT;");
         ExecuteSqlIfColumnMissing(context, "GeneralExpenses", "CustomExpenseName", "ALTER TABLE GeneralExpenses ADD COLUMN CustomExpenseName TEXT;");
         // حقول أمنية جديدة للمستخدمين
         ExecuteSqlIfColumnMissing(context, "Users", "IsActive", "ALTER TABLE Users ADD COLUMN IsActive INTEGER NOT NULL DEFAULT 1;");

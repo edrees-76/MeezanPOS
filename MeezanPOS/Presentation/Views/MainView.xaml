@@ -142,6 +142,12 @@
                             <TextBlock Text="الحسابات البنكية والخزينة" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
+                    <ListBoxItem>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="GiftOutline" Width="24" Height="24" Margin="0,0,16,0"/>
+                            <TextBlock Text="الطلبات المجانية والمرتجعات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
 
                 <StackPanel Grid.Row="2" Margin="0,0,0,40">

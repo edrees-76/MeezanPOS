@@ -32,6 +32,9 @@ public partial class OrderAdjustmentItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string notes = string.Empty;
+
+    [ObservableProperty]
+    private string personName = string.Empty;
 }
 
 
@@ -986,6 +989,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         Amount = ret.Amount ?? 0m,
                         InvoiceNumber = ret.InvoiceNumber,
                         Notes = ret.Notes,
+                        PersonName = ret.PersonName?.Trim(),
                         CreatedAt = System.DateTime.UtcNow
                     });
                 }
@@ -1002,6 +1006,7 @@ public partial class DailyJournalViewModel : ObservableObject
                         Amount = free.Amount ?? 0m,
                         InvoiceNumber = free.InvoiceNumber,
                         Notes = free.Notes,
+                        PersonName = free.PersonName?.Trim(),
                         CreatedAt = System.DateTime.UtcNow
                     });
                 }
@@ -1372,7 +1377,8 @@ public partial class DailyJournalViewModel : ObservableObject
                 {
                     Amount = a.Amount,
                     InvoiceNumber = a.InvoiceNumber ?? "",
-                    Notes = a.Notes ?? ""
+                    Notes = a.Notes ?? "",
+                    PersonName = a.PersonName ?? ""
                 };
                 item.PropertyChanged += (s, e) => RefreshCalculations();
                 if (a.IsFreeOrder)

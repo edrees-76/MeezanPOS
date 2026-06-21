@@ -155,13 +155,19 @@ public class DailyJournalPdfReport : IDocument
                         {
                             innerCol.Item().Table(t =>
                             {
-                                t.ColumnsDefinition(cols => { cols.RelativeColumn(); cols.RelativeColumn(2); });
+                                t.ColumnsDefinition(cols => {
+                                    cols.RelativeColumn();   // المبلغ
+                                    cols.RelativeColumn(2);  // اسم الشخص ← جديد
+                                    cols.RelativeColumn(2);  // ملاحظات/فاتورة
+                                });
                                 t.Header(h => { 
                                     h.Cell().Border(1).BorderColor(Colors.Black).Background("#fefff5").Padding(4).Text("المبلغ").SemiBold(); 
+                                    h.Cell().Border(1).BorderColor(Colors.Black).Background("#fefff5").Padding(4).Text("اسم الشخص").SemiBold(); 
                                     h.Cell().Border(1).BorderColor(Colors.Black).Background("#fefff5").Padding(4).Text("ملاحظات/فاتورة").SemiBold(); 
                                 });
                                 foreach (var item in _vm.FreeOrders) { 
                                     t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text($"{item.Amount:N2}"); 
+                                    t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(!string.IsNullOrWhiteSpace(item.PersonName) ? item.PersonName : "—"); 
                                     t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(item.InvoiceNumber ?? item.Notes); 
                                 }
                             });
@@ -181,13 +187,19 @@ public class DailyJournalPdfReport : IDocument
                         {
                             innerCol.Item().Table(t =>
                             {
-                                t.ColumnsDefinition(cols => { cols.RelativeColumn(); cols.RelativeColumn(2); });
+                                t.ColumnsDefinition(cols => {
+                                    cols.RelativeColumn();   // المبلغ
+                                    cols.RelativeColumn(2);  // اسم الشخص ← جديد
+                                    cols.RelativeColumn(2);  // ملاحظات/فاتورة
+                                });
                                 t.Header(h => { 
                                     h.Cell().Border(1).BorderColor(Colors.Black).Background("#fff5f5").Padding(4).Text("المبلغ").SemiBold(); 
+                                    h.Cell().Border(1).BorderColor(Colors.Black).Background("#fff5f5").Padding(4).Text("اسم الشخص").SemiBold(); 
                                     h.Cell().Border(1).BorderColor(Colors.Black).Background("#fff5f5").Padding(4).Text("ملاحظات/فاتورة").SemiBold(); 
                                 });
                                 foreach (var item in _vm.Returns) { 
                                     t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text($"{item.Amount:N2}"); 
+                                    t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(!string.IsNullOrWhiteSpace(item.PersonName) ? item.PersonName : "—"); 
                                     t.Cell().Border(1).BorderColor(Colors.Black).Padding(4).Text(item.InvoiceNumber ?? item.Notes); 
                                 }
                             });

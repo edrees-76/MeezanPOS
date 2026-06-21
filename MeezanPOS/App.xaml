@@ -36,6 +36,9 @@
             <DataTemplate DataType="{x:Type vm:BankingServicesViewModel}">
                 <views:BankingServicesView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:FreeOrdersReturnsViewModel}">
+                <views:FreeOrdersReturnsView />
+            </DataTemplate>
             
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
             <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>

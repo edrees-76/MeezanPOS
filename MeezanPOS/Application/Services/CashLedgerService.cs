@@ -40,17 +40,9 @@ public class CashLedgerService : ICashLedgerService
 
         await _semaphore.WaitAsync();
         var hasActiveTransaction = _context.Database.CurrentTransaction != null;
-        bool startedRawTransaction = false;
+        var transaction = !hasActiveTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
-            if (!hasActiveTransaction)
-            {
-                // BEGIN IMMEDIATE يضمن حصرية الكتابة في SQLite فوراً بدلاً من الانتظار حتى أول كتابة
-                await _context.Database.OpenConnectionAsync();
-                await _context.Database.ExecuteSqlRawAsync("BEGIN IMMEDIATE");
-                startedRawTransaction = true;
-            }
-
             var txDate = date ?? DateTime.UtcNow;
             
             // جلب رصيد آخر حركة مسجلة — الترتيب بـ Id فقط (AUTOINCREMENT متسلسل)
@@ -92,26 +84,26 @@ public class CashLedgerService : ICashLedgerService
 
             await _context.SaveChangesAsync();
             
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                await _context.Database.ExecuteSqlRawAsync("COMMIT");
+                await transaction.CommitAsync();
             }
 
             return movement;
         }
         catch
         {
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                try { await _context.Database.ExecuteSqlRawAsync("ROLLBACK"); } catch { }
+                try { await transaction.RollbackAsync(); } catch { }
             }
             throw;
         }
         finally
         {
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                try { await _context.Database.CloseConnectionAsync(); } catch { }
+                await transaction.DisposeAsync();
             }
             _semaphore.Release();
         }
@@ -121,16 +113,9 @@ public class CashLedgerService : ICashLedgerService
     {
         await _semaphore.WaitAsync();
         var hasActiveTransaction = _context.Database.CurrentTransaction != null;
-        bool startedRawTransaction = false;
+        var transaction = !hasActiveTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
-            if (!hasActiveTransaction)
-            {
-                await _context.Database.OpenConnectionAsync();
-                await _context.Database.ExecuteSqlRawAsync("BEGIN IMMEDIATE");
-                startedRawTransaction = true;
-            }
-
             var original = await _context.CashMovements.FindAsync(movementId);
             if (original == null || original.IsReversed)
                 throw new Exception("الحركة غير موجودة أو تم عكسها بالفعل.");
@@ -177,26 +162,26 @@ public class CashLedgerService : ICashLedgerService
 
             await _context.SaveChangesAsync();
             
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                await _context.Database.ExecuteSqlRawAsync("COMMIT");
+                await transaction.CommitAsync();
             }
 
             return reversal;
         }
         catch
         {
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                try { await _context.Database.ExecuteSqlRawAsync("ROLLBACK"); } catch { }
+                try { await transaction.RollbackAsync(); } catch { }
             }
             throw;
         }
         finally
         {
-            if (startedRawTransaction)
+            if (transaction != null)
             {
-                try { await _context.Database.CloseConnectionAsync(); } catch { }
+                await transaction.DisposeAsync();
             }
             _semaphore.Release();
         }

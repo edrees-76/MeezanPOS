@@ -37,7 +37,7 @@ public class DailyJournal : BaseEntity, IPostableEntity
 
     // المطابقة النهائية
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-    public decimal ExpectedCash => CashFloat + CashSales - TotalExpenses - ReturnsTotal;  // النقد المتوقع
+    public decimal ExpectedCash => CashFloat + CashSales - TotalExpenses - ReturnsTotal - FreeOrdersTotal;  // النقد المتوقع
     public decimal ActualCash { get; set; }            // النقد الفعلي المستلم
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal Difference => ActualCash - ExpectedCash;  // الفرق (عجز أو زيادة)
@@ -82,6 +82,7 @@ public class OrderAdjustmentItem : BaseEntity
     public decimal Amount { get; set; }
     public string? InvoiceNumber { get; set; }
     public string? Notes { get; set; }
+    public string? PersonName { get; set; } // اسم الشخص (اختياري)
 }
 
 /// <summary>
