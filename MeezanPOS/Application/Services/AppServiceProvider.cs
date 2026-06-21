@@ -17,8 +17,9 @@ public static class AppServiceProvider
     {
         var services = new ServiceCollection();
 
-        // DbContext — Transient (كل طلب context جديد)
-        services.AddTransient<AppDbContext>();
+        // DbContext — Scoped (مشاركة نفس الكائن لتجنب أخطاء الإقفال والتعارض المالي في SQLite)
+        services.AddScoped<AppDbContext>();
+        services.AddDbContextFactory<AppDbContext>();
 
         // Session — Singleton (مستخدم واحد طوال التطبيق)
         services.AddSingleton<ISessionService, SessionService>();
@@ -26,14 +27,14 @@ public static class AppServiceProvider
         // Authentication
         services.AddTransient<IAuthenticationService, AuthenticationService>();
 
-        // الخدمات المالية — Transient
-        services.AddTransient<ILedgerService, LedgerService>();
-        services.AddTransient<IBankService, BankService>();
-        services.AddTransient<ICashLedgerService, CashLedgerService>();
-        services.AddTransient<IPostingService, PostingService>();
-        services.AddTransient<IOwnerDebtService, OwnerDebtService>();
-        services.AddTransient<IWagesService, WagesService>();
-        services.AddTransient<AuditService>();
+        // الخدمات المالية — Scoped لمنع تعارض المعاملات وقفل قاعدة البيانات (SQLite Deadlock)
+        services.AddScoped<ILedgerService, LedgerService>();
+        services.AddScoped<IBankService, BankService>();
+        services.AddScoped<ICashLedgerService, CashLedgerService>();
+        services.AddScoped<IPostingService, PostingService>();
+        services.AddScoped<IOwnerDebtService, OwnerDebtService>();
+        services.AddScoped<IWagesService, WagesService>();
+        services.AddScoped<AuditService>();
 
         _provider = services.BuildServiceProvider();
     }
