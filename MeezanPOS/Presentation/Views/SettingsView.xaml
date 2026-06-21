@@ -1,0 +1,232 @@
+<UserControl x:Class="MeezanPOS.Presentation.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
+             xmlns:enums="clr-namespace:MeezanPOS.Domain.Enums"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" d:DesignWidth="900"
+             FlowDirection="RightToLeft"
+             Background="#f8f9ff">
+
+    <UserControl.Resources>
+        <ObjectDataProvider x:Key="FrequencyEnumValues" MethodName="GetValues" ObjectType="{x:Type System:Enum}" xmlns:System="clr-namespace:System;assembly=mscorlib">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="enums:BackupFrequency" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <Style x:Key="SidebarTabItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="16,14"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Foreground" Value="#64748b"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="8" Margin="8,2">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#080b1c30" />
+                                <Setter Property="Foreground" Value="#0b1c30"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#e5eeff" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3b82f6"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="4,0,0,0"/>
+                                <Setter Property="Foreground" Value="#2563eb"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="0">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/> <!-- Inner Sidebar -->
+            <ColumnDefinition Width="*"/> <!-- Tab Content -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Inner Sidebar for Settings Tabs -->
+        <Border Grid.Column="0" Background="White" BorderBrush="#e5eeff" BorderThickness="0,0,1,0" Padding="8,16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="أقسام الإعدادات" FontSize="15" FontWeight="Bold" Foreground="#0b1c30" Margin="16,0,16,16"/>
+
+                <ListBox Grid.Row="1" x:Name="SettingsTabsList" AutomationProperties.AutomationId="SettingsTabsList" Background="Transparent" BorderThickness="0" SelectedIndex="0">
+                    <!-- Tab 1: Backup & Restore -->
+                    <ListBoxItem Style="{StaticResource SidebarTabItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="DatabaseSync" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="النسخ الاحتياطي والاسترجاع" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+                </ListBox>
+            </Grid>
+        </Border>
+
+        <!-- Settings Content Area -->
+        <Grid Grid.Column="1" Margin="24">
+            
+            <!-- Tab 0: Backup & Restore -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabsList}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Grid with Close Button -->
+                <Grid Grid.Row="0" Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Title & Subtitle -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="إعدادات النسخ الاحتياطي والاسترجاع" FontSize="20" FontWeight="Bold" Foreground="#0b1c30"/>
+                        <TextBlock Text="قم بتكوين خيارات النسخ الاحتياطي التلقائي أو إجراء عمليات نسخ واسترجاع يدوية لقاعدة البيانات." FontSize="13" Foreground="#76777d" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Close Button -->
+                    <Button Grid.Column="1" x:Name="btnCloseSettings" AutomationProperties.AutomationId="btnCloseSettings"
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="Dashboard"
+                            Style="{StaticResource MaterialDesignIconButton}" 
+                            Foreground="#ef4444" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Left"
+                            Margin="16,0,0,0"
+                            Width="36" 
+                            Height="36">
+                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
+                    </Button>
+                </Grid>
+
+                <!-- Sections Card -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        
+                        <!-- Section A: Automatic Backup -->
+                        <Border Background="White" CornerRadius="8" BorderBrush="#e5eeff" BorderThickness="1" Padding="20" Margin="0,0,0,20">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <materialDesign:PackIcon Kind="ClockStart" Foreground="#3b82f6" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="الجدولة والنسخ التلقائي" FontSize="16" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <!-- Folder Selection -->
+                                <TextBlock Text="مسار النسخ الاحتياطي المفضل" FontSize="13" FontWeight="SemiBold" Foreground="#64748b" Margin="0,0,0,6"/>
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Text="{Binding PreferredBackupPath, Mode=TwoWay}" IsReadOnly="True" 
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                             Padding="12,10" Height="40" Background="#f8f9ff"/>
+                                    <Button Grid.Column="1" Command="{Binding BackupNowCommand}" Content="استعراض مجلد..." 
+                                             Style="{StaticResource MaterialDesignFlatButton}" Foreground="#2563eb"
+                                             Margin="8,0,0,0" Height="40" Padding="12,0"/>
+                                </Grid>
+
+                                <!-- Backup Frequency -->
+                                <TextBlock Text="تكرار النسخ الاحتياطي التلقائي (عند إغلاق المنظومة)" FontSize="13" FontWeight="SemiBold" Foreground="#64748b" Margin="0,0,0,6"/>
+                                <ComboBox x:Name="comboFrequency" AutomationProperties.AutomationId="comboFrequency" SelectedItem="{Binding SelectedFrequency}" ItemsSource="{Binding Source={StaticResource FrequencyEnumValues}}"
+                                          Width="250" HorizontalAlignment="Right" Height="40" Padding="8,6" VerticalContentAlignment="Center">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock FontSize="13" HorizontalAlignment="Right" TextAlignment="Right">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding}" Value="{x:Static enums:BackupFrequency.Disabled}">
+                                                                <Setter Property="Text" Value="معطّل (إيقاف النسخ التلقائي)" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding}" Value="{x:Static enums:BackupFrequency.Daily}">
+                                                                <Setter Property="Text" Value="يومي" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding}" Value="{x:Static enums:BackupFrequency.Weekly}">
+                                                                <Setter Property="Text" Value="أسبوعي" />
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding}" Value="{x:Static enums:BackupFrequency.Monthly}">
+                                                                <Setter Property="Text" Value="شهري" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+
+                                <!-- Info -->
+                                <Border Background="#f0f7ff" CornerRadius="6" Padding="12" Margin="0,16,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Information" Foreground="#2563eb" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="تاريخ آخر نسخ تلقائي:" FontSize="12" Foreground="#1e3a8a" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding LastAutoBackupDateText}" FontSize="12" Foreground="#1e3a8a" Margin="6,0,0,0"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Section B: Manual Actions -->
+                        <Border Background="White" CornerRadius="8" BorderBrush="#e5eeff" BorderThickness="1" Padding="20" Margin="0,0,0,20">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <materialDesign:PackIcon Kind="DatabaseSettings" Foreground="#f59e0b" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="العمليات اليدوية الفورية" FontSize="16" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Text="يمكنك حفظ نسخة احتياطية بشكل يدوي في أي وقت أو استعادة البيانات من ملف قديم." FontSize="13" Foreground="#76777d" Margin="0,0,0,16"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="btnBackupNow" AutomationProperties.AutomationId="btnBackupNow" Command="{Binding BackupNowCommand}" Background="#2563eb" BorderThickness="0" Padding="16,8" Height="40" Margin="0,0,12,0" materialDesign:ButtonAssist.CornerRadius="6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Backup" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="نسخ احتياطي فوري الآن" Foreground="White" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="btnRestoreNow" AutomationProperties.AutomationId="btnRestoreNow" Command="{Binding RestoreNowCommand}" Background="#ef4444" BorderThickness="0" Padding="16,8" Height="40" materialDesign:ButtonAssist.CornerRadius="6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Restore" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="استرجاع نسخة سابقة..." Foreground="White" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+            
+        </Grid>
+    </Grid>
+</UserControl>

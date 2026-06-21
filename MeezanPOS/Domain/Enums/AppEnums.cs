@@ -8,6 +8,14 @@ public enum WorkerTransactionType { WageAccrual, Payment, Advance, Deduction, Ad
 public enum ShiftType { FirstShift, SecondShift, FullDay }
 public enum AttendanceStatus { Present, Absent, HalfDay, Leave }
 
+public enum BackupFrequency
+{
+    Disabled,
+    Daily,
+    Weekly,
+    Monthly
+}
+
 public enum WorkerLedgerFilter
 {
     All,         // الكل

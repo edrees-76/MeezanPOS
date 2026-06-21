@@ -41,6 +41,7 @@ public partial class MainViewModel : ObservableObject
                 else if (value == 4) Navigate("Wages");
                 else if (value == 5) Navigate("Banking");
                 else if (value == 6) Navigate("FreeOrdersReturns");
+                else if (value == 7) Navigate("Settings");
             }
         }
     }
@@ -118,6 +119,11 @@ public partial class MainViewModel : ObservableObject
                 Title = "ميزان للمالية - الطلبات المجانية والمرتجعات";
                 SelectedNavIndex = 6;
                 CurrentViewModel = new FreeOrdersReturnsViewModel();
+                break;
+            case "Settings":
+                Title = "ميزان للمالية - الإعدادات النظامية";
+                SelectedNavIndex = 7;
+                CurrentViewModel = new SettingsViewModel();
                 break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";

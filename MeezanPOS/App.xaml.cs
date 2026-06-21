@@ -1,8 +1,13 @@
 using System.Configuration;
 using System.Data;
 using System.Windows;
+using System.IO;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using MeezanPOS.Application.Services;
+using MeezanPOS.Domain.Entities;
+using MeezanPOS.Domain.Enums;
 using Serilog;
 namespace MeezanPOS;
 
@@ -295,6 +300,92 @@ public partial class App : System.Windows.Application
     protected override void OnExit(ExitEventArgs e)
     {
         Log.Information("إيقاف منظومة ميزان POS");
+        
+        // تشغيل عملية النسخ الاحتياطي التلقائي بشكل متزامن وحظر عملية الإغلاق حتى اكتمال الكتابة
+        try
+        {
+            using (var context = new MeezanPOS.Infrastructure.Data.AppDbContext())
+            {
+                var freqSetting = context.Settings.FirstOrDefault(s => s.Key == "BackupFrequency");
+                var pathSetting = context.Settings.FirstOrDefault(s => s.Key == "PreferredBackupPath");
+                
+                if (freqSetting != null && pathSetting != null && 
+                    Enum.TryParse<BackupFrequency>(freqSetting.Value, out var freq) && freq != BackupFrequency.Disabled &&
+                    !string.IsNullOrWhiteSpace(pathSetting.Value) && Directory.Exists(pathSetting.Value))
+                {
+                    var preferredPath = pathSetting.Value;
+                    var lastBackupStr = context.Settings.FirstOrDefault(s => s.Key == "LastAutoBackupDate")?.Value;
+                    
+                    var lastBackup = DateTime.MinValue;
+                    if (!string.IsNullOrEmpty(lastBackupStr))
+                    {
+                        DateTime.TryParse(lastBackupStr, out lastBackup);
+                    }
+
+                    bool shouldBackup = false;
+                    if (freq == BackupFrequency.Daily && lastBackup.AddDays(1) <= DateTime.Now)
+                    {
+                        shouldBackup = true;
+                    }
+                    else if (freq == BackupFrequency.Weekly && lastBackup.AddDays(7) <= DateTime.Now)
+                    {
+                        shouldBackup = true;
+                    }
+                    else if (freq == BackupFrequency.Monthly && lastBackup.AddMonths(1) <= DateTime.Now)
+                    {
+                        shouldBackup = true;
+                    }
+
+                    if (shouldBackup)
+                    {
+                        Log.Information("Starting automatic backup on exit. Frequency: {Freq}, Last Backup: {Last}", freq, lastBackup);
+                        var fileName = $"Meezan_Backup_{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
+                        var targetFile = Path.Combine(preferredPath, fileName);
+                        var tempFile = targetFile + ".tmp";
+
+                        if (File.Exists(tempFile))
+                        {
+                            File.Delete(tempFile);
+                        }
+
+                        var dbPath = MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath();
+                        using (var source = new SqliteConnection($"Data Source={dbPath}"))
+                        using (var destination = new SqliteConnection($"Data Source={tempFile};Pooling=False"))
+                        {
+                            source.Open();
+                            destination.Open();
+                            source.BackupDatabase(destination);
+                        }
+
+                        // Atomic rename
+                        if (File.Exists(targetFile))
+                        {
+                            File.Delete(targetFile);
+                        }
+                        File.Move(tempFile, targetFile);
+
+                        // Save last backup date
+                        var nowStr = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        var dateSetting = context.Settings.FirstOrDefault(s => s.Key == "LastAutoBackupDate");
+                        if (dateSetting == null)
+                        {
+                            context.Settings.Add(new Setting { Key = "LastAutoBackupDate", Value = nowStr });
+                        }
+                        else
+                        {
+                            dateSetting.Value = nowStr;
+                        }
+                        context.SaveChanges();
+                        Log.Information("Automatic backup completed successfully on exit to {Path}", targetFile);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to run automatic backup on application exit");
+        }
+
         if (_appMutex != null)
         {
             try
