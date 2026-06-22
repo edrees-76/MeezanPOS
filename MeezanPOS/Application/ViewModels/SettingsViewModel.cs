@@ -9,6 +9,7 @@ using Microsoft.Data.Sqlite;
 using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
 using MeezanPOS.Application.Services;
+using MeezanPOS.Application.Interfaces;
 using MeezanPOS.Infrastructure.Data;
 using Serilog;
 
@@ -18,6 +19,9 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
     private bool _isInitializing = true;
+
+    [ObservableProperty]
+    private bool isResetPasswordDialogOpen;
 
     [ObservableProperty]
     private string preferredBackupPath = string.Empty;
@@ -254,4 +258,134 @@ public partial class SettingsViewModel : ObservableObject
             MessageBox.Show($"فشلت عملية استعادة قاعدة البيانات:\n{ex.Message}", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
+
+    [RelayCommand]
+    private void ResetSystem()
+    {
+        var result = MessageBox.Show(
+            "تحذير حرج للغاية: إعادة ضبط المنظومة ستؤدي إلى حذف جميع البيانات والعمليات المالية والتقارير والنسخ الاحتياطي نهائياً، ولا يمكن التراجع عن ذلك.\n\nسيتم الإبقاء فقط على حسابات المستخدمين.\n\nهل أنت متأكد من رغبتك في الاستمرار؟",
+            "تأكيد إعادة الضبط النهائي",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Error,
+            MessageBoxResult.No);
+
+        if (result == MessageBoxResult.Yes)
+        {
+            IsResetPasswordDialogOpen = true;
+        }
+    }
+
+    [RelayCommand]
+    private void CloseResetDialog()
+    {
+        IsResetPasswordDialogOpen = false;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmResetAsync(object parameter)
+    {
+        if (parameter is System.Windows.Controls.PasswordBox passwordBox)
+        {
+            string password = passwordBox.Password;
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                MessageBox.Show("الرجاء إدخال كلمة مرور الحساب الحالي لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var sessionService = AppServiceProvider.Resolve<ISessionService>();
+            var authService = AppServiceProvider.Resolve<IAuthenticationService>();
+            string currentUsername = sessionService.CurrentUsername ?? "admin";
+
+            var authenticatedUser = await authService.AuthenticateAsync(currentUsername, password);
+            if (authenticatedUser == null)
+            {
+                MessageBox.Show("كلمة المرور غير صحيحة. يرجى إدخال كلمة المرور الصحيحة لحسابك.", "خطأ في المصادقة", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            passwordBox.Clear();
+            IsResetPasswordDialogOpen = false;
+
+            try
+            {
+                var dbPath = AppDbContext.GetDatabasePath();
+                var tablesToKeep = new System.Collections.Generic.HashSet<string>
+                {
+                    "Users",
+                    "Roles",
+                    "__EFMigrationsHistory"
+                };
+
+                using (var conn = new SqliteConnection($"Data Source={dbPath}"))
+                {
+                    await conn.OpenAsync();
+
+                    // Turn off foreign keys temporarily
+                    using (var pragmaCmd = conn.CreateCommand())
+                    {
+                        pragmaCmd.CommandText = "PRAGMA foreign_keys = OFF;";
+                        await pragmaCmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Get all tables
+                    var allTables = new System.Collections.Generic.List<string>();
+                    using (var getTablesCmd = conn.CreateCommand())
+                    {
+                        getTablesCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";
+                        using (var reader = await getTablesCmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                allTables.Add(reader.GetString(0));
+                            }
+                        }
+                    }
+
+                    // Clear tables
+                    foreach (var table in allTables)
+                    {
+                        if (!tablesToKeep.Contains(table))
+                        {
+                            using (var deleteCmd = conn.CreateCommand())
+                            {
+                                deleteCmd.CommandText = $"DELETE FROM \"{table}\";";
+                                await deleteCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
+
+                    // Reset auto-increment sequences
+                    using (var resetSeqCmd = conn.CreateCommand())
+                    {
+                        resetSeqCmd.CommandText = "DELETE FROM sqlite_sequence;";
+                        await resetSeqCmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Turn foreign keys back on
+                    using (var pragmaCmd = conn.CreateCommand())
+                    {
+                        pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+                        await pragmaCmd.ExecuteNonQueryAsync();
+                    }
+                }
+
+                // Clear connection pools to ensure database file can be refreshed
+                SqliteConnection.ClearAllPools();
+
+                MessageBox.Show("تم إعادة ضبط المنظومة وحذف جميع البيانات بنجاح!\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً للبدء بقاعدة بيانات نظيفة.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.Application.Current.Shutdown();
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error resetting database in SettingsViewModel");
+                MessageBox.Show($"فشلت عملية إعادة ضبط قاعدة البيانات:\n{ex.Message}", "خطأ في إعادة الضبط", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        else
+        {
+            MessageBox.Show("الرجاء إدخال كلمة المرور لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
 }
+

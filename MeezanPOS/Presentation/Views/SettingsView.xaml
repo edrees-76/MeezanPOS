@@ -12,6 +12,8 @@
              Background="#f8f9ff">
 
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        
         <ObjectDataProvider x:Key="FrequencyEnumValues" MethodName="GetValues" ObjectType="{x:Type System:Enum}" xmlns:System="clr-namespace:System;assembly=mscorlib">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="enums:BackupFrequency" />
@@ -223,10 +225,58 @@
                                 </StackPanel>
                             </StackPanel>
                         </Border>
+
+                        <!-- Section C: Reset and Initialization -->
+                        <Border Background="White" CornerRadius="8" BorderBrush="#fecaca" BorderThickness="1" Padding="20" Margin="0,0,0,20">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                    <materialDesign:PackIcon Kind="DatabaseAlert" Foreground="#dc2626" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="إعادة الضبط والتهيئة" FontSize="16" FontWeight="Bold" Foreground="#991b1b" VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <TextBlock Text="إعادة تعيين المنظومة بالكامل وحذف كافة البيانات التشغيلية والمصرفية والحركات والتقارير والنسخ الاحتياطي نهائياً، مع الإبقاء فقط على حسابات المستخدمين وكلمات مرورهم." 
+                                           FontSize="13" Foreground="#7f1d1d" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="btnResetSystem" AutomationProperties.AutomationId="btnResetSystem" Command="{Binding ResetSystemCommand}" Background="#dc2626" BorderThickness="0" Padding="16,8" Height="40" materialDesign:ButtonAssist.CornerRadius="6">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="DatabaseRemove" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="إعادة ضبط المنظومة وحذف البيانات" Foreground="White" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
             
+        </Grid>
+
+        <!-- Reset System Password Verification Overlay Dialog -->
+        <Grid Grid.ColumnSpan="2" Background="#66000000" Visibility="{Binding IsResetPasswordDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Border Background="White" CornerRadius="16" Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="#fecaca" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="تأكيد الهوية لإعادة ضبط المنظومة" FontSize="18" FontWeight="Bold" Foreground="#991b1b" HorizontalAlignment="Center"/>
+                    <TextBlock Text="الرجاء إدخال كلمة مرور الحساب الحالي لتأكيد العملية وحذف البيانات نهائياً." FontSize="13" Foreground="#475569" Margin="0,8,0,16" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+
+                    <!-- Password Box -->
+                    <TextBlock Text="كلمة مرور الحساب الحالي:" FontSize="13" FontWeight="Bold" Foreground="#dc2626" Margin="0,0,0,6"/>
+                    <PasswordBox x:Name="ResetPasswordBox" AutomationProperties.AutomationId="txtResetPassword" Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,0,0,20" Padding="12,10"/>
+
+                    <!-- Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="إلغاء" Command="{Binding CloseResetDialogCommand}" 
+                                Style="{StaticResource MaterialDesignFlatButton}" Background="#F1F5F9" Foreground="#475569" Height="42" Margin="0,0,8,0" materialDesign:ButtonAssist.CornerRadius="8"/>
+                        <Button Grid.Column="1" AutomationProperties.AutomationId="btnConfirmReset" Content="تأكيد الحذف النهائي" Command="{Binding ConfirmResetCommand}" CommandParameter="{Binding ElementName=ResetPasswordBox}"
+                                Background="#dc2626" BorderThickness="0" Foreground="White" Height="42" Margin="8,0,0,0" materialDesign:ButtonAssist.CornerRadius="8"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>
