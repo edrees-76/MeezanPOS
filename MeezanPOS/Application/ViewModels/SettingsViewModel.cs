@@ -341,10 +341,17 @@ public partial class SettingsViewModel : ObservableObject
                     }
                     foreach (var trigger in allTriggers)
                     {
-                        using (var dropCmd = conn.CreateCommand())
+                        try
                         {
-                            dropCmd.CommandText = $"DROP TRIGGER IF EXISTS \"{trigger}\";";
-                            await dropCmd.ExecuteNonQueryAsync();
+                            using (var dropCmd = conn.CreateCommand())
+                            {
+                                dropCmd.CommandText = $"DROP TRIGGER IF EXISTS \"{trigger}\";";
+                                await dropCmd.ExecuteNonQueryAsync();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Warning(ex, "Failed to drop trigger {TriggerName}", trigger);
                         }
                     }
 
@@ -365,7 +372,7 @@ public partial class SettingsViewModel : ObservableObject
                     // Clear tables
                     foreach (var table in allTables)
                     {
-                        if (!tablesToKeep.Contains(table))
+                        if (!tablesToKeep.Contains(table) && !table.StartsWith("sqlite_", StringComparison.OrdinalIgnoreCase))
                         {
                             using (var deleteCmd = conn.CreateCommand())
                             {
