@@ -513,7 +513,7 @@
 
                             <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Top">
                                 <!-- Card 1: Supplier Debt -->
-                                <Button AutomationProperties.AutomationId="btnSuppliersCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Suppliers" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="110" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnSuppliersCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Suppliers" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
                                             <materialDesign:PackIcon Kind="AccountTie" Width="24" Height="24" Foreground="#475569" HorizontalAlignment="Center"/>
@@ -524,7 +524,7 @@
                                 </Button>
 
                                 <!-- Card 2: Worker Advances -->
-                                <Button AutomationProperties.AutomationId="btnAdvancesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Advances" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="110" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnAdvancesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Advances" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Button.ToolTip>
                                         <ToolTip Content="صافي المبالغ التي دفعها المطعم للعمال مقدماً كذمة مالية عليهم."/>
                                     </Button.ToolTip>
@@ -539,7 +539,7 @@
                                 </Button>
 
                                 <!-- Card 3: Unpaid Wages -->
-                                <Button AutomationProperties.AutomationId="btnUnpaidWagesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="UnpaidWages" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="110" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnUnpaidWagesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="UnpaidWages" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Button.ToolTip>
                                         <ToolTip Content="مستحقات العمال المتراكمة لقاء أيام العمل ولم تُصرف لهم نقداً بعد."/>
                                     </Button.ToolTip>
@@ -554,7 +554,7 @@
                                 </Button>
 
                                 <!-- Card 4: Owner Receivables -->
-                                <Button AutomationProperties.AutomationId="btnReceivablesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Receivables" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="110" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnReceivablesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Receivables" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
                                             <materialDesign:PackIcon Kind="Handshake" Width="24" Height="24" Foreground="#15803D" HorizontalAlignment="Center"/>
@@ -566,7 +566,7 @@
                                 </Button>
 
                                 <!-- Card 5: Owner Obligations -->
-                                <Button AutomationProperties.AutomationId="btnObligationsCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Obligations" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="110" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnObligationsCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Obligations" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
                                             <materialDesign:PackIcon Kind="HandshakeOutline" Width="24" Height="24" Foreground="#B91C1C" HorizontalAlignment="Center"/>
@@ -578,7 +578,7 @@
                                 </Button>
 
                                 <!-- Card 6: Total Summary -->
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1.5" CornerRadius="12" Margin="6" Padding="16" Height="110">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1.5" CornerRadius="12" Margin="6" Padding="16" Height="125">
                                     <StackPanel VerticalAlignment="Center">
                                         <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="#0F172A" HorizontalAlignment="Center"/>
                                         <TextBlock Text="إجمالي الالتزامات والمستحقات" FontSize="13" Foreground="#0F172A" FontWeight="Bold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
