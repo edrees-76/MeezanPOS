@@ -22,3 +22,21 @@ public partial class ClosingAccountView : UserControl
         }
     }
 }
+
+public class IndexToSequenceConverter : System.Windows.Data.IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        if (value is int index)
+        {
+            return (index + 1).ToString();
+        }
+        return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+

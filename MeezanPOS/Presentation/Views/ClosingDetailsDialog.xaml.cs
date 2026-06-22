@@ -29,6 +29,8 @@ public partial class ClosingDetailsDialog : Window
         };
 
         gridData.Columns.Clear();
+        gridData.AlternationCount = 9999;
+        AddSequenceColumn();
 
         if (category == "Suppliers")
         {
@@ -99,6 +101,31 @@ public partial class ClosingDetailsDialog : Window
             Binding = new Binding(bindingPath) { StringFormat = "{0:yyyy-MM-dd}" },
             Width = new DataGridLength(1, DataGridLengthUnitType.Star),
             ElementStyle = FindResource("RightAlignedTextStyle") as Style
+        });
+    }
+
+    private void AddSequenceColumn()
+    {
+        gridData.Columns.Add(new DataGridTextColumn
+        {
+            Header = "ت",
+            Width = new DataGridLength(50),
+            Binding = new Binding
+            {
+                RelativeSource = new RelativeSource(RelativeSourceMode.FindAncestor, typeof(DataGridRow), 1),
+                Path = new PropertyPath("(ItemsControl.AlternationIndex)"),
+                Converter = new IndexToSequenceConverter()
+            },
+            ElementStyle = new Style(typeof(TextBlock))
+            {
+                Setters = {
+                    new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Center),
+                    new Setter(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center),
+                    new Setter(TextBlock.FontSizeProperty, 13.0),
+                    new Setter(TextBlock.FontWeightProperty, FontWeights.SemiBold),
+                    new Setter(TextBlock.ForegroundProperty, new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#64748B")))
+                }
+            }
         });
     }
 

@@ -5,12 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:ent="clr-namespace:MeezanPOS.Domain.Entities"
+             xmlns:local="clr-namespace:MeezanPOS.Presentation.Views"
              mc:Ignorable="d" 
              FlowDirection="RightToLeft"
              Background="#F8F9FF"
              d:DesignHeight="700" d:DesignWidth="1000">
 
     <UserControl.Resources>
+        <local:IndexToSequenceConverter x:Key="IndexToSequenceConverter"/>
         <!-- Modern Segmented TabControl Style -->
         <Style x:Key="ModernSegmentedTabControlStyle" TargetType="TabControl">
             <Setter Property="Padding" Value="0"/>
@@ -265,7 +267,7 @@
                                 <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
                                     <DataGrid ItemsSource="{Binding Summary.ExpensesByCategory}" AutoGenerateColumns="False" IsReadOnly="True" 
                                               Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
-                                              RowHeight="40" ColumnHeaderHeight="38">
+                                              RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
                                         <DataGrid.Resources>
                                             <Style TargetType="DataGridColumnHeader">
                                                 <Setter Property="Background" Value="#F8FAFC" />
@@ -279,6 +281,18 @@
                                             </Style>
                                         </DataGrid.Resources>
                                         <DataGrid.Columns>
+                                            <DataGridTextColumn Header="ت" Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexToSequenceConverter}}" Width="50">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="TextAlignment" Value="Center" />
+                                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                                        <Setter Property="FontWeight" Value="SemiBold" />
+                                                        <Setter Property="FontSize" Value="13" />
+                                                        <Setter Property="Foreground" Value="#64748B" />
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+
                                             <DataGridTextColumn Header="اسم فئة المصروف" Binding="{Binding CategoryName}" Width="250">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
@@ -356,7 +370,7 @@
                             <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
                                 <DataGrid ItemsSource="{Binding Summary.Suppliers}" AutoGenerateColumns="False" IsReadOnly="True" 
                                           Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
-                                          RowHeight="40" ColumnHeaderHeight="38">
+                                          RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
                                     <DataGrid.Resources>
                                         <Style TargetType="DataGridColumnHeader">
                                             <Setter Property="Background" Value="#F8FAFC" />
@@ -370,6 +384,18 @@
                                         </Style>
                                     </DataGrid.Resources>
                                     <DataGrid.Columns>
+                                        <DataGridTextColumn Header="ت" Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexToSequenceConverter}}" Width="50">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextAlignment" Value="Center" />
+                                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                                    <Setter Property="FontSize" Value="13" />
+                                                    <Setter Property="Foreground" Value="#64748B" />
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
+
                                         <DataGridTextColumn Header="اسم المورد" Binding="{Binding SupplierName}" Width="250">
                                             <DataGridTextColumn.ElementStyle>
                                                 <Style TargetType="TextBlock">
