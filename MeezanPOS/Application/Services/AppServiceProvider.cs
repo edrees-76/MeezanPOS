@@ -34,6 +34,7 @@ public static class AppServiceProvider
         services.AddScoped<IPostingService, PostingService>();
         services.AddScoped<IOwnerDebtService, OwnerDebtService>();
         services.AddScoped<IWagesService, WagesService>();
+        services.AddScoped<IFinancialReportingService, FinancialReportingService>();
         services.AddScoped<AuditService>();
 
         _provider = services.BuildServiceProvider();

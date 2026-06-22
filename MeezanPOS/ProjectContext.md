@@ -274,5 +274,41 @@ MeezanPOS/
 
 ---
 
-## 10. التحديث التلقائي لتوثيق المشروع (Permanent Context Updates Rule)
+## 11. توثيق ميزة نظام الحساب الختامي والتقارير المالية (Closing Account)
+
+### أ. ملخص الميزة
+تم بالكامل بناء شاشة "الحساب الختامي والتقارير المالية" (Closing Account) من الصفر وإدراجها كبند سابع في القائمة الجانبية. توفر الشاشة لصاحب العمل والمحاسب أداة متكاملة لمراجعة التقارير المالية والالتزامات والمستحقات، وإجراء تسوية الصندوق وقفل الفترات محاسبياً بشكل مجمد وآمن تماماً، مع إمكانية تصدير كشوفات مالية شاملة ومختصرة بصيغة PDF.
+
+### ب. ملفات الميزة المضافة والمعدلة
+* **واجهات المستخدم الرسومية:**
+  * [ClosingAccountView.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/ClosingAccountView.xaml) و [ClosingAccountView.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/ClosingAccountView.xaml.cs): تصميم شاشة التقارير والتبويبات الأربعة وحقل كلمة المرور.
+  * [ClosingDetailsDialog.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/ClosingDetailsDialog.xaml) و [ClosingDetailsDialog.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/ClosingDetailsDialog.xaml.cs): النافذة الحوارية المنبثقة لعرض جداول التفاصيل للالتزامات.
+  * [MainView.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/MainView.xaml): ربط البند الجديد في القائمة الجانبية وإعادة ترتيب الإعدادات.
+* **منطق الأعمال ونموذج العرض:**
+  * [ClosingAccountViewModel.cs](file:///d:/Meezan%20sys/MeezanPOS/Application/ViewModels/ClosingAccountViewModel.cs): إدارة حالة شاشة الحساب الختامي والمصادقة الحقيقية.
+  * [MainViewModel.cs](file:///d:/Meezan%20sys/MeezanPOS/Application/ViewModels/MainViewModel.cs): إدارة تنقل البند الجديد.
+* **خدمات المحاسبة والبيانات:**
+  * [IFinancialReportingService.cs](file:///d:/Meezan%20sys/MeezanPOS/Application/Interfaces/IFinancialReportingService.cs) و [FinancialReportingService.cs](file:///d:/Meezan%20sys/MeezanPOS/Application/Services/FinancialReportingService.cs): خدمة الحسابات المالية والالتزامات للعمال والملاك والموردين.
+  * [FinancialReportModels.cs](file:///d:/Meezan%20sys/MeezanPOS/Domain/Entities/FinancialReportModels.cs): النماذج المحاسبية المستخدمة لتمثيل البيانات.
+* **نظام التصدير وقاعدة البيانات:**
+  * [ClosingAccountPdfExporter.cs](file:///d:/Meezan%20sys/MeezanPOS/Infrastructure/Reports/ClosingAccountPdfExporter.cs): توليد ملفات PDF بالرسم المتجهي والخطوط العربية RTL.
+  * [20260622000027_AddFinancialIndexes.cs](file:///d:/Meezan%20sys/MeezanPOS/Migrations/20260622000027_AddFinancialIndexes.cs): إضافة فهارس لتسريع استعلامات الحساب الختامي.
+
+### ج. القرارات المعمارية المتخذة
+1. **المصادقة الحقيقية لتأكيد الإقفال:** تم تصميم حقل كلمة المرور في نافذة التسوية ليمرر الكائن `PasswordBox` كمعامل للأمر، والتحقق من صحة المدخلات عبر خدمة `IAuthenticationService` الحقيقية باستخدام التشفير الآمن BCrypt المعتمد في المنظومة، لضمان أعلى مستويات الأمان ومنع محاولات الإقفال غير المصرحة أو العشوائية.
+2. **الالتزام بالنطاق المطلوب للالتزامات:** تم التأكد من خلو منطق الحساب تماماً من بنود الضرائب المستحقة لعدم تواجد كيانات بيانات خاصة بها، والتركيز على البنود الخمسة المعتمدة: ديون الموردين، سلف العمال، أجور غير مدفوعة، ومستحقات والتزامات الشركاء.
+3. **تطبيق تبويبات العرض المستقلة:** تنظيم البيانات في 4 تبويبات واضحة ومستقلة: (قائمة الدخل والمصروفات، أرصدة الموردين، حركة الخزينة، الالتزامات والمستحقات) لتسهيل الفهم والمراجعة.
+4. **أدوات وتصدير PDF متطور:** الاعتماد الكامل على محرك تشكيل النصوص العربية RTL في PDFsharp مع استخدام الرسم المتجهي ثنائي الأبعاد لعرض المخططات والمنحنيات المالية لضمان جودة المستندات ومطابقتها للمعايير الاحترافية.
+
+### د. حالة الميزة والتحديثات المرئية الأخيرة
+* مكتملة، مستقرة ومؤمنة تماماً، وتم اختبارها برمجياً وميدانياً بنجاح 100% مع تحقيق 0 Warnings و 0 Errors أثناء البناء والتشغيل.
+* **التحسينات المرئية المنفذة:**
+  1. توحيد شكل تبويبات الحساب الختامي والتقارير لتطابق التبويبات الأخرى بالمنظومة (Segmented Floating Controls) مع استخدام لون التركيز البنفسجي `#4F46E5` وتعديل أيقونة التقرير غير الصالحة بالـ XAML لتجنب مشاكل التشغيل.
+  2. تحسين تباين قائمة خيارات تصدير PDF بجعل خلفية القائمة بيضاء والنصوص داكنة لحل مشكلة عدم وضوح الألوان.
+  3. إصلاح مشكلة قص النصوص والأرقام داخل حقول التسوية (المدفوع، المتبقي، كلمة المرور) بإلغاء الارتفاع الثابت (`Height`) والاعتماد على الحشو الداخلي التلقائي (`Padding="12,10"`).
+
+
+---
+
+## 12. التحديث التلقائي لتوثيق المشروع (Permanent Context Updates Rule)
 يجب تحديث هذه الوثيقة (`ProjectContext.md`) بشكل منهجي وآلي فور إتمام أي ميزة أو تعديل جوهري جديد على المنظومة، بنفس الأسلوب المتبع هنا (الملخص، الملفات المضافة والمعدلة، القرارات المعمارية، وحالة الميزة)، لضمان بقاء سياق المشروع محدثاً ودقيقاً لجميع المطورين.

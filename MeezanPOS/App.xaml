@@ -39,6 +39,9 @@
             <DataTemplate DataType="{x:Type vm:FreeOrdersReturnsViewModel}">
                 <views:FreeOrdersReturnsView />
             </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:ClosingAccountViewModel}">
+                <views:ClosingAccountView />
+            </DataTemplate>
             <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
                 <views:SettingsView />
             </DataTemplate>

@@ -41,7 +41,8 @@ public partial class MainViewModel : ObservableObject
                 else if (value == 4) Navigate("Wages");
                 else if (value == 5) Navigate("Banking");
                 else if (value == 6) Navigate("FreeOrdersReturns");
-                else if (value == 7) Navigate("Settings");
+                else if (value == 7) Navigate("ClosingAccount");
+                else if (value == 8) Navigate("Settings");
             }
         }
     }
@@ -120,9 +121,14 @@ public partial class MainViewModel : ObservableObject
                 SelectedNavIndex = 6;
                 CurrentViewModel = new FreeOrdersReturnsViewModel();
                 break;
+            case "ClosingAccount":
+                Title = "ميزان للمالية - الحساب الختامي والتقارير";
+                SelectedNavIndex = 7;
+                CurrentViewModel = new ClosingAccountViewModel();
+                break;
             case "Settings":
                 Title = "ميزان للمالية - الإعدادات النظامية";
-                SelectedNavIndex = 7;
+                SelectedNavIndex = 8;
                 CurrentViewModel = new SettingsViewModel();
                 break;
             case "AddJournal":
