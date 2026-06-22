@@ -328,6 +328,26 @@ public partial class SettingsViewModel : ObservableObject
                         await pragmaCmd.ExecuteNonQueryAsync();
                     }
 
+                    // Drop all triggers that block DELETE on posted records
+                    var allTriggers = new System.Collections.Generic.List<string>();
+                    using (var getTrigCmd = conn.CreateCommand())
+                    {
+                        getTrigCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='trigger'";
+                        using (var trigReader = await getTrigCmd.ExecuteReaderAsync())
+                        {
+                            while (await trigReader.ReadAsync())
+                                allTriggers.Add(trigReader.GetString(0));
+                        }
+                    }
+                    foreach (var trigger in allTriggers)
+                    {
+                        using (var dropCmd = conn.CreateCommand())
+                        {
+                            dropCmd.CommandText = $"DROP TRIGGER IF EXISTS \"{trigger}\";";
+                            await dropCmd.ExecuteNonQueryAsync();
+                        }
+                    }
+
                     // Get all tables
                     var allTables = new System.Collections.Generic.List<string>();
                     using (var getTablesCmd = conn.CreateCommand())
