@@ -335,6 +335,37 @@ MeezanPOS/
 
 ---
 
-## 13. التحديث التلقائي لتوثيق المشروع (Permanent Context Updates Rule)
-يجب تحديث هذه الوثيقة (`ProjectContext.md`) بشكل منهجي وآلي فور إتمام أي ميزة أو تعديل جوهري جديد على المنظومة، بنفس الأسلوب المتبع هنا (الملخص، الملفات المضافة والمعدلة، القرارات المعمارية، وحالة الميزة)، لضمان بقاء سياق المشروع محدثاً ودقيقاً لجميع المطورين.
+## 13. توثيق ميزة اختصارات لوحة المفاتيح (Enter, Tab, Esc) في شاشات الإدخال الرئيسية
+
+### أ. ملخص الميزة
+تم إضافة وتفعيل اختصارات لوحة المفاتيح بشكل متناسق في شاشات الإدخال الرئيسية الثلاث: اليومية (`DailyJournalView`)، المصاريف العامة (`GeneralExpensesView` مع `AddGeneralExpenseDialog`)، والموردين (`SupplierListView` و `SupplierDetailsView`). تتيح هذه الميزة تسريع الإدخال عبر الانتقال التلقائي للحقل التالي عند الضغط على Enter، وحفظ/اعتماد البيانات عند الضغط على Enter في الحقل الأخير من النموذج، وإغلاق النوافذ المنبثقة أو تصفية/مسح البيانات عند الضغط على Escape.
+
+### ب. ملفات الميزة المضافة والمعدلة
+* **السلوكيات المرفقة (Attached Behaviors):**
+  * [EnterKeyBehavior.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Behaviors/EnterKeyBehavior.cs): سلوك مرفق مخصص يدعم الانتقال التلقائي للتركيز (`MoveFocusOnEnter`) وتنفيذ الأوامر عند الضغط على Enter في الحقول الفردية مع استبعاد حقول النصوص متعددة الأسطر (`AcceptsReturn`).
+* **واجهات وعروض البيانات المعدلة (XAML):**
+  * [DailyJournalView.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/DailyJournalView.xaml)
+  * [AddGeneralExpenseDialog.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/AddGeneralExpenseDialog.xaml)
+  * [SupplierListView.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/SupplierListView.xaml)
+  * [SupplierDetailsView.xaml](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/SupplierDetailsView.xaml)
+* **منطق الأحداث في خلفية العرض (Code-Behind):**
+  * [DailyJournalView.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/DailyJournalView.xaml.cs)
+  * [AddGeneralExpenseDialog.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/AddGeneralExpenseDialog.xaml.cs)
+  * [GeneralExpensesView.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/GeneralExpensesView.xaml.cs)
+  * [SupplierListView.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/SupplierListView.xaml.cs)
+  * [SupplierDetailsView.xaml.cs](file:///d:/Meezan%20sys/MeezanPOS/Presentation/Views/SupplierDetailsView.xaml.cs)
+
+### ج. القرارات المعمارية المتخذة
+1. **استخدام Attached Behavior للـ Enter:** لتجنب كتابة أكواد متكررة في خلفية العرض أو التأثير على شاشات أخرى خارج النطاق المستهدف، وتسهيل الصيانة.
+2. **استثناء الـ TextBoxes متعددة الأسطر:** التحقق البرمجي التلقائي من خاصية `AcceptsReturn` في TextBox لمنع مقاطعة السلوك الطبيعي لإدخال سطر جديد في الحقول التي تحتمله (مثل ملاحظات اليومية والفاتورة).
+3. **معالجة Esc على مستوى الـ UserControl/Window:** التقاط حدث Escape بشكل مركزي للتحقق من وجود حوارات منبثقة/ overlays نشطة لإغلاقها، أو الرجوع للخلف، أو مسح الحقول بالكامل عبر أوامر ViewModel المتوفرة (مثل `ClearFormCommand`).
+
+### د. حالة الميزة
+* مكتملة، مستقرة، ومتحقق منها ميدانياً بالكامل بتاريخ 2026-06-23.
+
+---
+
+## 14. التحديث التلقائي لتوثيق المشروع (Permanent Context Updates Rule)
+جب تحديث هذه الوثيقة (`ProjectContext.md`) بشكل منهجي وآلي فور إتمام أي ميزة أو تعديل جوهري جديد على المنظومة، بنفس الأسلوب المتبع هنا (الملخص، الملفات المضافة والمعدلة، القرارات المعمارية، وحالة الميزة)، لضمان بقاء سياق المشروع محدثاً ودقيقاً لجميع المطورين.
+
 
