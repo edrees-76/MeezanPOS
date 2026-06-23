@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
+             xmlns:behaviors="clr-namespace:MeezanPOS.Presentation.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              FlowDirection="RightToLeft"
@@ -275,7 +276,7 @@
 
                     <StackPanel Grid.Row="2">
                         <DatePicker materialDesign:HintAssist.Hint="تاريخ الفاتورة" SelectedDate="{Binding NewInvoice.InvoiceDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,0,16"/>
-                        <TextBox materialDesign:HintAssist.Hint="رقم الفاتورة (الورقية)" Text="{Binding NewInvoice.InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+                        <TextBox materialDesign:HintAssist.Hint="رقم الفاتورة (الورقية)" Text="{Binding NewInvoice.InvoiceNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" Margin="0,0,0,16"/>
                         
                         <!-- إجمالي الفاتورة + زر التفاصيل -->
                         <Grid Margin="0,0,0,16">
@@ -283,7 +284,7 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="إجمالي الفاتورة *" Text="{Binding NewInvoice.TotalAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,8,0"/>
+                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="إجمالي الفاتورة *" Text="{Binding NewInvoice.TotalAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveInvoiceCommand}" Margin="0,0,8,0"/>
                             <Button Grid.Column="1" Command="{Binding OpenInvoiceDetailsCommand}" 
                                     Style="{StaticResource MaterialDesignOutlinedButton}" 
                                     Foreground="#3b82f6" BorderBrush="#3b82f6"
@@ -439,9 +440,9 @@
                     <StackPanel Grid.Row="2">
                         <DatePicker materialDesign:HintAssist.Hint="تاريخ الدفع *" SelectedDate="{Binding PaymentDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="0,0,0,16"/>
                         
-                        <TextBox materialDesign:HintAssist.Hint="قيمة الدفعة *" Text="{Binding PaymentAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+                        <TextBox materialDesign:HintAssist.Hint="قيمة الدفعة *" Text="{Binding PaymentAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" Margin="0,0,0,16"/>
                         
-                        <TextBox materialDesign:HintAssist.Hint="رقم الإيصال" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+                        <TextBox materialDesign:HintAssist.Hint="رقم الإيصال" Text="{Binding ReceiptNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" Margin="0,0,0,16"/>
                         
                         <ComboBox materialDesign:HintAssist.Hint="طريقة الدفع *" SelectedValue="{Binding SelectedPaymentMethod}" SelectedValuePath="Content" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,16">
                             <ComboBoxItem Content="نقدي"/>
@@ -479,7 +480,7 @@
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
-                            <TextBox materialDesign:HintAssist.Hint="رقم التحويل اخر 4 ارقام *" Text="{Binding TransferLast4, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox materialDesign:HintAssist.Hint="رقم التحويل اخر 4 ارقام *" Text="{Binding TransferLast4, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"/>
                         </StackPanel>
 
                         <!-- تفاصيل السداد الشخصي (تظهر فقط عند اختيار شخصي (شريك)) -->
@@ -501,7 +502,7 @@
                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                         </StackPanel>
 
-                        <TextBox materialDesign:HintAssist.Hint="بيان / وصف الدفعة" Text="{Binding PaymentDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <TextBox materialDesign:HintAssist.Hint="بيان / وصف الدفعة" Text="{Binding PaymentDescription, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SavePaymentCommand}"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">

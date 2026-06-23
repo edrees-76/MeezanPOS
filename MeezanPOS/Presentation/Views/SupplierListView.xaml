@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
+             xmlns:behaviors="clr-namespace:MeezanPOS.Presentation.Behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              FlowDirection="RightToLeft"
@@ -176,8 +177,8 @@
                     <TextBlock Grid.Row="0" Text="{Binding FormTitle}" FontSize="20" FontWeight="Bold"/>
 
                     <StackPanel Grid.Row="2">
-                        <TextBox materialDesign:HintAssist.Hint="اسم المورد *" Text="{Binding FormSupplier.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
-                        <TextBox materialDesign:HintAssist.Hint="رقم الهاتف" Text="{Binding FormSupplier.Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16"/>
+                        <TextBox materialDesign:HintAssist.Hint="اسم المورد *" Text="{Binding FormSupplier.Name, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" Margin="0,0,0,16"/>
+                        <TextBox materialDesign:HintAssist.Hint="رقم الهاتف" Text="{Binding FormSupplier.Phone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" Margin="0,0,0,16"/>
                         
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
@@ -186,7 +187,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             
-                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="الرصيد الافتتاحي" Text="{Binding FormSupplier.OpeningBalance, UpdateSourceTrigger=LostFocus, TargetNullValue=''}">
+                            <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="الرصيد الافتتاحي" Text="{Binding FormSupplier.OpeningBalance, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True">
                                 <TextBox.Style>
                                     <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
                                         <Style.Triggers>
@@ -199,7 +200,7 @@
                                 </TextBox.Style>
                             </TextBox>
                             
-                            <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="الحد الائتماني (اختياري)" Text="{Binding FormSupplier.CreditLimit, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Column="2" materialDesign:HintAssist.Hint="الحد الائتماني (اختياري)" Text="{Binding FormSupplier.CreditLimit, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveSupplierCommand}"/>
                         </Grid>
 
                         <CheckBox Content="المورد نشط" IsChecked="{Binding FormSupplier.IsActive}" Margin="0,8,0,0"/>

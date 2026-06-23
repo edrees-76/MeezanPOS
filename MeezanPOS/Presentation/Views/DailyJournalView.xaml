@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
+             xmlns:behaviors="clr-namespace:MeezanPOS.Presentation.Behaviors"
              FlowDirection="RightToLeft">
     
     <UserControl.Resources>
@@ -102,6 +103,7 @@
                             <TextBox Text="{Binding EmployeeName, UpdateSourceTrigger=PropertyChanged}"
                                      materialDesign:HintAssist.Hint="اسم الكاشير / الموظف"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                                      FontSize="15" Padding="8"/>
                         </StackPanel>
 
@@ -111,6 +113,7 @@
                             <TextBox Text="{Binding CashFloat, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
                                      materialDesign:HintAssist.Hint="0.00"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                                      FontSize="15" Padding="8"/>
                         </StackPanel>
                     </Grid>
@@ -140,6 +143,7 @@
                             <TextBox Text="{Binding CashSalesInput, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
                                      materialDesign:HintAssist.Hint="0.00"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                                      FontSize="20" FontWeight="Bold" Padding="12"/>
                         </StackPanel>
 
@@ -150,6 +154,7 @@
                                      materialDesign:HintAssist.Hint="0.00"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      IsEnabled="{Binding IsNotViewingMode}"
+                                     behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                                      FontSize="20" FontWeight="Bold" Padding="12"
                                      Margin="0,0,0,16"/>
 
@@ -775,6 +780,7 @@
                             <TextBox Text="{Binding ActualCash, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
                                      materialDesign:HintAssist.Hint="أدخل المبلغ الذي استلمته فعلياً"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveJournalCommand}"
                                      FontSize="22" FontWeight="Bold" Padding="12" Margin="0,0,0,16"/>
 
                             <!-- نتيجة المطابقة -->

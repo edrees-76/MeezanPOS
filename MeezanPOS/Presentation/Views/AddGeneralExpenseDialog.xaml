@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:behaviors="clr-namespace:MeezanPOS.Presentation.Behaviors"
         Title="إضافة مصروف عام" SizeToContent="Height" Width="550"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
@@ -68,7 +69,7 @@
 
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="المبلغ:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
-                        <TextBox Text="{Binding InputAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" materialDesign:HintAssist.Hint="0.00" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                        <TextBox Text="{Binding InputAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" materialDesign:HintAssist.Hint="0.00" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                     </StackPanel>
                 </Grid>
 
@@ -88,6 +89,7 @@
                     <TextBox Text="{Binding InputCustomExpenseType, UpdateSourceTrigger=PropertyChanged}" 
                              materialDesign:HintAssist.Hint="مثلاً: صيانة آلات، قرطاسية ..." 
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                             behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                              FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                 </StackPanel>
 
@@ -212,6 +214,7 @@
                                      materialDesign:HintAssist.Hint="----" 
                                      MaxLength="20"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                     behaviors:EnterKeyBehavior.MoveFocusOnEnter="True"
                                      FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                         </StackPanel>
                     </Grid>
@@ -241,7 +244,7 @@
 
                 <StackPanel Margin="0,0,0,24">
                     <TextBlock Text="الوصف:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding InputDescription, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات اختيارية" Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
+                    <TextBox Text="{Binding InputDescription, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات اختيارية" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveExpenseCommand}" behaviors:EnterKeyBehavior.EnterCommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                 </StackPanel>
 
             </StackPanel>

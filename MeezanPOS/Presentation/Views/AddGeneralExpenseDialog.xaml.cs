@@ -8,6 +8,16 @@ public partial class AddGeneralExpenseDialog : Window
     public AddGeneralExpenseDialog()
     {
         InitializeComponent();
+        this.KeyDown += AddGeneralExpenseDialog_KeyDown;
+    }
+
+    private void AddGeneralExpenseDialog_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            Close();
+            e.Handled = true;
+        }
     }
 
     private void DragWindow(object sender, MouseButtonEventArgs e)
