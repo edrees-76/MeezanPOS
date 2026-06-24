@@ -104,8 +104,19 @@ public class DashboardPdfExporter
         if (salesPoints != null || expenseCategories != null)
         {
             double chartHeight = 170;
-            DrawSalesLineChart(gfx, 40, y, 240, chartHeight, "تحليل المبيعات", salesPoints ?? new());
-            DrawExpenseDonutWithLegend(gfx, 295, y, 260, chartHeight, "توزيع المصروفات", expenseCategories ?? new());
+            var activeExpenses = expenseCategories?.Where(e => e.Amount > 0).ToList() ?? new();
+            bool hasExpenses = activeExpenses.Count > 0;
+
+            if (hasExpenses)
+            {
+                DrawSalesLineChart(gfx, 40, y, 240, chartHeight, "تحليل المبيعات", salesPoints ?? new());
+                DrawExpenseDonutWithLegend(gfx, 295, y, 260, chartHeight, "توزيع المصروفات", expenseCategories ?? new());
+            }
+            else
+            {
+                // Full width for Sales Chart if no expenses exist (width = 515)
+                DrawSalesLineChart(gfx, 40, y, 515, chartHeight, "تحليل المبيعات", salesPoints ?? new());
+            }
 
             y += chartHeight + gap;
         }
@@ -298,15 +309,15 @@ public class DashboardPdfExporter
         
         // Sales Legend Item (Solid Blue Line + Text)
         var salesLegendPen = new XPen(XColor.FromArgb(59, 130, 246), 2.5);
-        gfx.DrawLine(salesLegendPen, x + 15, y + 16, x + 29, y + 16);
-        var salesTextRect = new XRect(x + 33, y + 10, 45, 12);
+        gfx.DrawLine(salesLegendPen, x + 10, y + 16, x + 24, y + 16);
+        var salesTextRect = new XRect(x + 28, y + 10, 40, 12);
         DrawText(gfx, "المبيعات", legendFont, salesBrush, salesTextRect, XStringAlignment.Near);
         
         // Expenses Legend Item (Dashed Red Line + Text)
         var expLegendPen = new XPen(XColor.FromArgb(239, 68, 68), 2);
         expLegendPen.DashStyle = XDashStyle.Dash;
-        gfx.DrawLine(expLegendPen, x + 90, y + 16, x + 104, y + 16);
-        var expTextRect = new XRect(x + 108, y + 10, 55, 12);
+        gfx.DrawLine(expLegendPen, x + 75, y + 16, x + 89, y + 16);
+        var expTextRect = new XRect(x + 93, y + 10, 50, 12);
         DrawText(gfx, "المصروفات", legendFont, expBrush, expTextRect, XStringAlignment.Near);
 
         double marginTop = 42;
@@ -388,11 +399,15 @@ public class DashboardPdfExporter
         {
             gfx.DrawLine(salesPen, salesPoints[i], salesPoints[i + 1]);
         }
-        // Draw Sales points dots
+        // Draw Sales points dots (only if TotalSales > 0)
         var salesDotBrush = new XSolidBrush(XColor.FromArgb(59, 130, 246));
-        foreach (var pt in salesPoints)
+        for (int i = 0; i < N; i++)
         {
-            gfx.DrawEllipse(salesDotBrush, pt.X - 2, pt.Y - 2, 4, 4);
+            if (data[i].TotalSales > 0)
+            {
+                var pt = salesPoints[i];
+                gfx.DrawEllipse(salesDotBrush, pt.X - 2, pt.Y - 2, 4, 4);
+            }
         }
 
         // Draw Expenses Line (Red dashed)
@@ -402,14 +417,18 @@ public class DashboardPdfExporter
         {
             gfx.DrawLine(expensesPen, expensesPoints[i], expensesPoints[i + 1]);
         }
-        // Draw Expenses points dots
+        // Draw Expenses points dots (only if TotalExpenses > 0)
         var expensesDotBrush = new XSolidBrush(XColor.FromArgb(239, 68, 68));
-        foreach (var pt in expensesPoints)
+        for (int i = 0; i < N; i++)
         {
-            gfx.DrawEllipse(expensesDotBrush, pt.X - 1.5, pt.Y - 1.5, 3, 3);
+            if (data[i].TotalExpenses > 0)
+            {
+                var pt = expensesPoints[i];
+                gfx.DrawEllipse(expensesDotBrush, pt.X - 1.5, pt.Y - 1.5, 3, 3);
+            }
         }
 
-        // Draw value labels above non-zero points
+        // Draw value labels above/below non-zero points
         var valLabelFont = new XFont("Segoe UI", 7, XFontStyleEx.Regular);
         var salesLabelBrush = new XSolidBrush(XColor.FromArgb(29, 78, 216)); // Darker blue for contrast
         var expensesLabelBrush = new XSolidBrush(XColor.FromArgb(239, 68, 68)); // Same red
@@ -428,7 +447,7 @@ public class DashboardPdfExporter
             if (eVal > 0)
             {
                 var pt = expensesPoints[i];
-                var labelRect = new XRect(pt.X - 30, pt.Y - 14, 60, 10);
+                var labelRect = new XRect(pt.X - 30, pt.Y + 4, 60, 10);
                 DrawText(gfx, eVal.ToString("N0"), valLabelFont, expensesLabelBrush, labelRect, XStringAlignment.Center);
             }
         }

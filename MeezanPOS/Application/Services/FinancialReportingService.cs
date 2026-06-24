@@ -33,11 +33,13 @@ public class FinancialReportingService : IFinancialReportingService
         // 1. Income Statement (قائمة الدخل)
         // Load posted journals and general expenses
         var journals = await context.DailyJournals
+            .AsNoTracking()
             .Where(j => j.JournalDate >= start && j.JournalDate <= end &&
                         (j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived))
             .ToListAsync();
 
         var genExpenses = await context.GeneralExpenses
+            .AsNoTracking()
             .Where(e => e.PaymentDate >= start && e.PaymentDate <= end &&
                         (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
             .ToListAsync();
@@ -60,6 +62,7 @@ public class FinancialReportingService : IFinancialReportingService
 
         // 2. Expense Category Breakdown (تحليل المصاريف)
         var dailyExpenseItems = await context.DailyExpenseItems
+            .AsNoTracking()
             .Include(e => e.DailyJournal)
             .Where(e => e.DailyJournal!.JournalDate >= start && e.DailyJournal.JournalDate <= end &&
                         (e.DailyJournal.FinancialStatus == FinancialStatus.Posted || e.DailyJournal.FinancialStatus == FinancialStatus.Archived))
@@ -112,25 +115,46 @@ public class FinancialReportingService : IFinancialReportingService
 
         // 3. Supplier Report (تقرير الموردين)
         var suppliers = await context.Suppliers
+            .AsNoTracking()
             .Where(s => !s.IsDeleted)
             .ToListAsync();
 
         var supplierReportList = new List<SupplierReportItem>();
+
+        // Batch-load ALL supplier transactions to avoid N+1 queries
+        var supplierIds = suppliers.Select(s => s.Id).ToList();
+
+        var allPriorSupplierTx = await context.SupplierTransactions
+            .AsNoTracking()
+            .Where(t => supplierIds.Contains(t.SupplierId) && t.TransactionDate < start && !t.IsDeleted)
+            .ToListAsync();
+
+        var allPeriodSupplierTx = await context.SupplierTransactions
+            .AsNoTracking()
+            .Where(t => supplierIds.Contains(t.SupplierId) && t.TransactionDate >= start && t.TransactionDate <= end && !t.IsDeleted)
+            .ToListAsync();
+
+        var priorTxBySupplierId = allPriorSupplierTx
+            .GroupBy(t => t.SupplierId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var periodTxBySupplierId = allPeriodSupplierTx
+            .GroupBy(t => t.SupplierId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
         foreach (var supplier in suppliers)
         {
             // Opening balance before start date
-            var opBalTx = await context.SupplierTransactions
-                .Where(t => t.SupplierId == supplier.Id && t.TransactionDate < start && !t.IsDeleted)
-                .OrderByDescending(t => t.TransactionDate)
-                .ThenByDescending(t => t.Id)
-                .FirstOrDefaultAsync();
+            var opBalTx = priorTxBySupplierId.TryGetValue(supplier.Id, out var priorList)
+                ? priorList.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id).FirstOrDefault()
+                : null;
 
             decimal openingBalance = opBalTx?.BalanceAfter ?? 0m;
 
             // Activity during period
-            var periodTx = await context.SupplierTransactions
-                .Where(t => t.SupplierId == supplier.Id && t.TransactionDate >= start && t.TransactionDate <= end && !t.IsDeleted)
-                .ToListAsync();
+            var periodTx = periodTxBySupplierId.TryGetValue(supplier.Id, out var periodList)
+                ? periodList
+                : new List<SupplierTransaction>();
 
             decimal purchases = periodTx.Where(t => t.Type == SupplierTransactionType.IncreaseDebt).Sum(t => t.Amount);
             decimal payments = periodTx.Where(t => t.Type == SupplierTransactionType.DecreaseDebt).Sum(t => t.Amount);
@@ -153,6 +177,7 @@ public class FinancialReportingService : IFinancialReportingService
 
         // 4. Cash Ledger (تقرير حركة الخزينة)
         var lastOpMovement = await context.CashMovements
+            .AsNoTracking()
             .Where(m => m.TransactionDate < start && !m.IsDeleted && !m.IsReversed)
             .OrderByDescending(m => m.TransactionDate)
             .ThenByDescending(m => m.Id)
@@ -161,6 +186,7 @@ public class FinancialReportingService : IFinancialReportingService
         decimal cashOpening = lastOpMovement?.BalanceAfter ?? 0m;
 
         var periodMovements = await context.CashMovements
+            .AsNoTracking()
             .Where(m => m.TransactionDate >= start && m.TransactionDate <= end && !m.IsDeleted && !m.IsReversed)
             .ToListAsync();
 
@@ -233,10 +259,12 @@ public class FinancialReportingService : IFinancialReportingService
 
         // Owner Receivables & Obligations
         var ownerDebts = await context.OwnerDebts
+            .AsNoTracking()
             .Where(d => !d.IsDeleted && d.TransactionDate <= end)
             .ToListAsync();
 
         var ownerSettlements = await context.OwnerDebtSettlements
+            .AsNoTracking()
             .Where(s => !s.IsDeleted && s.SettlementDate <= end)
             .ToListAsync();
 
@@ -290,6 +318,83 @@ public class FinancialReportingService : IFinancialReportingService
 
         summary.Liabilities = liabilities;
 
+        // 6. Bank Accounts Report (تقرير الحسابات المصرفية)
+        var bankAccounts = await context.BankAccounts
+            .AsNoTracking()
+            .Where(b => !b.IsDeleted)
+            .ToListAsync();
+
+        var bankReportList = new List<BankAccountReportItem>();
+
+        // Batch-load ALL bank transactions to avoid N+1 queries
+        var accountIds = bankAccounts.Select(a => a.Id).ToList();
+
+        var allPriorBankTxns = await context.BankTransactions
+            .AsNoTracking()
+            .Where(t => accountIds.Contains(t.BankAccountId) && !t.IsDeleted && t.TransactionDate < start)
+            .ToListAsync();
+
+        var allPeriodBankTxns = await context.BankTransactions
+            .AsNoTracking()
+            .Where(t => accountIds.Contains(t.BankAccountId) && !t.IsDeleted && t.TransactionDate >= start && t.TransactionDate <= end)
+            .ToListAsync();
+
+        var priorTxnsByAccountId = allPriorBankTxns
+            .GroupBy(t => t.BankAccountId)
+            .ToDictionary(g => g.Key, g => g.OrderBy(t => t.TransactionDate).ThenBy(t => t.CreatedAt).ToList());
+
+        var periodTxnsByAccountId = allPeriodBankTxns
+            .GroupBy(t => t.BankAccountId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var account in bankAccounts)
+        {
+            var priorTransactions = priorTxnsByAccountId.TryGetValue(account.Id, out var priorList)
+                ? priorList
+                : new List<BankTransaction>();
+
+            decimal openingBalance = account.OpeningBalance;
+            foreach (var tx in priorTransactions)
+            {
+                openingBalance += CalculateBankBalanceChange(tx.Type, tx.Amount, tx.Notes);
+            }
+
+            var periodTransactions = periodTxnsByAccountId.TryGetValue(account.Id, out var periodList)
+                ? periodList
+                : new List<BankTransaction>();
+
+            decimal totalDeposits = 0;
+            decimal totalWithdrawals = 0;
+
+            foreach (var tx in periodTransactions)
+            {
+                decimal change = CalculateBankBalanceChange(tx.Type, tx.Amount, tx.Notes);
+                if (change > 0)
+                {
+                    totalDeposits += change;
+                }
+                else if (change < 0)
+                {
+                    totalWithdrawals += Math.Abs(change);
+                }
+            }
+
+            decimal closingBalance = openingBalance + totalDeposits - totalWithdrawals;
+
+            bankReportList.Add(new BankAccountReportItem
+            {
+                BankAccountId = account.Id,
+                AccountName = account.FriendlyName,
+                BankName = account.BankName ?? string.Empty,
+                AccountNumber = account.AccountNumber ?? string.Empty,
+                OpeningBalance = openingBalance,
+                TotalDeposits = totalDeposits,
+                TotalWithdrawals = totalWithdrawals,
+                ClosingBalance = closingBalance
+            });
+        }
+        summary.BankAccounts = bankReportList.OrderBy(b => b.AccountName).ToList();
+
         return summary;
     }
 
@@ -310,6 +415,24 @@ public class FinancialReportingService : IFinancialReportingService
             GeneralExpenseType.Taxes => "ضرائب/رسوم",
             GeneralExpenseType.SupplierPayment => "تسديد موردين",
             _ => "أخرى"
+        };
+    }
+
+    private decimal CalculateBankBalanceChange(BankTransactionType type, decimal amount, string? notes = null)
+    {
+        return type switch
+        {
+            BankTransactionType.Deposit => amount,
+            BankTransactionType.CardSalesDeposit => amount,
+            BankTransactionType.Withdrawal => -amount,
+            BankTransactionType.SupplierPayment => -amount,
+            BankTransactionType.ExpensePayment => -amount,
+            BankTransactionType.OwnerDebtSettlement => -amount,
+            BankTransactionType.InternalTransferOut => -amount,
+            BankTransactionType.InternalTransferIn => amount,
+            BankTransactionType.InternalTransfer => (notes != null && (notes.StartsWith("تحويل من") || notes.Contains("من "))) ? amount : -amount,
+            BankTransactionType.ExchangeDifference => amount,
+            _ => 0
         };
     }
 }

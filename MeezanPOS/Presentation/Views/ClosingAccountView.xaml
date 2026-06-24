@@ -623,6 +623,139 @@
                             </UniformGrid>
                         </Grid>
                 </TabItem>
+
+                <!-- Tab 5: Bank Accounts -->
+                <TabItem Style="{StaticResource ModernSegmentedTabItemStyle}">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Bank" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                     Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                            <TextBlock Text="أرصدة المصارف" VerticalAlignment="Center" FontWeight="Bold"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="0,16,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="ملخص أرصدة وحسابات المصارف خلال الفترة:" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="6,0,0,10"/>
+
+                        <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                            <DataGrid ItemsSource="{Binding Summary.BankAccounts}" AutoGenerateColumns="False" IsReadOnly="True" 
+                                      Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
+                                      RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
+                                <DataGrid.Resources>
+                                    <Style TargetType="DataGridColumnHeader">
+                                        <Setter Property="Background" Value="#F8FAFC" />
+                                        <Setter Property="Foreground" Value="#475569" />
+                                        <Setter Property="FontWeight" Value="Bold" />
+                                        <Setter Property="FontSize" Value="13" />
+                                        <Setter Property="Padding" Value="10,0" />
+                                        <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                        <Setter Property="BorderThickness" Value="0,0,0,1" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Center" />
+                                    </Style>
+                                </DataGrid.Resources>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ت" Binding="{Binding (ItemsControl.AlternationIndex), RelativeSource={RelativeSource AncestorType=DataGridRow}, Converter={StaticResource IndexToSequenceConverter}}" Width="50">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Center" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                <Setter Property="FontSize" Value="13" />
+                                                <Setter Property="Foreground" Value="#64748B" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="اسم الحساب" Binding="{Binding AccountName}" Width="180">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Right" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontWeight" Value="SemiBold" />
+                                                <Setter Property="FontSize" Value="13" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="اسم البنك" Binding="{Binding BankName}" Width="150">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Right" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="رقم الحساب" Binding="{Binding AccountNumber}" Width="150">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Center" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="رصيد أول المدة" Binding="{Binding OpeningBalance, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Left" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="إجمالي الإيداعات (+)" Binding="{Binding TotalDeposits, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Left" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                                <Setter Property="Foreground" Value="#15803D" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="إجمالي السحوبات (-)" Binding="{Binding TotalWithdrawals, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Left" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                                <Setter Property="Foreground" Value="#B91C1C" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="الرصيد الختامي" Binding="{Binding ClosingBalance, StringFormat='{}{0:N2} د.ل'}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextAlignment" Value="Left" />
+                                                <Setter Property="VerticalAlignment" Value="Center" />
+                                                <Setter Property="Margin" Value="10,0" />
+                                                <Setter Property="FontSize" Value="13" />
+                                                <Setter Property="FontWeight" Value="Bold" />
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
 

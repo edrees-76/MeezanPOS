@@ -75,6 +75,18 @@ public class OwnerDebtDetailItem
     public DateTime TransactionDate { get; set; }
 }
 
+public class BankAccountReportItem
+{
+    public int BankAccountId { get; set; }
+    public string AccountName { get; set; } = string.Empty;
+    public string BankName { get; set; } = string.Empty;
+    public string AccountNumber { get; set; } = string.Empty;
+    public decimal OpeningBalance { get; set; }
+    public decimal TotalDeposits { get; set; }
+    public decimal TotalWithdrawals { get; set; }
+    public decimal ClosingBalance { get; set; }
+}
+
 public class ClosingAccountSummary
 {
     public string PeriodText { get; set; } = string.Empty;
@@ -85,4 +97,5 @@ public class ClosingAccountSummary
     public List<SupplierReportItem> Suppliers { get; set; } = new();
     public CashLedgerReport CashLedger { get; set; } = new();
     public LiabilitiesSummary Liabilities { get; set; } = new();
+    public List<BankAccountReportItem> BankAccounts { get; set; } = new();
 }

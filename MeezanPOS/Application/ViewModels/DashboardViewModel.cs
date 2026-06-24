@@ -155,7 +155,11 @@ public partial class DashboardViewModel : ObservableObject
 
     public void StopAutoRefresh()
     {
-        _autoRefreshTimer?.Stop();
+        if (_autoRefreshTimer != null)
+        {
+            _autoRefreshTimer.Tick -= AutoRefreshTimer_Tick;
+            _autoRefreshTimer.Stop();
+        }
     }
 
     partial void OnSelectedPeriodChanged(DashboardPeriod value)
@@ -428,6 +432,20 @@ public partial class DashboardViewModel : ObservableObject
                     };
                 }).ToList();
 
+                // Trim leading and trailing zero-value days to make chart range dynamic
+                int firstActive = trendPoints.FindIndex(p => p.TotalSales > 0 || p.TotalExpenses > 0);
+                int lastActive = trendPoints.FindLastIndex(p => p.TotalSales > 0 || p.TotalExpenses > 0);
+                if (firstActive != -1 && lastActive != -1)
+                {
+                    trendPoints = trendPoints.GetRange(firstActive, lastActive - firstActive + 1);
+                }
+                else
+                {
+                    // If no active data at all, keep only today or a single day to avoid rendering a huge empty chart
+                    trendPoints = trendPoints.Where(p => p.Date.Date == today).ToList();
+                }
+
+
                 // 5. Expense distribution categories
                 var dailyExpenseItems = await context.DailyExpenseItems
                     .Include(e => e.DailyJournal)
@@ -685,8 +703,7 @@ public partial class DashboardViewModel : ObservableObject
                             new[] { blueColor.WithAlpha(40), blueColor.WithAlpha(0) },
                             new SKPoint(0.5f, 0),
                             new SKPoint(0.5f, 1)),
-                        GeometryFill = new SolidColorPaint(SKColors.Transparent),
-                        GeometryStroke = new SolidColorPaint(blueColor) { StrokeThickness = 2 }
+                        GeometrySize = 0
                     };
 
                     var expensesLine = new LineSeries<double>
@@ -699,8 +716,7 @@ public partial class DashboardViewModel : ObservableObject
                             PathEffect = new DashEffect(new float[] { 6, 4 })
                         },
                         Fill = null,
-                        GeometryFill = new SolidColorPaint(SKColors.Transparent),
-                        GeometryStroke = new SolidColorPaint(redColor) { StrokeThickness = 1.5f }
+                        GeometrySize = 0
                     };
 
                     SalesTrendSeries = new ISeries[] { salesLine, expensesLine };

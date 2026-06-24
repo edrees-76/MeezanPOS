@@ -314,7 +314,8 @@ public partial class SettingsViewModel : ObservableObject
                 {
                     "Users",
                     "Roles",
-                    "__EFMigrationsHistory"
+                    "__EFMigrationsHistory",
+                    "Settings"
                 };
 
                 using (var conn = new SqliteConnection($"Data Source={dbPath}"))
@@ -369,24 +370,38 @@ public partial class SettingsViewModel : ObservableObject
                         }
                     }
 
-                    // Clear tables
-                    foreach (var table in allTables)
+                    // Wrap all destructive operations in a transaction for atomicity
+                    using var transaction = conn.BeginTransaction();
+                    try
                     {
-                        if (!tablesToKeep.Contains(table) && !table.StartsWith("sqlite_", StringComparison.OrdinalIgnoreCase))
+                        // Clear tables
+                        foreach (var table in allTables)
                         {
-                            using (var deleteCmd = conn.CreateCommand())
+                            if (!tablesToKeep.Contains(table) && !table.StartsWith("sqlite_", StringComparison.OrdinalIgnoreCase))
                             {
-                                deleteCmd.CommandText = $"DELETE FROM \"{table}\";";
-                                await deleteCmd.ExecuteNonQueryAsync();
+                                using (var deleteCmd = conn.CreateCommand())
+                                {
+                                    deleteCmd.Transaction = transaction;
+                                    deleteCmd.CommandText = $"DELETE FROM \"{table}\";";
+                                    await deleteCmd.ExecuteNonQueryAsync();
+                                }
                             }
                         }
-                    }
 
-                    // Reset auto-increment sequences
-                    using (var resetSeqCmd = conn.CreateCommand())
+                        // Reset auto-increment sequences
+                        using (var resetSeqCmd = conn.CreateCommand())
+                        {
+                            resetSeqCmd.Transaction = transaction;
+                            resetSeqCmd.CommandText = "DELETE FROM sqlite_sequence;";
+                            await resetSeqCmd.ExecuteNonQueryAsync();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
                     {
-                        resetSeqCmd.CommandText = "DELETE FROM sqlite_sequence;";
-                        await resetSeqCmd.ExecuteNonQueryAsync();
+                        transaction.Rollback();
+                        throw;
                     }
 
                     // Turn foreign keys back on
@@ -399,6 +414,10 @@ public partial class SettingsViewModel : ObservableObject
 
                 // Clear connection pools to ensure database file can be refreshed
                 SqliteConnection.ClearAllPools();
+
+                // Restore triggers and schema by running EF migrations
+                await using var restoreContext = await _dbContextFactory.CreateDbContextAsync();
+                await restoreContext.Database.MigrateAsync();
 
                 MessageBox.Show("تم إعادة ضبط المنظومة وحذف جميع البيانات بنجاح!\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً للبدء بقاعدة بيانات نظيفة.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
                 System.Windows.Application.Current.Shutdown();

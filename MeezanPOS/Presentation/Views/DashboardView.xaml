@@ -163,7 +163,19 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Line Chart -->
-                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" Margin="0,0,16,0" BorderBrush="#e5eeff" BorderThickness="1">
+                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#e5eeff" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Margin" Value="0,0,16,0"/>
+                            <Setter Property="Grid.ColumnSpan" Value="1"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TotalExpenses}" Value="0">
+                                    <Setter Property="Margin" Value="0"/>
+                                    <Setter Property="Grid.ColumnSpan" Value="2"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -195,6 +207,16 @@
 
                 <!-- Donut Chart -->
                 <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" BorderBrush="#e5eeff" BorderThickness="1">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding TotalExpenses}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
                     <Grid>
                         <Grid.RowDefinitions>

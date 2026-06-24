@@ -85,7 +85,7 @@ public class ClosingAccountPdfExporter
         double cardHeight = 55;
         double cardGap = 10;
 
-        DrawSummaryCard(gfx, 40, y, cardWidth, cardHeight, "إجمالي المبيعات", $"{summary.IncomeStatement.TotalSales:N2} د.ل");
+        DrawSummaryCard(gfx, 40, y, cardWidth, cardHeight, "إجمالي المبيعات", $"{summary.IncomeStatement.TotalSales:N2} د.ل", null, $"نقدي: {summary.IncomeStatement.CashSales:N2} | بطاقة: {summary.IncomeStatement.CardSales:N2}");
         DrawSummaryCard(gfx, 40 + cardWidth + cardGap, y, cardWidth, cardHeight, "إجمالي المصروفات", $"{summary.IncomeStatement.TotalExpenses:N2} د.ل");
         
         // Draw Net Profit with visual color distinction
@@ -100,6 +100,13 @@ public class ClosingAccountPdfExporter
         DrawCashLedgerSummaryBlock(gfx, 40, y, blockWidth, blockHeight, summary.CashLedger);
 
         y += blockHeight + gap;
+
+        // New: Bank Accounts Summary Box
+        if (summary.BankAccounts != null && summary.BankAccounts.Any())
+        {
+            DrawBankAccountsSummaryBlock(gfx, 40, y, blockWidth, blockHeight, summary.BankAccounts);
+            y += blockHeight + gap;
+        }
 
         // 3. Section: Grouped Expenses (Top 5 categories for summary page)
         var topExpenses = summary.ExpensesByCategory.Take(5).ToList();
@@ -117,11 +124,13 @@ public class ClosingAccountPdfExporter
         // 5. Detailed Annex Pages (Only generated in Comprehensive mode)
         if (isComprehensive)
         {
+            int annexNumber = 1;
+
             // Supplier Details Page
             if (summary.Suppliers.Any())
             {
                 gfx = CreateNewPage(document, ref pageCount, summary, isComprehensive, out y);
-                DrawText(gfx, "ملحق رقم (1): تفاصيل أرصدة وحركات الموردين", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
+                DrawText(gfx, $"ملحق رقم ({annexNumber++}): تفاصيل أرصدة وحركات الموردين", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
                 y += 25;
 
                 // Headers
@@ -133,10 +142,10 @@ public class ClosingAccountPdfExporter
             if (summary.Liabilities.WorkerAdvanceDetails.Any())
             {
                 gfx = CreateNewPage(document, ref pageCount, summary, isComprehensive, out y);
-                DrawText(gfx, "ملحق رقم (2): تفاصيل سلف العمال غير المسددة", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
-                y += 10;
+                DrawText(gfx, $"ملحق رقم ({annexNumber++}): تفاصيل سلف العمال غير المسددة", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
+                y += 32;
                 DrawText(gfx, "صافي ما يدين به العمال للمطعم (المبالغ المسحوبة كذمة مالية)", new XFont("Segoe UI", 8.5, XFontStyleEx.Italic), new XSolidBrush(XColor.FromArgb(118, 119, 125)), new XRect(40, y, 515, 12), XStringAlignment.Far);
-                y += 18;
+                y += 22;
 
                 DrawWorkerAdvancesTable(gfx, ref y, document, ref pageCount, summary, summary.Liabilities.WorkerAdvanceDetails);
                 gfx.Dispose();
@@ -146,10 +155,10 @@ public class ClosingAccountPdfExporter
             if (summary.Liabilities.WorkerUnpaidWageDetails.Any())
             {
                 gfx = CreateNewPage(document, ref pageCount, summary, isComprehensive, out y);
-                DrawText(gfx, "ملحق رقم (3): تفاصيل الأجور المستحقة غير المصروفة للعمال", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
-                y += 10;
+                DrawText(gfx, $"ملحق رقم ({annexNumber++}): تفاصيل الأجور المستحقة غير المصروفة للعمال", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
+                y += 32;
                 DrawText(gfx, "أجور مستحقة للعمال لقاء حضورهم ولم تُصرف لهم نقداً بعد", new XFont("Segoe UI", 8.5, XFontStyleEx.Italic), new XSolidBrush(XColor.FromArgb(118, 119, 125)), new XRect(40, y, 515, 12), XStringAlignment.Far);
-                y += 18;
+                y += 22;
 
                 DrawWorkerUnpaidWagesTable(gfx, ref y, document, ref pageCount, summary, summary.Liabilities.WorkerUnpaidWageDetails);
                 gfx.Dispose();
@@ -159,10 +168,21 @@ public class ClosingAccountPdfExporter
             if (summary.Liabilities.OwnerDebtDetails.Any())
             {
                 gfx = CreateNewPage(document, ref pageCount, summary, isComprehensive, out y);
-                DrawText(gfx, "ملحق رقم (4): تفاصيل حسابات ذمم الملاك والشركاء", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
+                DrawText(gfx, $"ملحق رقم ({annexNumber++}): تفاصيل حسابات ذمم الملاك والشركاء", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
                 y += 25;
 
                 DrawOwnerDebtsTable(gfx, ref y, document, ref pageCount, summary, summary.Liabilities.OwnerDebtDetails);
+                gfx.Dispose();
+            }
+
+            // Bank Account Details Page
+            if (summary.BankAccounts != null && summary.BankAccounts.Any())
+            {
+                gfx = CreateNewPage(document, ref pageCount, summary, isComprehensive, out y);
+                DrawText(gfx, $"ملحق رقم ({annexNumber++}): تفاصيل أرصدة وحسابات المصارف", new XFont("Segoe UI", 12, XFontStyleEx.Bold), new XSolidBrush(XColor.FromArgb(11, 28, 48)), new XRect(40, y, 515, 20), XStringAlignment.Far);
+                y += 25;
+
+                DrawBankAccountsTable(gfx, ref y, document, ref pageCount, summary, summary.BankAccounts);
                 gfx.Dispose();
             }
         }
@@ -238,13 +258,13 @@ public class ClosingAccountPdfExporter
         double titleEndX = logoX - 15;
         double titleWidth = titleEndX - 40;
 
-        var titleRect = new XRect(40, y, titleWidth, 20);
+        var titleRect = new XRect(40, y, titleWidth, 22);
         var titleFont = new XFont("Segoe UI", 15, XFontStyleEx.Bold);
         var titleBrush = new XSolidBrush(XColor.FromArgb(11, 28, 48));
         string reportTitle = isComprehensive ? "تقرير الحساب الختامي والمركز المالي (الشامل)" : "تقرير الحساب الختامي والمركز المالي (المختصر)";
         DrawText(gfx, reportTitle, titleFont, titleBrush, titleRect, XStringAlignment.Far);
 
-        var subtitleRect = new XRect(40, y + 20, titleWidth, 15);
+        var subtitleRect = new XRect(40, y + 26, titleWidth, 15);
         var subtitleFont = new XFont("Segoe UI", 9.5, XFontStyleEx.Regular);
         var subtitleBrush = new XSolidBrush(XColor.FromArgb(118, 119, 125));
         DrawText(gfx, summary.PeriodText, subtitleFont, subtitleBrush, subtitleRect, XStringAlignment.Far);
@@ -265,22 +285,32 @@ public class ClosingAccountPdfExporter
         y += 15;
     }
 
-    private static void DrawSummaryCard(XGraphics gfx, double x, double y, double width, double height, string title, string val, XColor? bgColor = null)
+    private static void DrawSummaryCard(XGraphics gfx, double x, double y, double width, double height, string title, string val, XColor? bgColor = null, string? subText = null)
     {
         var rect = new XRect(x, y, width, height);
         var bgBrush = bgColor.HasValue ? new XSolidBrush(bgColor.Value) : XBrushes.White;
         var borderPen = new XPen(XColor.FromArgb(229, 238, 255), 1);
         gfx.DrawRoundedRectangle(borderPen, bgBrush, rect, new XSize(8, 8));
 
-        var titleRect = new XRect(x + 10, y + 8, width - 20, 15);
-        var titleFont = new XFont("Segoe UI", 9, XFontStyleEx.Bold);
+        var titleRect = new XRect(x + 10, y + 6, width - 20, 13);
+        var titleFont = new XFont("Segoe UI", 8.5, XFontStyleEx.Bold);
         var titleBrush = new XSolidBrush(XColor.FromArgb(118, 119, 125));
         DrawText(gfx, title, titleFont, titleBrush, titleRect, XStringAlignment.Far);
 
-        var valRect = new XRect(x + 10, y + 25, width - 20, 20);
-        var valFont = new XFont("Segoe UI", 12, XFontStyleEx.Bold);
+        var valRect = string.IsNullOrEmpty(subText)
+            ? new XRect(x + 10, y + 22, width - 20, 20)
+            : new XRect(x + 10, y + 20, width - 20, 18);
+        var valFont = new XFont("Segoe UI", 11.5, XFontStyleEx.Bold);
         var valBrush = new XSolidBrush(XColor.FromArgb(11, 28, 48));
         DrawText(gfx, val, valFont, valBrush, valRect, XStringAlignment.Far);
+
+        if (!string.IsNullOrEmpty(subText))
+        {
+            var subRect = new XRect(x + 10, y + 39, width - 20, 11);
+            var subFont = new XFont("Segoe UI", 7.5, XFontStyleEx.Regular);
+            var subBrush = new XSolidBrush(XColor.FromArgb(118, 119, 125));
+            DrawText(gfx, subText, subFont, subBrush, subRect, XStringAlignment.Far);
+        }
     }
 
     private static void DrawCashLedgerSummaryBlock(XGraphics gfx, double x, double y, double width, double height, CashLedgerReport cashLedger)
@@ -309,6 +339,46 @@ public class ClosingAccountPdfExporter
         for (int i = 0; i < 4; i++)
         {
             double colX = x + 10 + (3 - i) * colWidth; // Right-to-Left column arrangement
+            var lblRect = new XRect(colX, rowY, colWidth, 12);
+            DrawText(gfx, labels[i], labelFont, new XSolidBrush(XColor.FromArgb(118, 119, 125)), lblRect, XStringAlignment.Center);
+
+            var valRect = new XRect(colX, rowY + 14, colWidth, 15);
+            DrawText(gfx, $"{values[i]:N2} د.ل", valFont, new XSolidBrush(colors[i]), valRect, XStringAlignment.Center);
+        }
+    }
+
+    private static void DrawBankAccountsSummaryBlock(XGraphics gfx, double x, double y, double width, double height, List<BankAccountReportItem> bankAccounts)
+    {
+        var rect = new XRect(x, y, width, height);
+        var bgBrush = XBrushes.White;
+        var borderPen = new XPen(XColor.FromArgb(229, 238, 255), 1);
+        gfx.DrawRoundedRectangle(borderPen, bgBrush, rect, new XSize(8, 8));
+
+        var titleFont = new XFont("Segoe UI", 9.5, XFontStyleEx.Bold);
+        var labelFont = new XFont("Segoe UI", 8.5, XFontStyleEx.Regular);
+        var valFont = new XFont("Segoe UI", 9.5, XFontStyleEx.Bold);
+
+        // Section header
+        var headerRect = new XRect(x + 10, y + 6, width - 20, 15);
+        DrawText(gfx, "ملخص أرصدة وحسابات المصارف (Bank Accounts)", titleFont, new XSolidBrush(XColor.FromArgb(15, 23, 42)), headerRect, XStringAlignment.Far);
+
+        double rowY = y + 25;
+        double colWidth = (width - 20) / 4;
+
+        var banks = bankAccounts ?? new List<BankAccountReportItem>();
+        decimal openingSum = banks.Sum(b => b.OpeningBalance);
+        decimal depositsSum = banks.Sum(b => b.TotalDeposits);
+        decimal withdrawalsSum = banks.Sum(b => b.TotalWithdrawals);
+        decimal closingSum = banks.Sum(b => b.ClosingBalance);
+
+        // Draw 4 columns (Opening, Deposits, Withdrawals, Closing)
+        string[] labels = new[] { "رصيد أول المدة بنك", "إجمالي الإيداعات (+)", "إجمالي السحوبات (-)", "الرصيد الختامي بنك" };
+        decimal[] values = new[] { openingSum, depositsSum, withdrawalsSum, closingSum };
+        XColor[] colors = new[] { XColor.FromArgb(15, 23, 42), XColor.FromArgb(21, 128, 61), XColor.FromArgb(185, 28, 28), XColor.FromArgb(29, 78, 216) };
+
+        for (int i = 0; i < 4; i++)
+        {
+            double colX = x + 10 + (3 - i) * colWidth;
             var lblRect = new XRect(colX, rowY, colWidth, 12);
             DrawText(gfx, labels[i], labelFont, new XSolidBrush(XColor.FromArgb(118, 119, 125)), lblRect, XStringAlignment.Center);
 
@@ -618,6 +688,68 @@ public class ClosingAccountPdfExporter
             
             DrawText(gfx, $"{item.Amount:N2} د.ل", tdBoldFont, tdBrush, new XRect(40 + 515 - 380, y, 90, rowHeight), XStringAlignment.Far);
             DrawText(gfx, $"{item.TransactionDate:yyyy-MM-dd}", tdFont, tdBrush, new XRect(40, y, 120, rowHeight), XStringAlignment.Far);
+
+            y += rowHeight;
+        }
+    }
+
+    private static void DrawBankAccountsTable(XGraphics gfx, ref double y, PdfDocument document, ref int pageCount, ClosingAccountSummary summary, List<BankAccountReportItem> items)
+    {
+        double headerHeight = 22;
+        double rowHeight = 20;
+
+        // Table Header
+        var thBg = new XSolidBrush(XColor.FromArgb(241, 245, 249));
+        gfx.DrawRectangle(thBg, 40, y, 515, headerHeight);
+        var borderPen = new XPen(XColor.FromArgb(226, 232, 240), 1);
+        gfx.DrawRectangle(borderPen, 40, y, 515, headerHeight);
+
+        var thFont = new XFont("Segoe UI", 9, XFontStyleEx.Bold);
+        var thBrush = new XSolidBrush(XColor.FromArgb(71, 85, 105));
+
+        DrawText(gfx, "حساب المصرف", thFont, thBrush, new XRect(40 + 395, y, 115, headerHeight), XStringAlignment.Far);
+        DrawText(gfx, "البنك / رقم الحساب", thFont, thBrush, new XRect(40 + 285, y, 105, headerHeight), XStringAlignment.Far);
+        DrawText(gfx, "رصيد أول المدة", thFont, thBrush, new XRect(40 + 215, y, 65, headerHeight), XStringAlignment.Far);
+        DrawText(gfx, "إيداعات (+)", thFont, thBrush, new XRect(40 + 145, y, 65, headerHeight), XStringAlignment.Far);
+        DrawText(gfx, "سحوبات (-)", thFont, thBrush, new XRect(40 + 75, y, 65, headerHeight), XStringAlignment.Far);
+        DrawText(gfx, "الرصيد الختامي", thFont, thBrush, new XRect(40, y, 70, headerHeight), XStringAlignment.Far);
+
+        y += headerHeight;
+
+        var tdFont = new XFont("Segoe UI", 8.5, XFontStyleEx.Regular);
+        var tdBoldFont = new XFont("Segoe UI", 8.5, XFontStyleEx.Bold);
+        var tdBrush = new XSolidBrush(XColor.FromArgb(15, 23, 42));
+
+        foreach (var item in items)
+        {
+            if (y > 740)
+            {
+                gfx.Dispose();
+                gfx = CreateNewPage(document, ref pageCount, summary, true, out y);
+
+                // Redraw table headers on new page
+                gfx.DrawRectangle(thBg, 40, y, 515, headerHeight);
+                gfx.DrawRectangle(borderPen, 40, y, 515, headerHeight);
+                DrawText(gfx, "حساب المصرف", thFont, thBrush, new XRect(40 + 395, y, 115, headerHeight), XStringAlignment.Far);
+                DrawText(gfx, "البنك / رقم الحساب", thFont, thBrush, new XRect(40 + 285, y, 105, headerHeight), XStringAlignment.Far);
+                DrawText(gfx, "رصيد أول المدة", thFont, thBrush, new XRect(40 + 215, y, 65, headerHeight), XStringAlignment.Far);
+                DrawText(gfx, "إيداعات (+)", thFont, thBrush, new XRect(40 + 145, y, 65, headerHeight), XStringAlignment.Far);
+                DrawText(gfx, "سحوبات (-)", thFont, thBrush, new XRect(40 + 75, y, 65, headerHeight), XStringAlignment.Far);
+                DrawText(gfx, "الرصيد الختامي", thFont, thBrush, new XRect(40, y, 70, headerHeight), XStringAlignment.Far);
+                y += headerHeight;
+            }
+
+            gfx.DrawRectangle(borderPen, 40, y, 515, rowHeight);
+
+            DrawText(gfx, item.AccountName, tdBoldFont, tdBrush, new XRect(40 + 395, y, 115, rowHeight), XStringAlignment.Far);
+
+            string bankDetails = $"{item.BankName} / {item.AccountNumber}";
+            DrawText(gfx, bankDetails, tdFont, tdBrush, new XRect(40 + 285, y, 105, rowHeight), XStringAlignment.Far);
+
+            DrawText(gfx, $"{item.OpeningBalance:N2}", tdFont, tdBrush, new XRect(40 + 215, y, 65, rowHeight), XStringAlignment.Far);
+            DrawText(gfx, $"{item.TotalDeposits:N2}", tdFont, new XSolidBrush(XColor.FromArgb(21, 128, 61)), new XRect(40 + 145, y, 65, rowHeight), XStringAlignment.Far);
+            DrawText(gfx, $"{item.TotalWithdrawals:N2}", tdFont, new XSolidBrush(XColor.FromArgb(185, 28, 28)), new XRect(40 + 75, y, 65, rowHeight), XStringAlignment.Far);
+            DrawText(gfx, $"{item.ClosingBalance:N2}", tdBoldFont, tdBrush, new XRect(40, y, 70, rowHeight), XStringAlignment.Far);
 
             y += rowHeight;
         }
