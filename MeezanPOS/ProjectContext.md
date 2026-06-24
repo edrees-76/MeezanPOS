@@ -428,4 +428,11 @@ Health Score ارتفع من 7/10 إلى 9/10.
 ### د. حالة المنظومة
 مستقرة وجاهزة للإنتاج بالكامل.
 
+تم كذلك إصلاح نمط AppServiceProvider.Resolve<T>() في 5 ViewModels 
+رئيسية (SalesViewModel, GeneralExpensesViewModel, DailyJournalViewModel, 
+ClosingAccountViewModel, SettingsViewModel) بتحويل 34 حالة Resolve 
+داخل الـ methods إلى Constructor Injection نظيف، مما يضمن أن الخدمات 
+الـ Scoped تعيش ضمن دورة حياة الـ ViewModel فقط ولا تتحول إلى Singleton 
+غير مقصود. Health Score ارتفع إلى 9.5/10.
+
 

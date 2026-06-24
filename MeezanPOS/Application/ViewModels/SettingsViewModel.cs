@@ -18,6 +18,8 @@ namespace MeezanPOS.Application.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+    private readonly ISessionService _sessionService;
+    private readonly IAuthenticationService _authService;
     private bool _isInitializing = true;
 
     [ObservableProperty]
@@ -33,13 +35,20 @@ public partial class SettingsViewModel : ObservableObject
     private string lastAutoBackupDateText = "لا يوجد";
 
     public SettingsViewModel() : this(
-        AppServiceProvider.Resolve<IDbContextFactory<AppDbContext>>())
+        AppServiceProvider.Resolve<IDbContextFactory<AppDbContext>>(),
+        AppServiceProvider.Resolve<ISessionService>(),
+        AppServiceProvider.Resolve<IAuthenticationService>())
     {
     }
 
-    public SettingsViewModel(IDbContextFactory<AppDbContext> dbContextFactory)
+    public SettingsViewModel(
+        IDbContextFactory<AppDbContext> dbContextFactory,
+        ISessionService sessionService,
+        IAuthenticationService authService)
     {
         _dbContextFactory = dbContextFactory ?? throw new ArgumentNullException(nameof(dbContextFactory));
+        _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         _ = LoadSettingsAsync();
     }
 
@@ -293,8 +302,8 @@ public partial class SettingsViewModel : ObservableObject
                 return;
             }
 
-            var sessionService = AppServiceProvider.Resolve<ISessionService>();
-            var authService = AppServiceProvider.Resolve<IAuthenticationService>();
+            var sessionService = _sessionService;
+            var authService = _authService;
             string currentUsername = sessionService.CurrentUsername ?? "admin";
 
             var authenticatedUser = await authService.AuthenticateAsync(currentUsername, password);

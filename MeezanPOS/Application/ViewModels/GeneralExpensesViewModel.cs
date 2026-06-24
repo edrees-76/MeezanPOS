@@ -70,6 +70,44 @@ public partial class GeneralExpenseDisplayItem : ObservableObject
 
 public partial class GeneralExpensesViewModel : ObservableObject
 {
+    private readonly IBankService _bankService;
+    private readonly IOwnerDebtService _ownerDebtService;
+    private readonly IWagesService _wagesService;
+    private readonly ICashLedgerService _cashLedgerService;
+    private readonly IPostingService _postingService;
+    private readonly ISessionService _sessionService;
+
+    public GeneralExpensesViewModel() : this(
+        AppServiceProvider.Resolve<IBankService>(),
+        AppServiceProvider.Resolve<IOwnerDebtService>(),
+        AppServiceProvider.Resolve<IWagesService>(),
+        AppServiceProvider.Resolve<ICashLedgerService>(),
+        AppServiceProvider.Resolve<IPostingService>(),
+        AppServiceProvider.Resolve<ISessionService>())
+    {
+    }
+
+    public GeneralExpensesViewModel(
+        IBankService bankService,
+        IOwnerDebtService ownerDebtService,
+        IWagesService wagesService,
+        ICashLedgerService cashLedgerService,
+        IPostingService postingService,
+        ISessionService sessionService)
+    {
+        _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
+        _ownerDebtService = ownerDebtService ?? throw new ArgumentNullException(nameof(ownerDebtService));
+        _wagesService = wagesService ?? throw new ArgumentNullException(nameof(wagesService));
+        _cashLedgerService = cashLedgerService ?? throw new ArgumentNullException(nameof(cashLedgerService));
+        _postingService = postingService ?? throw new ArgumentNullException(nameof(postingService));
+        _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+
+        InitializeLists();
+        LoadExpenses();
+        _ = LoadBankAccountsAsync();
+        _ = LoadPartnerNamesAsync();
+    }
+
     // --- خصائص التحديد والترحيل الجماعي ---
     [ObservableProperty]
     private bool isAllSelected;
@@ -201,7 +239,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            var bankService = AppServiceProvider.Resolve<IBankService>();
+            var bankService = _bankService;
             var accountsList = await bankService.GetAllAccountsAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -222,7 +260,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
+            var ownerDebtService = _ownerDebtService;
             var names = await ownerDebtService.GetPartnerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -243,7 +281,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            var service = AppServiceProvider.Resolve<IWagesService>();
+            var service = _wagesService;
             var names = await service.GetUniqueWorkerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -274,13 +312,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     // --- ملخصات حسب النوع ---
     public ObservableCollection<TypeSummaryItem> TypeSummaries { get; } = new();
 
-    public GeneralExpensesViewModel()
-    {
-        InitializeLists();
-        LoadExpenses();
-        _ = LoadBankAccountsAsync();
-        _ = LoadPartnerNamesAsync();
-    }
+
 
     private void InitializeLists()
     {
@@ -504,8 +536,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
         try
         {
             using var db = new AppDbContext();
-            var bankService = AppServiceProvider.Resolve<IBankService>();
-            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
+            var bankService = _bankService;
+            var ownerDebtService = _ownerDebtService;
 
             if (EditingId.HasValue)
             {
@@ -530,7 +562,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     }
 
                     // عكس الحركة النقدية القديمة إن وجدت
-                    var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+                    var cashLedgerService = _cashLedgerService;
                     var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
                     if (oldCashMovement != null)
                     {
@@ -808,7 +840,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
                 else if (SelectedPaymentMethod == PaymentMethodType.Cash)
                 {
-                    var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+                    var cashLedgerService = _cashLedgerService;
                     var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
                     var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
                     await cashLedgerService.RecordMovementAsync(
@@ -1149,11 +1181,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
 
                 // حذف الحركة البنكية المرتبطة
-                var bankService = AppServiceProvider.Resolve<IBankService>();
+                var bankService = _bankService;
                 await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
 
                 // حذف ديون المالك المرتبطة
-                var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
+                var ownerDebtService = _ownerDebtService;
                 var relatedDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
                 foreach (var debt in relatedDebts)
                 {
@@ -1161,7 +1193,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 }
 
                 // عكس الحركة النقدية المرتبطة إن وجدت
-                var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+                var cashLedgerService = _cashLedgerService;
                 var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
                 if (oldCashMovement != null)
                 {
@@ -1193,8 +1225,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
-            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            var postingService = _postingService;
+            var currentUserId = _sessionService.CurrentUserId;
             await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, currentUserId);
             
             MessageBox.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -1211,7 +1243,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         if (item == null || !item.IsPosted) return;
 
-        var sessionService = AppServiceProvider.Resolve<ISessionService>();
+        var sessionService = _sessionService;
         if (!sessionService.HasPermission("UnpostFinancial"))
         {
             MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -1269,7 +1301,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             var currentUserId = sessionService.CurrentUserId;
             await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, currentUserId);
             
@@ -1449,8 +1481,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
-            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            var postingService = _postingService;
+            var currentUserId = _sessionService.CurrentUserId;
             var batchResult = await postingService.PostGeneralExpensesBatchAsync(selectedIds, currentUserId, "ترحيل جماعي للمصاريف المحددة من الواجهة");
 
             if (batchResult.Success)
@@ -1536,8 +1568,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (confirmResult != MessageBoxResult.Yes) return;
 
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
-            var currentUserId = AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+            var postingService = _postingService;
+            var currentUserId = _sessionService.CurrentUserId;
             var batchResult = await postingService.PostGeneralExpensesBatchAsync(expensesInPeriod, currentUserId, $"ترحيل جماعي للمصاريف للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
 
             if (batchResult.Success)

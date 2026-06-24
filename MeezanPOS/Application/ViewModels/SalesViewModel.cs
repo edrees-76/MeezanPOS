@@ -84,7 +84,30 @@ public partial class MonthSummaryCard : ObservableObject
 
 public partial class SalesViewModel : ObservableObject
 {
-    private string CurrentUserId => AppServiceProvider.Resolve<ISessionService>().CurrentUserId;
+    private readonly ISessionService _sessionService;
+    private readonly IPostingService _postingService;
+    private readonly ICashLedgerService _cashLedgerService;
+
+    public SalesViewModel() : this(
+        AppServiceProvider.Resolve<ISessionService>(),
+        AppServiceProvider.Resolve<IPostingService>(),
+        AppServiceProvider.Resolve<ICashLedgerService>())
+    {
+    }
+
+    public SalesViewModel(
+        ISessionService sessionService,
+        IPostingService postingService,
+        ICashLedgerService cashLedgerService)
+    {
+        _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        _postingService = postingService ?? throw new ArgumentNullException(nameof(postingService));
+        _cashLedgerService = cashLedgerService ?? throw new ArgumentNullException(nameof(cashLedgerService));
+        
+        _ = LoadDataAsync();
+    }
+
+    private string CurrentUserId => _sessionService.CurrentUserId;
 
     [ObservableProperty]
     private ObservableCollection<CashMovement> cashMovements = new();
@@ -201,10 +224,7 @@ public partial class SalesViewModel : ObservableObject
 
     private List<DailyJournal> _allJournals = new();
 
-    public SalesViewModel()
-    {
-        _ = LoadDataAsync();
-    }
+
 
     partial void OnSelectedTabChanged(int value)
     {
@@ -522,7 +542,7 @@ public partial class SalesViewModel : ObservableObject
         {
             IsLoading = true;
             using var context = new AppDbContext();
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             await postingService.PostEntityAsync<DailyJournal>(journal.Id, CurrentUserId);
 
             System.Windows.MessageBox.Show("تم ترحيل الوردية وإقفالها مالياً بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -570,7 +590,7 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             foreach (var j in draftJournals)
             {
                 await postingService.PostEntityAsync<DailyJournal>(j.Id, CurrentUserId);
@@ -600,7 +620,7 @@ public partial class SalesViewModel : ObservableObject
     {
         if (month == null) return;
 
-        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
+        if (!_sessionService.HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
@@ -681,7 +701,7 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             foreach (var j in postedJournals)
             {
                 await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, CurrentUserId);
@@ -1086,7 +1106,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
 
             var batchResult = await postingService.PostDailyJournalsBatchAsync(selectedIds, "Admin", "ترحيل جماعي لليوميات المحددة من الواجهة");
 
@@ -1179,7 +1199,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (confirmResult != System.Windows.MessageBoxResult.Yes) return;
 
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             var batchResult = await postingService.PostDailyJournalsBatchAsync(journalsInPeriod, CurrentUserId, $"ترحيل جماعي للفترة من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}");
 
             if (batchResult.Success)
@@ -1238,7 +1258,7 @@ public partial class SalesViewModel : ObservableObject
 
             CashMovements = new ObservableCollection<CashMovement>(movements);
             
-            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+            var cashLedgerService = _cashLedgerService;
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
             IsRebuildRequired = await cashLedgerService.IsRebuildRequiredAsync();
         }
@@ -1267,7 +1287,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+            var cashLedgerService = _cashLedgerService;
             await cashLedgerService.RebuildLedgerAsync();
             await LoadCashMovementsAsync();
             System.Windows.MessageBox.Show("تم إعادة بناء دفتر النقدية بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -1305,7 +1325,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             using var context = new AppDbContext();
-            var cashLedgerService = AppServiceProvider.Resolve<ICashLedgerService>();
+            var cashLedgerService = _cashLedgerService;
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
         }
         catch (System.Exception ex)
@@ -1358,7 +1378,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
 
             var batchResult = await postingService.SettleAndLockPeriodAsync(
                 payoutAmount: SettlePayoutInput,
@@ -1416,7 +1436,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             var history = await postingService.GetSettlementHistoryAsync();
             
             SettlementHistory.Clear();
@@ -1446,7 +1466,7 @@ public partial class SalesViewModel : ObservableObject
     public async Task UnlockPeriodAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
-        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
+        if (!_sessionService.HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
@@ -1475,7 +1495,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             var success = await postingService.UnlockPeriodAsync(item.SessionId, reason, detailReason, CurrentUserId);
 
             if (success)
@@ -1506,7 +1526,7 @@ public partial class SalesViewModel : ObservableObject
     public async Task UnpostPeriodAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
-        if (!AppServiceProvider.Resolve<ISessionService>().HasPermission("UnpostFinancial"))
+        if (!_sessionService.HasPermission("UnpostFinancial"))
         {
             System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
@@ -1565,7 +1585,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             var reason = $"إجراء فك ترحيل الفترة للجلسة {item.ShortSessionGuid} بواسطة المدير العام";
             var success = await postingService.UnpostPeriodAsync(item.SessionId, reason, CurrentUserId);
 
@@ -1602,7 +1622,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var postingService = AppServiceProvider.Resolve<IPostingService>();
+            var postingService = _postingService;
             string pdfPath = await postingService.RegenerateSettlementPdfAsync(item.SessionId);
 
             if (!string.IsNullOrEmpty(pdfPath) && System.IO.File.Exists(pdfPath))

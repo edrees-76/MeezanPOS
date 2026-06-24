@@ -57,21 +57,26 @@ public partial class ClosingAccountViewModel : ObservableObject
     [ObservableProperty]
     private bool settleIsProcessing;
 
+    private readonly IAuthenticationService _authService;
+
     public ClosingAccountViewModel() : this(
         AppServiceProvider.Resolve<IFinancialReportingService>(),
         AppServiceProvider.Resolve<IPostingService>(),
-        AppServiceProvider.Resolve<ISessionService>())
+        AppServiceProvider.Resolve<ISessionService>(),
+        AppServiceProvider.Resolve<IAuthenticationService>())
     {
     }
 
     public ClosingAccountViewModel(
         IFinancialReportingService reportingService,
         IPostingService postingService,
-        ISessionService sessionService)
+        ISessionService sessionService,
+        IAuthenticationService authService)
     {
         _reportingService = reportingService ?? throw new ArgumentNullException(nameof(reportingService));
         _postingService = postingService ?? throw new ArgumentNullException(nameof(postingService));
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
         _ = LoadReportAsync();
     }
@@ -247,7 +252,7 @@ public partial class ClosingAccountViewModel : ObservableObject
             }
 
             string currentUsername = _sessionService.CurrentUsername ?? "admin";
-            var authService = AppServiceProvider.Resolve<IAuthenticationService>();
+            var authService = _authService;
             var authenticatedUser = await authService.AuthenticateAsync(currentUsername, password);
 
             if (authenticatedUser == null)

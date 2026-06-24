@@ -158,6 +158,35 @@ public partial class BankSaleInputViewModel : ObservableObject
 
 public partial class DailyJournalViewModel : ObservableObject
 {
+    private readonly IWagesService _wagesService;
+    private readonly IBankService _bankService;
+    private readonly ILedgerService _ledgerService;
+
+    public DailyJournalViewModel() : this(
+        AppServiceProvider.Resolve<IWagesService>(),
+        AppServiceProvider.Resolve<IBankService>(),
+        AppServiceProvider.Resolve<ILedgerService>())
+    {
+    }
+
+    public DailyJournalViewModel(
+        IWagesService wagesService,
+        IBankService bankService,
+        ILedgerService ledgerService)
+    {
+        _wagesService = wagesService ?? throw new ArgumentNullException(nameof(wagesService));
+        _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
+        _ledgerService = ledgerService ?? throw new ArgumentNullException(nameof(ledgerService));
+
+        _ = LoadSuppliersAsync();
+        _ = LoadCustomExpenseTypesAsync();
+        _ = LoadWorkerNamesAsync();
+        _ = LoadBankAccountsAsync();
+        AddExpenseItem();
+        AddBankingItem();
+        _ = UpdateAvailableShiftsAsync(JournalDate);
+    }
+
     // --- معلومات الوردية ---
     [ObservableProperty]
     private DateTime journalDate = DateTime.Today;
@@ -308,7 +337,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            var service = AppServiceProvider.Resolve<IWagesService>();
+            var service = _wagesService;
             var names = await service.GetUniqueWorkerNamesAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -368,16 +397,7 @@ public partial class DailyJournalViewModel : ObservableObject
     [ObservableProperty]
     private bool isSaved;
 
-    public DailyJournalViewModel()
-    {
-        _ = LoadSuppliersAsync();
-        _ = LoadCustomExpenseTypesAsync();
-        _ = LoadWorkerNamesAsync();
-        _ = LoadBankAccountsAsync();
-        AddExpenseItem();
-        AddBankingItem();
-        _ = UpdateAvailableShiftsAsync(JournalDate);
-    }
+
 
     private async System.Threading.Tasks.Task LoadBankAccountsAsync()
     {
@@ -425,7 +445,19 @@ public partial class DailyJournalViewModel : ObservableObject
         }
     }
 
-    public DailyJournalViewModel(int journalId) : this()
+    public DailyJournalViewModel(int journalId) : this(
+        journalId,
+        AppServiceProvider.Resolve<IWagesService>(),
+        AppServiceProvider.Resolve<IBankService>(),
+        AppServiceProvider.Resolve<ILedgerService>())
+    {
+    }
+
+    public DailyJournalViewModel(
+        int journalId,
+        IWagesService wagesService,
+        IBankService bankService,
+        ILedgerService ledgerService) : this(wagesService, bankService, ledgerService)
     {
         // استخدام ديسباتشر لتنفيذ التحميل في الخلفية أو بعد التهيئة
         System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => 
@@ -779,7 +811,7 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var bankService = AppServiceProvider.Resolve<IBankService>();
+            var bankService = _bankService;
             
             // Check for duplicate shifts on the same day
             var targetDate = JournalDate.Date;
@@ -1152,7 +1184,7 @@ public partial class DailyJournalViewModel : ObservableObject
             }
 
             // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
-            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
+            var ledgerService = _ledgerService;
             var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
 
             foreach (var newExp in journal.ExpenseItems.Where(e => e.SupplierId != null))
