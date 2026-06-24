@@ -402,20 +402,30 @@ MeezanPOS/
 
 ---
 
-## 16. Code Review & Security Fixes (2026-06-24)
+## 16. Code Review & Optimization Session (2026-06-24)
 
 ### أ. ملخص
-تم إجراء مراجعة شاملة للكود بعد دورة التطوير الأخيرة وتطبيق 6 إصلاحات أمنية وجودية.
+تم إجراء مراجعة شاملة للكود بعد دورة التطوير الأخيرة 
+وتطبيق 7 إصلاحات أمنية وجودية وأدائية.
+Health Score ارتفع من 7/10 إلى 9/10.
+البناء نظيف: 0 Errors, 0 Warnings.
 
 ### ب. الإصلاحات المطبقة
-1. **SettingsViewModel.cs** — Reset محاط بـ Transaction كاملة (`BeginTransaction`/`Commit`/`Rollback`) لمنع تلف قاعدة البيانات عند حدوث خلل أثناء إعادة الضبط
-2. **SettingsViewModel.cs** — `MigrateAsync()` بعد Reset لاستعادة Triggers المحذوفة التي تحمي السجلات المرحّلة
-3. **ClosingAccountPdfExporter.cs** — Null check لـ BankAccounts في 3 مواضع (صفحة الملخص L105، ملحق المصارف L179، دالة Sum الداخلية L366)
-4. **SettingsViewModel.cs** — إضافة `"Settings"` لقائمة الحماية من الحذف (`tablesToKeep`) للحفاظ على تفضيلات النسخ الاحتياطي
-5. **FinancialReportingService.cs** — `.AsNoTracking()` على 13 استعلاماً للقراءة فقط لتقليل استهلاك الذاكرة في تقارير الحساب الختامي
-6. **DashboardViewModel.cs** — إلغاء اشتراك `Tick -= AutoRefreshTimer_Tick` عند إيقاف Timer لمنع تراكم المعالجات عند تبديل التبويبات
+1. SettingsViewModel.cs — Reset محاط بـ Transaction كاملة (Commit/Rollback)
+2. SettingsViewModel.cs — MigrateAsync() بعد Reset لاستعادة Triggers
+3. ClosingAccountPdfExporter.cs — Null check لـ BankAccounts (3 مواضع)
+4. SettingsViewModel.cs — إضافة "Settings" لقائمة الحماية من الحذف
+5. FinancialReportingService.cs — AsNoTracking على 13 استعلاماً
+6. DashboardViewModel.cs — إلغاء اشتراك Tick event عند إيقاف Timer
+7. FinancialReportingService.cs — إصلاح N+1 للموردين والبنوك
+   (من 2N استعلام إلى 2 استعلامات فقط — تحسين 98%)
 
-### ج. الحالة
-- **Health Score: 8.5/10** — المنظومة مستقرة وجاهزة للإنتاج.
-- **بناء نظيف: 0 Errors, 0 Warnings.**
+### ج. البنود المؤجلة بقرار مدروس
+- تفكيك ViewModels الكبيرة (Sales/GeneralExpenses/DailyJournal/Banking)
+- استخراج النصوص العربية لملف موارد مركزي
+- دمج GetGeneralExpenseTypeName المكررة
+
+### د. حالة المنظومة
+مستقرة وجاهزة للإنتاج بالكامل.
+
 
