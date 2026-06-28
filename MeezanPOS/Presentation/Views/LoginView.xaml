@@ -407,11 +407,16 @@
                                         VerticalAlignment="Center">
                                 
                                 <!-- Designer Logo -->
-                                <Image Source="/Resources/designer_logo.png"
-                                       Width="38" Height="38"
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center"
-                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                                <Border Background="White"
+                                        CornerRadius="8"
+                                        Padding="6"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,10,0">
+                                    <Image Source="/Resources/designer_logo.png"
+                                           Width="70" Height="70"
+                                           RenderOptions.BitmapScalingMode="HighQuality"
+                                           VerticalAlignment="Center"/>
+                                </Border>
                                 
                                 <!-- Designer Name -->
                                 <StackPanel Orientation="Vertical"

@@ -460,11 +460,16 @@
                     <Border Background="#1A2744" CornerRadius="12" Padding="24" Margin="0,0,0,20">
                         <StackPanel FlowDirection="RightToLeft">
                             <!-- Designer Logo — centered, large -->
-                            <Image Source="/Resources/designer_logo.png"
-                                   Width="130" Height="130"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,10,0,16"
-                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                            <Border Background="White"
+                                    CornerRadius="16"
+                                    Padding="16"
+                                    HorizontalAlignment="Center"
+                                    Margin="0,10,0,20">
+                                <Image Source="/Resources/designer_logo.png"
+                                       Width="180" Height="180"
+                                       RenderOptions.BitmapScalingMode="HighQuality"
+                                       HorizontalAlignment="Center"/>
+                            </Border>
 
                             <!-- Designer Name -->
                             <TextBlock Text="م. إدريس فتح الله الهرى"
