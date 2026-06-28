@@ -399,72 +399,30 @@
                         <StackPanel Grid.Row="4"
                                     Orientation="Vertical"
                                     HorizontalAlignment="Center"
-                                    Margin="0,8,0,10">
+                                    Margin="0,10,0,10">
 
-                            <StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        FlowDirection="RightToLeft">
+                            <TextBlock Text="تصميم وتنفيذ"
+                                       FontSize="11"
+                                       Foreground="#90A4AE"
+                                       HorizontalAlignment="Center"/>
 
-                                <!-- Text: right side -->
-                                <StackPanel Orientation="Vertical"
-                                            VerticalAlignment="Center"
-                                            Margin="0,0,12,0"
-                                            FlowDirection="RightToLeft">
+                            <TextBlock Text="م. إدريس فتح الله الهرى"
+                                       FontSize="13"
+                                       FontWeight="Bold"
+                                       Foreground="#FFD700"
+                                       HorizontalAlignment="Center"
+                                       FlowDirection="RightToLeft"/>
 
-                                    <TextBlock Text="تصميم وتنفيذ"
-                                               FontSize="11"
-                                               Foreground="#90A4AE"
-                                               HorizontalAlignment="Right"/>
+                            <TextBlock Text="EDREES .F. ELHERY"
+                                       FontSize="10"
+                                       Foreground="#64B5F6"
+                                       HorizontalAlignment="Center"/>
 
-                                    <TextBlock Text="م. إدريس فتح الله الهرى"
-                                               FontSize="13"
-                                               FontWeight="Bold"
-                                               Foreground="#FFD700"
-                                               HorizontalAlignment="Right"/>
-
-                                    <TextBlock Text="EDREES .F. ELHERY"
-                                               FontSize="10"
-                                               Foreground="#64B5F6"
-                                               HorizontalAlignment="Right"
-                                               FlowDirection="LeftToRight"/>
-                                </StackPanel>
-
-                                <!-- Logo: white background already in the PNG file -->
-                                <!-- Just show it with rounded corners clip -->
-                                <Border CornerRadius="12"
-                                        Width="90"
-                                        Height="90"
-                                        VerticalAlignment="Center">
-                                    
-                                    <!-- White glow halo behind logo -->
-                                    <Border.Effect>
-                                        <DropShadowEffect Color="White"
-                                                          BlurRadius="12"
-                                                          ShadowDepth="0"
-                                                          Opacity="0.85"/>
-                                    </Border.Effect>
-                                    
-                                    <Border.Clip>
-                                        <RectangleGeometry RadiusX="12" 
-                                                           RadiusY="12"
-                                                           Rect="0,0,90,90"/>
-                                    </Border.Clip>
-                                    
-                                    <Image Source="/Resources/designer_logo.png"
-                                           Width="90" Height="90"
-                                           Stretch="Uniform"
-                                           RenderOptions.BitmapScalingMode="HighQuality"/>
-                                </Border>
-
-                            </StackPanel>
-
-                            <!-- Copyright -->
                             <TextBlock Text="جميع الحقوق محفوظة © 2026"
                                        FontSize="10"
                                        Foreground="#546E7A"
                                        HorizontalAlignment="Center"
-                                       Margin="0,8,0,0"/>
+                                       Margin="0,6,0,0"/>
 
                         </StackPanel>
 
