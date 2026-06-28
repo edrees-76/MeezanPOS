@@ -432,17 +432,27 @@
 
                                 <!-- Logo: white background already in the PNG file -->
                                 <!-- Just show it with rounded corners clip -->
-                                <Border CornerRadius="10"
-                                        Width="70"
-                                        Height="70"
+                                <Border CornerRadius="12"
+                                        Width="90"
+                                        Height="90"
                                         VerticalAlignment="Center">
+                                    
+                                    <!-- White glow halo behind logo -->
+                                    <Border.Effect>
+                                        <DropShadowEffect Color="White"
+                                                          BlurRadius="12"
+                                                          ShadowDepth="0"
+                                                          Opacity="0.85"/>
+                                    </Border.Effect>
+                                    
                                     <Border.Clip>
-                                        <RectangleGeometry RadiusX="10" 
-                                                           RadiusY="10"
-                                                           Rect="0,0,70,70"/>
+                                        <RectangleGeometry RadiusX="12" 
+                                                           RadiusY="12"
+                                                           Rect="0,0,90,90"/>
                                     </Border.Clip>
+                                    
                                     <Image Source="/Resources/designer_logo.png"
-                                           Width="70" Height="70"
+                                           Width="90" Height="90"
                                            Stretch="Uniform"
                                            RenderOptions.BitmapScalingMode="HighQuality"/>
                                 </Border>
