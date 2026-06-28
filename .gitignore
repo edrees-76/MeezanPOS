@@ -43,3 +43,7 @@ ehthumbs.db
 
 # Folder config file
 Desktop.ini
+
+# Custom Publish & Installer build outputs
+Publish/
+Installer/Output/
