@@ -401,51 +401,60 @@
                                     HorizontalAlignment="Center"
                                     Margin="0,8,0,10">
 
-                            <!-- Row: logo + credit text side by side -->
                             <StackPanel Orientation="Horizontal"
                                         HorizontalAlignment="Center"
-                                        VerticalAlignment="Center">
+                                        VerticalAlignment="Center"
+                                        FlowDirection="RightToLeft">
 
-                                <!-- Logo: small, clean, no background -->
-                                <Image Source="/Resources/designer_logo.png"
-                                       Width="52" Height="52"
-                                       Margin="0,0,10,0"
-                                       VerticalAlignment="Center"
-                                       RenderOptions.BitmapScalingMode="HighQuality"
-                                       Opacity="0.92"/>
-
-                                <!-- Text: designed and developed by -->
+                                <!-- Text: right side -->
                                 <StackPanel Orientation="Vertical"
-                                            VerticalAlignment="Center">
+                                            VerticalAlignment="Center"
+                                            Margin="0,0,12,0"
+                                            FlowDirection="RightToLeft">
 
                                     <TextBlock Text="تصميم وتنفيذ"
-                                               FontSize="10"
+                                               FontSize="11"
                                                Foreground="#90A4AE"
-                                               HorizontalAlignment="Right"
-                                               FlowDirection="RightToLeft"/>
+                                               HorizontalAlignment="Right"/>
 
                                     <TextBlock Text="م. إدريس فتح الله الهرى"
                                                FontSize="13"
-                                               FontWeight="SemiBold"
+                                               FontWeight="Bold"
                                                Foreground="#FFD700"
-                                               HorizontalAlignment="Right"
-                                               FlowDirection="RightToLeft"/>
+                                               HorizontalAlignment="Right"/>
 
                                     <TextBlock Text="EDREES .F. ELHERY"
                                                FontSize="10"
                                                Foreground="#64B5F6"
-                                               HorizontalAlignment="Right"/>
-
+                                               HorizontalAlignment="Right"
+                                               FlowDirection="LeftToRight"/>
                                 </StackPanel>
+
+                                <!-- Logo: white background already in the PNG file -->
+                                <!-- Just show it with rounded corners clip -->
+                                <Border CornerRadius="10"
+                                        Width="70"
+                                        Height="70"
+                                        VerticalAlignment="Center">
+                                    <Border.Clip>
+                                        <RectangleGeometry RadiusX="10" 
+                                                           RadiusY="10"
+                                                           Rect="0,0,70,70"/>
+                                    </Border.Clip>
+                                    <Image Source="/Resources/designer_logo.png"
+                                           Width="70" Height="70"
+                                           Stretch="Uniform"
+                                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                                </Border>
+
                             </StackPanel>
 
-                            <!-- Copyright below -->
+                            <!-- Copyright -->
                             <TextBlock Text="جميع الحقوق محفوظة © 2026"
                                        FontSize="10"
-                                       Foreground="#607D8B"
+                                       Foreground="#546E7A"
                                        HorizontalAlignment="Center"
-                                       Margin="0,6,0,0"
-                                       FlowDirection="RightToLeft"/>
+                                       Margin="0,8,0,0"/>
 
                         </StackPanel>
 
