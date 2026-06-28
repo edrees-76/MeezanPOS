@@ -34,6 +34,24 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string lastAutoBackupDateText = "لا يوجد";
 
+    [ObservableProperty]
+    private int selectedTab = 0;
+
+    // Tab navigation support
+    public const string BackupTab = "Backup";
+    public const string AboutSystemTab = "AboutSystem";
+    public const string AboutDesignerTab = "AboutDesigner";
+
+    public void NavigateToTab(string tabIdentifier)
+    {
+        SelectedTab = tabIdentifier switch
+        {
+            "AboutSystem" => 1,
+            "AboutDesigner" => 2,
+            _ => 0
+        };
+    }
+
     public SettingsViewModel() : this(
         AppServiceProvider.Resolve<IDbContextFactory<AppDbContext>>(),
         AppServiceProvider.Resolve<ISessionService>(),

@@ -257,8 +257,8 @@
                             <RowDefinition Height="75"/>
                             <RowDefinition Height="75"/>
                             <RowDefinition Height="75"/>
-                            <RowDefinition Height="65"/>
-                            <RowDefinition Height="40"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
 
                         </Grid.RowDefinitions>
 
@@ -373,7 +373,8 @@
 
                         <StackPanel Grid.Row="3"
                                     HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
+                                    VerticalAlignment="Center"
+                                    Margin="0,10,0,0">
 
                             <!-- Remember Me Checkbox -->
                             <StackPanel Orientation="Horizontal"
@@ -389,31 +390,53 @@
                                            VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <!-- Designer Info -->
-                            <TextBlock Text="تصميم وتنفيذ م. إدريس فتح الله الهرى"
-                                       FontSize="13"
-                                       FontWeight="Medium"
-                                       Foreground="#A5B4FC"
-                                       Margin="0,6,0,0"
-                                       HorizontalAlignment="Center"
-                                       TextAlignment="Center"/>
-
                         </StackPanel>
 
                         <!-- ========================================================= -->
-                        <!-- Copyright -->
+                        <!-- Copyright & Branding -->
                         <!-- ========================================================= -->
 
                         <StackPanel Grid.Row="4"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center">
-
+                                    Orientation="Vertical" 
+                                    HorizontalAlignment="Center"
+                                    Margin="0,8,0,8">
+                            
+                            <!-- Logo + Designer Credit on same line -->
+                            <StackPanel Orientation="Horizontal" 
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
+                                
+                                <!-- Designer Logo -->
+                                <Image Source="/Resources/designer_logo.png"
+                                       Width="38" Height="38"
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                                
+                                <!-- Designer Name -->
+                                <StackPanel Orientation="Vertical"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="تصميم وتنفيذ"
+                                               FontFamily="Arial"
+                                               FontSize="10"
+                                               Foreground="#B0BEC5"
+                                               HorizontalAlignment="Center"/>
+                                    <TextBlock Text="م. إدريس فتح الله الهرى"
+                                               FontFamily="Arial"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#FFD700"
+                                               HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                            
+                            <!-- Copyright -->
                             <TextBlock Text="جميع الحقوق محفوظة © 2026"
-                                       FontSize="12"
-                                       Foreground="#94A3B8"
+                                       FontFamily="Arial"
+                                       FontSize="10"
+                                       Foreground="#78909C"
                                        HorizontalAlignment="Center"
-                                       TextAlignment="Center"/>
-
+                                       Margin="0,4,0,0"/>
                         </StackPanel>
 
                     </Grid>

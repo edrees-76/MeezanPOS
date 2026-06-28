@@ -65,12 +65,28 @@
 
                 <TextBlock Grid.Row="0" Text="أقسام الإعدادات" FontSize="15" FontWeight="Bold" Foreground="#0b1c30" Margin="16,0,16,16"/>
 
-                <ListBox Grid.Row="1" x:Name="SettingsTabsList" AutomationProperties.AutomationId="SettingsTabsList" Background="Transparent" BorderThickness="0" SelectedIndex="0">
+                <ListBox Grid.Row="1" x:Name="SettingsTabsList" AutomationProperties.AutomationId="SettingsTabsList" Background="Transparent" BorderThickness="0" SelectedIndex="{Binding SelectedTab, Mode=TwoWay}">
                     <!-- Tab 1: Backup & Restore -->
                     <ListBoxItem Style="{StaticResource SidebarTabItem}">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="DatabaseSync" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
                             <TextBlock Text="النسخ الاحتياطي والاسترجاع" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+
+                    <!-- Tab 2: عن المنظومة -->
+                    <ListBoxItem Style="{StaticResource SidebarTabItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="InformationOutline" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="عن المنظومة" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ListBoxItem>
+
+                    <!-- Tab 3: عن المصمم -->
+                    <ListBoxItem Style="{StaticResource SidebarTabItem}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountOutline" Width="20" Height="20" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="عن المصمم" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center"/>
                         </StackPanel>
                     </ListBoxItem>
                 </ListBox>
@@ -248,6 +264,287 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Tab 1: عن المنظومة -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabsList}" Value="1">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Grid with Close Button -->
+                <Grid Grid.Row="0" Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Title & Subtitle -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="عن المنظومة" FontSize="20" FontWeight="Bold" Foreground="#0b1c30"/>
+                        <TextBlock Text="معلومات حول منظومة ميزان ومميزاتها وإمكانياتها." FontSize="13" Foreground="#76777d" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Close Button -->
+                    <Button Grid.Column="1" 
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="Dashboard"
+                            Style="{StaticResource MaterialDesignIconButton}" 
+                            Foreground="#ef4444" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Left"
+                            Margin="16,0,0,0"
+                            Width="36" 
+                            Height="36">
+                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
+                    </Button>
+                </Grid>
+
+                <!-- About System Content Card -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <Border Background="#1A2744" CornerRadius="12" Padding="24" Margin="0,0,0,20">
+                        <StackPanel FlowDirection="RightToLeft">
+                            <!-- System Logo at top -->
+                            <Image Source="/Resources/meezan_logo.png" 
+                                   Width="80" Height="80"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,0,0,12"/>
+
+                            <!-- System Name -->
+                            <TextBlock Text="منظومة ميزان للمطاعم"
+                                       FontSize="22" FontWeight="Bold"
+                                       Foreground="#FFD700"
+                                       HorizontalAlignment="Center"/>
+
+                            <!-- Version -->
+                            <TextBlock Text="الإصدار 1.0 — 2026"
+                                       FontSize="13" Foreground="#90CAF9"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,16"/>
+
+                            <!-- Divider -->
+                            <Separator Background="#2A3A5C" Margin="40,0"/>
+
+                            <!-- Description -->
+                            <TextBlock TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"
+                                       TextAlignment="Center"
+                                       Margin="20,16,20,0"
+                                       Foreground="#CFD8DC"
+                                       FontSize="13"
+                                       Text="منظومة متكاملة لإدارة المطاعم تشمل المبيعات والمصاريف والأجور والموردين والحسابات البنكية وإصدار التقارير المالية الشاملة"/>
+
+                            <!-- Features Title -->
+                            <TextBlock Text="✦ المميزات والإمكانيات"
+                                       FontSize="15" FontWeight="Bold"
+                                       Foreground="#64B5F6"
+                                       Margin="20,20,20,10"/>
+
+                            <!-- Features List -->
+                            <StackPanel Margin="20,0">
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="إدارة الورديات والمبيعات اليومية" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="متابعة المصاريف العامة واليومية" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="إدارة أجور العمال وسلفهم" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="إدارة حسابات الموردين والفواتير" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="الخدمات المصرفية وتتبع الأرصدة" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="الحساب الختامي والتقارير المالية" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="لوحة قيادة تفاعلية مع رسوم بيانية" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="تصدير التقارير بصيغة PDF احترافية" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="نسخ احتياطي تلقائي مجدول" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="نظام صلاحيات وحماية بكلمة مرور" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="واجهة عربية RTL بالكامل" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,3">
+                                    <TextBlock Text="✓" Foreground="#4CAF50" FontWeight="Bold" Margin="0,0,8,0" FontSize="13"/>
+                                    <TextBlock Text="يعمل بدون إنترنت (Offline)" Foreground="#E0E0E0" FontSize="13"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Tab 2: عن المصمم -->
+            <Grid>
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedIndex, ElementName=SettingsTabsList}" Value="2">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Grid.Style>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header Grid with Close Button -->
+                <Grid Grid.Row="0" Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Title & Subtitle -->
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="عن المصمم" FontSize="20" FontWeight="Bold" Foreground="#0b1c30"/>
+                        <TextBlock Text="معلومات الاتصال وتفاصيل حول مطور ومصمم النظام." FontSize="13" Foreground="#76777d" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Close Button -->
+                    <Button Grid.Column="1" 
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="Dashboard"
+                            Style="{StaticResource MaterialDesignIconButton}" 
+                            Foreground="#ef4444" 
+                            VerticalAlignment="Top" 
+                            HorizontalAlignment="Left"
+                            Margin="16,0,0,0"
+                            Width="36" 
+                            Height="36">
+                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24"/>
+                    </Button>
+                </Grid>
+
+                <!-- Designer Profile Card -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <Border Background="#1A2744" CornerRadius="12" Padding="24" Margin="0,0,0,20">
+                        <StackPanel FlowDirection="RightToLeft">
+                            <!-- Designer Logo — centered, large -->
+                            <Image Source="/Resources/designer_logo.png"
+                                   Width="130" Height="130"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,10,0,16"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                            <!-- Designer Name -->
+                            <TextBlock Text="م. إدريس فتح الله الهرى"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="#FFD700"
+                                       HorizontalAlignment="Center"/>
+
+                            <!-- Title -->
+                            <TextBlock Text="EDREES .F. ELHERY"
+                                       FontSize="13"
+                                       Foreground="#90CAF9"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,2"/>
+
+                            <TextBlock Text="AI-Powered Software Developer"
+                                       FontSize="12"
+                                       Foreground="#78909C"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,0,0,16"/>
+
+                            <!-- Divider -->
+                            <Separator Background="#2A3A5C" Margin="40,0,40,16"/>
+
+                            <!-- About Text -->
+                            <TextBlock TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       Margin="20,0,20,16"
+                                       Foreground="#CFD8DC"
+                                       FontSize="13"
+                                       Text="مطور برامج متخصص في بناء منظومات إدارية متكاملة باستخدام تقنيات الذكاء الاصطناعي. يجمع بين الخبرة التقنية العميقة والفهم الدقيق لاحتياجات بيئة العمل العربية."/>
+
+                            <!-- Contact Title -->
+                            <TextBlock Text="✦ معلومات التواصل"
+                                       FontSize="15" FontWeight="Bold"
+                                       Foreground="#64B5F6"
+                                       Margin="20,0,20,12"
+                                       HorizontalAlignment="Center"/>
+
+                            <!-- Contact Items -->
+
+                            <!-- Phone 1 -->
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,6,0,0">
+                                <TextBlock Text="📱" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="0925126355"
+                                           FontSize="14" Foreground="#E0E0E0"
+                                           FontFamily="Courier New"/>
+                            </StackPanel>
+
+                            <!-- Phone 2 -->
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,6,0,0">
+                                <TextBlock Text="📱" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="0917730110"
+                                           FontSize="14" Foreground="#E0E0E0"
+                                           FontFamily="Courier New"/>
+                            </StackPanel>
+
+                            <!-- Location -->
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,6,0,0">
+                                <TextBlock Text="📍" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="بنغازي — ليبيا"
+                                           FontSize="14" Foreground="#E0E0E0"/>
+                            </StackPanel>
+
+                            <!-- Email -->
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,6,0,16">
+                                <TextBlock Text="✉️" FontSize="14" Margin="0,0,8,0"/>
+                                <TextBlock Text="EdreesElhery@gmail.com"
+                                           FontSize="13" Foreground="#90CAF9"
+                                           FontFamily="Courier New"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </ScrollViewer>
             </Grid>
             

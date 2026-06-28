@@ -45,6 +45,12 @@
     <Resource Include="..\perfect_login_bg.png">
       <Link>Assets\Images\perfect_login_bg.png</Link>
     </Resource>
+    <Resource Include="Presentation\Resources\designer_logo.png">
+      <Link>Resources\designer_logo.png</Link>
+    </Resource>
+    <Resource Include="..\mizan_3d_icon_final_transparent.png">
+      <Link>Resources\meezan_logo.png</Link>
+    </Resource>
   </ItemGroup>
 
 
