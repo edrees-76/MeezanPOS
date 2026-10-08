@@ -252,29 +252,33 @@ public partial class SettingsViewModel : ObservableObject
 
                 if (result == MessageBoxResult.Yes)
                 {
-                    // Clear connection pools to release file lock
-                    SqliteConnection.ClearAllPools();
+                    // 1. التحقق من أن الملف نسخة سليمة من قاعدة بيانات ميزان
+                    try
+                    {
+                        DatabaseBackupHelper.ValidateMeezanDatabase(selectedFile);
+                    }
+                    catch (InvalidDataException invalid)
+                    {
+                        MessageBox.Show(invalid.Message, "ملف غير صالح", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
 
                     var dbPath = AppDbContext.GetDatabasePath();
-                    var tempDbPath = dbPath + ".tmp";
 
-                    // Safe copy using Backup API
-                    using (var source = new SqliteConnection($"Data Source={selectedFile};Pooling=False"))
-                    using (var destination = new SqliteConnection($"Data Source={tempDbPath};Pooling=False"))
+                    // 2. نسخة أمان من البيانات الحالية قبل استبدالها (للتراجع عند الخطأ)
+                    var safetyBackup = Path.Combine(Path.GetDirectoryName(dbPath)!, "Backups",
+                        $"Meezan_before_restore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                    if (!await ExecuteBackupAsync(safetyBackup))
                     {
-                        await source.OpenAsync();
-                        await destination.OpenAsync();
-                        source.BackupDatabase(destination);
+                        MessageBox.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت الاستعادة.", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
                     }
 
-                    // Atomic replace
-                    if (File.Exists(dbPath))
-                    {
-                        File.Delete(dbPath);
-                    }
-                    File.Move(tempDbPath, dbPath);
+                    // 3. الاستبدال الآمن (يفرغ الاتصالات ويحذف ملفات WAL القديمة)
+                    await Task.Run(() => DatabaseBackupHelper.ReplaceDatabase(selectedFile, dbPath));
+                    Log.Warning("Database restored from {Source}; previous data saved to {Safety}", selectedFile, safetyBackup);
 
-                    MessageBox.Show("تم استعادة قاعدة البيانات بنجاح!\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً لتطبيق البيانات المسترجعة.", "نجاح الاستعادة", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"تم استعادة قاعدة البيانات بنجاح!\n\nتم حفظ نسخة من البيانات السابقة في:\n{safetyBackup}\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً لتطبيق البيانات المسترجعة.", "نجاح الاستعادة", MessageBoxButton.OK, MessageBoxImage.Information);
                     System.Windows.Application.Current.Shutdown();
                 }
             }
@@ -337,6 +341,17 @@ public partial class SettingsViewModel : ObservableObject
             try
             {
                 var dbPath = AppDbContext.GetDatabasePath();
+
+                // نسخة أمان إلزامية قبل الحذف: إعادة الضبط لا يمكن التراجع عنها إلا من هذه النسخة
+                var safetyBackup = Path.Combine(Path.GetDirectoryName(dbPath)!, "Backups",
+                    $"Meezan_before_reset_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+                if (!await ExecuteBackupAsync(safetyBackup))
+                {
+                    MessageBox.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت إعادة الضبط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+                Log.Warning("System reset requested by {User}; data saved to {Safety}", currentUsername, safetyBackup);
+
                 var tablesToKeep = new System.Collections.Generic.HashSet<string>
                 {
                     "Users",

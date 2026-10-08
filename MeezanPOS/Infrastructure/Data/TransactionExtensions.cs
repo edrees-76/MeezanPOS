@@ -16,15 +16,35 @@ namespace MeezanPOS.Infrastructure.Data;
 public sealed class ScopedTransaction : IDisposable, IAsyncDisposable
 {
     private readonly IDbContextTransaction? _owned;
+    private readonly DbContext? _context;
 
-    internal ScopedTransaction(IDbContextTransaction? owned) => _owned = owned;
+    internal ScopedTransaction(IDbContextTransaction? owned, DbContext? context = null)
+    {
+        _owned = owned;
+        _context = context;
+    }
 
     /// <summary>هل هذه المعاملة هي المالكة (الخارجية)؟</summary>
     public bool IsOwner => _owned != null;
 
     public Task CommitAsync() => _owned?.CommitAsync() ?? Task.CompletedTask;
 
-    public Task RollbackAsync() => _owned?.RollbackAsync() ?? Task.CompletedTask;
+    /// <summary>
+    /// التراجع عن المعاملة، ثم تفريغ متتبع التغييرات: الكيانات المعدلة في الذاكرة لم تعد تطابق
+    /// قاعدة البيانات، وتركها يجعل أول SaveChanges لاحق يحفظ تعديلات العملية الفاشلة.
+    /// </summary>
+    public async Task RollbackAsync()
+    {
+        if (_owned == null) return;
+        try
+        {
+            await _owned.RollbackAsync();
+        }
+        finally
+        {
+            _context?.ChangeTracker.Clear();
+        }
+    }
 
     public void Dispose() => _owned?.Dispose();
 
@@ -41,6 +61,7 @@ public static class TransactionExtensions
         var tx = isolationLevel.HasValue
             ? await database.BeginTransactionAsync(isolationLevel.Value)
             : await database.BeginTransactionAsync();
-        return new ScopedTransaction(tx);
+        var context = ((IDatabaseFacadeDependenciesAccessor)database).Context;
+        return new ScopedTransaction(tx, context);
     }
 }

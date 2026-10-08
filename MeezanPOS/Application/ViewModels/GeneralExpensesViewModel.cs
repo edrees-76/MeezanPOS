@@ -539,12 +539,24 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var bankService = _bankService;
             var ownerDebtService = _ownerDebtService;
 
+            if (await PeriodLock.IsDateLockedAsync(db, InputPaymentDate))
+            {
+                MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             if (EditingId.HasValue)
             {
                 // --- تعديل ---
                 var existing = db.GeneralExpenses.Find(EditingId.Value);
                 if (existing != null)
                 {
+                    if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
+                    {
+                        MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
                     if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
                     {
                         MessageBox.Show("لا يمكن تعديل مصروف مرحّل مالياً.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -1177,6 +1189,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
                 {
                     MessageBox.Show("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
+                {
+                    MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 

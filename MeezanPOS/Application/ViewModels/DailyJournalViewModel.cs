@@ -830,6 +830,12 @@ public partial class DailyJournalViewModel : ObservableObject
                 return;
             }
 
+            if (await MeezanPOS.Application.Services.PeriodLock.IsDateLockedAsync(context, targetDate))
+            {
+                StatusMessage = MeezanPOS.Application.Services.PeriodLock.LockedMessage;
+                return;
+            }
+
             MeezanPOS.Domain.Entities.DailyJournal? journal;
             var oldExpenseIds = new System.Collections.Generic.List<int>();
 
@@ -844,6 +850,19 @@ public partial class DailyJournalViewModel : ObservableObject
                 if (journal == null)
                 {
                     StatusMessage = "خطأ: لم يتم العثور على السجل لتعديله.";
+                    return;
+                }
+
+                // حماية على مستوى الحفظ وليس الواجهة فقط: اليومية المرحلة لا تُعدَّل إلا بعد فك ترحيلها
+                if (journal.FinancialStatus != FinancialStatus.Draft)
+                {
+                    StatusMessage = "لا يمكن تعديل يومية مرحّلة. يجب فك ترحيلها أولاً.";
+                    return;
+                }
+
+                if (await MeezanPOS.Application.Services.PeriodLock.IsDateLockedAsync(context, journal.JournalDate))
+                {
+                    StatusMessage = MeezanPOS.Application.Services.PeriodLock.LockedMessage;
                     return;
                 }
 

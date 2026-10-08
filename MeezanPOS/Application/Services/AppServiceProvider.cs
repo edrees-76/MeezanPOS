@@ -43,6 +43,13 @@ public static class AppServiceProvider
     /// <summary>
     /// اختصار لجلب خدمة. يُستخدم في ViewModels.
     /// </summary>
+    /// <remarks>
+    /// كل استدعاء ينشئ نطاقاً (Scope) جديداً: الخدمة وتبعياتها تتشارك AppDbContext واحداً خاصاً بها
+    /// (لازم لمشاركة المعاملة بين PostingService و CashLedgerService مثلاً)، لكن لا يُشارك السياق
+    /// مع بقية الشاشات. سابقاً كانت الخدمات تُجلب من الجذر فيعيش سياق واحد طوال عمر التطبيق،
+    /// فتبقى الكيانات القديمة في الذاكرة وتُحفظ تعديلات معاملات مُلغاة، ويُستخدم السياق من خيطين معاً.
+    /// الخدمات الـ Singleton (مثل الجلسة) تبقى واحدة لأن النطاق يعيدها من الجذر.
+    /// </remarks>
     public static T Resolve<T>() where T : notnull
-        => Provider.GetRequiredService<T>();
+        => Provider.CreateScope().ServiceProvider.GetRequiredService<T>();
 }

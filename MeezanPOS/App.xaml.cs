@@ -20,6 +20,15 @@ public partial class App : System.Windows.Application
 
     public App()
     {
+        // أخطاء الخيوط الخلفية والمهام غير المنتظرة: تسجيلها على الأقل بدلاً من ضياعها بصمت
+        AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+            Log.Fatal(e.ExceptionObject as Exception, "Unhandled non-UI exception (terminating: {Terminating})", e.IsTerminating);
+        System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (s, e) =>
+        {
+            Log.Error(e.Exception, "Unobserved task exception");
+            e.SetObserved();
+        };
+
         this.DispatcherUnhandledException += (s, e) => 
         {
             var fullError = e.Exception.Message;
@@ -30,7 +39,7 @@ public partial class App : System.Windows.Application
                 inner = inner.InnerException;
             }
 
-            Log.Fatal("FATAL: {Error}", fullError);
+            Log.Fatal(e.Exception, "FATAL: {Error}", fullError);
             try
             {
                 var logPath = System.IO.Path.Combine(
@@ -94,27 +103,19 @@ public partial class App : System.Windows.Application
             try
             {
                 var dbPath = MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath();
+                // النسخة المأخوذة في هذا التشغيل تحديداً (قبل الترقية) — هي الوحيدة الآمنة للاستعادة التلقائية
+                string? thisRunBackup = null;
                 if (System.IO.File.Exists(dbPath))
                 {
                     try
                     {
                         var backupDir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(dbPath)!, "Backups");
-                        if (!System.IO.Directory.Exists(backupDir))
-                        {
-                            System.IO.Directory.CreateDirectory(backupDir);
-                        }
                         var backupPath = System.IO.Path.Combine(backupDir, $"Meezan_backup_{System.DateTime.Now:yyyyMMdd_HHmmss}.db");
-                        System.IO.File.Copy(dbPath, backupPath, true);
+                        // Backup API بدلاً من File.Copy: يتضمن البيانات الموجودة في ملف WAL
+                        MeezanPOS.Infrastructure.Data.DatabaseBackupHelper.CreateBackup(dbPath, backupPath);
+                        thisRunBackup = backupPath;
 
-                        // الاحتفاظ بآخر 10 نسخ احتياطية فقط وحذف الأقدم
-                        var oldBackups = System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
-                            .Select(f => new System.IO.FileInfo(f))
-                            .OrderByDescending(f => f.CreationTime)
-                            .Skip(10);
-                        foreach (var file in oldBackups)
-                        {
-                            file.Delete();
-                        }
+                        MeezanPOS.Infrastructure.Data.DatabaseBackupHelper.PruneBackups(backupDir, "Meezan_backup_*.db");
                     }
                     catch (System.Exception ex)
                     {
@@ -131,27 +132,27 @@ public partial class App : System.Windows.Application
                     }
                     catch (System.Exception ex)
                     {
-                        var dbDir = System.IO.Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!;
-                        var backupDir = System.IO.Path.Combine(dbDir, "Backups");
-                        var latestBackup = System.IO.Directory.Exists(backupDir)
-                            ? System.IO.Directory.GetFiles(backupDir, "Meezan_backup_*.db")
-                                .Select(f => new System.IO.FileInfo(f))
-                                .OrderByDescending(f => f.CreationTime)
-                                .FirstOrDefault()
-                            : null;
+                        Log.Error(ex, "فشل ترقية قاعدة البيانات");
 
-                        string restoreMessage = "";
-                        if (latestBackup != null)
+                        string restoreMessage;
+                        if (thisRunBackup != null)
                         {
                             try
                             {
-                                System.IO.File.Copy(latestBackup.FullName, dbPath, true);
-                                restoreMessage = "\nتم استعادة آخر نسخة احتياطية سليمة لقاعدة البيانات تلقائياً.";
+                                context.Dispose();
+                                MeezanPOS.Infrastructure.Data.DatabaseBackupHelper.ReplaceDatabase(thisRunBackup, dbPath);
+                                restoreMessage = "\nتم استعادة نسخة قاعدة البيانات المأخوذة قبل الترقية تلقائياً.";
                             }
                             catch (System.Exception restoreEx)
                             {
+                                Log.Error(restoreEx, "فشلت الاستعادة التلقائية بعد فشل الترقية");
                                 restoreMessage = $"\nفشلت محاولة الاستعادة التلقائية: {restoreEx.Message}";
                             }
+                        }
+                        else
+                        {
+                            // لا نسترجع نسخة قديمة من تشغيل سابق تلقائياً حتى لا تضيع بيانات أيام دون علم المستخدم
+                            restoreMessage = "\nلم تُستعد أي نسخة تلقائياً. يمكنك استعادة نسخة يدوياً من مجلد Backups.";
                         }
 
                         Dispatcher.Invoke(() =>
@@ -181,9 +182,23 @@ public partial class App : System.Windows.Application
                     // تصحيح قيم RowVersion التالفة أو المخزنة كـ BLOB في SQLite لضمان نجاح الترحيل المالي وتجنب تعارض التزامن
                     try
                     {
-                        context.Database.ExecuteSqlRaw("UPDATE DailyJournals SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
-                        context.Database.ExecuteSqlRaw("UPDATE SaleHeaders SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
-                        context.Database.ExecuteSqlRaw("UPDATE GeneralExpenses SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;");
+                        // كل جدول في محاولة مستقلة: فشل أحدها (مثلاً بسبب مشغلات حماية السجلات المرحلة) لا يمنع البقية
+                        foreach (var sql in new[]
+                        {
+                            "UPDATE DailyJournals SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;",
+                            "UPDATE SaleHeaders SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;",
+                            "UPDATE GeneralExpenses SET RowVersion = 1 WHERE typeof(RowVersion) = 'blob' OR RowVersion = 0 OR RowVersion IS NULL;"
+                        })
+                        {
+                            try
+                            {
+                                context.Database.ExecuteSqlRaw(sql);
+                            }
+                            catch (System.Exception ex)
+                            {
+                                Log.Warning(ex, "خطأ أثناء تصحيح حقول RowVersion: {Sql}", sql);
+                            }
+                        }
                     }
                     catch (System.Exception ex)
                     {

@@ -38,6 +38,8 @@ namespace MeezanPOS.Application.Services
                 if (postableEntity.FinancialStatus == FinancialStatus.Posted || postableEntity.FinancialStatus == FinancialStatus.Archived)
                     throw new Exception("لا يمكن ترحيل حركة مرحّلة مسبقاً.");
 
+                await EnsureEntityPeriodOpenAsync(entity);
+
                 // تحديث الحالة المالية
                 postableEntity.FinancialStatus = FinancialStatus.Posted;
                 postableEntity.PostedDate = DateTime.UtcNow;
@@ -103,6 +105,9 @@ namespace MeezanPOS.Application.Services
 
                 if (postableEntity.FinancialStatus != FinancialStatus.Posted)
                     throw new Exception("لا يمكن فك ترحيل حركة غير مرحّلة.");
+
+                // القفل حسب التاريخ يشمل أيضاً السجلات المرحلة فردياً داخل الفترة المسواة
+                await EnsureEntityPeriodOpenAsync(entity);
 
                 // تحقق إذا كانت الوردية تابعة لجلسة مغلقة ولم يلغى قفلها
                 if (postableEntity.PostingSessionId.HasValue)
@@ -484,11 +489,11 @@ namespace MeezanPOS.Application.Services
                     .Include(j => j.ExpenseItems)
                     .Include(j => j.BankingItems)
                     .Include(j => j.Adjustments)
-                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate <= DateTime.UtcNow)
+                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate <= DateTime.Now)
                     .ToListAsync();
 
                 var draftExpenses = await _context.GeneralExpenses
-                    .Where(e => e.FinancialStatus == FinancialStatus.Draft && e.PaymentDate <= DateTime.UtcNow)
+                    .Where(e => e.FinancialStatus == FinancialStatus.Draft && e.PaymentDate <= DateTime.Now)
                     .ToListAsync();
 
                 var totalSalesVal = draftJournals.Sum(j => j.TotalSales);
@@ -963,6 +968,18 @@ namespace MeezanPOS.Application.Services
                     await _context.SaveChangesAsync();
                 }
             }
+        }
+
+        private async Task EnsureEntityPeriodOpenAsync(object entity)
+        {
+            DateTime? date = entity switch
+            {
+                DailyJournal j => j.JournalDate,
+                GeneralExpense e => e.PaymentDate,
+                _ => null
+            };
+            if (date.HasValue)
+                await PeriodLock.EnsureDateOpenAsync(_context, date.Value);
         }
 
         /// <summary>
