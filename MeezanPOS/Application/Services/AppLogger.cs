@@ -11,9 +11,10 @@ public static class AppLogger
 {
     public static void Initialize()
     {
+        // بجوار قاعدة البيانات: نسخة التجربة (MEEZANPOS_DATA_DIR) لا تكتب في سجلات البيانات الحقيقية
         var logDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MeezanPOS", "Logs");
+            Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!,
+            "Logs");
         Directory.CreateDirectory(logDir);
 
         Log.Logger = new LoggerConfiguration()

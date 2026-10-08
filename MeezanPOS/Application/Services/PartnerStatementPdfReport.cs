@@ -23,7 +23,6 @@ public class PartnerStatementPdfReport
         DateTime startDate,
         DateTime endDate)
     {
-        QuestPDF.Settings.License = LicenseType.Community;
 
         Document.Create(container =>
         {

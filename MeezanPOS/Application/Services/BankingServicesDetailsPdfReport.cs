@@ -29,7 +29,6 @@ public class BankingServicesDetailsPdfReport : IDocument
         _account = account;
         _items = items;
         _shiftTotals = shiftTotals;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public void Compose(IDocumentContainer container)

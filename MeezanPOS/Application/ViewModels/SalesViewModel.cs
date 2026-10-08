@@ -780,7 +780,6 @@ public partial class SalesViewModel : ObservableObject
     {
         try
         {
-            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
             var filePath = System.IO.Path.Combine(
                 System.IO.Path.GetTempPath(), 

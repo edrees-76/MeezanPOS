@@ -1,0 +1,511 @@
+<UserControl x:Class="MeezanPOS.Presentation.Views.SalesCashTab"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
+             mc:Ignorable="d"
+             FlowDirection="RightToLeft">
+    <!-- رصيد النقدية الحالي وحركاتها: جزء من شاشة المبيعات (SalesView)، يرث DataContext منها -->
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SalesViewResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+        <Grid Grid.Row="4">
+
+
+
+            <Grid.Style>
+
+
+
+                <Style TargetType="Grid">
+
+
+
+                    <Setter Property="Visibility" Value="Collapsed"/>
+
+
+
+                    <Style.Triggers>
+
+
+
+                        <DataTrigger Binding="{Binding SelectedTab}" Value="2">
+
+
+
+                            <Setter Property="Visibility" Value="Visible"/>
+
+
+
+                        </DataTrigger>
+
+
+
+                    </Style.Triggers>
+
+
+
+                </Style>
+
+
+
+            </Grid.Style>
+
+
+
+
+
+
+
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+
+
+
+                <Grid>
+
+
+
+                    <Grid.RowDefinitions>
+
+
+
+                        <RowDefinition Height="Auto"/>
+
+
+
+                        <RowDefinition Height="*"/>
+
+
+
+                    </Grid.RowDefinitions>
+
+
+
+
+
+
+
+                    <!-- Header & Summary Card -->
+
+
+
+                    <Border Grid.Row="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
+
+
+
+                        <Grid>
+
+
+
+                            <Grid.ColumnDefinitions>
+
+
+
+                                <ColumnDefinition Width="Auto"/>
+
+
+
+                                <ColumnDefinition Width="*"/>
+
+
+
+                                <ColumnDefinition Width="Auto"/>
+
+
+
+                            </Grid.ColumnDefinitions>
+
+
+
+
+
+
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+
+
+                                <StackPanel VerticalAlignment="Center">
+
+
+
+                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium"/>
+
+
+
+                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
+
+
+
+                                </StackPanel>
+
+
+
+                            </StackPanel>
+
+
+
+
+
+
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+
+
+
+                                 <!-- Rebuild Warning Alert -->
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}"
+
+
+
+                                         Height="40" Width="140" Padding="0" Margin="0,0,10,0"
+
+
+
+                                         Background="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}"
+
+
+
+                                         Cursor="Help"
+
+
+
+                                         Visibility="{Binding IsRebuildRequired, Converter={StaticResource BooleanToVisibilityConverter}}"
+
+
+
+                                         ToolTip="تنبيه: يجب إعادة بناء الدفتر بسبب تسجيل حركة بتاريخ سابق أو تعديل مصروف/سداد بأثر رجعي!">
+
+
+
+                                     <Grid Width="140">
+
+
+
+                                        <materialDesign:PackIcon Kind="Alert" Width="28" Height="28" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+
+
+                                     </Grid>
+
+
+
+                                 </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                        Content="إعادة بناء الدفتر" 
+
+
+
+                                        Command="{Binding RebuildCashLedgerCommand}" 
+
+
+
+                                        BorderBrush="{StaticResource Brush.Pending}" Foreground="{StaticResource Brush.Pending}"
+
+
+
+                                        Height="40" Width="140" Margin="0,0,10,0" Cursor="Hand" ToolTip="إعادة حساب الأرصدة التراكمية لتصحيح أي خلل"/>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+
+
+
+                                         Command="{Binding OpenSettleOwnerCashDialogCommand}" 
+
+
+
+                                         Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}"
+
+
+
+                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
+
+
+
+                                      <StackPanel Orientation="Horizontal">
+
+
+
+                                          <materialDesign:PackIcon Kind="CashCheck" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                          <TextBlock Text="تسوية كاش المالك" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                      </StackPanel>
+
+
+
+                                  </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+
+
+
+                                         Command="{Binding OpenSettlementArchiveCommand}" 
+
+
+
+                                         BorderBrush="{StaticResource Brush.TextMuted}" Foreground="{StaticResource Brush.TextMuted}"
+
+
+
+                                         Height="40" Margin="0,0,10,0" Cursor="Hand">
+
+
+
+                                      <StackPanel Orientation="Horizontal">
+
+
+
+                                          <materialDesign:PackIcon Kind="History" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+
+
+
+                                          <TextBlock Text="أرشيف التسويات" VerticalAlignment="Center" FontWeight="Bold"/>
+
+
+
+                                      </StackPanel>
+
+
+
+                                  </Button>
+
+
+
+
+
+
+
+                                 <Button Style="{StaticResource MaterialDesignRaisedButton}" 
+
+
+
+                                        Content="تحديث البيانات" 
+
+
+
+                                        Command="{Binding LoadCashMovementsCommand}" 
+
+
+
+                                        Background="{StaticResource Brush.Income}" BorderBrush="{StaticResource Brush.Income}"
+
+
+
+                                        Height="40" Cursor="Hand"/>
+
+
+
+                            </StackPanel>
+
+
+
+                        </Grid>
+
+
+
+                    </Border>
+
+
+
+
+
+
+
+                    <!-- Cash Movements DataGrid -->
+
+
+
+                    <Grid Grid.Row="1">
+
+
+
+                        <DataGrid CanUserSortColumns="False" Margin="0" 
+
+
+
+                                  ItemsSource="{Binding CashMovements}" 
+
+
+
+                                  AutoGenerateColumns="False"
+
+
+
+                                  CanUserAddRows="False" 
+
+
+
+                                  IsReadOnly="True"
+
+
+
+                                  HeadersVisibility="Column"
+
+
+
+                                  Background="Transparent"
+
+
+
+                                  BorderThickness="0"
+
+
+
+                                  RowHeight="50"
+
+
+
+                                  GridLinesVisibility="Horizontal"
+
+
+
+                                  HorizontalScrollBarVisibility="Auto"
+
+
+
+                                  HorizontalGridLinesBrush="#f1f5f9">
+
+
+
+                            <DataGrid.Columns>
+
+
+
+                                <DataGridTextColumn Header="م" Binding="{Binding Sequence}" Width="Auto" MinWidth="40"/>
+
+
+
+                                <DataGridTextColumn Header="التاريخ" Binding="{Binding TransactionDate, StringFormat=\{0:dd-MM-yyyy hh:mm tt\}}" Width="Auto" MinWidth="150"/>
+
+
+
+                                <DataGridTextColumn Header="البيان" Binding="{Binding Notes}" Width="*" MinWidth="250"/>
+
+
+
+                                <DataGridTemplateColumn Header="المبلغ" Width="Auto" MinWidth="120">
+
+
+
+                                    <DataGridTemplateColumn.CellTemplate>
+
+
+
+                                        <DataTemplate>
+
+
+
+                                            <Button Command="{Binding DataContext.ViewCashMovementDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+
+
+
+                                                    CommandParameter="{Binding}"
+
+
+
+                                                    Style="{StaticResource MaterialDesignFlatButton}"
+
+
+
+                                                    Cursor="Hand" Padding="4,0" Height="Auto"
+
+
+
+                                                    ToolTip="اضغط لعرض التفاصيل">
+
+
+
+                                                <TextBlock Text="{Binding Amount, StringFormat=\{0:N2\} د.ل}" 
+
+
+
+                                                           FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}" 
+
+
+
+                                                           TextDecorations="Underline"/>
+
+
+
+                                            </Button>
+
+
+
+                                        </DataTemplate>
+
+
+
+                                    </DataGridTemplateColumn.CellTemplate>
+
+
+
+                                </DataGridTemplateColumn>
+
+
+
+                                <DataGridTextColumn Header="الرصيد بعد الحركة" Binding="{Binding BalanceAfter, StringFormat=\{0:N2\} د.ل}" Width="Auto" MinWidth="130"/>
+
+
+
+                            </DataGrid.Columns>
+
+
+
+                        </DataGrid>
+
+
+
+                    </Grid>
+
+
+
+                </Grid>
+
+
+
+            </Border>
+
+
+
+        </Grid>
+</UserControl>

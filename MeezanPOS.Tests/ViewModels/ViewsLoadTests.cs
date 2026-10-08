@@ -113,6 +113,13 @@ public class ViewsLoadTests
         {
             var xaml = File.ReadAllText(file);
             var localKeys = Regex.Matches(xaml, "x:Key=\"([^\"]+)\"").Select(m => m.Groups[1].Value).ToHashSet();
+            // مفاتيح القواميس المدمجة من ملفات مجاورة (مثل SalesViewResources.xaml)
+            foreach (Match src in Regex.Matches(xaml, "<ResourceDictionary Source=\"([\\w.]+\\.xaml)\""))
+            {
+                var merged = Path.Combine(viewsDir, src.Groups[1].Value);
+                if (File.Exists(merged))
+                    localKeys.UnionWith(Regex.Matches(File.ReadAllText(merged), "x:Key=\"([^\"]+)\"").Select(k => k.Groups[1].Value));
+            }
             foreach (Match m in Regex.Matches(xaml, @"\{StaticResource\s+([^}\s]+)\s*\}"))
             {
                 var key = m.Groups[1].Value;

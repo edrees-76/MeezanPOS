@@ -14,7 +14,6 @@ public class GeneralExpensePdfReport
     public GeneralExpensePdfReport(GeneralExpensesViewModel vm)
     {
         _vm = vm;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public void GeneratePdf(string filePath)

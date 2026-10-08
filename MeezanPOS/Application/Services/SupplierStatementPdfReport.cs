@@ -24,7 +24,6 @@ public class SupplierStatementPdfReport
         DateTime? filterEndDate,
         List<SupplierInvoice>? detailedInvoices = null)
     {
-        QuestPDF.Settings.License = LicenseType.Community;
 
         Document.Create(container =>
         {

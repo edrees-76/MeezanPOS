@@ -19,7 +19,6 @@ namespace MeezanPOS.Application.Services
             List<WorkerLedgerEntry> transactions,
             bool autoOpen)
         {
-            QuestPDF.Settings.License = LicenseType.Community;
 
             Document.Create(container =>
             {

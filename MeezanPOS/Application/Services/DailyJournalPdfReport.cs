@@ -14,7 +14,6 @@ public class DailyJournalPdfReport : IDocument
     public DailyJournalPdfReport(DailyJournalViewModel vm)
     {
         _vm = vm;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public void Compose(IDocumentContainer container)

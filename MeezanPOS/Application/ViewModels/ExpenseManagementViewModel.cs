@@ -502,7 +502,6 @@ public partial class ExpenseManagementViewModel : ObservableObject
                 return;
             }
 
-            QuestPDF.Settings.License = LicenseType.Community;
             string pdfPath = Path.Combine(Path.GetTempPath(), $"ExpenseSummaries_{DateTime.Now.Ticks}.pdf");
             
             var document = Document.Create(container =>
@@ -599,7 +598,6 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         try
         {
-            QuestPDF.Settings.License = LicenseType.Community;
             string pdfPath = Path.Combine(Path.GetTempPath(), $"Expenses_{SelectedDateDetails:yyyyMMdd}_{DateTime.Now.Ticks}.pdf");
             
             var document = Document.Create(container =>

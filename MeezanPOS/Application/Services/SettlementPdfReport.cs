@@ -38,7 +38,6 @@ public class SettlementPdfReport : IDocument
         _totalSales = totalSales;
         _totalExpenses = totalExpenses;
         _sessionGuid = sessionGuid;
-        QuestPDF.Settings.License = LicenseType.Community;
     }
 
     public static void GeneratePdf(

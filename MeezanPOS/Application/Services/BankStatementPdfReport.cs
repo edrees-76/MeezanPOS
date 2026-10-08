@@ -22,7 +22,6 @@ public class BankStatementPdfReport
         DateTime startDate,
         DateTime endDate)
     {
-        QuestPDF.Settings.License = LicenseType.Community;
 
         Document.Create(container =>
         {
