@@ -31,3 +31,24 @@ public class UpdateCheckerTests
         new UpdateChecker.UpdateInfo(current, new Version(1, 0, 9), "v1.0.9", "").IsNewer.Should().BeFalse();
     }
 }
+
+public class PdfLicensingTests
+{
+    [Theory]
+    [InlineData("Professional", QuestPDF.Infrastructure.LicenseType.Professional)]
+    [InlineData("enterprise", QuestPDF.Infrastructure.LicenseType.Enterprise)]
+    [InlineData(null, QuestPDF.Infrastructure.LicenseType.Community)]
+    [InlineData("garbage", QuestPDF.Infrastructure.LicenseType.Community)]
+    public void StoredValue_IsAppliedToQuestPdf(string? stored, QuestPDF.Infrastructure.LicenseType expected)
+    {
+        try
+        {
+            MeezanPOS.Infrastructure.Reports.PdfLicensing.Apply(stored).Should().Be(expected);
+            QuestPDF.Settings.License.Should().Be(expected);
+        }
+        finally
+        {
+            MeezanPOS.Infrastructure.Reports.PdfLicensing.Apply(QuestPDF.Infrastructure.LicenseType.Community);
+        }
+    }
+}

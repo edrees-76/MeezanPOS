@@ -138,6 +138,11 @@ public partial class App : System.Windows.Application
                     {
                         context.Database.Migrate();
                         MeezanPOS.Infrastructure.Data.AppDbContext.SeedData();
+
+                        // نوع ترخيص مكتبة التقارير المختار من الإعدادات (الافتراضي Community)
+                        var license = context.Settings.AsNoTracking()
+                            .FirstOrDefault(s => s.Key == MeezanPOS.Infrastructure.Reports.PdfLicensing.SettingKey)?.Value;
+                        MeezanPOS.Infrastructure.Reports.PdfLicensing.Apply(license);
                     }
                     catch (System.Exception ex)
                     {

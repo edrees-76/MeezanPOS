@@ -88,6 +88,10 @@ public partial class SettingsViewModel : ObservableObject
                 SelectedFrequency = freq;
             }
 
+            var licenseSetting = await context.Settings.FirstOrDefaultAsync(s => s.Key == MeezanPOS.Infrastructure.Reports.PdfLicensing.SettingKey);
+            SelectedPdfLicense = PdfLicenseOptions.FirstOrDefault(o => o.Value.ToString() == licenseSetting?.Value)
+                                 ?? PdfLicenseOptions[0];
+
             var dateSetting = await context.Settings.FirstOrDefaultAsync(s => s.Key == "LastAutoBackupDate");
             if (dateSetting != null)
             {
@@ -110,6 +114,27 @@ public partial class SettingsViewModel : ObservableObject
         {
             _ = SaveSettingAsync("PreferredBackupPath", value);
         }
+    }
+
+    public sealed record PdfLicenseOption(QuestPDF.Infrastructure.LicenseType Value, string Label);
+
+    /// <summary>أنواع ترخيص مكتبة التقارير QuestPDF.</summary>
+    public System.Collections.Generic.IReadOnlyList<PdfLicenseOption> PdfLicenseOptions { get; } = new[]
+    {
+        new PdfLicenseOption(QuestPDF.Infrastructure.LicenseType.Community, "Community — مجاني (دخل سنوي أقل من مليون دولار)"),
+        new PdfLicenseOption(QuestPDF.Infrastructure.LicenseType.Professional, "Professional — ترخيص مدفوع"),
+        new PdfLicenseOption(QuestPDF.Infrastructure.LicenseType.Enterprise, "Enterprise — ترخيص مدفوع للمؤسسات"),
+    };
+
+    [ObservableProperty]
+    private PdfLicenseOption? selectedPdfLicense;
+
+    partial void OnSelectedPdfLicenseChanged(PdfLicenseOption? value)
+    {
+        if (value == null) return;
+        MeezanPOS.Infrastructure.Reports.PdfLicensing.Apply(value.Value);
+        if (!_isInitializing)
+            _ = SaveSettingAsync(MeezanPOS.Infrastructure.Reports.PdfLicensing.SettingKey, value.Value.ToString());
     }
 
     partial void OnSelectedFrequencyChanged(BackupFrequency value)

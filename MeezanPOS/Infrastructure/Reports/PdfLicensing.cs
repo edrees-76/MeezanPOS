@@ -1,19 +1,38 @@
+using System;
 using System.Runtime.CompilerServices;
+using QuestPDF.Infrastructure;
 
 namespace MeezanPOS.Infrastructure.Reports;
 
 /// <summary>
-/// ضبط ترخيص QuestPDF مرة واحدة عند تحميل التجميعة (يشمل التطبيق والاختبارات).
+/// نوع ترخيص مكتبة التقارير QuestPDF.
 /// </summary>
 /// <remarks>
-/// ترخيص Community مجاني للمنشآت التي يقل دخلها السنوي عن مليون دولار. إذا تجاوزه المطعم
-/// يجب شراء ترخيص Professional وتغيير القيمة هنا فقط.
+/// Community مجاني للمنشآت التي يقل دخلها السنوي الإجمالي عن مليون دولار. إذا تجاوزه المطعم
+/// يُشترى ترخيص Professional أو Enterprise ويُختار من الإعدادات (يُحفظ في جدول Settings بالمفتاح
+/// <see cref="SettingKey"/> ويُطبّق عند بدء التشغيل) دون أي تعديل في الكود.
 /// </remarks>
-internal static class PdfLicensing
+public static class PdfLicensing
 {
+    public const string SettingKey = "QuestPdfLicense";
+
+    public static LicenseType Current { get; private set; } = LicenseType.Community;
+
+    /// <summary>الافتراضي عند تحميل التجميعة (يشمل الاختبارات) قبل قراءة الإعداد.</summary>
     [ModuleInitializer]
-    internal static void Configure()
+    internal static void Configure() => Apply(LicenseType.Community);
+
+    public static void Apply(LicenseType license)
     {
-        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+        Current = license;
+        QuestPDF.Settings.License = license;
+    }
+
+    /// <summary>تطبيق القيمة المحفوظة في الإعدادات؛ القيم غير المعروفة تعود إلى Community.</summary>
+    public static LicenseType Apply(string? storedValue)
+    {
+        var license = Enum.TryParse<LicenseType>(storedValue, ignoreCase: true, out var parsed) ? parsed : LicenseType.Community;
+        Apply(license);
+        return license;
     }
 }
