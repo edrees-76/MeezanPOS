@@ -143,7 +143,7 @@ public class CashLedgerService : ICashLedgerService
                 BalanceAfter = newBalance,
                 SourceType = original.SourceType,
                 SourceId = original.SourceId,
-                Notes = $"عكس حركة رقم {original.Id} - السبب: {reason ?? "إلغاء العملية"}",
+                Notes = $"{CashMovementQueries.ReversalNotePrefix} {original.Id} - السبب: {reason ?? "إلغاء العملية"}",
                 IsReversed = false // هذه حركة عكسية صالحة وليست ملغاة
             };
 
@@ -192,7 +192,7 @@ public class CashLedgerService : ICashLedgerService
         await _semaphore.WaitAsync();
         try
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
 
             // الترتيب بـ Id فقط لأنه AUTOINCREMENT متسلسل
             var movements = await _context.CashMovements

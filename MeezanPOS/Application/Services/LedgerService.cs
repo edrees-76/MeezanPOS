@@ -38,7 +38,7 @@ public class LedgerService : ILedgerService
 
     public async Task PostInvoiceAsync(SupplierInvoice invoice)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var supplier = await _context.Suppliers.FindAsync(invoice.SupplierId);
@@ -89,7 +89,7 @@ public class LedgerService : ILedgerService
     /// </remarks>
     public async Task PostPaymentAsync(int supplierId, decimal amount, TransactionSourceType source, int sourceId, DateTime paymentDate, int? targetInvoiceId = null, string? receiptNumber = null, string? notes = null, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var supplier = await _context.Suppliers.FindAsync(supplierId);
@@ -254,7 +254,7 @@ public class LedgerService : ILedgerService
     /// </summary>
     public async Task RebuildSupplierLedgerAsync(int supplierId)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             await RebuildSupplierLedgerInternalAsync(supplierId);
@@ -272,7 +272,7 @@ public class LedgerService : ILedgerService
 
     public async Task UpdateInvoiceAsync(SupplierInvoice invoice, List<SupplierInvoiceItem> newItems)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var dbInvoice = await _context.SupplierInvoices
@@ -351,7 +351,7 @@ public class LedgerService : ILedgerService
 
     public async Task UpdatePaymentAsync(int transactionId, decimal amount, DateTime paymentDate, string? receiptNumber, string? notes, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var ledgerTx = await _context.SupplierTransactions
@@ -414,7 +414,7 @@ public class LedgerService : ILedgerService
             // عكس الحركة النقدية القديمة للمصروف إن وجدت
             if (oldExpense != null)
             {
-                var oldCashMovement = await _context.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == oldExpense.Id && !m.IsReversed);
+                var oldCashMovement = await _context.CashMovements.FindLiveForSourceAsync(SourceTypes.GeneralExpense, oldExpense.Id);
                 if (oldCashMovement != null)
                 {
                     await _cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل دفعة المورد");

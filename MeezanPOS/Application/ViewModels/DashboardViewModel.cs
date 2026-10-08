@@ -559,7 +559,8 @@ public partial class DashboardViewModel : ObservableObject
                     .ToListAsync();
 
                 var dbCashMovements = await context.CashMovements
-                    .Where(m => m.TransactionDate >= start && m.TransactionDate <= end && !m.IsDeleted && !m.IsReversed)
+                    .Where(m => m.TransactionDate >= start && m.TransactionDate <= end && !m.IsDeleted)
+                    .WhereLive()
                     .OrderByDescending(m => m.TransactionDate)
                     .Take(10)
                     .Select(m => new RecentActivity

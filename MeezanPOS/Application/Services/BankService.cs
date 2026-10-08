@@ -116,7 +116,7 @@ public class BankService : IBankService
 
     public async Task RecordInternalTransferAsync(int fromAccountId, int toAccountId, decimal amount, string? notes, DateTime date)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var fromAccount = await _context.BankAccounts.FindAsync(fromAccountId);
@@ -194,7 +194,7 @@ public class BankService : IBankService
 
     public async Task ClearCardPaymentAsync(int reconciliationId, int bankAccountId, DateTime clearDate)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var recon = await _context.CardPaymentReconciliations

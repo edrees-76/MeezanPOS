@@ -653,10 +653,10 @@
                             </Grid.ColumnDefinitions>
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="تاريخ المبيعات:" Foreground="#64748b" FontSize="13"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.JournalDate, StringFormat=yyyy/MM/dd}" FontWeight="SemiBold" Foreground="#1E293B"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.DailyJournal.JournalDate, StringFormat=yyyy/MM/dd}" FontWeight="SemiBold" Foreground="#1E293B"/>
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="المصرف / الوجهة المعلقة:" Foreground="#64748b" FontSize="13" Margin="0,4,0,0"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.CardBrand}" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.BankName, TargetNullValue='غير محدد'}" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,4,0,0"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="المبلغ المستحق تحصيله:" Foreground="#64748b" FontSize="13" Margin="0,4,0,0"/>
                             <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.Amount, StringFormat={}{0:N2} د.ل}" FontWeight="Bold" Foreground="#3F51B5" Margin="0,4,0,0"/>

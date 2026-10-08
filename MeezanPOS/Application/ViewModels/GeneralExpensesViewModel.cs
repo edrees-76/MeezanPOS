@@ -563,7 +563,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
                     // عكس الحركة النقدية القديمة إن وجدت
                     var cashLedgerService = _cashLedgerService;
-                    var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
+                    var oldCashMovement = await db.CashMovements.FindLiveForSourceAsync(SourceTypes.GeneralExpense, existing.Id);
                     if (oldCashMovement != null)
                     {
                         await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل المصروف العام");
@@ -1194,7 +1194,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
                 // عكس الحركة النقدية المرتبطة إن وجدت
                 var cashLedgerService = _cashLedgerService;
-                var oldCashMovement = await db.CashMovements.FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == existing.Id && !m.IsReversed);
+                var oldCashMovement = await db.CashMovements.FindLiveForSourceAsync(SourceTypes.GeneralExpense, existing.Id);
                 if (oldCashMovement != null)
                 {
                     await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "حذف المصروف العام");

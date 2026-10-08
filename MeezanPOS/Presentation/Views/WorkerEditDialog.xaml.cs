@@ -55,6 +55,8 @@ namespace MeezanPOS.Presentation.Views
                 return;
             }
 
+            // منع الضغط المزدوج على زر الحفظ (كان يُنشئ العامل مرتين)
+            if (sender is UIElement saveButton) saveButton.IsEnabled = false;
             try
             {
                 Worker worker = _worker ?? new Worker();
@@ -71,6 +73,7 @@ namespace MeezanPOS.Presentation.Views
             catch (Exception ex)
             {
                 MessageBox.Show($"خطأ أثناء حفظ ملف العامل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (sender is UIElement saveButton2) saveButton2.IsEnabled = true;
             }
         }
 

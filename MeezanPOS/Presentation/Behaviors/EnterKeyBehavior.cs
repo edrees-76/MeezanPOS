@@ -125,6 +125,9 @@ namespace MeezanPOS.Presentation.Behaviors
                         if (command.CanExecute(parameter))
                         {
                             e.Handled = true;
+                            // الربط قد يكون LostFocus: ادفع القيمة المكتوبة للـ ViewModel قبل التنفيذ
+                            // وإلا يُحفظ الرقم السابق بدلاً من الرقم الذي كتبه المستخدم للتو.
+                            (sender as TextBox)?.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
                             command.Execute(parameter);
                         }
                     }

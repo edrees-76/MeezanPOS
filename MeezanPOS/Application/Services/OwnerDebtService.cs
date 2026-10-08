@@ -48,7 +48,7 @@ public class OwnerDebtService : IOwnerDebtService
 
     public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null, int? bankAccountId = null)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var debt = new OwnerDebt
@@ -146,7 +146,7 @@ public class OwnerDebtService : IOwnerDebtService
 
     public async Task<OwnerDebtSettlement> RecordSettlementAsync(int? debtId, string partnerName, decimal amount, OwnerDebtSettlementSource source, int? bankAccountId, string? notes, DateTime date)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             OwnerDebt? debt = null;
@@ -210,7 +210,7 @@ public class OwnerDebtService : IOwnerDebtService
 
     public async Task DeleteSettlementAsync(int settlementId)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
+        using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
             var settlement = await _context.OwnerDebtSettlements.FindAsync(settlementId);

@@ -176,25 +176,27 @@ public class FinancialReportingService : IFinancialReportingService
         summary.Suppliers = supplierReportList.OrderBy(s => s.SupplierName).ToList();
 
         // 4. Cash Ledger (تقرير حركة الخزينة)
-        var lastOpMovement = await context.CashMovements
+        // تُستخدم الحركات السارية فقط (تُستبعد الحركة المعكوسة والحركة العكسية معاً لأنهما تلغيان بعضهما)،
+        // ويُحسب الرصيد من مجموع الحركات بدلاً من BalanceAfter حتى يتطابق: الافتتاحي + الوارد - الصادر = الختامي
+        // حتى مع الحركات ذات التاريخ السابق.
+        var priorMovements = await context.CashMovements
             .AsNoTracking()
-            .Where(m => m.TransactionDate < start && !m.IsDeleted && !m.IsReversed)
-            .OrderByDescending(m => m.TransactionDate)
-            .ThenByDescending(m => m.Id)
-            .FirstOrDefaultAsync();
+            .Where(m => m.TransactionDate < start && !m.IsDeleted)
+            .WhereLive()
+            .Select(m => new { m.Type, m.Amount })
+            .ToListAsync();
 
-        decimal cashOpening = lastOpMovement?.BalanceAfter ?? 0m;
+        decimal cashOpening = priorMovements.Sum(m => m.Type == CashMovementType.CashIn ? m.Amount : -m.Amount);
 
         var periodMovements = await context.CashMovements
             .AsNoTracking()
-            .Where(m => m.TransactionDate >= start && m.TransactionDate <= end && !m.IsDeleted && !m.IsReversed)
+            .Where(m => m.TransactionDate >= start && m.TransactionDate <= end && !m.IsDeleted)
+            .WhereLive()
             .ToListAsync();
 
         decimal cashIn = periodMovements.Where(m => m.Type == CashMovementType.CashIn).Sum(m => m.Amount);
         decimal cashOut = periodMovements.Where(m => m.Type == CashMovementType.CashOut).Sum(m => m.Amount);
-
-        var lastPeriodMovement = periodMovements.OrderByDescending(m => m.TransactionDate).ThenByDescending(m => m.Id).FirstOrDefault();
-        decimal cashClosing = lastPeriodMovement != null ? lastPeriodMovement.BalanceAfter : cashOpening;
+        decimal cashClosing = cashOpening + cashIn - cashOut;
 
         summary.CashLedger = new CashLedgerReport
         {

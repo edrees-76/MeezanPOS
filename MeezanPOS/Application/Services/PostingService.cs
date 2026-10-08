@@ -24,7 +24,7 @@ namespace MeezanPOS.Application.Services
 
         public async Task<bool> PostEntityAsync<T>(int entityId, string postedByUserId) where T : class
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
             try
             {
                 var entity = await _context.Set<T>().FindAsync(entityId);
@@ -62,14 +62,8 @@ namespace MeezanPOS.Application.Services
                 if (entity is DailyJournal finalJournal)
                 {
                     transactionAmt = finalJournal.ActualCash - finalJournal.CashFloat;
-                    await _cashLedgerService.RecordMovementAsync(
-                        CashMovementType.CashIn,
-                        transactionAmt,
-                        SourceTypes.DailyJournal,
-                        finalJournal.Id,
-                        $"ترحيل وردية: {finalJournal.ShiftName} - الموظف: {finalJournal.EmployeeName}",
-                        finalJournal.JournalDate
-                    );
+                    await RecordJournalCashAsync(finalJournal,
+                        $"ترحيل وردية: {finalJournal.ShiftName} - الموظف: {finalJournal.EmployeeName}");
 
                     await CheckAndAutoReSettleSessionAsync(finalJournal.JournalDate);
                 }
@@ -96,7 +90,7 @@ namespace MeezanPOS.Application.Services
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 20)
                 throw new Exception("يجب إدخال سبب معتمد وشرح لا يقل عن 20 حرفاً لفك الترحيل المالي.");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
             try
             {
                 var entity = await _context.Set<T>().FindAsync(entityId);
@@ -177,23 +171,16 @@ namespace MeezanPOS.Application.Services
                     });
                 }
 
+                // حركة خزينة الوردية تُسجَّل عند الترحيل، لذا تُعكس عند فك الترحيل.
+                // أما المصروف العام فحركته النقدية تُسجَّل عند إنشائه (وليس عند ترحيله)،
+                // لذا فك ترحيله لا يمس الخزينة؛ تُعكس حركته فقط عند تعديله أو حذفه.
                 if (entity is DailyJournal journalObj)
                 {
                     var oldMovement = await _context.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == SourceTypes.DailyJournal && m.SourceId == journalObj.Id && !m.IsReversed);
+                        .FindLiveForSourceAsync(SourceTypes.DailyJournal, journalObj.Id);
                     if (oldMovement != null)
                     {
                         await _cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"إلغاء ترحيل الوردية: {reason}");
-                        auditDetail.CashMovementId = oldMovement.Id;
-                    }
-                }
-                else if (entity is GeneralExpense expObj)
-                {
-                    var oldMovement = await _context.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == expObj.Id && !m.IsReversed);
-                    if (oldMovement != null)
-                    {
-                        await _cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"إلغاء ترحيل المصروف: {reason}");
                         auditDetail.CashMovementId = oldMovement.Id;
                     }
                 }
@@ -236,7 +223,7 @@ namespace MeezanPOS.Application.Services
             }
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync(System.Data.IsolationLevel.Serializable);
             try
             {
                 var ids = journalIds.ToHashSet();
@@ -324,15 +311,8 @@ namespace MeezanPOS.Application.Services
 
                 foreach (var journal in journals)
                 {
-                    decimal cashAmount = journal.ActualCash - journal.CashFloat;
-                    await _cashLedgerService.RecordMovementAsync(
-                        CashMovementType.CashIn,
-                        cashAmount,
-                        "DailyJournal",
-                        journal.Id,
-                        $"إيراد وردية: {journal.ShiftName} - الكاشير: {journal.EmployeeName}",
-                        journal.JournalDate
-                    );
+                    await RecordJournalCashAsync(journal,
+                        $"إيراد وردية: {journal.ShiftName} - الكاشير: {journal.EmployeeName}");
 
                     await CheckAndAutoReSettleSessionAsync(journal.JournalDate);
                 }
@@ -378,7 +358,7 @@ namespace MeezanPOS.Application.Services
             }
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync(System.Data.IsolationLevel.Serializable);
             try
             {
                 var ids = expenseIds.ToHashSet();
@@ -496,7 +476,7 @@ namespace MeezanPOS.Application.Services
             };
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            using var transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync(System.Data.IsolationLevel.Serializable);
             try
             {
                 // 1. ترحيل وتأكيد كافة اليوميات غير المرحلة حالياً لإدخال مبالغها في الخزينة
@@ -564,15 +544,8 @@ namespace MeezanPOS.Application.Services
                     _context.PostingSessionDetails.Add(detail);
 
                     // تسجيل حركة الوارد النقدي بالخزينة للوردية
-                    decimal cashAmount = journal.ActualCash - journal.CashFloat;
-                    await _cashLedgerService.RecordMovementAsync(
-                        CashMovementType.CashIn,
-                        cashAmount,
-                        "DailyJournal",
-                        journal.Id,
-                        $"إيراد وردية (إقفال وتسوية): {journal.ShiftName} - الكاشير: {journal.EmployeeName}",
-                        journal.JournalDate
-                    );
+                    await RecordJournalCashAsync(journal,
+                        $"إيراد وردية (إقفال وتسوية): {journal.ShiftName} - الكاشير: {journal.EmployeeName}");
                 }
 
                 // 4. ترحيل المصاريف العامة
@@ -693,8 +666,7 @@ namespace MeezanPOS.Application.Services
                 {
                     var lastMovementBefore = await _context.CashMovements
                         .Where(m => m.TransactionDate <= session.PeriodEndDate)
-                        .OrderByDescending(m => m.Sequence)
-                        .ThenByDescending(m => m.TransactionDate)
+                        .OrderByDescending(m => m.Id) // الرصيد التراكمي مرتب بـ Id (Sequence غير مخزن)
                         .FirstOrDefaultAsync();
                     
                     keepBalancesDict[session.Id] = lastMovementBefore?.BalanceAfter ?? 0;
@@ -756,8 +728,7 @@ namespace MeezanPOS.Application.Services
             {
                 var lastMovementBefore = await _context.CashMovements
                     .Where(m => m.TransactionDate <= session.PeriodEndDate)
-                    .OrderByDescending(m => m.Sequence)
-                    .ThenByDescending(m => m.TransactionDate)
+                    .OrderByDescending(m => m.Id) // الرصيد التراكمي مرتب بـ Id (Sequence غير مخزن)
                     .FirstOrDefaultAsync();
                 
                 keepAmount = lastMovementBefore?.BalanceAfter ?? 0;
@@ -803,7 +774,7 @@ namespace MeezanPOS.Application.Services
             if (string.IsNullOrWhiteSpace(reason) || string.IsNullOrWhiteSpace(detailReason) || detailReason.Length < 20)
                 throw new Exception("يجب تحديد سبب وإدخال تفاصيل شرح لا تقل عن 20 حرفاً لإلغاء القفل.");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
             try
             {
                 var session = await _context.PostingSessions
@@ -858,7 +829,7 @@ namespace MeezanPOS.Application.Services
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 20)
                 throw new Exception("يجب إدخال سبب معتمد وشرح تفصيلي لا يقل عن 20 حرفاً لفك ترحيل الفترة.");
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
             try
             {
                 var session = await _context.PostingSessions
@@ -883,8 +854,9 @@ namespace MeezanPOS.Application.Services
                     .ToListAsync();
 
                 decimal totalReversedAmount = 0;
-                
-                // إلغاء ترحيل اليوميات وحساب القيمة
+                var reversedMovementIds = new System.Collections.Generic.Dictionary<int, int>();
+
+                // إلغاء ترحيل اليوميات وعكس حركة الخزينة الخاصة بكل وردية على حدة
                 foreach (var journal in journals)
                 {
                     journal.FinancialStatus = FinancialStatus.Draft;
@@ -892,71 +864,44 @@ namespace MeezanPOS.Application.Services
                     journal.PostingSessionId = null;
                     journal.RowVersion++;
                     totalReversedAmount += (journal.ActualCash - journal.CashFloat);
+
+                    var oldMovement = await _context.CashMovements
+                        .FindLiveForSourceAsync(SourceTypes.DailyJournal, journal.Id);
+                    if (oldMovement != null)
+                    {
+                        await _cashLedgerService.ReverseMovementAsync(oldMovement.Id, $"فك ترحيل الفترة: {reason}");
+                        reversedMovementIds[journal.Id] = oldMovement.Id;
+                    }
                 }
 
-                // إلغاء ترحيل المصاريف وحساب القيمة
+                // إلغاء ترحيل المصاريف العامة: حركتها النقدية سُجلت عند إنشائها وليس عند الترحيل،
+                // لذا لا تُعكس هنا (تُعكس فقط عند تعديل المصروف أو حذفه).
                 foreach (var expense in expenses)
                 {
                     expense.FinancialStatus = FinancialStatus.Draft;
                     expense.PostedDate = null;
                     expense.PostingSessionId = null;
                     expense.RowVersion++;
-                    totalReversedAmount += expense.Amount;
-                }
-
-                // تسجيل حركة مالية عكسية مجمعة بالخزينة
-                int? cashMovementId = null;
-                if (totalReversedAmount != 0)
-                {
-                    decimal currentBalance = await _cashLedgerService.GetCurrentBalanceAsync();
-                    var cashMovement = new CashMovement
-                    {
-                        CreatedAt = DateTime.UtcNow,
-                        TransactionDate = DateTime.UtcNow,
-                        Type = CashMovementType.CashOut,
-                        Amount = -totalReversedAmount,
-                        BalanceAfter = currentBalance - totalReversedAmount,
-                        SourceType = "UnpostSession",
-                        SourceId = sessionId,
-                        Notes = $"إرجاع وعكس مالي مجمع لفك ترحيل الفترة | السبب: {reason}",
-                        IsReversed = false
-                    };
-                    _context.CashMovements.Add(cashMovement);
-                    await _context.SaveChangesAsync(); // لتوليد المعرف للمستندات التفصيلية
-                    cashMovementId = cashMovement.Id;
                 }
 
                 // تحديث تفاصيل الجلسة للتتبع
                 foreach (var detail in session.Details)
                 {
                     detail.ActionType = PostingActionType.Unposted;
-                    detail.CashMovementId = cashMovementId;
-                    
+
                     // تحديث المبلغ وقت العملية للتسجيل الدقيق
                     if (detail.EntityType == PostingEntityType.DailyJournal)
                     {
                         var j = journals.FirstOrDefault(x => x.Id == detail.EntityId);
                         if (j != null) detail.TransactionAmount = j.ActualCash - j.CashFloat;
+                        detail.CashMovementId = reversedMovementIds.TryGetValue(detail.EntityId, out var movId) ? movId : null;
                     }
                     else if (detail.EntityType == PostingEntityType.GeneralExpense)
                     {
                         var e = expenses.FirstOrDefault(x => x.Id == detail.EntityId);
                         if (e != null) detail.TransactionAmount = e.Amount;
+                        detail.CashMovementId = null;
                     }
-                }
-
-                // فك حركات الخزينة الفردية القديمة للمبيعات والمصاريف لجعلها Reversed
-                foreach (var journal in journals)
-                {
-                    var oldMov = await _context.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == SourceTypes.DailyJournal && m.SourceId == journal.Id && !m.IsReversed);
-                    if (oldMov != null) oldMov.IsReversed = true;
-                }
-                foreach (var expense in expenses)
-                {
-                    var oldMov = await _context.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == "GeneralExpense" && m.SourceId == expense.Id && !m.IsReversed);
-                    if (oldMov != null) oldMov.IsReversed = true;
                 }
 
                 session.Status = PostingSessionStatus.Unlocked; // تظل مفتوحة للتعديل
@@ -1018,6 +963,24 @@ namespace MeezanPOS.Application.Services
                     await _context.SaveChangesAsync();
                 }
             }
+        }
+
+        /// <summary>
+        /// تسجيل صافي نقدية الوردية (الفعلي - العهدة) في الخزينة.
+        /// موجب = وارد، سالب = صادر (عجز عن العهدة)، صفر = لا حركة (مبيعات بالبطاقات بالكامل مثلاً).
+        /// </summary>
+        private async Task RecordJournalCashAsync(DailyJournal journal, string notes)
+        {
+            decimal net = journal.ActualCash - journal.CashFloat;
+            if (net == 0) return;
+
+            await _cashLedgerService.RecordMovementAsync(
+                net > 0 ? CashMovementType.CashIn : CashMovementType.CashOut,
+                Math.Abs(net),
+                SourceTypes.DailyJournal,
+                journal.Id,
+                notes,
+                journal.JournalDate);
         }
 
         private async Task SelfHealEntityAsync<T>(int entityId, T entity, Action<IPostableEntity> updateAction) where T : class
