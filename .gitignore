@@ -53,3 +53,4 @@ Installer/Output/
 
 # Local addons (not part of the product)
 MeezanPOS/Addons/
+.kilo/
