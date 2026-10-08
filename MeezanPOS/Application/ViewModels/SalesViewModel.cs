@@ -42,26 +42,26 @@ public partial class MonthSummaryCard : ObservableObject
     public int Year { get; set; }
     public int Month { get; set; }
     public string MonthName { get; set; } = string.Empty;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetProfit))]
     private decimal totalSales;
-    
+
     [ObservableProperty]
     private decimal totalCashSales;
-    
+
     [ObservableProperty]
     private decimal totalBankingSales;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NetProfit))]
     private decimal totalExpenses;
-    
+
     public decimal NetProfit => TotalSales - TotalExpenses;
-    
+
     [ObservableProperty]
     private int daysCount;
-    
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     [NotifyPropertyChangedFor(nameof(StatusColor))]
@@ -75,7 +75,7 @@ public partial class MonthSummaryCard : ObservableObject
     [NotifyPropertyChangedFor(nameof(CardBackground))]
     [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
     private bool isPartiallyPosted;
-    
+
     public string StatusText => IsPosted ? "مرحّل بالكامل" : (IsPartiallyPosted ? "مرحّل جزئياً" : "مفتوح");
     public string StatusColor => IsPosted ? "#10b981" : (IsPartiallyPosted ? "#f59e0b" : "#3b82f6");
     public string CardBackground => IsPosted ? "#f0fdf4" : (IsPartiallyPosted ? "#fffbeb" : "#f8faff");
@@ -87,6 +87,7 @@ public partial class SalesViewModel : ObservableObject
     private readonly ISessionService _sessionService;
     private readonly IPostingService _postingService;
     private readonly ICashLedgerService _cashLedgerService;
+    private readonly MeezanPOS.Application.Services.Queries.ISalesQueryService _queries;
 
     public SalesViewModel() : this(
         AppServiceProvider.Resolve<ISessionService>(),
@@ -98,12 +99,14 @@ public partial class SalesViewModel : ObservableObject
     public SalesViewModel(
         ISessionService sessionService,
         IPostingService postingService,
-        ICashLedgerService cashLedgerService)
+        ICashLedgerService cashLedgerService,
+        MeezanPOS.Application.Services.Queries.ISalesQueryService? queries = null)
     {
+        _queries = queries ?? new MeezanPOS.Application.Services.Queries.SalesQueryService();
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
         _postingService = postingService ?? throw new ArgumentNullException(nameof(postingService));
         _cashLedgerService = cashLedgerService ?? throw new ArgumentNullException(nameof(cashLedgerService));
-        
+
         _ = LoadDataAsync();
     }
 
@@ -263,16 +266,7 @@ public partial class SalesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            
-            // Get all journals ordered by date descending
-            _allJournals = await context.DailyJournals
-                .Include(j => j.ExpenseItems)
-                .Include(j => j.BankingItems)
-                .Include(j => j.Adjustments)
-                .OrderBy(j => j.JournalDate)
-                .ThenBy(j => j.Id)
-                .ToListAsync();
+            _allJournals = await _queries.GetAllJournalsWithItemsAsync();
 
             // Populate CashierNames
             var uniqueCashiers = _allJournals
@@ -281,7 +275,7 @@ public partial class SalesViewModel : ObservableObject
                 .Distinct()
                 .OrderBy(name => name)
                 .ToList();
-            
+
             CashierNames.Clear();
             CashierNames.Add("الكل");
             foreach (var name in uniqueCashiers)
@@ -301,9 +295,9 @@ public partial class SalesViewModel : ObservableObject
                     var totalCount = g.Count();
                     var isPosted = postedCount == totalCount;
                     var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
-                    
+
                     var postedJournals = g.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived).ToList();
-                    
+
                     return new MonthSummaryCard
                     {
                         Year = year,
@@ -439,7 +433,7 @@ public partial class SalesViewModel : ObservableObject
         {
             if (SelectedArchivedMonth != null)
             {
-                var resultList = commonFiltered.Where(j => j.JournalDate.Year == SelectedArchivedMonth.Year && 
+                var resultList = commonFiltered.Where(j => j.JournalDate.Year == SelectedArchivedMonth.Year &&
                                                            j.JournalDate.Month == SelectedArchivedMonth.Month &&
                                                            (j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)).ToList();
 
@@ -465,9 +459,9 @@ public partial class SalesViewModel : ObservableObject
                         var totalCount = g.Count();
                         var isPosted = postedCount == totalCount;
                         var isPartiallyPosted = postedCount > 0 && postedCount < totalCount;
-                        
+
                         var postedJournals = g.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived).ToList();
-                        
+
                         return new MonthSummaryCard
                         {
                             Year = year,
@@ -541,7 +535,6 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            using var context = new AppDbContext();
             var postingService = _postingService;
             await postingService.PostEntityAsync<DailyJournal>(journal.Id, CurrentUserId);
 
@@ -574,15 +567,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            List<DailyJournal> draftJournals;
-            using (var context = new AppDbContext())
-            {
-                draftJournals = await context.DailyJournals
-                    .Where(j => j.JournalDate.Year == month.Year && 
-                                j.JournalDate.Month == month.Month && 
-                                j.FinancialStatus == FinancialStatus.Draft)
-                    .ToListAsync();
-            }
+            var draftJournals = await _queries.GetJournalIdsInMonthAsync(month.Year, month.Month, FinancialStatus.Draft);
 
             if (!draftJournals.Any())
             {
@@ -591,9 +576,9 @@ public partial class SalesViewModel : ObservableObject
             }
 
             var postingService = _postingService;
-            foreach (var j in draftJournals)
+            foreach (var journalId in draftJournals)
             {
-                await postingService.PostEntityAsync<DailyJournal>(j.Id, CurrentUserId);
+                await postingService.PostEntityAsync<DailyJournal>(journalId, CurrentUserId);
             }
 
             Dialogs.Show($"تم ترحيل شهر {month.MonthName} بالكامل وإقفاله بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -627,20 +612,8 @@ public partial class SalesViewModel : ObservableObject
         }
 
         // 1. تحقق مما إذا كان الشهر يحتوي على ورديات تابعة لفترة تمت تسويتها وإغلاقها مسبقاً
-        using (var context = new AppDbContext())
         {
-            var settledSessionIds = await context.PostingSessions
-                .Where(s => s.Status == PostingSessionStatus.Settled || s.Status == PostingSessionStatus.ReSettled)
-                .Select(s => s.Id)
-                .ToListAsync();
-            
-            var hasSettled = await context.DailyJournals
-                .AnyAsync(j => j.JournalDate.Year == month.Year && 
-                               j.JournalDate.Month == month.Month && 
-                               j.PostingSessionId.HasValue && 
-                               settledSessionIds.Contains(j.PostingSessionId.Value));
-            
-            if (hasSettled)
+            if (await _queries.MonthHasSettledJournalsAsync(month.Year, month.Month))
             {
                 Dialogs.Show(
                     "عذراً، هذا الشهر يحتوي على ورديات تابعة لفترة تم تسويتها وإقفالها مسبقاً.\nيجب إلغاء قفل فترة التسوية المعنية أولاً من شاشة (الكاش الحالي -> أرشيف التسويات).",
@@ -670,15 +643,7 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            List<DailyJournal> postedJournals;
-            using (var context = new AppDbContext())
-            {
-                postedJournals = await context.DailyJournals
-                    .Where(j => j.JournalDate.Year == month.Year && 
-                                j.JournalDate.Month == month.Month && 
-                                j.FinancialStatus == FinancialStatus.Posted)
-                    .ToListAsync();
-            }
+            var postedJournals = await _queries.GetJournalIdsInMonthAsync(month.Year, month.Month, FinancialStatus.Posted);
 
             if (!postedJournals.Any())
             {
@@ -687,9 +652,9 @@ public partial class SalesViewModel : ObservableObject
             }
 
             var postingService = _postingService;
-            foreach (var j in postedJournals)
+            foreach (var journalId in postedJournals)
             {
-                await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, CurrentUserId);
+                await postingService.UnpostEntityAsync<DailyJournal>(journalId, reason, CurrentUserId);
             }
 
             Dialogs.Show($"تم فك ترحيل شهر {month.MonthName} بنجاح، وأصبحت الوردية قابلة للتعديل مجدداً.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
@@ -716,7 +681,7 @@ public partial class SalesViewModel : ObservableObject
     {
         if (selectableJournal == null) return;
         var journal = selectableJournal.Journal;
-        
+
         var mainWindow = System.Windows.Application.Current.MainWindow;
         if (mainWindow?.DataContext is MainViewModel mainVM)
         {
@@ -744,7 +709,7 @@ public partial class SalesViewModel : ObservableObject
             Dialogs.Show("لا يمكن تعديل حركة مرحّلة مالياً. يرجى فك الترحيل أولاً.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
-        
+
         var mainWindow = System.Windows.Application.Current.MainWindow;
         if (mainWindow?.DataContext is MainViewModel mainVM)
         {
@@ -767,7 +732,7 @@ public partial class SalesViewModel : ObservableObject
         {
 
             var filePath = System.IO.Path.Combine(
-                System.IO.Path.GetTempPath(), 
+                System.IO.Path.GetTempPath(),
                 $"تقرير_المبيعات_{System.DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
             QuestPDF.Fluent.Document.Create(container =>
@@ -812,7 +777,7 @@ public partial class SalesViewModel : ObservableObject
             row.RelativeItem().Column(column =>
             {
                 column.Item().Text("تقرير المبيعات والإيرادات").FontSize(20).SemiBold().FontColor(QuestPDF.Helpers.Colors.Blue.Darken2);
-                
+
                 // بناء سطر معلومات التصفية
                 var filterParts = new System.Collections.Generic.List<string>();
 
@@ -857,7 +822,7 @@ public partial class SalesViewModel : ObservableObject
 
     private void ComposeContent(QuestPDF.Infrastructure.IContainer container)
     {
-        container.PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Column(column => 
+        container.PaddingVertical(1, QuestPDF.Infrastructure.Unit.Centimetre).Column(column =>
         {
             // Cards Summary
             column.Item().Row(row =>
@@ -947,7 +912,7 @@ public partial class SalesViewModel : ObservableObject
                 table.Cell().Element(CellStyle).Text(item.Journal.ReturnsTotal.ToString("N2"));
                 table.Cell().Element(CellStyle).Text(item.Journal.FreeOrdersTotal.ToString("N2"));
                 table.Cell().Element(CellStyle).Text(item.Journal.TotalExpenses.ToString("N2"));
-                
+
                 var diffColor = item.Journal.Difference < 0 ? QuestPDF.Helpers.Colors.Red.Medium : item.Journal.Difference > 0 ? QuestPDF.Helpers.Colors.Black : QuestPDF.Helpers.Colors.Green.Medium;
                 table.Cell().Element(CellStyle).Text(item.Journal.DifferenceText).FontColor(diffColor).Bold();
 
@@ -1137,15 +1102,8 @@ public partial class SalesViewModel : ObservableObject
         try
         {
             IsLoading = true;
-            List<int> journalsInPeriod;
-            using (var context = new AppDbContext())
-            {
-                // جلب اليوميات المفتوحة فقط في هذه الفترة
-                journalsInPeriod = await context.DailyJournals
-                    .Where(j => j.JournalDate.Date >= startDate && j.JournalDate.Date <= endDate && j.FinancialStatus == FinancialStatus.Draft)
-                    .Select(j => j.Id)
-                    .ToListAsync();
-            }
+            // اليوميات المفتوحة فقط في هذه الفترة
+            var journalsInPeriod = await _queries.GetDraftJournalIdsInRangeAsync(startDate, endDate);
 
             if (!journalsInPeriod.Any())
             {
@@ -1210,14 +1168,7 @@ public partial class SalesViewModel : ObservableObject
         IsCashLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var movements = await context.CashMovements
-                .OrderByDescending(m => m.TransactionDate)
-                .ThenByDescending(m => m.Id)
-                .Take(150)
-                .ToListAsync();
-
-            movements.Reverse();
+            var movements = await _queries.GetRecentCashMovementsAsync(150);
 
             // Add sequence numbers
             for (int i = 0; i < movements.Count; i++)
@@ -1226,7 +1177,7 @@ public partial class SalesViewModel : ObservableObject
             }
 
             CashMovements = new ObservableCollection<CashMovement>(movements);
-            
+
             var cashLedgerService = _cashLedgerService;
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
             IsRebuildRequired = await cashLedgerService.IsRebuildRequiredAsync();
@@ -1255,7 +1206,6 @@ public partial class SalesViewModel : ObservableObject
         IsCashLoading = true;
         try
         {
-            using var context = new AppDbContext();
             var cashLedgerService = _cashLedgerService;
             await cashLedgerService.RebuildLedgerAsync();
             await LoadCashMovementsAsync();
@@ -1285,7 +1235,6 @@ public partial class SalesViewModel : ObservableObject
         IsCashLoading = true;
         try
         {
-            using var context = new AppDbContext();
             var cashLedgerService = _cashLedgerService;
             CurrentCashBalance = await cashLedgerService.GetCurrentBalanceAsync();
         }
@@ -1399,7 +1348,7 @@ public partial class SalesViewModel : ObservableObject
         {
             var postingService = _postingService;
             var history = await postingService.GetSettlementHistoryAsync();
-            
+
             SettlementHistory.Clear();
             foreach (var item in history)
             {
@@ -1447,7 +1396,7 @@ public partial class SalesViewModel : ObservableObject
             if (success)
             {
                 Dialogs.Show("تم إلغاء قفل الفترة بنجاح للمراجعة والتدقيق.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-                
+
                 // تحديث قائمة أرشيف التسويات
                 var history = await postingService.GetSettlementHistoryAsync();
                 SettlementHistory.Clear();
@@ -1490,22 +1439,10 @@ public partial class SalesViewModel : ObservableObject
 
         try
         {
-            using (var context = new AppDbContext())
-            {
-                journalsCount = await context.DailyJournals.CountAsync(j => j.PostingSessionId == item.SessionId);
-                expensesCount = await context.GeneralExpenses.CountAsync(e => e.PostingSessionId == item.SessionId);
-                
-                var journalCash = await context.DailyJournals
-                    .Where(j => j.PostingSessionId == item.SessionId)
-                    .Select(j => j.ActualCash - j.CashFloat)
-                    .ToListAsync();
-                var expenseAmounts = await context.GeneralExpenses
-                    .Where(e => e.PostingSessionId == item.SessionId)
-                    .Select(e => e.Amount)
-                    .ToListAsync();
-
-                totalReversedAmount = journalCash.Sum() + expenseAmounts.Sum();
-            }
+            var impact = await _queries.GetSettlementImpactAsync(item.SessionId);
+            journalsCount = impact.JournalsCount;
+            expensesCount = impact.ExpensesCount;
+            totalReversedAmount = impact.TotalAmount;
         }
         catch (Exception ex)
         {
@@ -1538,7 +1475,7 @@ public partial class SalesViewModel : ObservableObject
             if (success)
             {
                 Dialogs.Show("تم فك ترحيل الفترة بالكامل وإلغاء وعكس حركات النقدية بنجاح.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
-                
+
                 // تحديث قائمة أرشيف التسويات
                 var history = await postingService.GetSettlementHistoryAsync();
                 SettlementHistory.Clear();
@@ -1564,7 +1501,7 @@ public partial class SalesViewModel : ObservableObject
     public async Task RegenerateSettlementPdfAsync(SettlementHistoryItem item)
     {
         if (item == null) return;
-        
+
         IsLoading = true;
         try
         {
