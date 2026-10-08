@@ -112,10 +112,17 @@ public partial class LoginViewModel : ObservableObject
             // تُفرض أيضاً إذا كانت كلمة المرور الحالية ضعيفة (مثل admin/admin الافتراضية)
             if (user.MustChangePassword || UserManagementService.ValidatePassword(Password, user.Username) != null)
             {
-                var dialog = new Presentation.Views.ChangePasswordDialog(isForced: true)
-                {
-                    Owner = System.Windows.Application.Current.MainWindow
-                };
+                // المالك هو نافذة الدخول الظاهرة. لا نستخدم Application.MainWindow هنا: عند غيابه يجعل WPF
+                // أول نافذة تُنشأ (الحوار نفسه) هي MainWindow فيفشل ضبط المالك.
+                var loginWindow = System.Windows.Application.Current.Windows
+                    .OfType<Presentation.Views.LoginView>()
+                    .FirstOrDefault(w => w.IsVisible);
+                if (loginWindow != null)
+                    System.Windows.Application.Current.MainWindow = loginWindow;
+
+                var dialog = new Presentation.Views.ChangePasswordDialog(isForced: true);
+                if (loginWindow != null)
+                    dialog.Owner = loginWindow;
                 if (dialog.ShowDialog() != true)
                 {
                     session.ClearSession();
