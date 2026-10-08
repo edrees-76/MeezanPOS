@@ -13,9 +13,9 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="ميزان المطاعم"
-        Icon="/Assets/Images/mizan_3d_icon_final_transparent.png"
-        Height="720"
-        Width="520"
+        Icon="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png"
+        Height="640"
+        Width="1000"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
@@ -35,501 +35,292 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="LocalBooleanToVisibilityConverter"/>
 
-        <!-- Colors -->
-        <Color x:Key="PrimaryBlue">#071D49</Color>
-        <Color x:Key="SecondaryBlue">#102B61</Color>
-        <Color x:Key="GoldColor">#C9A65B</Color>
-        <Color x:Key="WhiteText">#F3F3F3</Color>
-
-        <!-- Brushes -->
-        <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource PrimaryBlue}"/>
-        <SolidColorBrush x:Key="SecondaryBlueBrush" Color="{StaticResource SecondaryBlue}"/>
-        <SolidColorBrush x:Key="GoldBrush" Color="{StaticResource GoldColor}"/>
-        <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteText}"/>
-
-        <!-- ========================================================= -->
-        <!-- TextBox Style -->
-        <!-- ========================================================= -->
-
+        <!-- حقول الإدخال بهوية ميزان -->
         <Style x:Key="ModernTextBoxStyle" TargetType="TextBox">
-
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource SecondaryBlueBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
-            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.BorderStrong}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Height" Value="46"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="15,0,15,0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontFamily" Value="{StaticResource Font.Body}"/>
+            <Setter Property="Padding" Value="44,0,44,0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="CaretBrush" Value="White"/>
-
+            <Setter Property="CaretBrush" Value="{StaticResource Brush.Primary}"/>
             <Setter Property="Template">
                 <Setter.Value>
-
                     <ControlTemplate TargetType="TextBox">
-
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="12">
-
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
                             <ScrollViewer x:Name="PART_ContentHost"/>
-
                         </Border>
-
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="Bd" Property="Background" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
-
                 </Setter.Value>
             </Setter>
-
         </Style>
-
-        <!-- ========================================================= -->
-        <!-- PasswordBox Style -->
-        <!-- ========================================================= -->
 
         <Style x:Key="ModernPasswordStyle" TargetType="PasswordBox">
-
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource SecondaryBlueBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
-            <Setter Property="BorderThickness" Value="1.5"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.BorderStrong}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Height" Value="46"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="15,0,15,0"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="44,0,44,0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-
+            <Setter Property="CaretBrush" Value="{StaticResource Brush.Primary}"/>
             <Setter Property="Template">
                 <Setter.Value>
-
                     <ControlTemplate TargetType="PasswordBox">
-
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="12">
-
-                            <ScrollViewer x:Name="PART_ContentHost"/>
-
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center"/>
                         </Border>
-
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
+                                <Setter TargetName="Bd" Property="Background" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
-
                 </Setter.Value>
             </Setter>
-
         </Style>
 
-        <!-- ========================================================= -->
-        <!-- Login Button Style -->
-        <!-- ========================================================= -->
+        <Style x:Key="FieldWatermark" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="44,0,44,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+        </Style>
 
-        <Style x:Key="LoginButtonStyle" TargetType="Button">
+        <Style x:Key="FieldIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="14,0,0,0"/>
+            <Setter Property="IsHitTestVisible" Value="False"/>
+        </Style>
 
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="#0B2455"/>
-            <Setter Property="BorderBrush" Value="{StaticResource GoldBrush}"/>
-            <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="FontSize" Value="22"/>
-            <Setter Property="FontWeight" Value="Bold"/>
+        <!-- أزرار التحكم بالنافذة (فوق اللوحة النيلية) -->
+        <Style x:Key="WindowControlButton" TargetType="Button">
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Foreground" Value="#C5CAE9"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Height" Value="50"/>
-
             <Setter Property="Template">
                 <Setter.Value>
-
                     <ControlTemplate TargetType="Button">
-
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="25">
-
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
-
                         <ControlTemplate.Triggers>
-
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#153B80"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#26FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter Property="Background" Value="#04142F"/>
-                            </Trigger>
-
                         </ControlTemplate.Triggers>
-
                     </ControlTemplate>
-
                 </Setter.Value>
             </Setter>
-
         </Style>
 
+        <Style x:Key="FeatureTile" TargetType="Border">
+            <Setter Property="Background" Value="#1FFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#33FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
     </Window.Resources>
 
-    <!-- ========================================================= -->
-    <!-- Main Grid -->
-    <!-- ========================================================= -->
-
     <Grid>
-
-        <!-- Full-screen Background when Maximized -->
+        <!-- خلفية ملء الشاشة عند التكبير -->
         <Grid x:Name="FullScreenBackground" Visibility="Collapsed">
-            <Image Source="/Assets/Images/perfect_login_bg.png" Stretch="UniformToFill">
+            <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/perfect_login_bg.png" Stretch="UniformToFill">
                 <Image.Effect>
                     <BlurEffect Radius="15"/>
                 </Image.Effect>
             </Image>
-            <!-- Dark Blue brand overlay for high contrast and readability -->
-            <Border Background="#D5071D49"/>
+            <Border Background="#D51A237E"/>
         </Grid>
 
-        <!-- Main Card -->
-
-        <Border Width="430"
-                Height="640"
-                Background="White"
-                CornerRadius="20"
-                BorderBrush="#C7AA6C"
-                BorderThickness="1.5"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center">
-
+        <!-- البطاقة الرئيسية: نموذج الدخول + اللوحة التعريفية -->
+        <Border Width="960" Height="600" Background="White" CornerRadius="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center" Effect="{StaticResource Shadow.Dialog}">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="440"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <Grid.RowDefinitions>
+                <!-- ===== نموذج الدخول ===== -->
+                <Grid Grid.Column="0" Margin="48,40,48,28">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                    <RowDefinition Height="250"/>
-                    <RowDefinition Height="*"/>
-
-                </Grid.RowDefinitions>
-
-                <!-- ========================================================= -->
-                <!-- Top White Section -->
-                <!-- ========================================================= -->
-
-                <Grid Grid.Row="0">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,10,0,0">
-                        <!-- Logo (Mizan Chef Scale Logo) -->
-                        <Image Source="/Assets/Images/mizan_3d_icon_final_transparent.png" 
-                               Width="165" Height="165" 
-                               Stretch="Uniform" 
-                               HorizontalAlignment="Center">
-                            <Image.Effect>
-                                <DropShadowEffect BlurRadius="12" ShadowDepth="3" Opacity="0.12" Color="Black"/>
-                            </Image.Effect>
-                        </Image>
-
-                        <!-- Premium Typography Title -->
-                        <TextBlock Text="منظومة ميزان للمطاعم"
-                                   Foreground="#071D49"
-                                   FontSize="20"
-                                   FontWeight="ExtraBold"
-                                   FontFamily="Segoe UI"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,8,0,0"
-                                   TextAlignment="Center">
-                            <TextBlock.Effect>
-                                <DropShadowEffect BlurRadius="2" ShadowDepth="1" Opacity="0.05" Color="Black"/>
-                            </TextBlock.Effect>
-                        </TextBlock>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Width="40" Height="40"/>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="ميزان للمطاعم" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="16" Foreground="{StaticResource Brush.Primary}"/>
+                            <TextBlock Text="نظام إدارة المحاسبة والخزينة" Style="{StaticResource Text.Caption}"/>
+                        </StackPanel>
                     </StackPanel>
+
+                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                        <TextBlock Text="تسجيل الدخول للنظام" Style="{StaticResource Text.PageTitle}" FontSize="26"/>
+                        <TextBlock Text="أهلاً بك مجدداً، أدخل بيانات حسابك لبدء العمل" Style="{StaticResource Text.Body}" Margin="0,6,0,28"/>
+
+                        <!-- اسم المستخدم -->
+                        <TextBlock Text="اسم المستخدم" Style="{StaticResource Text.Label}" Foreground="{StaticResource Brush.TextPrimary}" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,18">
+                            <TextBox x:Name="txtUsername"
+                                     Style="{StaticResource ModernTextBoxStyle}"
+                                     Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                                     TextChanged="TxtUsername_TextChanged"/>
+                            <TextBlock x:Name="txtUsernameWatermark" Text="أدخل اسم المستخدم" Style="{StaticResource FieldWatermark}"/>
+                            <materialDesign:PackIcon Kind="AccountOutline" Style="{StaticResource FieldIcon}"/>
+                        </Grid>
+
+                        <!-- كلمة المرور -->
+                        <TextBlock Text="كلمة المرور" Style="{StaticResource Text.Label}" Foreground="{StaticResource Brush.TextPrimary}" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <Grid Margin="0,0,0,16">
+                            <PasswordBox x:Name="txtPassword"
+                                         Style="{StaticResource ModernPasswordStyle}"
+                                         PasswordChanged="PasswordBox_PasswordChanged"/>
+                            <TextBox x:Name="txtVisiblePassword"
+                                     Style="{StaticResource ModernTextBoxStyle}"
+                                     Padding="44,0,44,0"
+                                     Visibility="Collapsed"
+                                     TextChanged="TxtVisiblePassword_TextChanged"/>
+                            <TextBlock x:Name="txtPasswordWatermark" Text="أدخل كلمة المرور" Style="{StaticResource FieldWatermark}"/>
+                            <materialDesign:PackIcon Kind="LockOutline" Style="{StaticResource FieldIcon}"/>
+
+                            <!-- إظهار / إخفاء كلمة المرور -->
+                            <Button x:Name="btnTogglePassword"
+                                    Width="36" Height="36"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Margin="0,0,6,0"
+                                    Cursor="Hand"
+                                    ToolTip="إظهار / إخفاء كلمة المرور"
+                                    Click="BtnTogglePassword_Click">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="Transparent">
+                                            <materialDesign:PackIcon x:Name="iconTogglePassword"
+                                                                     Kind="EyeOutline"
+                                                                     Foreground="{StaticResource Brush.TextMuted}"
+                                                                     Width="20" Height="20"
+                                                                     HorizontalAlignment="Center"
+                                                                     VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                            </Button>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                            <CheckBox x:Name="chkRememberMe" IsChecked="{Binding RememberMe}" VerticalAlignment="Center"
+                                      Style="{StaticResource MaterialDesignCheckBox}"/>
+                            <TextBlock Text="تذكرني على هذا الجهاز" Style="{StaticResource Text.Body}" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                        </StackPanel>
+
+                        <Button x:Name="btnLogin" Click="btnLogin_Click" IsDefault="True"
+                                Style="{StaticResource Button.Primary}" Height="48" FontSize="16" HorizontalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="تسجيل الدخول" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Login" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Right" Text="جميع الحقوق محفوظة © 2026" Style="{StaticResource Text.Caption}" FontSize="11"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="تصميم وتنفيذ:" Style="{StaticResource Text.Caption}" FontSize="11"/>
+                            <TextBlock Text="م. إدريس فتح الله الهرى" Style="{StaticResource Text.Caption}" FontSize="11" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" Margin="4,0,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
                 </Grid>
 
-                <!-- ========================================================= -->
-                <!-- Bottom Blue Section -->
-                <!-- ========================================================= -->
-
-                <Border Grid.Row="1"
-                        Background="{StaticResource BlueBrush}"
-                        CornerRadius="0,0,20,20">
-
-                    <Grid Margin="30">
-
-                        <Grid.RowDefinitions>
-
-                            <RowDefinition Height="75"/>
-                            <RowDefinition Height="75"/>
-                            <RowDefinition Height="75"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-
-                        </Grid.RowDefinitions>
-
-                        <!-- ========================================================= -->
-                        <!-- Username -->
-                        <!-- ========================================================= -->
-
-                        <StackPanel Grid.Row="0" VerticalAlignment="Center">
-
-                            <!-- Label -->
-                            <TextBlock Text="اسم المستخدم"
-                                       Foreground="#C9A65B"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Margin="4,0,4,6"/>
-
-                            <!-- Field -->
-                            <Grid>
-                                <TextBox x:Name="txtUsername"
-                                         Style="{StaticResource ModernTextBoxStyle}"
-                                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
-                                         TextChanged="TxtUsername_TextChanged"/>
-
-                                <TextBlock x:Name="txtUsernameWatermark"
-                                           Text="أدخل اسم المستخدم هنا"
-                                           Foreground="#6A7FA8"
-                                           FontSize="15"
-                                           Margin="0"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"
-                                           IsHitTestVisible="False"/>
-                            </Grid>
-
+                <!-- ===== اللوحة التعريفية النيلية ===== -->
+                <Border Grid.Column="1" CornerRadius="0,16,16,0" ClipToBounds="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#283593" Offset="0"/>
+                            <GradientStop Color="#1A237E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Grid>
+                        <!-- أزرار النافذة -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,12,12,0" FlowDirection="LeftToRight">
+                            <Button Style="{StaticResource WindowControlButton}" Click="MinimizeButton_Click" ToolTip="تصغير">
+                                <materialDesign:PackIcon Kind="WindowMinimize" Width="16" Height="16"/>
+                            </Button>
+                            <Button Style="{StaticResource WindowControlButton}" Click="MaximizeButton_Click" ToolTip="تكبير">
+                                <materialDesign:PackIcon Kind="WindowMaximize" Width="15" Height="15"/>
+                            </Button>
+                            <Button Style="{StaticResource WindowControlButton}" Click="CloseButton_Click" ToolTip="إغلاق">
+                                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                            </Button>
                         </StackPanel>
 
-                        <!-- ========================================================= -->
-                        <!-- Password -->
-                        <!-- ========================================================= -->
+                        <StackPanel VerticalAlignment="Center" Margin="44,0">
+                            <Border Width="92" Height="92" CornerRadius="20" Background="White" HorizontalAlignment="Left" Padding="8" Margin="0,0,0,22">
+                                <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Stretch="Uniform"/>
+                            </Border>
+                            <TextBlock Text="ميزان — محاسبة مطعمك بدقة" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="28" Foreground="White" TextWrapping="Wrap"/>
+                            <TextBlock Text="نظام متكامل يربط الكاشير بالخزينة والموردين وأجور العمال، مع إقفال ورديات يومي وتقارير ختامية بضغطة زر."
+                                       FontSize="14" Foreground="#C5CAE9" TextWrapping="Wrap" LineHeight="22" Margin="0,10,0,28"/>
 
-                        <StackPanel Grid.Row="1" VerticalAlignment="Center">
-
-                            <!-- Label -->
-                            <TextBlock Text="كلمة المرور"
-                                       Foreground="#C9A65B"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Margin="4,0,4,6"/>
-
-                            <!-- Field -->
-                            <Grid>
-                                <PasswordBox x:Name="txtPassword"
-                                             Style="{StaticResource ModernPasswordStyle}"
-                                             Padding="45,0,45,0"
-                                             PasswordChanged="PasswordBox_PasswordChanged"/>
-
-                                <TextBox x:Name="txtVisiblePassword"
-                                         Style="{StaticResource ModernTextBoxStyle}"
-                                         Padding="45,0,45,0"
-                                         Visibility="Collapsed"
-                                         TextChanged="TxtVisiblePassword_TextChanged"/>
-
-                                <TextBlock x:Name="txtPasswordWatermark"
-                                           Text="أدخل كلمة المرور هنا"
-                                           Foreground="#6A7FA8"
-                                           FontSize="15"
-                                           Margin="0"
-                                           VerticalAlignment="Center"
-                                           HorizontalAlignment="Center"
-                                           IsHitTestVisible="False"/>
-
-                                <!-- Toggle Password Button (Right aligned in RTL) -->
-                                <Button x:Name="btnTogglePassword"
-                                        Width="36" Height="36"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        Margin="0,0,10,0"
-                                        Background="Transparent"
-                                        BorderThickness="0"
-                                        Cursor="Hand"
-                                        Click="BtnTogglePassword_Click">
-                                    <Button.Template>
-                                        <ControlTemplate TargetType="Button">
-                                            <Border Background="Transparent">
-                                                <materialDesign:PackIcon x:Name="iconTogglePassword" 
-                                                                         Kind="EyeOutline" 
-                                                                         Foreground="#C9A65B" 
-                                                                         Width="22" Height="22" 
-                                                                         HorizontalAlignment="Center" 
-                                                                         VerticalAlignment="Center"/>
-                                            </Border>
-                                        </ControlTemplate>
-                                    </Button.Template>
-                                </Button>
-                            </Grid>
-
+                            <UniformGrid Columns="3">
+                                <Border Style="{StaticResource FeatureTile}">
+                                    <StackPanel>
+                                        <materialDesign:PackIcon Kind="CashMultiple" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="الخزينة النقدية" FontWeight="Bold" FontSize="13" Foreground="White"/>
+                                        <TextBlock Text="مطابقة الدرج والورديات" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource FeatureTile}">
+                                    <StackPanel>
+                                        <materialDesign:PackIcon Kind="TruckOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="الموردون" FontWeight="Bold" FontSize="13" Foreground="White"/>
+                                        <TextBlock Text="فواتير ودفعات وكشوف" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Style="{StaticResource FeatureTile}" Margin="0">
+                                    <StackPanel>
+                                        <materialDesign:PackIcon Kind="AccountGroupOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="أجور العمال" FontWeight="Bold" FontSize="13" Foreground="White"/>
+                                        <TextBlock Text="حضور وسلف ومستحقات" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
                         </StackPanel>
-
-                        <!-- ========================================================= -->
-                        <!-- Login Button -->
-                        <!-- ========================================================= -->
-
-                        <Button x:Name="btnLogin"
-                                Grid.Row="2"
-                                Margin="0,15,0,0"
-                                Content="دخول"
-                                Style="{StaticResource LoginButtonStyle}"
-                                Click="btnLogin_Click"/>
-
-                        <!-- ========================================================= -->
-                        <!-- Footer Row: Remember Me & Designer (centered) -->
-                        <!-- ========================================================= -->
-
-                        <StackPanel Grid.Row="3"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Margin="0,10,0,0">
-
-                            <!-- Remember Me Checkbox -->
-                            <StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Center">
-                                <CheckBox x:Name="chkRememberMe"
-                                          IsChecked="{Binding RememberMe}"
-                                          Margin="0,0,6,0"
-                                          VerticalAlignment="Center"/>
-                                <TextBlock Text="تذكرني"
-                                           Foreground="#D8C08A"
-                                           FontSize="15"
-                                           FontWeight="SemiBold"
-                                           VerticalAlignment="Center"/>
-                            </StackPanel>
-
-                        </StackPanel>
-
-                        <!-- ========================================================= -->
-                        <!-- Copyright & Branding -->
-                        <!-- ========================================================= -->
-
-                        <StackPanel Grid.Row="4"
-                                    Orientation="Vertical"
-                                    HorizontalAlignment="Center"
-                                    Margin="0,10,0,10">
-
-                            <TextBlock Text="تصميم وتنفيذ"
-                                       FontSize="11"
-                                       Foreground="#90A4AE"
-                                       HorizontalAlignment="Center"/>
-
-                            <TextBlock Text="م. إدريس فتح الله الهرى"
-                                       FontSize="13"
-                                       FontWeight="Bold"
-                                       Foreground="#FFD700"
-                                       HorizontalAlignment="Center"
-                                       FlowDirection="RightToLeft"/>
-
-                            <TextBlock Text="EDREES .F. ELHERY"
-                                       FontSize="10"
-                                       Foreground="#64B5F6"
-                                       HorizontalAlignment="Center"/>
-
-                            <TextBlock Text="جميع الحقوق محفوظة © 2026"
-                                       FontSize="10"
-                                       Foreground="#546E7A"
-                                       HorizontalAlignment="Center"
-                                       Margin="0,6,0,0"/>
-
-                        </StackPanel>
-
                     </Grid>
-
                 </Border>
-
             </Grid>
-
         </Border>
-
-        <!-- ========================================================= -->
-        <!-- Window Control Buttons (macOS style premium window actions) -->
-        <!-- ========================================================= -->
-        <StackPanel Orientation="Horizontal" 
-                    HorizontalAlignment="Left" 
-                    VerticalAlignment="Top" 
-                    Margin="20,20,0,0">
-
-            <!-- Close Button (Red) -->
-            <Button Width="18"
-                    Height="18"
-                    Background="#FF5F56"
-                    BorderBrush="#E0443E"
-                    BorderThickness="1"
-                    Cursor="Hand"
-                    Margin="0,0,10,0"
-                    Click="CloseButton_Click"
-                    ToolTip="إغلاق">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="9">
-                            <TextBlock Text="✕" FontSize="8" FontWeight="Bold" Foreground="#4C0002"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF3B30"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-
-            <!-- Minimize Button (Yellow) -->
-            <Button Width="18"
-                    Height="18"
-                    Background="#FFBD2E"
-                    BorderBrush="#DEA123"
-                    BorderThickness="1"
-                    Cursor="Hand"
-                    Margin="0,0,10,0"
-                    Click="MinimizeButton_Click"
-                    ToolTip="تصغير">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="9">
-                            <TextBlock Text="—" FontSize="8" FontWeight="Bold" Foreground="#5C3E00"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#FF9500"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-
-            <!-- Maximize Button (Green) -->
-            <Button Width="18"
-                    Height="18"
-                    Background="#27C93F"
-                    BorderBrush="#1AAB29"
-                    BorderThickness="1"
-                    Cursor="Hand"
-                    Click="MaximizeButton_Click"
-                    ToolTip="تكبير">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" 
-                                BorderBrush="{TemplateBinding BorderBrush}" 
-                                BorderThickness="{TemplateBinding BorderThickness}" 
-                                CornerRadius="9">
-                            <TextBlock Text="⬜" FontSize="6" FontWeight="Bold" Foreground="#024D00"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center"
-                                       Visibility="{Binding IsMouseOver, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#34C759"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-
-        </StackPanel>
-
     </Grid>
 
 </Window>

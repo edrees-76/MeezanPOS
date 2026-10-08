@@ -7,35 +7,89 @@
         xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
         mc:Ignorable="d"
         Title="{Binding Title}" AutomationProperties.AutomationId="MainWindow" Height="800" Width="1200"
-        Icon="/Assets/Images/mizan_3d_icon_final_transparent.png"
+        MinWidth="1280" MinHeight="720"
+        Icon="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png"
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         FlowDirection="RightToLeft"
-        Background="#f8f9ff"
-        FontFamily="Segoe UI">
+        Background="{StaticResource Brush.Canvas}"
+        FontFamily="{StaticResource Font.Body}">
 
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
 
+    <!-- التنقل بين الأقسام: Ctrl+1 .. Ctrl+0 (مفاتيح F محجوزة لإجراءات الشاشات مثل F5 حفظ و F9 ترحيل) -->
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Control" Key="D1" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
+        <KeyBinding Modifiers="Control" Key="D2" Command="{Binding NavigateCommand}" CommandParameter="AddJournal"/>
+        <KeyBinding Modifiers="Control" Key="D3" Command="{Binding NavigateCommand}" CommandParameter="Sales"/>
+        <KeyBinding Modifiers="Control" Key="D4" Command="{Binding NavigateCommand}" CommandParameter="Suppliers"/>
+        <KeyBinding Modifiers="Control" Key="D5" Command="{Binding NavigateCommand}" CommandParameter="Expenses"/>
+        <KeyBinding Modifiers="Control" Key="D6" Command="{Binding NavigateCommand}" CommandParameter="Wages"/>
+        <KeyBinding Modifiers="Control" Key="D7" Command="{Binding NavigateCommand}" CommandParameter="Banking"/>
+        <KeyBinding Modifiers="Control" Key="D8" Command="{Binding NavigateCommand}" CommandParameter="FreeOrdersReturns"/>
+        <KeyBinding Modifiers="Control" Key="D9" Command="{Binding NavigateCommand}" CommandParameter="ClosingAccount"/>
+        <KeyBinding Modifiers="Control" Key="D0" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
+    </Window.InputBindings>
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+
+        <!-- عنصر في القائمة الجانبية: أيقونة + نص (الاختصار يظهر كتلميح) -->
+        <Style x:Key="NavItem" TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="14,11"/>
+            <Setter Property="Margin" Value="12,2"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.SidebarText}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="8" Padding="{TemplateBinding Padding}"
+                                BorderBrush="{StaticResource Brush.Accent}" BorderThickness="0">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.SidebarHover}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Brush.SidebarActive}"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="3,0,0,0"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="NavText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Font.BodyMedium}"/>
+            <Setter Property="FontSize" Value="14.5"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+        </Style>
+        <Style x:Key="NavIcon" TargetType="materialDesign:PackIcon">
+            <Setter Property="Width" Value="20"/>
+            <Setter Property="Height" Value="20"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" /> <!-- Sidebar -->
-            <ColumnDefinition Width="*" /> <!-- Main Content -->
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Sidebar -->
-        <Border Grid.Column="0" Width="260" Visibility="{Binding IsSidebarVisible, Converter={StaticResource BooleanToVisibilityConverter}}" BorderBrush="#1Affffff" BorderThickness="0,0,1,0">
-            <Border.Background>
-                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
-                    <GradientStop Color="#0F172A" Offset="0"/> <!-- Slate 900 -->
-                    <GradientStop Color="#172554" Offset="1"/> <!-- Blue 950 -->
-                </LinearGradientBrush>
-            </Border.Background>
+        <!-- ===== القائمة الجانبية ===== -->
+        <Border Grid.Column="0" Width="264" Background="{StaticResource Brush.Sidebar}"
+                Visibility="{Binding IsSidebarVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -43,194 +97,147 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <!-- Header -->
-                <StackPanel Grid.Row="0" Margin="16,30,16,20" Orientation="Horizontal">
-                    <Border Width="65" Height="65" CornerRadius="32.5" Background="White" Margin="-5,0,0,0" ClipToBounds="True">
-                        <Image Source="/Assets/Images/mizan_3d_icon_final_transparent.png" Stretch="Uniform" Margin="4"/>
-                    </Border>
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="ميزان للمطاعم" FontWeight="Bold" FontSize="18" Foreground="#ffe081"/>
+                <!-- الشعار واسم المنظومة -->
+                <Border Grid.Row="0" Padding="20,22,20,18" BorderBrush="#1FFFFFFF" BorderThickness="0,0,0,1">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="46" Height="46" CornerRadius="10" Background="White" Padding="3">
+                            <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Stretch="Uniform"/>
+                        </Border>
+                        <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="ميزان للمطاعم" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="19" Foreground="White"/>
+                            <TextBlock Text="إدارة المحاسبة والخزينة" FontSize="12" Foreground="{StaticResource Brush.SidebarText}" Margin="0,1,0,0"/>
+                        </StackPanel>
                     </StackPanel>
-                </StackPanel>
+                </Border>
 
-                <!-- Navigation List -->
-                <ListBox Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,10,0,0"
+                <!-- عناصر التنقل (الترتيب يطابق NavOrder في MainViewModel) -->
+                <ListBox Grid.Row="1" Background="Transparent" BorderThickness="0" Margin="0,14,0,0"
+                         ItemContainerStyle="{StaticResource NavItem}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          SelectedIndex="{Binding SelectedNavIndex}">
-                    <ListBox.Resources>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="#cbd5e1"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" Value="True">
-                                    <Setter Property="Foreground" Value="#fbbf24"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                        <Style TargetType="materialDesign:PackIcon">
-                            <Setter Property="Foreground" Value="#cbd5e1"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType={x:Type ListBoxItem}}}" Value="True">
-                                    <Setter Property="Foreground" Value="#fbbf24"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Padding" Value="16,14"/>
-                            <Setter Property="Margin" Value="0,4"/>
-                            <Setter Property="Foreground" Value="#cbd5e1"/>
-                            <Setter Property="Opacity" Value="0.75"/>
-                            <Setter Property="Cursor" Value="Hand"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Bd" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="0,24,24,0" Margin="0,0,16,0">
-                                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#1Affffff" />
-                                                <Setter Property="Opacity" Value="1"/>
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="#1Afbbf24" />
-                                                <Setter TargetName="Bd" Property="BorderBrush" Value="#fbbf24"/>
-                                                <Setter TargetName="Bd" Property="BorderThickness" Value="4,0,0,0"/>
-                                                <Setter Property="Foreground" Value="#fbbf24"/>
-                                                <Setter Property="Opacity" Value="1"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.Resources>
-
-                    <!-- Items -->
-                    <ListBoxItem materialDesign:ListBoxItemAssist.ShowSelection="False">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboard" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="لوحة التحكم" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+1">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="ViewDashboardOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="لوحة التحكم" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CashRegister" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="المبيعات والإيرادات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+2">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="CalendarEditOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="تسجيل حركة يومية" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountTie" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="إدارة الموردين" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+3">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="CashRegister" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="المبيعات والإيرادات" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="إدارة المصروفات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+4">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="TruckOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="إدارة الموردين" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountMultipleOutline" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="أجور ومستحقات العمال" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+5">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="ReceiptTextOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="إدارة المصروفات" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Bank" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="الحسابات البنكية والخزينة" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+6">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="أجور ومستحقات العمال" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="GiftOutline" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="الطلبات المجانية والمرتجعات" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+7">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="Bank" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="الحسابات البنكية والخزينة" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem>
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="24" Height="24" Margin="0,0,16,0"/>
-                            <TextBlock Text="الحساب الختامي والتقارير" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                        </StackPanel>
+                    <ListBoxItem ToolTip="Ctrl+8">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="GiftOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="الطلبات المجانية والمرتجعات" Style="{StaticResource NavText}"/>
+                        </DockPanel>
+                    </ListBoxItem>
+                    <ListBoxItem ToolTip="Ctrl+9">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="ChartBoxOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="الحساب الختامي والتقارير" Style="{StaticResource NavText}"/>
+                        </DockPanel>
+                    </ListBoxItem>
+                    <ListBoxItem ToolTip="Ctrl+0">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="CogOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="الإعدادات" Style="{StaticResource NavText}"/>
+                        </DockPanel>
                     </ListBoxItem>
                 </ListBox>
 
-                <StackPanel Grid.Row="2" Margin="0,0,0,40">
-
-                    <Button Command="{Binding LogoutCommand}"
-                            Style="{StaticResource MaterialDesignFlatButton}" 
-                            Foreground="#ffdad6" Margin="16,0" Padding="8" Height="45"
-                            HorizontalContentAlignment="Left">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Logout" Width="20" Height="20" Margin="0,0,16,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="تسجيل الخروج" FontSize="15" VerticalAlignment="Center"/>
+                <!-- بطاقة المستخدم وتسجيل الخروج -->
+                <Border Grid.Row="2" Margin="12,8,12,16" Padding="12,10" CornerRadius="10" Background="#26000000">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Command="{Binding LogoutCommand}" ToolTip="تسجيل الخروج"
+                                Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36" Foreground="#FFCDD2">
+                            <materialDesign:PackIcon Kind="Logout" Width="20" Height="20"/>
+                        </Button>
+                        <Border Width="38" Height="38" CornerRadius="19" Background="{StaticResource Brush.Accent}">
+                            <TextBlock Text="{Binding CurrentUserInitial}" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="16"
+                                       Foreground="{StaticResource Brush.PrimaryDark}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding CurrentUserName}" FontFamily="{StaticResource Font.BodyMedium}" FontSize="14" Foreground="White" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding CurrentUserRole}" FontSize="12" Foreground="{StaticResource Brush.SidebarText}"/>
                         </StackPanel>
-                    </Button>
-                </StackPanel>
+                    </DockPanel>
+                </Border>
             </Grid>
         </Border>
 
-        <!-- Main Area -->
+        <!-- ===== منطقة المحتوى ===== -->
         <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="80" /> <!-- TopNav -->
-                <RowDefinition Height="*" /> <!-- Content -->
+                <RowDefinition Height="64" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Top Navbar -->
-            <Border Grid.Row="0" Background="White" BorderBrush="#e5eeff" BorderThickness="0,0,0,1">
-                <Grid Margin="32,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <Button Grid.Column="0" Command="{Binding ToggleSidebarCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="#0b1c30" Margin="0,0,16,0" ToolTip="إظهار / إخفاء القائمة">
-                        <materialDesign:PackIcon Kind="Menu" Width="28" Height="28"/>
+            <!-- الشريط العلوي -->
+            <Border Grid.Row="0" Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
+                <DockPanel Margin="20,0" LastChildFill="True">
+                    <Button DockPanel.Dock="Left" Command="{Binding ToggleSidebarCommand}" ToolTip="إظهار / إخفاء القائمة"
+                            Style="{StaticResource MaterialDesignIconButton}" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="MenuOpen" Width="24" Height="24"/>
                     </Button>
 
-                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
-
-                    <!-- Search Removed -->
-
-                    <!-- Actions -->
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- Quick Add Action -->
-                        <Button Command="{Binding NavigateCommand}" CommandParameter="AddJournal" 
-                                Background="#10b981" BorderThickness="0" Padding="12,4" Margin="0,0,16,0" materialDesign:ButtonAssist.CornerRadius="8">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Title}" Value="ميزان للمالية - لوحة التحكم">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Style="{StaticResource Chip}" Margin="0,0,12,0" Padding="12,5">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="Plus" Foreground="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="تسجيل حركة يومية" Foreground="White" FontWeight="SemiBold" FontSize="13" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="CalendarToday" Width="16" Height="16" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding TodayText}" FontFamily="{StaticResource Font.Money}" FontSize="13"
+                                           Foreground="{StaticResource Brush.TextSecondary}" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
                             </StackPanel>
-                        </Button>
-
-                        <!-- Bell removed -->
-                        <Button x:Name="btnSettings" AutomationProperties.AutomationId="btnSettings" Command="{Binding NavigateCommand}" CommandParameter="Settings" Style="{StaticResource MaterialDesignIconButton}" Foreground="#76777d" Margin="0,0,16,0">
-                            <materialDesign:PackIcon Kind="CogOutline" Width="24" Height="24"/>
-                        </Button>
-
-                        <Border Width="40" Height="40" CornerRadius="20" Background="#e5eeff" BorderBrush="#bec6e0" BorderThickness="2">
-                            <materialDesign:PackIcon Kind="Account" Width="24" Height="24" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#0b1c30"/>
                         </Border>
+                        <Button x:Name="btnSettings" AutomationProperties.AutomationId="btnSettings" ToolTip="الإعدادات"
+                                Command="{Binding NavigateCommand}" CommandParameter="Settings"
+                                Style="{StaticResource MaterialDesignIconButton}" Foreground="{StaticResource Brush.TextMuted}">
+                            <materialDesign:PackIcon Kind="CogOutline" Width="22" Height="22"/>
+                        </Button>
                     </StackPanel>
-                </Grid>
+
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="ميزان" Style="{StaticResource Text.Caption}" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Text="{Binding PageTitle}" FontFamily="{StaticResource Font.Title}" FontWeight="Bold" FontSize="17"
+                                   Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </DockPanel>
             </Border>
 
-            <!-- Dynamic Content -->
-            <ContentControl Grid.Row="1" Margin="32" Content="{Binding CurrentViewModel}" />
+            <!-- محتوى الشاشة الحالية -->
+            <ContentControl Grid.Row="1" Margin="24" Content="{Binding CurrentViewModel}" />
         </Grid>
     </Grid>
 </Window>

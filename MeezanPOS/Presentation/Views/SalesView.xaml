@@ -210,11 +210,11 @@
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="Background" Value="#3b82f6"/>
+                                    <Setter TargetName="BoxBorder" Property="Background" Value="#3F51B5"/>
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3F51B5"/>
 
 
 
@@ -230,7 +230,7 @@
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3b82f6"/>
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3F51B5"/>
 
 
 
@@ -426,7 +426,7 @@
 
 
 
-                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="#0f172a"/>
+                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="#1E293B"/>
 
 
 
@@ -486,7 +486,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Foreground" Value="#1E293B"/>
 
 
 
@@ -598,7 +598,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Foreground" Value="#1E293B"/>
 
 
 
@@ -710,7 +710,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Foreground" Value="#1E293B"/>
 
 
 
@@ -946,7 +946,7 @@
 
 
 
-                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="#3b82f6" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,8,0"/>
 
 
 
@@ -958,7 +958,7 @@
 
 
 
-                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#0f172a"/>
+                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#1E293B"/>
 
 
 
@@ -978,7 +978,7 @@
 
 
 
-            <Border Grid.Column="2" Background="#f0fdf4" CornerRadius="16" Padding="20" BorderBrush="#dcfce7" BorderThickness="1">
+            <Border Grid.Column="2" Background="#DCFCE7" CornerRadius="16" Padding="20" BorderBrush="#dcfce7" BorderThickness="1">
 
 
 
@@ -990,7 +990,7 @@
 
 
 
-                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#10b981" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#16A34A" Margin="0,0,8,0"/>
 
 
 
@@ -1022,7 +1022,7 @@
 
 
 
-            <Border Grid.Column="4" Background="#faf5ff" CornerRadius="16" Padding="20" BorderBrush="#f3e8ff" BorderThickness="1">
+            <Border Grid.Column="4" Background="#EEF2FF" CornerRadius="16" Padding="20" BorderBrush="#f3e8ff" BorderThickness="1">
 
 
 
@@ -1034,7 +1034,7 @@
 
 
 
-                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="#a855f7" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,8,0"/>
 
 
 
@@ -1046,7 +1046,7 @@
 
 
 
-                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#581c87"/>
+                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#1A237E"/>
 
 
 
@@ -1082,7 +1082,7 @@
 
 
 
-                        <Setter Property="Background" Value="#f0fdf4"/>
+                        <Setter Property="Background" Value="#DCFCE7"/>
 
 
 
@@ -1098,11 +1098,11 @@
 
 
 
-                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#DC2626">
 
 
 
-                                <Setter Property="Background" Value="#fef2f2"/>
+                                <Setter Property="Background" Value="#FEE2E2"/>
 
 
 
@@ -1118,15 +1118,15 @@
 
 
 
-                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                            <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3F51B5">
 
 
 
-                                <Setter Property="Background" Value="#eff6ff"/>
+                                <Setter Property="Background" Value="#EEF2FF"/>
 
 
 
-                                <Setter Property="BorderBrush" Value="#dbeafe"/>
+                                <Setter Property="BorderBrush" Value="#EEF2FF"/>
 
 
 
@@ -1174,7 +1174,7 @@
 
 
 
-                                    <Setter Property="Foreground" Value="#10b981"/>
+                                    <Setter Property="Foreground" Value="#16A34A"/>
 
 
 
@@ -1186,7 +1186,7 @@
 
 
 
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#DC2626">
 
 
 
@@ -1194,7 +1194,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                            <Setter Property="Foreground" Value="#DC2626"/>
 
 
 
@@ -1206,7 +1206,7 @@
 
 
 
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3F51B5">
 
 
 
@@ -1214,7 +1214,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#3b82f6"/>
+                                            <Setter Property="Foreground" Value="#3F51B5"/>
 
 
 
@@ -1266,7 +1266,7 @@
 
 
 
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#DC2626">
 
 
 
@@ -1282,11 +1282,11 @@
 
 
 
-                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                        <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3F51B5">
 
 
 
-                                            <Setter Property="Foreground" Value="#1d4ed8"/>
+                                            <Setter Property="Foreground" Value="#3F51B5"/>
 
 
 
@@ -1342,7 +1342,7 @@
 
 
 
-                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#ef4444">
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#DC2626">
 
 
 
@@ -1358,11 +1358,11 @@
 
 
 
-                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3b82f6">
+                                    <DataTrigger Binding="{Binding TotalDifferenceColor}" Value="#3F51B5">
 
 
 
-                                        <Setter Property="Foreground" Value="#1e3a8a"/>
+                                        <Setter Property="Foreground" Value="#283593"/>
 
 
 
@@ -1558,11 +1558,11 @@
 
 
 
-                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="#3b82f6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="#3F51B5" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
 
 
-                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
 
 
@@ -1686,11 +1686,11 @@
 
 
 
-                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="45" Width="100" Margin="0,0,8,0"/>
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#16A34A" BorderBrush="#16A34A" Height="45" Width="100" Margin="0,0,8,0"/>
 
 
 
-                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
+                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#DC2626" BorderBrush="#DC2626" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
 
 
 
@@ -1702,7 +1702,7 @@
 
 
 
-                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="#6366f1" BorderBrush="#6366f1" Height="45" Cursor="Hand">
+                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="#3F51B5" BorderBrush="#3F51B5" Height="45" Cursor="Hand">
 
 
 
@@ -1838,7 +1838,7 @@
 
 
 
-                                    <DataGridTemplateColumn Width="65">
+                                    <DataGridTemplateColumn Width="Auto" MinWidth="65">
 
 
 
@@ -1994,7 +1994,7 @@
 
 
 
-                                    <DataGridTemplateColumn Header="إجراءات" Width="140">
+                                    <DataGridTemplateColumn Header="إجراءات" Width="Auto" MinWidth="140">
 
 
 
@@ -2034,7 +2034,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3F51B5"/>
 
 
 
@@ -2066,7 +2066,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
+                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#16A34A"/>
 
 
 
@@ -2098,7 +2098,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="#ef4444"/>
+                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="#DC2626"/>
 
 
 
@@ -2162,7 +2162,7 @@
 
 
 
-                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#0f172a" Opacity="0.18"/>
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#1E293B" Opacity="0.18"/>
 
 
 
@@ -2226,11 +2226,11 @@
 
 
 
-                                        <Border Background="#eff6ff" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="#EEF2FF" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3b82f6" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3F51B5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2246,7 +2246,7 @@
 
 
 
-                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="#0f172a"/>
+                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
 
 
 
@@ -2270,11 +2270,11 @@
 
 
 
-                                        <Border Background="#f0fdf4" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="#DCFCE7" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#10b981" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#16A34A" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2314,11 +2314,11 @@
 
 
 
-                                        <Border Background="#fdf2f8" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="#EEF2FF" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#db2777" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#3F51B5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2330,11 +2330,11 @@
 
 
 
-                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="#be185d" FontWeight="Medium"/>
+                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="#283593" FontWeight="Medium"/>
 
 
 
-                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#831843"/>
+                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#1A237E"/>
 
 
 
@@ -2366,7 +2366,7 @@
 
 
 
-                                            Background="#0f172a" BorderBrush="#0f172a" Foreground="White"
+                                            Background="#1E293B" BorderBrush="#1E293B" Foreground="White"
 
 
 
@@ -2470,7 +2470,7 @@
 
 
 
-                                        BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
+                                        BorderBrush="#DC2626" Foreground="#DC2626" Height="38" Padding="16,0">
 
 
 
@@ -2650,9 +2650,9 @@
 
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
 
-                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#8b5cf6" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#3F51B5" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
                                     </StackPanel>
 
@@ -2664,9 +2664,9 @@
 
                                         <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" Padding="10,5" FontSize="13" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
 
-                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تصفية" Style="{StaticResource MaterialDesignRaisedButton}" Background="#10b981" BorderBrush="#10b981" Height="36" Width="80" Margin="0,0,6,0"/>
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تصفية" Style="{StaticResource MaterialDesignRaisedButton}" Background="#16A34A" BorderBrush="#16A34A" Height="36" Width="80" Margin="0,0,6,0"/>
 
-                                        <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#ef4444" BorderBrush="#ef4444" Height="36" Width="36" Padding="0">
+                                        <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#DC2626" BorderBrush="#DC2626" Height="36" Width="36" Padding="0">
 
                                             <materialDesign:PackIcon Kind="FilterRemove" Width="18" Height="18"/>
 
@@ -2830,11 +2830,11 @@
 
 
 
-                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#8b5cf6" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#3F51B5" Margin="0,0,8,0" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
 
 
@@ -2870,7 +2870,7 @@
 
 
 
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#10b981" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Center"/>
 
 
 
@@ -2894,7 +2894,7 @@
 
 
 
-                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#ef4444" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center"/>
 
 
 
@@ -2918,7 +2918,7 @@
 
 
 
-                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
 
 
@@ -2982,7 +2982,7 @@
 
 
 
-                                                            Background="#3b82f6" BorderBrush="#3b82f6" Height="36" Cursor="Hand" Margin="0,0,10,0">
+                                                            Background="#3F51B5" BorderBrush="#3F51B5" Height="36" Cursor="Hand" Margin="0,0,10,0">
 
 
 
@@ -3042,7 +3042,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="#3b82f6"/>
+                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="#3F51B5"/>
 
 
 
@@ -3078,7 +3078,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="#10b981"/>
+                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="#16A34A"/>
 
 
 
@@ -3254,7 +3254,7 @@
 
 
 
-                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3b82f6" Height="36" Padding="8,0">
+                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3F51B5" Height="36" Padding="8,0">
 
 
 
@@ -3282,7 +3282,7 @@
 
 
 
-                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
 
 
@@ -3478,7 +3478,7 @@
 
 
 
-                                    <DataGridTemplateColumn Header="إجراءات" Width="100">
+                                    <DataGridTemplateColumn Header="إجراءات" Width="Auto" MinWidth="100">
 
 
 
@@ -3518,7 +3518,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3b82f6"/>
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3F51B5"/>
 
 
 
@@ -3598,7 +3598,7 @@
 
 
 
-                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#10b981"/>
+                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#16A34A"/>
 
 
 
@@ -3670,7 +3670,7 @@
 
 
 
-                                            BorderBrush="#ef4444" Foreground="#ef4444" Height="38" Padding="16,0">
+                                            BorderBrush="#DC2626" Foreground="#DC2626" Height="38" Padding="16,0">
 
 
 
@@ -3842,7 +3842,7 @@
 
 
 
-                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#10b981" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#16A34A" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
 
 
@@ -3934,7 +3934,7 @@
 
 
 
-                                        BorderBrush="#f59e0b" Foreground="#d97706"
+                                        BorderBrush="#D97706" Foreground="#d97706"
 
 
 
@@ -3954,7 +3954,7 @@
 
 
 
-                                         Background="#6366f1" BorderBrush="#6366f1"
+                                         Background="#3F51B5" BorderBrush="#3F51B5"
 
 
 
@@ -4038,7 +4038,7 @@
 
 
 
-                                        Background="#10b981" BorderBrush="#10b981"
+                                        Background="#16A34A" BorderBrush="#16A34A"
 
 
 
@@ -4170,7 +4170,7 @@
 
 
 
-                                                           FontWeight="Bold" Foreground="#3b82f6" 
+                                                           FontWeight="Bold" Foreground="#3F51B5" 
 
 
 
@@ -4238,7 +4238,7 @@
 
             <Border.Effect>
 
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#1E293B" Opacity="0.25"/>
 
             </Border.Effect>
 
@@ -4272,9 +4272,9 @@
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
 
-                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
-                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
                 </StackPanel>
 
@@ -4334,7 +4334,7 @@
 
                     <!-- Keep Amount (ReadOnly Calculation) -->
 
-                    <Border Background="#f0fdf4" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
+                    <Border Background="#DCFCE7" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
 
                         <Grid>
 
@@ -4384,7 +4384,7 @@
 
                 <!-- Warning Alert -->
 
-                <Border Grid.Row="6" Background="#fffbeb" BorderBrush="#fef3c7" BorderThickness="1" CornerRadius="8" Padding="12">
+                <Border Grid.Row="6" Background="#FEF3C7" BorderBrush="#fef3c7" BorderThickness="1" CornerRadius="8" Padding="12">
 
                     <Grid>
 
@@ -4424,7 +4424,7 @@
 
                     <Button Grid.Column="0" Content="تأكيد وإقفال" Command="{Binding ConfirmSettleOwnerCashCommand}" 
 
-                            Background="#6366f1" BorderBrush="#6366f1" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
+                            Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
 
                     <Button Grid.Column="2" Content="إلغاء" Command="{Binding CloseSettleOwnerCashDialogCommand}" 
 
@@ -4450,7 +4450,7 @@
 
             <Border.Effect>
 
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#0f172a" Opacity="0.25"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#1E293B" Opacity="0.25"/>
 
             </Border.Effect>
 
@@ -4492,9 +4492,9 @@
 
                     <StackPanel Orientation="Horizontal" Grid.Column="0">
 
-                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="#6366f1" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
-                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
                     </StackPanel>
 
@@ -4557,7 +4557,7 @@
                             <DataGridTextColumn Header="البيان والملاحظات" Binding="{Binding Notes}" Width="*" MinWidth="180"/>
 
                             <DataGridTextColumn Header="حالة الفترة" Binding="{Binding StatusText}" Width="Auto" MinWidth="120"/>
-                            <DataGridTemplateColumn Header="إجراءات" Width="150">
+                            <DataGridTemplateColumn Header="إجراءات" Width="Auto" MinWidth="150">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
@@ -4567,7 +4567,7 @@
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
                                                     ToolTip="تنزيل وعرض إيصال PDF">
-                                                <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#ef4444"/>
+                                                <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#DC2626"/>
                                             </Button>
                                             <!-- Unlock Period -->
                                             <Button Command="{Binding DataContext.UnlockPeriodCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"

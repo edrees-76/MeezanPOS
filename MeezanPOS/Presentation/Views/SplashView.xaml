@@ -22,9 +22,9 @@
         FlowDirection="RightToLeft">
 
     <Window.Resources>
-        <Color x:Key="PrimaryBlue">#071D49</Color>
-        <Color x:Key="SecondaryBlue">#102B61</Color>
-        <Color x:Key="GoldColor">#C9A65B</Color>
+        <Color x:Key="PrimaryBlue">#1A237E</Color>
+        <Color x:Key="SecondaryBlue">#283593</Color>
+        <Color x:Key="GoldColor">#FFB300</Color>
         <Color x:Key="WhiteText">#F3F3F3</Color>
 
         <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource PrimaryBlue}"/>
@@ -33,10 +33,17 @@
         <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource WhiteText}"/>
     </Window.Resources>
 
-    <Border BorderBrush="#C7AA6C"
-            BorderThickness="2"
-            CornerRadius="20"
-            Background="{StaticResource BlueBrush}">
+    <Border BorderBrush="#33FFFFFF"
+            BorderThickness="1"
+            CornerRadius="16"
+            Margin="10"
+            Effect="{StaticResource Shadow.Dialog}">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#283593" Offset="0"/>
+                <GradientStop Color="#1A237E" Offset="1"/>
+            </LinearGradientBrush>
+        </Border.Background>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
@@ -50,22 +57,16 @@
                         Margin="0,30,0,10">
                 
                 <!-- Logo -->
-                <Image Source="/Assets/Images/mizan_3d_icon_final_transparent.png" 
-                       Width="140" 
-                       Height="140" 
-                       Stretch="Uniform" 
-                       HorizontalAlignment="Center">
-                    <Image.Effect>
-                        <DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.25" Color="Black"/>
-                    </Image.Effect>
-                </Image>
+                <Border Width="120" Height="120" CornerRadius="26" Background="White" Padding="10" HorizontalAlignment="Center">
+                    <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Stretch="Uniform"/>
+                </Border>
 
                 <!-- App Name -->
-                <TextBlock Text="منظومة ميزان للمطاعم"
-                           Foreground="{StaticResource GoldBrush}"
-                           FontSize="24"
-                           FontWeight="ExtraBold"
-                           FontFamily="Segoe UI"
+                <TextBlock Text="ميزان للمطاعم"
+                           Foreground="White"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           FontFamily="{StaticResource Font.Heading}"
                            HorizontalAlignment="Center"
                            Margin="0,15,0,5"
                            TextAlignment="Center">
@@ -75,11 +76,11 @@
                 </TextBlock>
 
                 <!-- Loading status -->
-                <TextBlock Text="جاري تحميل النظام..."
-                           Foreground="#A5B4FC"
+                <TextBlock Text="جاري تجهيز قاعدة البيانات..."
+                           Foreground="#C5CAE9"
                            FontSize="15"
                            FontWeight="Medium"
-                           FontFamily="Segoe UI"
+                           FontFamily="{StaticResource Font.Body}"
                            HorizontalAlignment="Center"
                            Margin="0,5,0,15"
                            TextAlignment="Center"/>
@@ -92,7 +93,7 @@
                 <ProgressBar x:Name="ProgressBar"
                              Height="6"
                              IsIndeterminate="True"
-                             Background="#1E3A8A"
+                             Background="#33FFFFFF"
                              Foreground="{StaticResource GoldBrush}"
                              BorderThickness="0">
                     <ProgressBar.Resources>

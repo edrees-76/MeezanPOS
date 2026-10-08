@@ -11,7 +11,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              FlowDirection="RightToLeft"
-             Background="#f8f9ff">
+             Background="Transparent">
     <UserControl.Resources>
         <CollectionViewSource x:Key="AlertsViewSource" Source="{Binding Alerts}" Filter="AlertsViewSource_Filter" />
         <converters:AlertColorToBrushConverter x:Key="AlertColorConverter" />
@@ -20,16 +20,17 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,0,20">
-            <!-- Header -->
-            <Grid Margin="0,0,0,24">
+            <!-- رأس الصفحة -->
+            <Border Style="{StaticResource PageHeader}">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="نظرة عامة على الأداء" FontSize="28" FontWeight="Bold" Foreground="#0b1c30"/>
-                    <TextBlock Text="{Binding LastUpdated, StringFormat='آخر تحديث: {0:yyyy-MM-dd HH:mm:ss}', TargetNullValue='ملخص مالي حقيقي ومباشر'}" FontSize="16" Foreground="#76777d" Margin="0,4,0,0"/>
+                    <TextBlock Text="لوحة التحكم المالية والتشغيلية" Style="{StaticResource Text.PageTitle}"/>
+                    <TextBlock Text="{Binding LastUpdated, StringFormat='آخر تحديث: {0:yyyy-MM-dd HH:mm:ss}', TargetNullValue='ملخص مالي حقيقي ومباشر'}" Style="{StaticResource Text.Caption}" Margin="0,4,0,0"/>
                 </StackPanel>
                 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -79,78 +80,79 @@
                     </Button>
                 </StackPanel>
             </Grid>
+            </Border>
 
             <!-- KPI Cards -->
-            <UniformGrid Columns="6" Margin="0,0,0,24">
+            <UniformGrid Columns="6" Margin="0,0,0,20">
                 <!-- Card 1: إجمالي المبيعات -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,12,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
+                    
                     <StackPanel>
-                        <Border Background="#e6f8f1" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="TrendingUp" Foreground="#10b981" Width="20" Height="20"/>
+                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="TrendingUp" Foreground="#16A34A" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="إجمالي المبيعات" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalSales, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="إجمالي المبيعات" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding TotalSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 2: مبيعات نقدي -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,12,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
+                    
                     <StackPanel>
-                        <Border Background="#e6f8f1" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="CashMultiple" Foreground="#10b981" Width="20" Height="20"/>
+                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="CashMultiple" Foreground="#16A34A" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="مبيعات نقدي" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding CashSales, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="مبيعات نقدي" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding CashSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 3: مبيعات شبكة -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,12,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
+                    
                     <StackPanel>
                         <Border Background="#eef2ff" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="CreditCard" Foreground="#3b82f6" Width="20" Height="20"/>
+                            <materialDesign:PackIcon Kind="CreditCard" Foreground="#3F51B5" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="مبيعات خدمات مصرفية" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding CardSales, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="مبيعات خدمات مصرفية" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding CardSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 4: إجمالي المصروفات -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,12,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
+                    
                     <StackPanel>
                         <Border Background="#fee2e2" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="ReceiptText" Foreground="#ef4444" Width="20" Height="20"/>
+                            <materialDesign:PackIcon Kind="ReceiptText" Foreground="#DC2626" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="إجمالي المصروفات" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalExpenses, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="إجمالي المصروفات" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding TotalExpenses, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 5: صافي الربح -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,12,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
+                    
                     <StackPanel>
-                        <Border Background="#fffbeb" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="Wallet" Foreground="#f59e0b" Width="20" Height="20"/>
+                        <Border Background="#FEF3C7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="Wallet" Foreground="#D97706" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="صافي الربح" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding NetProfit, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="صافي الربح" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding NetProfit, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Card 6: رصيد الخزينة -->
-                <Border Background="White" CornerRadius="12" Padding="16" Margin="0,0,0,0" BorderBrush="#e5eeff" BorderThickness="1">
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                <Border Style="{StaticResource Card}" Padding="18,16">
+                    
                     <StackPanel>
                         <Border Background="#ffedd5" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
                             <materialDesign:PackIcon Kind="ScaleBalance" Foreground="#f97316" Width="20" Height="20"/>
                         </Border>
-                        <TextBlock Text="رصيد الخزينة" FontSize="13" Foreground="#76777d" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding CashBalance, StringFormat={}{0:N2}}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30" Margin="0,4,0,0"/>
+                        <TextBlock Text="رصيد الخزينة" Style="{StaticResource Text.Label}"/>
+                        <TextBlock Text="{Binding CashBalance, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -163,7 +165,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Line Chart -->
-                <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24" BorderBrush="#e5eeff" BorderThickness="1">
+                <Border Grid.Column="0" Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="24" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Margin" Value="0,0,16,0"/>
@@ -176,7 +178,7 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                    
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -187,17 +189,17 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="تحليل المبيعات" FontSize="18" FontWeight="Bold" Foreground="#0b1c30" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="تحليل المبيعات" Style="{StaticResource Text.SectionTitle}" VerticalAlignment="Center"/>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Sales Legend -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
-                                    <Border Width="12" Height="12" Background="#3b82f6" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock Text="المبيعات" FontSize="12" Foreground="#3b82f6" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Border Width="12" Height="12" Background="#3F51B5" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="المبيعات" FontSize="12" Foreground="#3F51B5" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <!-- Expenses Legend -->
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Rectangle Width="12" Height="12" Stroke="#ef4444" StrokeThickness="2" StrokeDashArray="2 1.5" RadiusX="2" RadiusY="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock Text="المصروفات (متقطع)" FontSize="12" Foreground="#ef4444" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Rectangle Width="12" Height="12" Stroke="#DC2626" StrokeThickness="2" StrokeDashArray="2 1.5" RadiusX="2" RadiusY="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="المصروفات (متقطع)" FontSize="12" Foreground="#DC2626" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -206,7 +208,7 @@
                 </Border>
 
                 <!-- Donut Chart -->
-                <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="24" BorderBrush="#e5eeff" BorderThickness="1">
+                <Border Grid.Column="1" Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="24" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -217,20 +219,20 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+                    
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Text="توزيع المصروفات" FontSize="18" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,16"/>
+                        <TextBlock Text="توزيع المصروفات" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,16"/>
                         <lvc:PieChart x:Name="ExpenseDistributionChart" Grid.Row="1" Series="{Binding ExpenseDistributionSeries}" TooltipPosition="Top" FlowDirection="LeftToRight" />
                     </Grid>
                 </Border>
             </Grid>
 
             <!-- Alerts Section -->
-            <Border Margin="0,0,0,24" BorderBrush="#e5eeff" BorderThickness="0">
+            <Border Margin="0,0,0,24" BorderBrush="#EEF2FF" BorderThickness="0">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -262,7 +264,7 @@
                                     
                                     <!-- Message -->
                                     <TextBlock Grid.Column="1" Text="{Binding Message}" FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#0b1c30" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                               Foreground="#1E293B" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     
                                     <!-- Close Button -->
                                     <Button Grid.Column="2" Click="DismissAlert_Click" 
@@ -278,7 +280,7 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>
-                                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#76777d"/>
+                                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#64748B"/>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -288,15 +290,14 @@
             </Border>
 
             <!-- Table -->
-            <Border Background="White" CornerRadius="12" Padding="0" BorderBrush="#e5eeff" BorderThickness="1">
-                <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Margin="0,0,0,20">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
-                    <Border BorderBrush="#e5eeff" BorderThickness="0,0,0,1" Padding="24,16">
-                        <TextBlock Text="أحدث المبيعات اليومية" FontSize="18" FontWeight="Bold" Foreground="#0b1c30"/>
+                    <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="24,16">
+                        <TextBlock Text="أحدث المبيعات اليومية" Style="{StaticResource Text.SectionTitle}"/>
                     </Border>
                     
                     <DataGrid Grid.Row="1" ItemsSource="{Binding RecentSales}" AutoGenerateColumns="False" 
@@ -314,16 +315,16 @@
             </Border>
 
             <!-- Recent Activities Section -->
-            <Border Background="White" CornerRadius="12" Padding="0" BorderBrush="#e5eeff" BorderThickness="1" Margin="0,0,0,24">
-                <Border.Effect><DropShadowEffect BlurRadius="10" ShadowDepth="2" Opacity="0.05"/></Border.Effect>
+            <Border Background="{StaticResource Brush.Surface}" CornerRadius="12" Padding="0" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Margin="0,0,0,24">
+                
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     
-                    <Border BorderBrush="#e5eeff" BorderThickness="0,0,0,1" Padding="24,16">
-                        <TextBlock Text="آخر العمليات والتحركات المالية" FontSize="18" FontWeight="Bold" Foreground="#0b1c30"/>
+                    <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1" Padding="24,16">
+                        <TextBlock Text="آخر العمليات والتحركات المالية" Style="{StaticResource Text.SectionTitle}"/>
                     </Border>
                     
                     <Grid Grid.Row="1" MinHeight="150">
@@ -345,7 +346,7 @@
                             </DataGrid.Style>
                             <DataGrid.Columns>
                                 <!-- النوع -->
-                                <DataGridTemplateColumn Header="النوع" Width="180">
+                                <DataGridTemplateColumn Header="النوع" Width="Auto" MinWidth="180">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -355,10 +356,10 @@
                                                             <Setter Property="Foreground" Value="#64748b"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#10b981"/>
+                                                                    <Setter Property="Foreground" Value="#16A34A"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                                    <Setter Property="Foreground" Value="#ef4444"/>
+                                                                    <Setter Property="Foreground" Value="#DC2626"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -374,7 +375,7 @@
                                 <DataGridTextColumn Header="الوصف" Binding="{Binding Description}" Width="2*" />
 
                                 <!-- المبلغ -->
-                                <DataGridTemplateColumn Header="المبلغ" Width="150">
+                                <DataGridTemplateColumn Header="المبلغ" Width="Auto" MinWidth="150">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding Amount, StringFormat={}{0:N2}}" FontWeight="Bold" VerticalAlignment="Center">
@@ -382,10 +383,10 @@
                                                     <Style TargetType="TextBlock">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                                <Setter Property="Foreground" Value="#10b981"/>
+                                                                <Setter Property="Foreground" Value="#16A34A"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                                <Setter Property="Foreground" Value="#ef4444"/>
+                                                                <Setter Property="Foreground" Value="#DC2626"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -404,7 +405,7 @@
                         </DataGrid>
 
                         <!-- Empty state message visible if Count = 0 -->
-                        <TextBlock Text="لا توجد عمليات حديثة في هذه الفترة" FontSize="16" Foreground="#76777d"
+                        <TextBlock Text="لا توجد عمليات حديثة في هذه الفترة" FontSize="16" Foreground="#64748B"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

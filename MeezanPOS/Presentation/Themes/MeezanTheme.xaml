@@ -1,0 +1,174 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!--
+        هوية ميزان البصرية (مأخوذة من تصميم Stitch المعتمد)
+        كل الألوان والخطوط والأنماط المشتركة تُعرَّف هنا فقط، والشاشات تستخدم المفاتيح.
+    -->
+
+    <!-- ===== الخطوط ===== -->
+    <!-- العناوين: Cairo بوزن عريض (FontWeight=Bold في الأنماط) -->
+    <FontFamily x:Key="Font.Heading">pack://application:,,,/Assets/Fonts/#Cairo</FontFamily>
+    <FontFamily x:Key="Font.Title">pack://application:,,,/Assets/Fonts/#Cairo</FontFamily>
+    <FontFamily x:Key="Font.Body">pack://application:,,,/Assets/Fonts/#Tajawal</FontFamily>
+    <FontFamily x:Key="Font.BodyMedium">pack://application:,,,/Assets/Fonts/#Tajawal Medium</FontFamily>
+    <!-- أرقام متساوية العرض لمحاذاة الخانات العشرية -->
+    <FontFamily x:Key="Font.Money">Consolas, Courier New</FontFamily>
+
+    <!-- ===== الألوان الأساسية ===== -->
+    <Color x:Key="Color.Primary">#283593</Color>
+    <Color x:Key="Color.PrimaryDark">#1A237E</Color>
+    <Color x:Key="Color.PrimaryInteractive">#3F51B5</Color>
+    <Color x:Key="Color.PrimarySoft">#EEF2FF</Color>
+    <Color x:Key="Color.Accent">#FFB300</Color>
+
+    <Color x:Key="Color.Canvas">#F5F7FA</Color>
+    <Color x:Key="Color.Surface">#FFFFFF</Color>
+    <Color x:Key="Color.SurfaceAlt">#F8FAFC</Color>
+    <Color x:Key="Color.Border">#E2E8F0</Color>
+    <Color x:Key="Color.BorderStrong">#CBD5E1</Color>
+
+    <Color x:Key="Color.TextPrimary">#1E293B</Color>
+    <Color x:Key="Color.TextSecondary">#475569</Color>
+    <Color x:Key="Color.TextMuted">#64748B</Color>
+
+    <!-- ألوان الحالات المحاسبية -->
+    <Color x:Key="Color.Income">#16A34A</Color>
+    <Color x:Key="Color.IncomeText">#15803D</Color>
+    <Color x:Key="Color.IncomeSoft">#DCFCE7</Color>
+    <Color x:Key="Color.Expense">#DC2626</Color>
+    <Color x:Key="Color.ExpenseText">#B91C1C</Color>
+    <Color x:Key="Color.ExpenseSoft">#FEE2E2</Color>
+    <Color x:Key="Color.Pending">#D97706</Color>
+    <Color x:Key="Color.PendingSoft">#FEF3C7</Color>
+    <Color x:Key="Color.Locked">#475569</Color>
+    <Color x:Key="Color.LockedSoft">#F1F5F9</Color>
+
+    <!-- ===== الفُرَش ===== -->
+    <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}"/>
+    <SolidColorBrush x:Key="Brush.PrimaryDark" Color="{StaticResource Color.PrimaryDark}"/>
+    <SolidColorBrush x:Key="Brush.PrimaryInteractive" Color="{StaticResource Color.PrimaryInteractive}"/>
+    <SolidColorBrush x:Key="Brush.PrimarySoft" Color="{StaticResource Color.PrimarySoft}"/>
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}"/>
+    <SolidColorBrush x:Key="Brush.Canvas" Color="{StaticResource Color.Canvas}"/>
+    <SolidColorBrush x:Key="Brush.Surface" Color="{StaticResource Color.Surface}"/>
+    <SolidColorBrush x:Key="Brush.SurfaceAlt" Color="{StaticResource Color.SurfaceAlt}"/>
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}"/>
+    <SolidColorBrush x:Key="Brush.BorderStrong" Color="{StaticResource Color.BorderStrong}"/>
+    <SolidColorBrush x:Key="Brush.TextPrimary" Color="{StaticResource Color.TextPrimary}"/>
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}"/>
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}"/>
+    <SolidColorBrush x:Key="Brush.Income" Color="{StaticResource Color.Income}"/>
+    <SolidColorBrush x:Key="Brush.IncomeText" Color="{StaticResource Color.IncomeText}"/>
+    <SolidColorBrush x:Key="Brush.IncomeSoft" Color="{StaticResource Color.IncomeSoft}"/>
+    <SolidColorBrush x:Key="Brush.Expense" Color="{StaticResource Color.Expense}"/>
+    <SolidColorBrush x:Key="Brush.ExpenseText" Color="{StaticResource Color.ExpenseText}"/>
+    <SolidColorBrush x:Key="Brush.ExpenseSoft" Color="{StaticResource Color.ExpenseSoft}"/>
+    <SolidColorBrush x:Key="Brush.Pending" Color="{StaticResource Color.Pending}"/>
+    <SolidColorBrush x:Key="Brush.PendingSoft" Color="{StaticResource Color.PendingSoft}"/>
+    <SolidColorBrush x:Key="Brush.Locked" Color="{StaticResource Color.Locked}"/>
+    <SolidColorBrush x:Key="Brush.LockedSoft" Color="{StaticResource Color.LockedSoft}"/>
+
+    <LinearGradientBrush x:Key="Brush.Sidebar" StartPoint="0.5,0" EndPoint="0.5,1">
+        <GradientStop Color="#1A237E" Offset="0"/>
+        <GradientStop Color="#283593" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="Brush.SidebarText" Color="#C5CAE9"/>
+    <SolidColorBrush x:Key="Brush.SidebarHover" Color="#1AFFFFFF"/>
+    <SolidColorBrush x:Key="Brush.SidebarActive" Color="#2EFFFFFF"/>
+
+    <!-- ===== الظلال ===== -->
+    <DropShadowEffect x:Key="Shadow.Card" BlurRadius="6" ShadowDepth="1" Direction="270" Color="#64748B" Opacity="0.12"/>
+    <DropShadowEffect x:Key="Shadow.Dialog" BlurRadius="24" ShadowDepth="6" Direction="270" Color="#1E293B" Opacity="0.18"/>
+
+    <!-- ===== النصوص ===== -->
+    <Style x:Key="Text.PageTitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Heading}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style x:Key="Text.SectionTitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Title}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="17"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+    </Style>
+    <Style x:Key="Text.Label" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.BodyMedium}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+    </Style>
+    <Style x:Key="Text.Body" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Body}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
+    </Style>
+    <Style x:Key="Text.Caption" TargetType="TextBlock" BasedOn="{StaticResource Text.Body}">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+    </Style>
+    <!-- مبلغ كبير في بطاقات الأرقام -->
+    <Style x:Key="Text.MoneyLarge" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Money}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+        <Setter Property="FlowDirection" Value="LeftToRight"/>
+    </Style>
+    <Style x:Key="Text.Money" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.Money}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
+        <Setter Property="FlowDirection" Value="LeftToRight"/>
+    </Style>
+
+    <!-- ===== البطاقات ===== -->
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Brush.Surface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="Effect" Value="{StaticResource Shadow.Card}"/>
+    </Style>
+    <Style x:Key="Card.Tinted" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+        <Setter Property="Effect" Value="{x:Null}"/>
+    </Style>
+
+    <!-- رأس الصفحة: عنوان ووصف وأزرار -->
+    <Style x:Key="PageHeader" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="Padding" Value="24,18"/>
+        <Setter Property="Margin" Value="0,0,0,20"/>
+    </Style>
+
+    <!-- ===== شارات الحالة ===== -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="10,3"/>
+        <Setter Property="Background" Value="{StaticResource Brush.LockedSoft}"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="Chip.Income" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
+    </Style>
+    <Style x:Key="Chip.Expense" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
+    </Style>
+    <Style x:Key="Chip.Pending" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="Background" Value="{StaticResource Brush.PendingSoft}"/>
+    </Style>
+    <Style x:Key="ChipText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Font.BodyMedium}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource Brush.Locked}"/>
+    </Style>
+
+    <!-- أنماط الأزرار وحقل المبالغ معرّفة في App.xaml لأنها مبنية على أنماط MaterialDesign -->
+
+</ResourceDictionary>

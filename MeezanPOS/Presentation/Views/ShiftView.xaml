@@ -4,7 +4,7 @@
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
              FlowDirection="RightToLeft"
-             Background="#f8f9ff">
+             Background="#F5F7FA">
     <UserControl.DataContext>
         <vm:ShiftViewModel />
     </UserControl.DataContext>
@@ -12,29 +12,29 @@
     <Grid Margin="32">
         <StackPanel MaxWidth="600" HorizontalAlignment="Center" VerticalAlignment="Center">
             <!-- Header -->
-            <TextBlock Text="إدارة الوردية (صندوق الكاشير)" FontSize="32" FontWeight="Bold" Foreground="#0b1c30" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-            <TextBlock Text="{Binding ShiftStatusText}" FontSize="18" Foreground="#76777d" HorizontalAlignment="Center" Margin="0,0,0,32"/>
+            <TextBlock Text="إدارة الوردية (صندوق الكاشير)" FontSize="32" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding ShiftStatusText}" FontSize="18" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,0,0,32"/>
 
             <!-- Content Card -->
-            <Border Background="White" CornerRadius="16" Padding="32" BorderBrush="#e5eeff" BorderThickness="1">
+            <Border Background="White" CornerRadius="16" Padding="32" BorderBrush="#EEF2FF" BorderThickness="1">
                 <Border.Effect><DropShadowEffect BlurRadius="15" ShadowDepth="4" Opacity="0.05"/></Border.Effect>
                 
                 <Grid>
                     <!-- Closed Shift State (Open Shift Form) -->
                     <StackPanel Visibility="{Binding IsShiftOpen, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
-                        <TextBlock Text="بدء وردية جديدة" FontSize="20" FontWeight="SemiBold" Foreground="#0b1c30" Margin="0,0,0,24"/>
+                        <TextBlock Text="بدء وردية جديدة" FontSize="20" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,24"/>
                         
                         <TextBox materialDesign:HintAssist.Hint="العهدة النقدية الافتتاحية (في الدرج)" 
                                  Text="{Binding InputCashAmount, UpdateSourceTrigger=PropertyChanged}" 
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,24" FontSize="16"/>
                         
                         <Button Content="فتح الوردية" Command="{Binding OpenShiftCommand}" 
-                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#10b981" Foreground="White" Height="45" FontSize="16"/>
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#16A34A" Foreground="White" Height="45" FontSize="16"/>
                     </StackPanel>
 
                     <!-- Open Shift State (Close Shift Form) -->
                     <StackPanel Visibility="{Binding IsShiftOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="تفاصيل الوردية الحالية" FontSize="20" FontWeight="SemiBold" Foreground="#0b1c30" Margin="0,0,0,24"/>
+                        <TextBlock Text="تفاصيل الوردية الحالية" FontSize="20" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,24"/>
                         
                         <Grid Margin="0,0,0,24">
                             <Grid.RowDefinitions>
@@ -47,14 +47,14 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="وقت البدء:" Foreground="#76777d" FontSize="16" Margin="0,0,0,12"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StartTime}" FontWeight="Bold" Foreground="#0b1c30" FontSize="16" Margin="0,0,0,12"/>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="وقت البدء:" Foreground="#64748B" FontSize="16" Margin="0,0,0,12"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding StartTime}" FontWeight="Bold" Foreground="#1E293B" FontSize="16" Margin="0,0,0,12"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="العهدة الافتتاحية:" Foreground="#76777d" FontSize="16" Margin="0,0,0,12"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OpeningCash, StringFormat={}{0:N2}}" FontWeight="Bold" Foreground="#0b1c30" FontSize="16" Margin="0,0,0,12"/>
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="العهدة الافتتاحية:" Foreground="#64748B" FontSize="16" Margin="0,0,0,12"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OpeningCash, StringFormat={}{0:N2}}" FontWeight="Bold" Foreground="#1E293B" FontSize="16" Margin="0,0,0,12"/>
 
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="النقد المتوقع حالياً:" Foreground="#76777d" FontSize="16"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExpectedCash, StringFormat={}{0:N2}}" FontWeight="Bold" Foreground="#3b82f6" FontSize="16"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="النقد المتوقع حالياً:" Foreground="#64748B" FontSize="16"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ExpectedCash, StringFormat={}{0:N2}}" FontWeight="Bold" Foreground="#3F51B5" FontSize="16"/>
                         </Grid>
 
                         <TextBox materialDesign:HintAssist.Hint="المبلغ الفعلي الموجود في الدرج الآن" 
@@ -62,7 +62,7 @@
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,24" FontSize="16"/>
                         
                         <Button Content="إغلاق الوردية" Command="{Binding CloseShiftCommand}" 
-                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#ef4444" Foreground="White" Height="45" FontSize="16"/>
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" Foreground="White" Height="45" FontSize="16"/>
                     </StackPanel>
                 </Grid>
             </Border>

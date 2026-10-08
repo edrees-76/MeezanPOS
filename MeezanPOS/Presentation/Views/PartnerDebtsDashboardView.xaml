@@ -22,8 +22,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="AccountGroupOutline" Width="28" Height="28" Foreground="#3b82f6" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                <TextBlock Text="لوحة متابعة ذمم الشركاء" FontSize="20" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                <materialDesign:PackIcon Kind="AccountGroupOutline" Width="28" Height="28" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="لوحة متابعة ذمم الشركاء" FontSize="20" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
             </StackPanel>
 
             <!-- أزرار الإضافة السريعة الدائرية -->
@@ -91,8 +91,8 @@
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#fef2f2" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="TrendingUp" Width="20" Height="20" Foreground="#ef4444"/>
+                        <Border Background="#FEE2E2" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingUp" Width="20" Height="20" Foreground="#DC2626"/>
                         </Border>
                         <TextBlock Text="إجمالي تمويل الشركاء" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -107,8 +107,8 @@
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#f0fdf4" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="TrendingDown" Width="20" Height="20" Foreground="#22c55e"/>
+                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingDown" Width="20" Height="20" Foreground="#16A34A"/>
                         </Border>
                         <TextBlock Text="إجمالي التسويات" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
                     </StackPanel>
@@ -117,18 +117,18 @@
             </Border>
 
             <!-- كرت الصافي -->
-            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="10,0,0,0" BorderBrush="#bfdbfe" BorderThickness="1.5">
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="10,0,0,0" BorderBrush="#C5CAE9" BorderThickness="1.5">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#eff6ff" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="#3b82f6"/>
+                        <Border Background="#EEF2FF" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="#3F51B5"/>
                         </Border>
                         <TextBlock Text="صافي الذمم المستحقة" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding NetBalanceAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#2563eb"/>
+                    <TextBlock Text="{Binding NetBalanceAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#3F51B5"/>
                 </StackPanel>
             </Border>
         </UniformGrid>
@@ -151,14 +151,14 @@
                       Background="Transparent"
                       RowHeight="44"
                       FontSize="13.5"
-                      AlternatingRowBackground="#fafbff"
+                      AlternatingRowBackground="#F5F7FA"
                       materialDesign:DataGridAssist.ColumnHeaderPadding="12,14"
                       materialDesign:DataGridAssist.CellPadding="12,8"
                       VerticalScrollBarVisibility="Auto"
                       MouseDoubleClick="PartnerGrid_MouseDoubleClick">
                 <DataGrid.Columns>
                     <!-- التسلسل -->
-                    <DataGridTextColumn Header="م" Binding="{Binding SequenceNumber}" Width="50">
+                    <DataGridTextColumn Header="م" Binding="{Binding SequenceNumber}" Width="Auto" MinWidth="50">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextAlignment" Value="Center"/>
@@ -179,10 +179,10 @@
                                                 <Setter Property="Background" Value="#f1f5f9"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                        <Setter Property="Background" Value="#fef2f2"/>
+                                                        <Setter Property="Background" Value="#FEE2E2"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                        <Setter Property="Background" Value="#f0fdf4"/>
+                                                        <Setter Property="Background" Value="#DCFCE7"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -193,10 +193,10 @@
                                                     <Setter Property="Foreground" Value="#64748b"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                                            <Setter Property="Foreground" Value="#DC2626"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                            <Setter Property="Foreground" Value="#22c55e"/>
+                                                            <Setter Property="Foreground" Value="#16A34A"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -210,7 +210,7 @@
                     </DataGridTemplateColumn>
 
                     <!-- إجمالي التمويلات -->
-                    <DataGridTextColumn Header="إجمالي التمويل" Binding="{Binding DebtsTotal, StringFormat=N2}" Width="150">
+                    <DataGridTextColumn Header="إجمالي التمويل" Binding="{Binding DebtsTotal, StringFormat=N2}" Width="Auto" MinWidth="150">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextAlignment" Value="Center"/>
@@ -222,7 +222,7 @@
                     </DataGridTextColumn>
 
                     <!-- إجمالي التسويات -->
-                    <DataGridTextColumn Header="إجمالي التسويات" Binding="{Binding SettlementsTotal, StringFormat=N2}" Width="150">
+                    <DataGridTextColumn Header="إجمالي التسويات" Binding="{Binding SettlementsTotal, StringFormat=N2}" Width="Auto" MinWidth="150">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextAlignment" Value="Center"/>
@@ -234,7 +234,7 @@
                     </DataGridTextColumn>
 
                     <!-- الرصيد الصافي -->
-                    <DataGridTextColumn Header="الرصيد الصافي" Binding="{Binding NetBalance, StringFormat=N2}" Width="180">
+                    <DataGridTextColumn Header="الرصيد الصافي" Binding="{Binding NetBalance, StringFormat=N2}" Width="Auto" MinWidth="180">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextAlignment" Value="Center"/>
@@ -256,7 +256,7 @@
                     </DataGridTextColumn>
 
                     <!-- الحالة / الاتجاه -->
-                    <DataGridTemplateColumn Header="الحالة المالية" Width="150" SortMemberPath="BalanceDirectionText">
+                    <DataGridTemplateColumn Header="الحالة المالية" Width="Auto" MinWidth="150" SortMemberPath="BalanceDirectionText">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -265,10 +265,10 @@
                                             <Setter Property="Background" Value="#f1f5f9"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                    <Setter Property="Background" Value="#fef2f2"/>
+                                                    <Setter Property="Background" Value="#FEE2E2"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                    <Setter Property="Background" Value="#f0fdf4"/>
+                                                    <Setter Property="Background" Value="#DCFCE7"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

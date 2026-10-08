@@ -63,9 +63,12 @@ public class AppDbContext : DbContext
     // المسار الثابت والموحد لقاعدة البيانات - يمنع إنشاء قواعد بيانات متعددة
     public static string GetDatabasePath()
     {
-        var appDataDir = System.IO.Path.Combine(
-            System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
-            "MeezanPOS");
+        // MEEZANPOS_DATA_DIR يسمح للاختبارات باستخدام مجلد مؤقت بدل قاعدة بيانات المستخدم الحقيقية
+        var appDataDir = System.Environment.GetEnvironmentVariable("MEEZANPOS_DATA_DIR");
+        if (string.IsNullOrWhiteSpace(appDataDir))
+            appDataDir = System.IO.Path.Combine(
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
+                "MeezanPOS");
         System.IO.Directory.CreateDirectory(appDataDir);
         return System.IO.Path.Combine(appDataDir, "Meezan.db");
     }

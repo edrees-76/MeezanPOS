@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1100"
              FlowDirection="RightToLeft"
-             Background="#f8f9ff"
+             Background="#F5F7FA"
              Loaded="UserControl_Loaded">
     
     <UserControl.Resources>
@@ -89,7 +89,7 @@
 
             <!-- Screen Title -->
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                <TextBlock Text="الطلبات المجانية والمرتجعات" FontSize="24" FontWeight="Bold" Foreground="#0f172a"/>
+                <TextBlock Text="الطلبات المجانية والمرتجعات" FontSize="24" FontWeight="Bold" Foreground="#1E293B"/>
                 <TextBlock Text="عرض إحصائيات وتفاصيل الطلبات المجانية والمرتجع للوردية" FontSize="13" Foreground="#64748b" Margin="0,4,0,0"/>
             </StackPanel>
 
@@ -104,7 +104,7 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedTab}" Value="0">
                                         <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Foreground" Value="#1E293B"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
@@ -132,7 +132,7 @@
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedTab}" Value="1">
                                         <Setter Property="Background" Value="White"/>
-                                        <Setter Property="Foreground" Value="#0f172a"/>
+                                        <Setter Property="Foreground" Value="#1E293B"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
@@ -192,7 +192,7 @@
                         </Grid.RowDefinitions>
                         
                         <Border BorderBrush="#f1f5f9" BorderThickness="0,0,0,1" Padding="20,16">
-                            <TextBlock Text="يوميات ورديات العمل المفتوحة (غير المرحلة)" FontWeight="Bold" FontSize="16" Foreground="#0f172a"/>
+                            <TextBlock Text="يوميات ورديات العمل المفتوحة (غير المرحلة)" FontWeight="Bold" FontSize="16" Foreground="#1E293B"/>
                         </Border>
 
                         <DataGrid Grid.Row="1" ItemsSource="{Binding CurrentJournals}" Style="{StaticResource PremiumDataGridStyle}" ColumnHeaderStyle="{StaticResource PremiumHeaderStyle}" CellStyle="{StaticResource CenterCellStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
@@ -233,7 +233,7 @@
                                                     Command="{Binding DataContext.ShowDayReturnDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#fff5f5"
+                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#FEE2E2"
                                                     HorizontalAlignment="Center" MinWidth="130" Height="36"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -272,11 +272,11 @@
                             <TextBlock Text="أعلى الأيام قيمة" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <Grid Margin="0,2">
                                 <TextBlock Text="أعلى مجاني:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
-                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Left"/>
                             </Grid>
                             <Grid Margin="0,2">
                                 <TextBlock Text="أعلى مرتجع:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
-                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Left"/>
                             </Grid>
                         </StackPanel>
 
@@ -287,7 +287,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0,2">
-                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" FontSize="13" Foreground="#ca8a04" FontWeight="Bold" HorizontalAlignment="Left"/>
                                         </Grid>
                                     </DataTemplate>
@@ -349,7 +349,7 @@
                             </Grid.RowDefinitions>
 
                             <Border BorderBrush="#f1f5f9" BorderThickness="0,0,0,1" Padding="20,16">
-                                <TextBlock Text="أرشيف الأشهر المرحلة" FontWeight="Bold" FontSize="16" Foreground="#0f172a"/>
+                                <TextBlock Text="أرشيف الأشهر المرحلة" FontWeight="Bold" FontSize="16" Foreground="#1E293B"/>
                             </Border>
 
                             <DataGrid Grid.Row="1" ItemsSource="{Binding ArchiveMonths}" Style="{StaticResource PremiumDataGridStyle}" ColumnHeaderStyle="{StaticResource PremiumHeaderStyle}" CellStyle="{StaticResource CenterCellStyle}" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto">
@@ -401,7 +401,7 @@
                                                         Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                                        Foreground="#4f46e5"
+                                                        Foreground="#3F51B5"
                                                         FontWeight="Bold"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -439,10 +439,10 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
-                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="#0f172a" Background="#e2e8f0" Width="36" Height="36" Padding="0">
+                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignIconButton}" Foreground="#1E293B" Background="#e2e8f0" Width="36" Height="36" Padding="0">
                             <materialDesign:PackIcon Kind="ArrowRight" Width="22" Height="22"/>
                         </Button>
-                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchiveMonth.MonthName, StringFormat='تفاصيل شهر: {0}'}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchiveMonth.MonthName, StringFormat='تفاصيل شهر: {0}'}" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
                     </Grid>
 
                     <materialDesign:Card Grid.Row="2" UniformCornerRadius="16" materialDesign:ElevationAssist.Elevation="Dp2" Background="White">
@@ -484,7 +484,7 @@
                                                     Command="{Binding DataContext.ShowDayReturnDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}"
                                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#fff5f5"
+                                                    Foreground="#dc2626" BorderBrush="#fecaca" Background="#FEE2E2"
                                                     HorizontalAlignment="Center" MinWidth="130" Height="36"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
@@ -523,11 +523,11 @@
                             <TextBlock Text="أعلى الأيام قيمة" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <Grid Margin="0,2">
                                 <TextBlock Text="أعلى مجاني:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
-                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding TopFreeOrderDay}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Left"/>
                             </Grid>
                             <Grid Margin="0,2">
                                 <TextBlock Text="أعلى مرتجع:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Right"/>
-                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding TopReturnsDay}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Left"/>
                             </Grid>
                         </StackPanel>
 
@@ -538,7 +538,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="0,2">
-                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#0f172a" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                            <TextBlock Text="{Binding PersonName}" FontSize="13" Foreground="#1E293B" FontWeight="SemiBold" HorizontalAlignment="Right"/>
                                             <TextBlock Text="{Binding TotalAmount, StringFormat='{}{0:N2} د.ل'}" FontSize="13" Foreground="#ca8a04" FontWeight="Bold" HorizontalAlignment="Left"/>
                                         </Grid>
                                     </DataTemplate>
@@ -571,14 +571,14 @@
                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="#000" Opacity="0.15"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="{Binding SelectedDayTitle}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" Margin="0,0,0,16"/>
+                    <TextBlock Text="{Binding SelectedDayTitle}" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
                     <DataGrid ItemsSource="{Binding SelectedDayShifts}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
                               HorizontalGridLinesBrush="#f1f5f9" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc" RowHeight="46"
                               materialDesign:DataGridAssist.CellPadding="16,10" materialDesign:DataGridAssist.ColumnHeaderPadding="16,12"
                               CellStyle="{StaticResource CenterCellStyle}">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="نوع الوردية" Width="120">
+                            <DataGridTemplateColumn Header="نوع الوردية" Width="Auto" MinWidth="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding ShiftName}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -586,7 +586,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             
-                            <DataGridTemplateColumn Header="الكاشير" Width="120">
+                            <DataGridTemplateColumn Header="الكاشير" Width="Auto" MinWidth="120">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding EmployeeName}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -595,7 +595,7 @@
                             </DataGridTemplateColumn>
                             
                             <!-- Free Orders Button -->
-                            <DataGridTemplateColumn Header="الطلبات المجانية" Width="140">
+                            <DataGridTemplateColumn Header="الطلبات المجانية" Width="Auto" MinWidth="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="{Binding FreeOrdersTotal, StringFormat='{}{0:N2} د.ل'}"
@@ -608,7 +608,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- Returns Button -->
-                            <DataGridTemplateColumn Header="المرتجعات" Width="140">
+                            <DataGridTemplateColumn Header="المرتجعات" Width="Auto" MinWidth="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Content="{Binding ReturnsTotal, StringFormat='{}{0:N2} د.ل'}"
@@ -634,14 +634,14 @@
                     <DropShadowEffect BlurRadius="15" ShadowDepth="3" Color="#000" Opacity="0.15"/>
                 </Border.Effect>
                 <StackPanel>
-                    <TextBlock Text="{Binding SelectedShiftTitle}" FontSize="18" FontWeight="Bold" Foreground="#0f172a" Margin="0,0,0,16"/>
+                    <TextBlock Text="{Binding SelectedShiftTitle}" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
                     <DataGrid ItemsSource="{Binding SelectedShiftDetails}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                               HeadersVisibility="Column" GridLinesVisibility="Horizontal" BorderThickness="0"
                               HorizontalGridLinesBrush="#f1f5f9" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc" RowHeight="46"
                               materialDesign:DataGridAssist.CellPadding="16,10" materialDesign:DataGridAssist.ColumnHeaderPadding="16,12"
                               CellStyle="{StaticResource CenterCellStyle}">
                         <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="تسلسل" Width="70">
+                            <DataGridTemplateColumn Header="تسلسل" Width="Auto" MinWidth="70">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding SequenceNumber}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -649,7 +649,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="رقم الطلبية" Width="110">
+                            <DataGridTemplateColumn Header="رقم الطلبية" Width="Auto" MinWidth="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding InvoiceNumber}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -657,7 +657,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="اسم الشخص" Width="140">
+                            <DataGridTemplateColumn Header="اسم الشخص" Width="Auto" MinWidth="140">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding PersonName}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -665,7 +665,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="القيمة" Width="110">
+                            <DataGridTemplateColumn Header="القيمة" Width="Auto" MinWidth="110">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Amount, StringFormat='{}{0:N2} د.ل'}" Style="{StaticResource CenterGridTextStyle}"/>
@@ -673,7 +673,7 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                            <DataGridTemplateColumn Header="الملاحظات" Width="320">
+                            <DataGridTemplateColumn Header="الملاحظات" Width="Auto" MinWidth="320">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding Notes}" Style="{StaticResource CenterGridTextStyle}"/>

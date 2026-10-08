@@ -51,6 +51,7 @@
     <Resource Include="..\mizan_3d_icon_final_transparent.png">
       <Link>Resources\meezan_logo.png</Link>
     </Resource>
+    <Resource Include="Assets\Fonts\*.ttf" />
   </ItemGroup>
 
 

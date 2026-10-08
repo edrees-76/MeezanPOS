@@ -11,7 +11,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              FlowDirection="RightToLeft"
-             Background="#f8f9ff"
+             Background="#F5F7FA"
              Padding="32,24"
              Loaded="UserControl_Loaded">
     
@@ -40,7 +40,7 @@
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0">
-                <TextBlock Text="إدارة أجور وعمال المطعم" FontSize="26" FontWeight="Bold" Foreground="#0b1c30"/>
+                <TextBlock Text="إدارة أجور وعمال المطعم" FontSize="26" FontWeight="Bold" Foreground="#1E293B"/>
                 <TextBlock Text="النظام المالي المتكامل لتسجيل حضور العمال، السلف، الأجور، وتدقيق كشوف الحسابات." FontSize="14" Foreground="#64748b" Margin="0,4,0,0"/>
             </StackPanel>
 
@@ -51,11 +51,11 @@
                 </Border.Effect>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Background="#fee2e2" CornerRadius="8" Padding="10" Margin="0,0,16,0">
-                        <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#ef4444" Width="26" Height="26"/>
+                        <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#DC2626" Width="26" Height="26"/>
                     </Border>
                     <StackPanel>
                         <TextBlock Text="إجمالي مستحقات العمال المتأخرة (عليهم/لهم)" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalOutstandingBalance, StringFormat={}{0:N2} د.ل}" FontSize="20" FontWeight="Bold" Foreground="#ef4444" Margin="0,2,0,0"/>
+                        <TextBlock Text="{Binding TotalOutstandingBalance, StringFormat={}{0:N2} د.ل}" FontSize="20" FontWeight="Bold" Foreground="#DC2626" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -103,7 +103,7 @@
                             <Button Grid.Column="6" Content="حفظ واعتماد الحضور اليومي ✓" 
                                     Command="{Binding SaveAttendanceBatchCommand}" 
                                     Style="{StaticResource MaterialDesignFlatButton}" 
-                                    Background="#2563eb" Foreground="White" Height="40" Padding="20,0"/>
+                                    Background="#3F51B5" Foreground="White" Height="40" Padding="20,0"/>
                         </Grid>
                     </Border>
 
@@ -130,7 +130,7 @@
                             </DataGrid.Resources>
                             <DataGrid.Columns>
                                 <!-- تسلسل -->
-                                <DataGridTemplateColumn Header="م" Width="50">
+                                <DataGridTemplateColumn Header="م" Width="Auto" MinWidth="50">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
@@ -152,7 +152,7 @@
                                 </DataGridTextColumn>
 
                                 <!-- حالة الحضور (Present / Absent / HalfDay / Leave) -->
-                                <DataGridTemplateColumn Header="حالة الحضور" Width="150">
+                                <DataGridTemplateColumn Header="حالة الحضور" Width="Auto" MinWidth="150">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <ComboBox ItemsSource="{Binding DataContext.AttendanceStatuses, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -170,7 +170,7 @@
                                                                      <Style.Triggers>
                                                                          <DataTrigger Binding="{Binding}" Value="Present">
                                                                              <Setter Property="Text" Value="حاضر (يوم كامل)"/>
-                                                                             <Setter Property="Foreground" Value="#047857"/>
+                                                                             <Setter Property="Foreground" Value="#15803D"/>
                                                                          </DataTrigger>
                                                                          <DataTrigger Binding="{Binding}" Value="Absent">
                                                                              <Setter Property="Text" Value="غائب"/>
@@ -182,7 +182,7 @@
                                                                          </DataTrigger>
                                                                          <DataTrigger Binding="{Binding}" Value="Leave">
                                                                              <Setter Property="Text" Value="إجازة"/>
-                                                                             <Setter Property="Foreground" Value="#2563eb"/>
+                                                                             <Setter Property="Foreground" Value="#3F51B5"/>
                                                                          </DataTrigger>
                                                                      </Style.Triggers>
                                                                  </Style>
@@ -196,7 +196,7 @@
                                 </DataGridTemplateColumn>
 
                                 <!-- يومية اليوم (يمكن تعديلها كلقطة Snapshot لهذا اليوم) -->
-                                <DataGridTextColumn Header="أجر اليومية (د.ل)" Binding="{Binding SnapshotDailyWage, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="130">
+                                <DataGridTextColumn Header="أجر اليومية (د.ل)" Binding="{Binding SnapshotDailyWage, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="Auto" MinWidth="130">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
@@ -216,11 +216,11 @@
                                 </DataGridTextColumn>
 
                                 <!-- خصومات اليوم -->
-                                <DataGridTextColumn Header="خصومات اليوم (د.ل)" Binding="{Binding DeductionAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="130">
+                                <DataGridTextColumn Header="خصومات اليوم (د.ل)" Binding="{Binding DeductionAmount, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="Auto" MinWidth="130">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                            <Setter Property="Foreground" Value="#DC2626"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -229,7 +229,7 @@
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#ef4444"/>
+                                            <Setter Property="Foreground" Value="#DC2626"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -238,7 +238,7 @@
                                 </DataGridTextColumn>
 
                                 <!-- تسوية السلفة اليومية -->
-                                <DataGridTextColumn Header="خصم سلفة (د.ل)" Binding="{Binding AdvanceDeducted, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="130">
+                                <DataGridTextColumn Header="خصم سلفة (د.ل)" Binding="{Binding AdvanceDeducted, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" Width="Auto" MinWidth="130">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
@@ -302,12 +302,12 @@
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#eff6ff" CornerRadius="8" Padding="12" Margin="0,0,16,0">
-                                    <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#2563eb" Width="24" Height="24"/>
+                                <Border Background="#EEF2FF" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                    <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#3F51B5" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="إجمالي عدد الموظفين" FontSize="12.5" Foreground="#64748b" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding TotalWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#2563eb" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding TotalWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#3F51B5" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -318,12 +318,12 @@
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#ecfdf5" CornerRadius="8" Padding="12" Margin="0,0,16,0">
-                                    <materialDesign:PackIcon Kind="AccountCheck" Foreground="#10b981" Width="24" Height="24"/>
+                                <Border Background="#DCFCE7" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                    <materialDesign:PackIcon Kind="AccountCheck" Foreground="#16A34A" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="الموظفون النشطون" FontSize="12.5" Foreground="#64748b" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding ActiveWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#10b981" Margin="0,4,0,0"/>
+                                    <TextBlock Text="{Binding ActiveWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#16A34A" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -334,7 +334,7 @@
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#fffbeb" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                <Border Background="#FEF3C7" CornerRadius="8" Padding="12" Margin="0,0,16,0">
                                     <materialDesign:PackIcon Kind="CashMultiple" Foreground="#d97706" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
@@ -368,7 +368,7 @@
                         <Button Grid.Column="2" 
                                 Command="{Binding OpenAddWorkerDialogCommand}"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Background="#2563eb" Foreground="White" Height="36" Padding="16,0"
+                                Background="#3F51B5" Foreground="White" Height="36" Padding="16,0"
                                 materialDesign:ButtonAssist.CornerRadius="8">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -402,7 +402,7 @@
                             </DataGrid.Resources>
                             <DataGrid.Columns>
                                 <!-- تسلسل -->
-                                <DataGridTemplateColumn Header="م" Width="50">
+                                <DataGridTemplateColumn Header="م" Width="Auto" MinWidth="50">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
@@ -424,7 +424,7 @@
                                 </DataGridTextColumn>
 
                                 <!-- اليومية الثابتة -->
-                                <DataGridTextColumn Header="اليومية الثابتة" Binding="{Binding DailyWage, StringFormat=N2}" Width="120">
+                                <DataGridTextColumn Header="اليومية الثابتة" Binding="{Binding DailyWage, StringFormat=N2}" Width="Auto" MinWidth="120">
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
@@ -436,7 +436,7 @@
                                 </DataGridTextColumn>
 
                                 <!-- حالة العامل النشاط -->
-                                <DataGridTemplateColumn Header="الحالة" Width="100">
+                                <DataGridTemplateColumn Header="الحالة" Width="Auto" MinWidth="100">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -444,10 +444,10 @@
                                                     <Style TargetType="Border">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Background" Value="#ecfdf5"/>
+                                                                <Setter Property="Background" Value="#DCFCE7"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                                                <Setter Property="Background" Value="#fef2f2"/>
+                                                                <Setter Property="Background" Value="#FEE2E2"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -458,7 +458,7 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                                                     <Setter Property="Text" Value="نشط"/>
-                                                                    <Setter Property="Foreground" Value="#047857"/>
+                                                                    <Setter Property="Foreground" Value="#15803D"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                                     <Setter Property="Text" Value="موقوف مؤقتاً"/>
@@ -485,7 +485,7 @@
                                 </DataGridTextColumn>
 
                                 <!-- إجراءات مباشرة -->
-                                <DataGridTemplateColumn Header="إجراءات" Width="120">
+                                <DataGridTemplateColumn Header="إجراءات" Width="Auto" MinWidth="120">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
@@ -494,7 +494,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="تعديل">
-                                                    <materialDesign:PackIcon Kind="EditOutline" Width="16" Height="16" Foreground="#3b82f6"/>
+                                                    <materialDesign:PackIcon Kind="EditOutline" Width="16" Height="16" Foreground="#3F51B5"/>
                                                 </Button>
 
                                                 <!-- زر إيقاف / تشغيل -->
@@ -502,7 +502,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="تغيير حالة النشاط">
-                                                    <materialDesign:PackIcon Kind="AccountSwitchOutline" Width="16" Height="16" Foreground="#f59e0b"/>
+                                                    <materialDesign:PackIcon Kind="AccountSwitchOutline" Width="16" Height="16" Foreground="#D97706"/>
                                                 </Button>
 
                                                 <!-- زر حذف نهائي -->
@@ -510,7 +510,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" ToolTip="حذف نهائي">
-                                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" Foreground="#ef4444"/>
+                                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" Foreground="#DC2626"/>
                                                 </Button>
                                             </StackPanel>
                                         </DataTemplate>
@@ -578,7 +578,7 @@
                                 </DataGrid.RowStyle>
                                 <DataGrid.Columns>
                                     <!-- تسلسل -->
-                                    <DataGridTemplateColumn Header="م" Width="50">
+                                    <DataGridTemplateColumn Header="م" Width="Auto" MinWidth="50">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
@@ -595,7 +595,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 <Setter Property="TextAlignment" Value="Center"/>
-                                                <Setter Property="Foreground" Value="#2563eb"/>
+                                                <Setter Property="Foreground" Value="#3F51B5"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -625,10 +625,10 @@
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 <Setter Property="TextAlignment" Value="Center"/>
-                                                <Setter Property="Foreground" Value="#ef4444"/>
+                                                <Setter Property="Foreground" Value="#DC2626"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Balance}" Value="0">
-                                                        <Setter Property="Foreground" Value="#10b981"/>
+                                                        <Setter Property="Foreground" Value="#16A34A"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

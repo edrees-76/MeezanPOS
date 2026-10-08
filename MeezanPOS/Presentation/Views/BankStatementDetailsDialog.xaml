@@ -7,10 +7,10 @@
         Height="640"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        Background="#f8f9ff"
+        Background="#F5F7FA"
         FlowDirection="RightToLeft"
-        FontFamily="Segoe UI"
-        TextElement.FontFamily="Segoe UI"
+        FontFamily="{StaticResource Font.Body}"
+        TextElement.FontFamily="{StaticResource Font.Body}"
         ShowInTaskbar="False">
 
     <Grid Margin="20,16">
@@ -37,8 +37,8 @@
 
                     <StackPanel Grid.Column="0">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#10b981" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="تفاصيل مبيعات الخدمات المصرفية" FontSize="17" FontWeight="Bold" Foreground="#0f172a" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#16A34A" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="تفاصيل مبيعات الخدمات المصرفية" FontSize="17" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="32,6,0,0">
                             <TextBlock Text="{Binding SelectedTransactionDate, StringFormat=تاريخ اليوم: \{0:yyyy/MM/dd\}}" FontSize="13.5" Foreground="#64748b" FontWeight="SemiBold"/>
@@ -48,10 +48,10 @@
                     </StackPanel>
 
                     <!-- كرت إجمالي اليوم -->
-                    <Border Grid.Column="1" Background="#ecfdf5" CornerRadius="8" Padding="14,8" BorderBrush="#10b981" BorderThickness="1" VerticalAlignment="Center">
+                    <Border Grid.Column="1" Background="#DCFCE7" CornerRadius="8" Padding="14,8" BorderBrush="#16A34A" BorderThickness="1" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="إجمالي اليوم: " FontSize="13" Foreground="#065f46" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding SelectedTransactionTotalAmount, StringFormat=\{0:N2\} د.ل}" FontSize="15" FontWeight="Bold" Foreground="#047857" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding SelectedTransactionTotalAmount, StringFormat=\{0:N2\} د.ل}" FontSize="15" FontWeight="Bold" Foreground="#15803D" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -79,7 +79,7 @@
                     <ComboBox Grid.Column="6" ItemsSource="{Binding ShiftFilters}" SelectedItem="{Binding SelectedShiftFilter, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Height="34" FontSize="13.5" VerticalAlignment="Center" Style="{StaticResource MaterialDesignComboBox}" Foreground="Black"/>
 
                     <!-- زر إعادة تعيين التصفية -->
-                    <Button Grid.Column="8" Command="{Binding ResetFiltersCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#4f46e5" Height="34" Padding="8,0" VerticalAlignment="Center">
+                    <Button Grid.Column="8" Command="{Binding ResetFiltersCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3F51B5" Height="34" Padding="8,0" VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="FilterRemoveOutline" Width="16" Height="16" Margin="0,0,4,0" VerticalAlignment="Center"/>
                             <TextBlock Text="إعادة تعيين" FontSize="12.5" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -115,7 +115,7 @@
 
                     <Border Grid.Row="0" Background="#f8fafc" CornerRadius="12,12,0,0" Padding="16,10" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewList" Width="20" Height="20" Foreground="#2563eb" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="ViewList" Width="20" Height="20" Foreground="#3F51B5" Margin="0,0,6,0" VerticalAlignment="Center"/>
                             <TextBlock Text="تفاصيل حركات الورديات والمسؤولين" FontSize="14.5" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
@@ -132,7 +132,7 @@
                               Background="Transparent"
                               RowHeight="44"
                               FontSize="14"
-                              AlternatingRowBackground="#fafbff"
+                              AlternatingRowBackground="#F5F7FA"
                               materialDesign:DataGridAssist.ColumnHeaderPadding="10"
                               materialDesign:DataGridAssist.CellPadding="10,4"
                               VerticalScrollBarVisibility="Auto">
@@ -142,12 +142,12 @@
                                 <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                 <Setter Property="FontWeight" Value="Bold"/>
                                 <Setter Property="FontSize" Value="14"/>
-                                <Setter Property="Foreground" Value="#0f172a"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
                             </Style>
                         </DataGrid.ColumnHeaderStyle>
                         <DataGrid.Columns>
                             <!-- عمود المطابقة (مربع اختيار مكبر) -->
-                            <DataGridTemplateColumn Header="المطابقة" Width="85" IsReadOnly="False">
+                            <DataGridTemplateColumn Header="المطابقة" Width="Auto" MinWidth="85" IsReadOnly="False">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <CheckBox IsChecked="{Binding IsReconciled, UpdateSourceTrigger=PropertyChanged}"
@@ -176,7 +176,7 @@
                             </DataGridTemplateColumn>
 
                             <!-- الوردية (قراءة فقط - محاذاة في المنتصف) -->
-                            <DataGridTextColumn Header="الوردية" Binding="{Binding ShiftName}" Width="130" IsReadOnly="True">
+                            <DataGridTextColumn Header="الوردية" Binding="{Binding ShiftName}" Width="Auto" MinWidth="130" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#64748b"/>
@@ -187,7 +187,7 @@
                             </DataGridTextColumn>
 
                             <!-- رقم الفاتورة (قراءة فقط - محاذاة في المنتصف) -->
-                            <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="120" IsReadOnly="True">
+                            <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="Auto" MinWidth="120" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#475569"/>
@@ -198,7 +198,7 @@
                             </DataGridTextColumn>
 
                             <!-- رقم التحويل (قراءة فقط - محاذاة في المنتصف) -->
-                            <DataGridTextColumn Header="رقم التحويل" Binding="{Binding TransferReference}" Width="120" IsReadOnly="True">
+                            <DataGridTextColumn Header="رقم التحويل" Binding="{Binding TransferReference}" Width="Auto" MinWidth="120" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Foreground" Value="#94a3b8"/>
@@ -209,10 +209,10 @@
                             </DataGridTextColumn>
 
                             <!-- المبلغ (قراءة فقط - محاذاة في المنتصف) -->
-                            <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat=N2}" Width="130" IsReadOnly="True">
+                            <DataGridTextColumn Header="المبلغ" Binding="{Binding Amount, StringFormat=N2}" Width="Auto" MinWidth="130" IsReadOnly="True">
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#059669"/>
+                                        <Setter Property="Foreground" Value="#15803D"/>
                                         <Setter Property="FontWeight" Value="Bold"/>
                                         <Setter Property="TextAlignment" Value="Center"/>
                                         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -231,7 +231,7 @@
                             </Grid.ColumnDefinitions>
                             
                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <materialDesign:PackIcon Kind="ChartPie" Width="20" Height="20" Foreground="#6366f1" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="ChartPie" Width="20" Height="20" Foreground="#3F51B5" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="إجماليات مبيعات الورديات:" FontSize="13.5" FontWeight="Bold" Foreground="#475569" VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -243,11 +243,11 @@
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#eff6ff" BorderBrush="#bfdbfe" BorderThickness="1" CornerRadius="6" Padding="14,4" Margin="0,0,12,0" VerticalAlignment="Center">
+                                        <Border Background="#EEF2FF" BorderBrush="#C5CAE9" BorderThickness="1" CornerRadius="6" Padding="14,4" Margin="0,0,12,0" VerticalAlignment="Center">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{Binding ShiftName, StringFormat=\{0\}: }" FontSize="13" FontWeight="SemiBold" Foreground="#1e40af"/>
-                                                <TextBlock Text="{Binding TotalAmount, StringFormat=N2}" FontSize="14" FontWeight="Bold" Foreground="#1d4ed8"/>
-                                                <TextBlock Text=" د.ل" FontSize="11.5" Foreground="#1d4ed8" VerticalAlignment="Bottom"/>
+                                                <TextBlock Text="{Binding ShiftName, StringFormat=\{0\}: }" FontSize="13" FontWeight="SemiBold" Foreground="#283593"/>
+                                                <TextBlock Text="{Binding TotalAmount, StringFormat=N2}" FontSize="14" FontWeight="Bold" Foreground="#3F51B5"/>
+                                                <TextBlock Text=" د.ل" FontSize="11.5" Foreground="#3F51B5" VerticalAlignment="Bottom"/>
                                             </StackPanel>
                                         </Border>
                                     </DataTemplate>
@@ -273,14 +273,14 @@
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="#fffbef" Offset="0"/>
-                        <GradientStop Color="#fffbeb" Offset="1"/>
+                        <GradientStop Color="#FEF3C7" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
                 <Border.Effect>
-                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#f59e0b" Opacity="0.05"/>
+                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#D97706" Opacity="0.05"/>
                 </Border.Effect>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Background="#fff3cd" CornerRadius="40" Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,16" BorderBrush="#f59e0b" BorderThickness="1">
+                    <Border Background="#fff3cd" CornerRadius="40" Width="80" Height="80" HorizontalAlignment="Center" Margin="0,0,0,16" BorderBrush="#D97706" BorderThickness="1">
                         <materialDesign:PackIcon Kind="AlertCircleOutline" Width="36" Height="36" Foreground="#d97706" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <TextBlock Text="لا توجد تفاصيل مدخلة" FontSize="17" FontWeight="Bold" Foreground="#92400e" HorizontalAlignment="Center" Margin="0,0,0,6"/>
@@ -295,7 +295,7 @@
         <!-- ═══════ الجزء السفلي: أزرار الإجراء ═══════ -->
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
             <!-- زر طباعة PDF (جديد) -->
-            <Button Command="{Binding PrintDetailsPdfCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#e0e7ff" Foreground="#312e81" Height="38" Padding="20,0" Margin="0,0,12,0" materialDesign:ButtonAssist.CornerRadius="8">
+            <Button Command="{Binding PrintDetailsPdfCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#EEF2FF" Foreground="#1A237E" Height="38" Padding="20,0" Margin="0,0,12,0" materialDesign:ButtonAssist.CornerRadius="8">
                 <StackPanel Orientation="Horizontal">
                     <materialDesign:PackIcon Kind="Printer" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
                     <TextBlock Text="طباعة تقرير PDF" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="13"/>

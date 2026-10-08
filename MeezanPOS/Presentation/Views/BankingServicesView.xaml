@@ -11,7 +11,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              FlowDirection="RightToLeft"
-             Background="#f8f9ff">
+             Background="#F5F7FA">
     
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
@@ -101,13 +101,13 @@
                                     <Condition Property="IsSelected" Value="False"/>
                                 </MultiTrigger.Conditions>
                                 <Setter TargetName="Border" Property="Background" Value="#E2E8F0"/>
-                                <Setter Property="Foreground" Value="#0F172A"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
                             </MultiTrigger>
                             
                             <!-- Selected State (Floating Card with DropShadow) -->
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter TargetName="Border" Property="Background" Value="#FFFFFF"/>
-                                <Setter Property="Foreground" Value="#2563eb"/>
+                                <Setter Property="Foreground" Value="#3F51B5"/>
                                 <Setter TargetName="Border" Property="Effect">
                                     <Setter.Value>
                                         <DropShadowEffect BlurRadius="10" ShadowDepth="1.5" Color="#64748B" Opacity="0.18"/>
@@ -138,12 +138,12 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="إدارة الحسابات البنكية والخدمات المصرفية" FontSize="26" FontWeight="Bold" Foreground="#0b1c30"/>
+                    <TextBlock Text="إدارة الحسابات البنكية والخدمات المصرفية" FontSize="26" FontWeight="Bold" Foreground="#1E293B"/>
                     <TextBlock Text="إدارة الحسابات البنكية (شخصي ومختلط)، مطابقة مبيعات البطاقات، ومتابعة مسحوبات وديون الشركاء بمرونة وأمان." FontSize="14" Foreground="#64748b" Margin="0,4,0,0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding LoadDataCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#2563eb" Background="#e0eaff" Height="40" Padding="16,0" Margin="0,0,10,0" materialDesign:ButtonAssist.CornerRadius="8">
+                    <Button Command="{Binding LoadDataCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3F51B5" Background="#e0eaff" Height="40" Padding="16,0" Margin="0,0,10,0" materialDesign:ButtonAssist.CornerRadius="8">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Refresh" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                             <TextBlock Text="تحديث البيانات" VerticalAlignment="Center" FontWeight="SemiBold"/>
@@ -153,7 +153,7 @@
             </Grid>
 
             <!-- مؤشر التحميل -->
-            <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="4" Background="Transparent" Foreground="#2563eb" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,16"/>
+            <ProgressBar Grid.Row="1" IsIndeterminate="True" Height="4" Background="Transparent" Foreground="#3F51B5" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,0,0,16"/>
 
             <!-- ═══════════ محتوى التبويبات الرئيسي ═══════════ -->
             <TabControl Grid.Row="2" Style="{StaticResource ModernSegmentedTabControlStyle}" FontSize="14">
@@ -180,7 +180,7 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
 
-                                <Button Grid.Row="0" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="42" Padding="16,0" Margin="0,0,0,16" materialDesign:ButtonAssist.CornerRadius="10">
+                                <Button Grid.Row="0" Command="{Binding OpenAddAccountCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="42" Padding="16,0" Margin="0,0,0,16" materialDesign:ButtonAssist.CornerRadius="10">
                                     <StackPanel Orientation="Horizontal">
                                         <materialDesign:PackIcon Kind="Plus" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                         <TextBlock Text="إضافة حساب بنكي جديد" VerticalAlignment="Center" FontWeight="Bold"/>
@@ -213,24 +213,24 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
 
-                                                    <Border Grid.Column="0" Background="#eff6ff" CornerRadius="8" Width="40" Height="40" Margin="0,0,12,0">
-                                                        <materialDesign:PackIcon Kind="BankOutline" Foreground="#2563eb" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="0" Background="#EEF2FF" CornerRadius="8" Width="40" Height="40" Margin="0,0,12,0">
+                                                        <materialDesign:PackIcon Kind="BankOutline" Foreground="#3F51B5" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                     </Border>
 
                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#0f172a"/>
+                                                        <TextBlock Text="{Binding FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B"/>
                                                         <TextBlock Text="{Binding BankName}" FontSize="12" Foreground="#64748b" Margin="0,2,0,0"/>
                                                     </StackPanel>
 
                                                     <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                                        <TextBlock Text="{Binding CurrentBalance, StringFormat={}{0:N2} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#10b981" HorizontalAlignment="Left"/>
+                                                        <TextBlock Text="{Binding CurrentBalance, StringFormat={}{0:N2} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Left"/>
                                                         <Border CornerRadius="4" Padding="4,2" Margin="0,4,0,0" HorizontalAlignment="Left">
                                                             <Border.Style>
                                                                 <Style TargetType="Border">
-                                                                    <Setter Property="Background" Value="#f0fdf4"/>
+                                                                    <Setter Property="Background" Value="#DCFCE7"/>
                                                                     <Style.Triggers>
                                                                         <DataTrigger Binding="{Binding AccountType}" Value="PersonalMixed">
-                                                                            <Setter Property="Background" Value="#fffbeb"/>
+                                                                            <Setter Property="Background" Value="#FEF3C7"/>
                                                                         </DataTrigger>
                                                                     </Style.Triggers>
                                                                 </Style>
@@ -255,8 +255,8 @@
                                             </Border>
                                             <DataTemplate.Triggers>
                                                 <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                                    <Setter TargetName="AccountCard" Property="Background" Value="#eff6ff"/>
-                                                    <Setter TargetName="AccountCard" Property="BorderBrush" Value="#3b82f6"/>
+                                                    <Setter TargetName="AccountCard" Property="Background" Value="#EEF2FF"/>
+                                                    <Setter TargetName="AccountCard" Property="BorderBrush" Value="#3F51B5"/>
                                                 </DataTrigger>
                                             </DataTemplate.Triggers>
                                         </DataTemplate>
@@ -290,19 +290,19 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="22" FontWeight="Bold" Foreground="#0b1c30"/>
+                                            <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="22" FontWeight="Bold" Foreground="#1E293B"/>
                                             <TextBlock Text="{Binding SelectedAccount.LegalOwnerName, StringFormat='المالك القانوني: {0}'}" FontSize="14" Foreground="#475569" Margin="0,6,0,0"/>
                                             <TextBlock Text="{Binding SelectedAccount.BankName, StringFormat='المصرف: {0}'}" FontSize="14" Foreground="#475569" Margin="0,4,0,0"/>
-                                            <TextBlock Text="{Binding SelectedAccount.AccountNumber, StringFormat='رقم الحساب: {0}'}" FontSize="15" FontWeight="SemiBold" Foreground="#2563eb" Margin="0,4,0,0"/>
+                                            <TextBlock Text="{Binding SelectedAccount.AccountNumber, StringFormat='رقم الحساب: {0}'}" FontSize="15" FontWeight="SemiBold" Foreground="#3F51B5" Margin="0,4,0,0"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                             <TextBlock Text="الرصيد الدفتري الحالي" FontSize="12" Foreground="#64748b" FontWeight="SemiBold" HorizontalAlignment="Left"/>
-                                            <TextBlock Text="{Binding SelectedAccount.CurrentBalance, StringFormat={}{0:N2} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#10b981" Margin="0,2,0,0" HorizontalAlignment="Left"/>
+                                            <TextBlock Text="{Binding SelectedAccount.CurrentBalance, StringFormat={}{0:N2} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#16A34A" Margin="0,2,0,0" HorizontalAlignment="Left"/>
                                             
                                             <!-- أزرار التعديل والحذف -->
                                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0" HorizontalAlignment="Left">
-                                                <Button Command="{Binding OpenEditAccountCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#2563eb" BorderBrush="#cbd5e1" Height="34" Padding="12,0" Margin="0,0,8,0">
+                                                <Button Command="{Binding OpenEditAccountCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#3F51B5" BorderBrush="#cbd5e1" Height="34" Padding="12,0" Margin="0,0,8,0">
                                                     <StackPanel Orientation="Horizontal">
                                                         <materialDesign:PackIcon Kind="Pencil" Width="14" Height="14" Margin="0,0,4,0"/>
                                                         <TextBlock Text="تعديل" FontSize="12"/>
@@ -316,11 +316,11 @@
                                 <!-- العمليات السريعة لتغذية/سحب الأموال -->
                                 <Border Grid.Row="2" Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="24">
                                     <StackPanel>
-                                        <TextBlock Text="إجراء عمليات مصرفية يدوية" FontSize="16" FontWeight="Bold" Foreground="#0f172a" Margin="0,0,0,16"/>
+                                        <TextBlock Text="إجراء عمليات مصرفية يدوية" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
                                         
                                         <UniformGrid Columns="3" Rows="1">
                                             <!-- إيداع -->
-                                            <Button Command="{Binding OpenDepositFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#10b981" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
+                                            <Button Command="{Binding OpenDepositFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#16A34A" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="ArrowUpBold" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="إيداع نقدي" VerticalAlignment="Center" FontWeight="Bold"/>
@@ -328,7 +328,7 @@
                                             </Button>
 
                                             <!-- سحب -->
-                                            <Button Command="{Binding OpenWithdrawalFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#f59e0b" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
+                                            <Button Command="{Binding OpenWithdrawalFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#D97706" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="ArrowDownBold" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="سحب نقدي" VerticalAlignment="Center" FontWeight="Bold"/>
@@ -336,7 +336,7 @@
                                             </Button>
 
                                             <!-- تحويل داخلي -->
-                                            <Button Command="{Binding OpenTransferFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
+                                            <Button Command="{Binding OpenTransferFormCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="50" Margin="4" materialDesign:ButtonAssist.CornerRadius="10">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="SwapHorizontal" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                                     <TextBlock Text="تحويل داخلي" VerticalAlignment="Center" FontWeight="Bold"/>
@@ -464,7 +464,7 @@
                                         <CheckBox Grid.Column="8" Content="عرض الحركات الشخصية للمالك" IsChecked="{Binding ShowPersonalTransactions}" FontSize="12" Foreground="#b45309" FontWeight="SemiBold" VerticalAlignment="Center" Visibility="{Binding IsStatementAccountMixed, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                                         <!-- زر تحميل الكشف (يفتح النافذة الجديدة) -->
-                                        <Button x:Name="LoadStatementButton" Grid.Column="10" Click="LoadStatementButton_Click" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="36" Padding="16,0" materialDesign:ButtonAssist.CornerRadius="8">
+                                        <Button x:Name="LoadStatementButton" Grid.Column="10" Click="LoadStatementButton_Click" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="36" Padding="16,0" materialDesign:ButtonAssist.CornerRadius="8">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="Magnify" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                                 <TextBlock Text="تحميل الكشف" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12"/>
@@ -480,10 +480,10 @@
                                     <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#94a3b8" Opacity="0.08"/>
                                 </Border.Effect>
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <Border Background="#eff6ff" CornerRadius="50" Width="100" Height="100" HorizontalAlignment="Center" Margin="0,0,0,20">
-                                        <materialDesign:PackIcon Kind="FileDocumentOutline" Width="48" Height="48" Foreground="#2563eb" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <Border Background="#EEF2FF" CornerRadius="50" Width="100" Height="100" HorizontalAlignment="Center" Margin="0,0,0,20">
+                                        <materialDesign:PackIcon Kind="FileDocumentOutline" Width="48" Height="48" Foreground="#3F51B5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
-                                    <TextBlock Text="كشف حساب المصرف البنكي" FontSize="20" FontWeight="Bold" Foreground="#0f172a" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBlock Text="كشف حساب المصرف البنكي" FontSize="20" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                     <TextBlock FontSize="14" Foreground="#64748b" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="500" TextAlignment="Center" LineHeight="22">
                                         اختر الحساب البنكي وحدد الفترة الزمنية المطلوبة من الأعلى، ثم اضغط على زر "تحميل الكشف" لفتح نافذة التقرير التفصيلي.
                                     </TextBlock>
@@ -504,7 +504,7 @@
         <Border Background="#99000000" Visibility="{Binding IsAccountFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="460" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="بيانات الحساب البنكي" FontSize="18" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,16"/>
+                    <TextBlock Text="بيانات الحساب البنكي" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
 
                     <!-- حقل مدمج لاسم المصرف والفرع -->
                     <TextBlock Text="اسم المصرف والفرع:" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
@@ -539,7 +539,7 @@
                     <!-- الأزرار -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button Command="{Binding CloseAccountFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">تراجع</Button>
-                        <Button Command="{Binding SaveAccountCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="40" Padding="20,0">حفظ الحساب ✓</Button>
+                        <Button Command="{Binding SaveAccountCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="40" Padding="20,0">حفظ الحساب ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -549,10 +549,10 @@
         <Border Background="#99000000" Visibility="{Binding IsDepositFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="400" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="تسجيل إيداع نقدي للمصرف" FontSize="18" FontWeight="Bold" Foreground="#10b981" Margin="0,0,0,16"/>
+                    <TextBlock Text="تسجيل إيداع نقدي للمصرف" FontSize="18" FontWeight="Bold" Foreground="#16A34A" Margin="0,0,0,16"/>
 
                     <TextBlock Text="الحساب المستهدف:" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
 
                     <TextBlock Text="مبلغ الإيداع (د.ل):" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
                     <TextBox Text="{Binding ManualTxAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,8" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
@@ -568,7 +568,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Command="{Binding CloseDepositFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">إلغاء</Button>
-                        <Button Command="{Binding SaveDepositCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#10b981" Foreground="White" Height="40" Padding="20,0">إيداع نقدي ✓</Button>
+                        <Button Command="{Binding SaveDepositCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#16A34A" Foreground="White" Height="40" Padding="20,0">إيداع نقدي ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -578,10 +578,10 @@
         <Border Background="#99000000" Visibility="{Binding IsWithdrawalFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="400" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="تسجيل عملية سحب نقدي" FontSize="18" FontWeight="Bold" Foreground="#f59e0b" Margin="0,0,0,16"/>
+                    <TextBlock Text="تسجيل عملية سحب نقدي" FontSize="18" FontWeight="Bold" Foreground="#D97706" Margin="0,0,0,16"/>
 
                     <TextBlock Text="الحساب المصدر:" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
 
                     <TextBlock Text="مبلغ السحب (د.ل):" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
                     <TextBox Text="{Binding ManualTxAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,8" FontSize="18" FontWeight="Bold" Margin="0,0,0,12"/>
@@ -597,7 +597,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Command="{Binding CloseWithdrawalFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">إلغاء</Button>
-                        <Button Command="{Binding SaveWithdrawalCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#f59e0b" Foreground="White" Height="40" Padding="20,0">سحب نقدي ✓</Button>
+                        <Button Command="{Binding SaveWithdrawalCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#D97706" Foreground="White" Height="40" Padding="20,0">سحب نقدي ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -607,10 +607,10 @@
         <Border Background="#99000000" Visibility="{Binding IsTransferFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="420" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="إجراء تحويل داخلي بين الحسابات" FontSize="18" FontWeight="Bold" Foreground="#2563eb" Margin="0,0,0,16"/>
+                    <TextBlock Text="إجراء تحويل داخلي بين الحسابات" FontSize="18" FontWeight="Bold" Foreground="#3F51B5" Margin="0,0,0,16"/>
 
                     <TextBlock Text="الحساب المصدر (الخصم):" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
-                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,12"/>
+                    <TextBlock Text="{Binding SelectedAccount.FriendlyName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
 
                     <!-- الحساب المستلم -->
                     <TextBlock Text="الحساب المستلم (الإيداع):" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
@@ -627,7 +627,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Command="{Binding CloseTransferFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">إلغاء</Button>
-                        <Button Command="{Binding SaveTransferCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="40" Padding="20,0">إتمام التحويل ✓</Button>
+                        <Button Command="{Binding SaveTransferCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="40" Padding="20,0">إتمام التحويل ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -637,7 +637,7 @@
         <Border Background="#99000000" Visibility="{Binding IsClearCardFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="400" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="تأكيد تحصيل بطاقة إلكترونية ومطابقتها" FontSize="18" FontWeight="Bold" Foreground="#10b981" Margin="0,0,0,16"/>
+                    <TextBlock Text="تأكيد تحصيل بطاقة إلكترونية ومطابقتها" FontSize="18" FontWeight="Bold" Foreground="#16A34A" Margin="0,0,0,16"/>
 
                     <TextBlock Text="بيانات العملية المعلقة:" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
                     <Border Background="#f8fafc" CornerRadius="8" Padding="12" Margin="0,0,0,12">
@@ -653,13 +653,13 @@
                             </Grid.ColumnDefinitions>
                             
                             <TextBlock Grid.Row="0" Grid.Column="0" Text="تاريخ المبيعات:" Foreground="#64748b" FontSize="13"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.JournalDate, StringFormat=yyyy/MM/dd}" FontWeight="SemiBold" Foreground="#0f172a"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.JournalDate, StringFormat=yyyy/MM/dd}" FontWeight="SemiBold" Foreground="#1E293B"/>
                             
                             <TextBlock Grid.Row="1" Grid.Column="0" Text="المصرف / الوجهة المعلقة:" Foreground="#64748b" FontSize="13" Margin="0,4,0,0"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.CardBrand}" FontWeight="SemiBold" Foreground="#0f172a" Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.CardBrand}" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,4,0,0"/>
 
                             <TextBlock Grid.Row="2" Grid.Column="0" Text="المبلغ المستحق تحصيله:" Foreground="#64748b" FontSize="13" Margin="0,4,0,0"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.Amount, StringFormat={}{0:N2} د.ل}" FontWeight="Bold" Foreground="#2563eb" Margin="0,4,0,0"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPendingCardPayment.Amount, StringFormat={}{0:N2} د.ل}" FontWeight="Bold" Foreground="#3F51B5" Margin="0,4,0,0"/>
                         </Grid>
                     </Border>
 
@@ -673,7 +673,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Command="{Binding CloseClearCardFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">إلغاء</Button>
-                        <Button Command="{Binding ClearCardPaymentCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#10b981" Foreground="White" Height="40" Padding="20,0">تأكيد تحصيل الرصيد ✓</Button>
+                        <Button Command="{Binding ClearCardPaymentCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#16A34A" Foreground="White" Height="40" Padding="20,0">تأكيد تحصيل الرصيد ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -683,7 +683,7 @@
         <Border Background="#99000000" Visibility="{Binding IsSettlementFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
             <materialDesign:Card Width="450" VerticalAlignment="Center" HorizontalAlignment="Center" UniformCornerRadius="16" Padding="28,24" Background="White">
                 <StackPanel>
-                    <TextBlock Text="تسجيل تسوية ذمة أو مسحوبات جديدة للشركاء" FontSize="17" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,16"/>
+                    <TextBlock Text="تسجيل تسوية ذمة أو مسحوبات جديدة للشركاء" FontSize="17" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
 
                     <!-- اسم الشريك -->
                     <TextBlock Text="اسم الشريك المعني:" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
@@ -691,7 +691,7 @@
 
                     <!-- المبلغ -->
                     <TextBlock Text="المبلغ النقدي المسدد (د.ل):" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
-                    <TextBox Text="{Binding SettlementAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,8" FontSize="18" FontWeight="Bold" Foreground="#2563eb" Margin="0,0,0,12"/>
+                    <TextBox Text="{Binding SettlementAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,8" FontSize="18" FontWeight="Bold" Foreground="#3F51B5" Margin="0,0,0,12"/>
 
                     <!-- مصدر التمويل -->
                     <TextBlock Text="مصدر الدفع والتمويل من المطعم:" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>
@@ -727,7 +727,7 @@
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button Command="{Binding CloseSettlementFormCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#64748b" BorderBrush="#cbd5e1" Height="40" Padding="16,0" Margin="0,0,10,0">إلغاء</Button>
-                        <Button Command="{Binding SaveSettlementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#2563eb" Foreground="White" Height="40" Padding="20,0">حفظ وإتمام التسوية ✓</Button>
+                        <Button Command="{Binding SaveSettlementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Background="#3F51B5" Foreground="White" Height="40" Padding="20,0">حفظ وإتمام التسوية ✓</Button>
                     </StackPanel>
                 </StackPanel>
             </materialDesign:Card>
@@ -738,7 +738,7 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Border Padding="28,24">
                         <StackPanel>
-                            <TextBlock Text="تسجيل تمويل تشغيلي جديد من شريك" FontSize="17" FontWeight="Bold" Foreground="#0b1c30" Margin="0,0,0,16"/>
+                            <TextBlock Text="تسجيل تمويل تشغيلي جديد من شريك" FontSize="17" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
 
                             <!-- اسم الشريك -->
                             <TextBlock Text="اسم الشريك الممول:" FontSize="12" Foreground="#64748b" Margin="0,0,0,6"/>

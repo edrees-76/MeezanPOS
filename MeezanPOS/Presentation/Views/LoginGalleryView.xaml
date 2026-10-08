@@ -8,9 +8,9 @@
         Title="معرض تصاميم واجهة الدخول - ميزان المطاعم" 
         Height="850" Width="1350"
         WindowStartupLocation="CenterScreen"
-        Background="#0f172a"
+        Background="#1E293B"
         FlowDirection="RightToLeft"
-        FontFamily="Segoe UI, Tahoma">
+        FontFamily="{StaticResource Font.Body}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -51,7 +51,7 @@
 
                 <!-- زر الإغلاق والعودة -->
                 <Button Grid.Column="3" Content="تطبيق هذا التصميم ✓" Click="ApplyDesign_Click" 
-                        Background="#10b981" BorderBrush="#10b981" Foreground="White" Height="40" Padding="16,0" FontWeight="Bold">
+                        Background="#16A34A" BorderBrush="#16A34A" Foreground="White" Height="40" Padding="16,0" FontWeight="Bold">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="8"/>
@@ -188,7 +188,7 @@
                 <Grid.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="#1e293b" Offset="0"/>
-                        <GradientStop Color="#0f172a" Offset="1"/>
+                        <GradientStop Color="#1E293B" Offset="1"/>
                     </LinearGradientBrush>
                 </Grid.Background>
 
@@ -207,8 +207,8 @@
                         <Border Grid.Column="1" CornerRadius="0,28,28,0" Padding="40">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                    <GradientStop Color="#1e3a8a" Offset="0"/>
-                                    <GradientStop Color="#0f172a" Offset="1"/>
+                                    <GradientStop Color="#283593" Offset="0"/>
+                                    <GradientStop Color="#1E293B" Offset="1"/>
                                 </LinearGradientBrush>
                             </Border.Background>
                             <Grid>
@@ -275,12 +275,12 @@
                             <StackPanel Grid.Row="2">
                                 <Grid Margin="0,0,0,16">
                                     <CheckBox Content="تذكرني" Foreground="#475569" FontSize="12" VerticalAlignment="Center"/>
-                                    <TextBlock Text="نسيت كلمة المرور؟" Foreground="#1e3a8a" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="Hand"/>
+                                    <TextBlock Text="نسيت كلمة المرور؟" Foreground="#283593" FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Left" VerticalAlignment="Center" Cursor="Hand"/>
                                 </Grid>
 
                                 <!-- زر الدخول الفاخر -->
                                 <Button Content="دخول لوحة التحكم ✓" Style="{StaticResource MaterialDesignFlatButton}" 
-                                        Background="#1e3a8a" Foreground="White" Height="44" FontSize="14" FontWeight="Bold">
+                                        Background="#283593" Foreground="White" Height="44" FontSize="14" FontWeight="Bold">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="10"/>
@@ -303,7 +303,7 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     
-                    <Border Grid.Column="0" Background="#0f172a"/>
+                    <Border Grid.Column="0" Background="#1E293B"/>
                     <!-- الجزء الأيمن مائل وتدرج ذهبي -->
                     <Border Grid.Column="1">
                         <Border.Background>
@@ -315,7 +315,7 @@
                     </Border>
                     
                     <!-- رسم خط مائل ناعم -->
-                    <Path Data="M 675,0 L 750,900 L 0,900 Z" Fill="#0f172a" Stretch="Fill"/>
+                    <Path Data="M 675,0 L 750,900 L 0,900 Z" Fill="#1E293B" Stretch="Fill"/>
                 </Grid>
 
                 <!-- بطاقة الدخول المطفأة الكبيرة عائمة وذات ظلال عميقة -->
@@ -336,9 +336,9 @@
                             <Grid Width="70" Height="70" HorizontalAlignment="Center">
                                 <Ellipse Fill="#f1f5f9"/>
                                 <materialDesign:PackIcon Kind="Scale" Foreground="#b45309" Width="36" Height="36" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,6,0,0"/>
-                                <materialDesign:PackIcon Kind="ChefHat" Foreground="#0f172a" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"/>
+                                <materialDesign:PackIcon Kind="ChefHat" Foreground="#1E293B" Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"/>
                             </Grid>
-                            <TextBlock Text="ميزان المطاعم" FontSize="22" FontWeight="Bold" Foreground="#0f172a" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                            <TextBlock Text="ميزان المطاعم" FontSize="22" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,10,0,0"/>
                             <TextBlock Text="نظام تسجيل الدخول المعاصر" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                         </StackPanel>
 
@@ -347,14 +347,14 @@
                             <!-- اسم المستخدم -->
                             <TextBlock Text="اسم المستخدم أو البريد:" FontSize="12" Foreground="#475569" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
-                                <TextBox Background="Transparent" BorderThickness="0" Foreground="#0f172a" FontSize="13" VerticalAlignment="Center"
+                                <TextBox Background="Transparent" BorderThickness="0" Foreground="#1E293B" FontSize="13" VerticalAlignment="Center"
                                          materialDesign:HintAssist.Hint="اكتب اسم المستخدم" materialDesign:HintAssist.Foreground="#94a3b8" materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"/>
                             </Border>
 
                             <!-- كلمة المرور -->
                             <TextBlock Text="كلمة المرور:" FontSize="12" Foreground="#475569" FontWeight="SemiBold" Margin="0,0,0,6"/>
                             <Border Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
-                                <PasswordBox Background="Transparent" BorderThickness="0" Foreground="#0f172a" FontSize="13" VerticalAlignment="Center"/>
+                                <PasswordBox Background="Transparent" BorderThickness="0" Foreground="#1E293B" FontSize="13" VerticalAlignment="Center"/>
                             </Border>
                             
                             <Grid Margin="0,0,0,10">
@@ -388,7 +388,7 @@
                     <Grid.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                             <GradientStop Color="#0b0f19" Offset="0"/>
-                            <GradientStop Color="#1e1b4b" Offset="0.3"/>
+                            <GradientStop Color="#1A237E" Offset="0.3"/>
                             <GradientStop Color="#311005" Offset="0.7"/>
                             <GradientStop Color="#030712" Offset="1"/>
                         </LinearGradientBrush>
@@ -430,7 +430,7 @@
                             <!-- اسم المستخدم -->
                             <TextBlock Text="اسم المستخدم" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
                             <TextBox Foreground="White" FontSize="14" BorderBrush="#55ffffff" BorderThickness="0,0,0,1.5" Padding="4,6" Margin="0,0,0,20"
-                                     materialDesign:HintAssist.Hint="اكتب اسم المستخدم" materialDesign:HintAssist.Foreground="#4b5563"/>
+                                     materialDesign:HintAssist.Hint="اكتب اسم المستخدم" materialDesign:HintAssist.Foreground="#64748B"/>
 
                             <!-- كلمة المرور -->
                             <TextBlock Text="كلمة المرور" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
@@ -439,7 +439,7 @@
                             <!-- كود الدخول -->
                             <TextBlock Text="كود الصندوق" FontSize="11" Foreground="#94a3b8" Margin="0,0,0,6"/>
                             <TextBox Foreground="White" FontSize="14" BorderBrush="#55ffffff" BorderThickness="0,0,0,1.5" Padding="4,6"
-                                     materialDesign:HintAssist.Hint="كود اليومية المعتمد" materialDesign:HintAssist.Foreground="#4b5563"/>
+                                     materialDesign:HintAssist.Hint="كود اليومية المعتمد" materialDesign:HintAssist.Foreground="#64748B"/>
                         </StackPanel>
 
                         <!-- زر الدخول الذهبي المطفي الفخم -->

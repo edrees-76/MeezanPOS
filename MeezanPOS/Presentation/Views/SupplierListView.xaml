@@ -9,7 +9,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1000"
              FlowDirection="RightToLeft"
-             Background="White">
+             Background="Transparent">
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
@@ -19,23 +19,29 @@
 
     <Grid>
         <!-- المحتوى الرئيسي (القائمة) -->
-        <Grid Margin="24">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="24"/>
+                <RowDefinition Height="0"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
             <!-- الترويسة والبحث -->
-            <Grid Grid.Row="0">
+            <Border Grid.Row="0" Style="{StaticResource PageHeader}">
+            <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <materialDesign:PackIcon Kind="AccountTie" Width="32" Height="32" Foreground="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center"/>
-                    <TextBlock Text="إدارة الموردين" FontSize="24" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                    <Border Width="44" Height="44" CornerRadius="10" Background="{StaticResource Brush.PrimarySoft}" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="TruckOutline" Width="24" Height="24" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="إدارة الموردين" Style="{StaticResource Text.PageTitle}"/>
+                        <TextBlock Text="حسابات الموردين وأرصدتهم المستحقة وكشوف الحساب" Style="{StaticResource Text.Caption}" Margin="0,2,0,0"/>
+                    </StackPanel>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="1">
@@ -53,7 +59,7 @@
                         <materialDesign:PackIcon Kind="Magnify"/>
                     </Button>
 
-                    <Button Command="{Binding OpenAddFormCommand}" Margin="16,0,0,0" Content="إضافة مورد" Style="{StaticResource MaterialDesignFlatMidBgButton}">
+                    <Button Command="{Binding OpenAddFormCommand}" Margin="16,0,0,0" Content="إضافة مورد" Style="{StaticResource Button.Primary}">
                         <Button.ContentTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
@@ -65,9 +71,10 @@
                     </Button>
                 </StackPanel>
             </Grid>
+            </Border>
 
             <!-- القائمة -->
-            <Border Grid.Row="2" CornerRadius="16" Background="White" Padding="0" Margin="0,0,0,0"
+            <Border Grid.Row="2" CornerRadius="12" Background="White" Padding="0" Margin="0,0,0,0"
                     BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
                 <DataGrid ItemsSource="{Binding Suppliers}" 
                           SelectedItem="{Binding SelectedSupplier}"
@@ -88,19 +95,19 @@
                         </Style>
                     </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="100"/>
+                        <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto" MinWidth="100"/>
                         <DataGridTextColumn Header="اسم المورد" Binding="{Binding Name}" Width="*">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Foreground" Value="#1E1B4B"/>
+                                    <Setter Property="Foreground" Value="#1A237E"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        <DataGridTextColumn Header="رقم الهاتف" Binding="{Binding Phone}" Width="150"/>
+                        <DataGridTextColumn Header="رقم الهاتف" Binding="{Binding Phone}" Width="Auto" MinWidth="150"/>
                         
                         <!-- الرصيد الحالي -->
-                        <DataGridTemplateColumn Header="الرصيد الحالي (الدين)" Width="150">
+                        <DataGridTemplateColumn Header="الرصيد الحالي (الدين)" Width="Auto" MinWidth="150">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding CurrentBalance, StringFormat=N2}" 
@@ -110,10 +117,10 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         
-                        <DataGridTextColumn Header="الرصيد الافتتاحي" Binding="{Binding OpeningBalance, StringFormat=N2}" Width="150"/>
+                        <DataGridTextColumn Header="الرصيد الافتتاحي" Binding="{Binding OpeningBalance, StringFormat=N2}" Width="Auto" MinWidth="150"/>
                         
                         <!-- نشط -->
-                        <DataGridTemplateColumn Header="نشط" Width="100">
+                        <DataGridTemplateColumn Header="نشط" Width="Auto" MinWidth="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <Border CornerRadius="12" Padding="8,4" HorizontalAlignment="Left">
@@ -123,14 +130,14 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
                         
-                        <DataGridTemplateColumn Header="إجراءات" Width="150">
+                        <DataGridTemplateColumn Header="إجراءات" Width="Auto" MinWidth="150">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
                                         <Button Command="{Binding DataContext.ViewSupplierDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                                Foreground="#4F46E5" BorderBrush="#4F46E5"
+                                                Foreground="#3F51B5" BorderBrush="#3F51B5"
                                                 materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32" Margin="0,0,8,0"
                                                 ToolTip="كشف الحساب والفواتير">
                                             <StackPanel Orientation="Horizontal">
@@ -141,7 +148,7 @@
                                         <Button Command="{Binding DataContext.OpenEditFormCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignIconButton}" 
-                                                Foreground="#F59E0B"
+                                                Foreground="#D97706"
                                                 ToolTip="تعديل">
                                             <materialDesign:PackIcon Kind="Pencil" Width="20" Height="20" />
                                         </Button>

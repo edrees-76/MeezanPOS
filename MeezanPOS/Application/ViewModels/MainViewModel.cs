@@ -24,32 +24,68 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel()
     {
         CurrentViewModel = new DashboardViewModel();
+
+        try
+        {
+            var user = MeezanPOS.Application.Services.AppServiceProvider
+                .Resolve<MeezanPOS.Application.Interfaces.ISessionService>().CurrentUser;
+            if (user != null)
+            {
+                CurrentUserName = string.IsNullOrWhiteSpace(user.FullName) ? user.Username : user.FullName;
+                CurrentUserRole = user.Role?.Name ?? string.Empty;
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            // الخدمات غير مهيأة (وضع التصميم) — تبقى بيانات المستخدم فارغة
+        }
     }
 
+    // ترتيب عناصر القائمة الجانبية (يطابق MainView.xaml واختصارات Ctrl+1..Ctrl+0)
+    private static readonly string[] NavOrder =
+    {
+        "Dashboard", "AddJournal", "Sales", "Suppliers", "Expenses",
+        "Wages", "Banking", "FreeOrdersReturns", "ClosingAccount", "Settings"
+    };
+
     private int selectedNavIndex = 0;
+    private bool _isNavigating;
     public int SelectedNavIndex
     {
         get => selectedNavIndex;
         set
         {
-            if (SetProperty(ref selectedNavIndex, value))
-            {
-                if (value == 0) Navigate("Dashboard");
-                else if (value == 1) Navigate("Sales");
-                else if (value == 2) Navigate("Suppliers");
-                else if (value == 3) Navigate("Expenses");
-                else if (value == 4) Navigate("Wages");
-                else if (value == 5) Navigate("Banking");
-                else if (value == 6) Navigate("FreeOrdersReturns");
-                else if (value == 7) Navigate("ClosingAccount");
-                else if (value == 8) Navigate("Settings");
-            }
+            if (SetProperty(ref selectedNavIndex, value) && !_isNavigating && value >= 0 && value < NavOrder.Length)
+                Navigate(NavOrder[value]);
         }
     }
 
+    /// <summary>عنوان الصفحة المعروض في الشريط العلوي (بدون بادئة اسم المنظومة)</summary>
+    public string PageTitle => Title.Replace("ميزان للمالية - ", string.Empty);
+
+    partial void OnTitleChanged(string value) => OnPropertyChanged(nameof(PageTitle));
+
+    public string CurrentUserName { get; } = string.Empty;
+    public string CurrentUserRole { get; } = string.Empty;
+    public string CurrentUserInitial => string.IsNullOrWhiteSpace(CurrentUserName) ? "؟" : CurrentUserName.Trim()[0].ToString();
+    public string TodayText { get; } = DateTime.Now.ToString("dd/MM/yyyy");
 
     [RelayCommand]
     private void Navigate(string viewName)
+    {
+        // يمنع إعادة الدخول: تغيير SelectedNavIndex داخل التنقل لا يعيد إنشاء الشاشة
+        _isNavigating = true;
+        try
+        {
+            NavigateCore(viewName);
+        }
+        finally
+        {
+            _isNavigating = false;
+        }
+    }
+
+    private void NavigateCore(string viewName)
     {
         switch (viewName)
         {
@@ -60,12 +96,12 @@ public partial class MainViewModel : ObservableObject
                 break;
             case "Sales":
                 Title = "ميزان للمالية - المبيعات والإيرادات";
-                SelectedNavIndex = 1;
+                SelectedNavIndex = 2;
                 CurrentViewModel = new SalesViewModel();
                 break;
             case "Suppliers":
                 Title = "ميزان للمالية - إدارة الموردين";
-                SelectedNavIndex = 2;
+                SelectedNavIndex = 3;
                 var supplierVM = new SupplierListViewModel();
                 supplierVM.OnViewSupplierDetails = (supplier) => 
                 {
@@ -78,7 +114,7 @@ public partial class MainViewModel : ObservableObject
                 break;
             case "Expenses":
                 Title = "ميزان للمالية - إدارة المصروفات";
-                SelectedNavIndex = 3;
+                SelectedNavIndex = 4;
                 var expenseVM = new ExpenseManagementViewModel();
                 expenseVM.OnBack = () => Navigate("Dashboard");
                 expenseVM.OnEditJournal = (journalId) => 
@@ -108,31 +144,32 @@ public partial class MainViewModel : ObservableObject
                 break;
             case "Wages":
                 Title = "ميزان للمالية - أجور ومستحقات العمال";
-                SelectedNavIndex = 4;
+                SelectedNavIndex = 5;
                 CurrentViewModel = new WagesManagementViewModel();
                 break;
             case "Banking":
                 Title = "ميزان للمالية - الخدمات المصرفية والبنكية";
-                SelectedNavIndex = 5;
+                SelectedNavIndex = 6;
                 CurrentViewModel = new BankingServicesViewModel();
                 break;
             case "FreeOrdersReturns":
                 Title = "ميزان للمالية - الطلبات المجانية والمرتجعات";
-                SelectedNavIndex = 6;
+                SelectedNavIndex = 7;
                 CurrentViewModel = new FreeOrdersReturnsViewModel();
                 break;
             case "ClosingAccount":
                 Title = "ميزان للمالية - الحساب الختامي والتقارير";
-                SelectedNavIndex = 7;
+                SelectedNavIndex = 8;
                 CurrentViewModel = new ClosingAccountViewModel();
                 break;
             case "Settings":
                 Title = "ميزان للمالية - الإعدادات النظامية";
-                SelectedNavIndex = 8;
+                SelectedNavIndex = 9;
                 CurrentViewModel = new SettingsViewModel();
                 break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";
+                SelectedNavIndex = 1;
                 var journalVM2 = new DailyJournalViewModel();
                 journalVM2.OnClose = () => Navigate("Dashboard");
                 CurrentViewModel = journalVM2;

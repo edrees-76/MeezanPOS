@@ -64,7 +64,7 @@
                 <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ" Style="{StaticResource MaterialDesignFloatingHintDatePicker}" Margin="0,0,16,0" Width="120" VerticalAlignment="Bottom"/>
                 
                 <Button Command="{Binding FilterStatementCommand}" Content="تصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" VerticalAlignment="Bottom"/>
-                <Button Command="{Binding ClearFilterCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,32,0" Foreground="#ef4444" BorderBrush="#ef4444" VerticalAlignment="Bottom">
+                <Button Command="{Binding ClearFilterCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,32,0" Foreground="#DC2626" BorderBrush="#DC2626" VerticalAlignment="Bottom">
                     <materialDesign:PackIcon Kind="FilterRemove" />
                 </Button>
 
@@ -111,15 +111,15 @@
                       IsReadOnly="True"
                       CanUserResizeColumns="False"
                       HeadersVisibility="Column"
-                      GridLinesVisibility="All" BorderThickness="1" BorderBrush="#e5e7eb"
-                      HorizontalGridLinesBrush="#e5e7eb" VerticalGridLinesBrush="#e5e7eb"
+                      GridLinesVisibility="All" BorderThickness="1" BorderBrush="#E2E8F0"
+                      HorizontalGridLinesBrush="#E2E8F0" VerticalGridLinesBrush="#E2E8F0"
                       materialDesign:DataGridAssist.CellPadding="8"
                       materialDesign:DataGridAssist.ColumnHeaderPadding="8">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="60"/>
-                    <DataGridTextColumn Header="رصيد أول" Binding="{Binding OpeningBalance, StringFormat=N2}" Width="75"/>
+                    <DataGridTextColumn Header="التسلسل" Binding="{Binding Sequence}" Width="Auto" MinWidth="60"/>
+                    <DataGridTextColumn Header="رصيد أول" Binding="{Binding OpeningBalance, StringFormat=N2}" Width="Auto" MinWidth="75"/>
                     
-                    <DataGridTemplateColumn Header="قيمة الفاتورة" Width="85">
+                    <DataGridTemplateColumn Header="قيمة الفاتورة" Width="Auto" MinWidth="85">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Command="{Binding DataContext.EditInvoiceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -135,16 +135,16 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="تاريخ الفاتورة" Binding="{Binding InvoiceDate, StringFormat=yyyy-MM-dd}" Width="90"/>
-                    <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="80"/>
+                    <DataGridTextColumn Header="تاريخ الفاتورة" Binding="{Binding InvoiceDate, StringFormat=yyyy-MM-dd}" Width="Auto" MinWidth="90"/>
+                    <DataGridTextColumn Header="رقم الفاتورة" Binding="{Binding InvoiceNumber}" Width="Auto" MinWidth="80"/>
                     
-                    <DataGridTemplateColumn Header="المبلغ المستلم" Width="95">
+                    <DataGridTemplateColumn Header="المبلغ المستلم" Width="Auto" MinWidth="95">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Command="{Binding DataContext.EditPaymentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                        Foreground="#22c55e"
+                                        Foreground="#16A34A"
                                         Padding="4,2" Height="Auto" Margin="0"
                                         ToolTip="تعديل الدفعة"
                                         Visibility="{Binding HasPayment, Converter={StaticResource BoolToVis}}"
@@ -154,8 +154,8 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="تاريخ الدفع" Binding="{Binding PaymentDate, StringFormat=yyyy-MM-dd}" Width="90"/>
-                    <DataGridTemplateColumn Header="طريقة الدفع" Width="105">
+                    <DataGridTextColumn Header="تاريخ الدفع" Binding="{Binding PaymentDate, StringFormat=yyyy-MM-dd}" Width="Auto" MinWidth="90"/>
+                    <DataGridTemplateColumn Header="طريقة الدفع" Width="Auto" MinWidth="105">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Grid HorizontalAlignment="Center">
@@ -163,7 +163,7 @@
                                     <Button Command="{Binding DataContext.ShowShiftDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource MaterialDesignFlatButton}"
-                                            Foreground="#1d4ed8"
+                                            Foreground="#3F51B5"
                                             Padding="4,2" Height="Auto" Margin="0"
                                             ToolTip="عرض تفاصيل الوردية والكاشير"
                                             Visibility="{Binding IsDailyJournalPayment, Converter={StaticResource BoolToVis}}">
@@ -177,7 +177,7 @@
                                     <Button Command="{Binding DataContext.ShowTransferDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource MaterialDesignFlatButton}"
-                                            Foreground="#6d28d9"
+                                            Foreground="#283593"
                                             Padding="4,2" Height="Auto" Margin="0"
                                             ToolTip="عرض تفاصيل التحويل المصرفي"
                                             Visibility="{Binding IsTransferPayment, Converter={StaticResource BoolToVis}}">
@@ -197,9 +197,9 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="رقم الايصال" Binding="{Binding ReceiptNumber}" Width="80"/>
+                    <DataGridTextColumn Header="رقم الايصال" Binding="{Binding ReceiptNumber}" Width="Auto" MinWidth="80"/>
                     
-                    <DataGridTemplateColumn Header="المتبقي" Width="85">
+                    <DataGridTemplateColumn Header="المتبقي" Width="Auto" MinWidth="85">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding RemainingBalance, StringFormat=N2}" 
@@ -247,7 +247,7 @@
                 <materialDesign:Card Grid.Column="2" Margin="4" Padding="12" Background="#f8fafc">
                     <StackPanel>
                         <TextBlock Text="المبالغ المستلمة" FontSize="12" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalPaymentsSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#22c55e" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock Text="{Binding TotalPaymentsSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
                 
@@ -287,7 +287,7 @@
                             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="إجمالي الفاتورة *" Text="{Binding NewInvoice.TotalAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveInvoiceCommand}" Margin="0,0,8,0"/>
                             <Button Grid.Column="1" Command="{Binding OpenInvoiceDetailsCommand}" 
                                     Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                    Foreground="#3b82f6" BorderBrush="#3b82f6"
+                                    Foreground="#3F51B5" BorderBrush="#3F51B5"
                                     Padding="12,8" VerticalAlignment="Stretch"
                                     ToolTip="إضافة تفاصيل الأصناف للتحقق من إجمالي الفاتورة">
                                 <StackPanel Orientation="Horizontal">
@@ -305,7 +305,7 @@
                                     <Setter Property="Foreground" Value="#eab308"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalMatching}" Value="True">
-                                            <Setter Property="Foreground" Value="#22c55e"/>
+                                            <Setter Property="Foreground" Value="#16A34A"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -362,24 +362,24 @@
                               CanUserResizeColumns="False"
                               HeadersVisibility="Column"
                               GridLinesVisibility="All" 
-                              BorderThickness="1" BorderBrush="#e5e7eb"
-                              HorizontalGridLinesBrush="#e5e7eb" VerticalGridLinesBrush="#e5e7eb"
+                              BorderThickness="1" BorderBrush="#E2E8F0"
+                              HorizontalGridLinesBrush="#E2E8F0" VerticalGridLinesBrush="#E2E8F0"
                               materialDesign:DataGridAssist.CellPadding="6"
                               materialDesign:DataGridAssist.ColumnHeaderPadding="6"
                               VerticalScrollBarVisibility="Auto">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="تسلسل" Binding="{Binding Sequence}" Width="55" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="تسلسل" Binding="{Binding Sequence}" Width="Auto" MinWidth="55" IsReadOnly="True"/>
                             <DataGridTextColumn Header="البيان" Binding="{Binding Description, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                            <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity, UpdateSourceTrigger=LostFocus}" Width="75"/>
-                            <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, UpdateSourceTrigger=LostFocus}" Width="90"/>
-                            <DataGridTextColumn Header="القيمة" Binding="{Binding TotalValue, StringFormat=N2}" Width="90" IsReadOnly="True"/>
-                            <DataGridTemplateColumn Header="" Width="45">
+                            <DataGridTextColumn Header="الكمية" Binding="{Binding Quantity, UpdateSourceTrigger=LostFocus}" Width="Auto" MinWidth="75"/>
+                            <DataGridTextColumn Header="سعر الوحدة" Binding="{Binding UnitPrice, UpdateSourceTrigger=LostFocus}" Width="Auto" MinWidth="90"/>
+                            <DataGridTextColumn Header="القيمة" Binding="{Binding TotalValue, StringFormat=N2}" Width="Auto" MinWidth="90" IsReadOnly="True"/>
+                            <DataGridTemplateColumn Header="" Width="Auto" MinWidth="45">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Command="{Binding DataContext.RemoveInvoiceItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignIconButton}"
-                                                Foreground="#ef4444" Width="28" Height="28" Padding="0"
+                                                Foreground="#DC2626" Width="28" Height="28" Padding="0"
                                                 ToolTip="حذف الصنف">
                                             <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
                                         </Button>
@@ -406,7 +406,7 @@
                                         <Setter Property="Foreground" Value="#eab308"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsTotalMatching}" Value="True">
-                                                <Setter Property="Foreground" Value="#22c55e"/>
+                                                <Setter Property="Foreground" Value="#16A34A"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -552,7 +552,7 @@
                             <Button Command="{Binding PrintStandardStatementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Height="150" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <StackPanel Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <materialDesign:PackIcon Kind="FileDocumentOutline" Width="48" Height="48" Foreground="#0284c7" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                                    <TextBlock Text="كشف حساب عادي" FontSize="16" FontWeight="Bold" Foreground="#0f172a" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="كشف حساب عادي" FontSize="16" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="الحركات المالية العامة فقط" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Button>
@@ -562,8 +562,8 @@
                         <materialDesign:Card Grid.Row="0" Grid.Column="2" UniformCornerRadius="12" Padding="0" Background="#f8fafc" BorderThickness="1" BorderBrush="#e2e8f0">
                             <Button Command="{Binding PrintDetailedStatementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Height="150" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <StackPanel Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="48" Height="48" Foreground="#7c3aed" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                                    <TextBlock Text="كشف حساب مفصل" FontSize="16" FontWeight="Bold" Foreground="#0f172a" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="48" Height="48" Foreground="#3F51B5" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                    <TextBlock Text="كشف حساب مفصل" FontSize="16" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,4"/>
                                     <TextBlock Text="كشف الحساب + تفاصيل جميع الفواتير" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Button>
@@ -574,7 +574,7 @@
                                 Command="{Binding ClosePrintSelectionCommand}" 
                                 Content="إلغاء" 
                                 Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                Foreground="#ef4444" BorderBrush="#ef4444" 
+                                Foreground="#DC2626" BorderBrush="#DC2626" 
                                 HorizontalAlignment="Stretch" Padding="0,8" Height="40"/>
                     </Grid>
                 </Grid>
