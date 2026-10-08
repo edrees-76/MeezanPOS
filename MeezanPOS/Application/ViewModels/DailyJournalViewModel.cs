@@ -14,155 +14,13 @@ using MeezanPOS.Application.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MeezanPOS.Application.ViewModels;
-
-/// <summary>
-/// نموذج بيانات لعرض خيارات الورديات في القائمة المنسدلة
-/// </summary>
-public record ShiftOption(ShiftType Type, string DisplayName);
-
-public partial class OrderAdjustmentItemViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int sequenceNumber;
-
-    [ObservableProperty]
-    private decimal? amount;
-
-    [ObservableProperty]
-    private string invoiceNumber = string.Empty;
-
-    [ObservableProperty]
-    private string notes = string.Empty;
-
-    [ObservableProperty]
-    private string personName = string.Empty;
-}
-
-
-public partial class ExpenseItemViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int sequenceNumber;
-
-    [ObservableProperty]
-    private string expenseType = string.Empty;
-
-    [ObservableProperty]
-    private decimal? amount;
-
-    [ObservableProperty]
-    private string description = string.Empty;
-
-    [ObservableProperty]
-    private int? selectedSupplierId;
-
-    [ObservableProperty]
-    private string supplierName = string.Empty;
-
-    [ObservableProperty]
-    private string invoiceNumber = string.Empty;
-
-    [ObservableProperty]
-    private string workerName = string.Empty;
-
-    [ObservableProperty]
-    private int? workerId;
-
-    [ObservableProperty]
-    private bool isDetailedWage = false;
-
-    [ObservableProperty]
-    private System.Collections.Generic.List<WorkerTransactionDetailDto> selectedWorkerWagesDetails = new();
-
-    [ObservableProperty]
-    private string notes = string.Empty;
-
-    partial void OnIsDetailedWageChanged(bool value)
-    {
-        if (!value)
-        {
-            WorkerName = string.Empty;
-            SelectedWorkerWagesDetails = new();
-        }
-    }
-
-
-
-    // --- حقول الإظهار/الإخفاء حسب النوع ---
-    // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري، ويومية عامل (مبلغ + وصف فقط)
-    public bool IsSimpleExpense => !string.IsNullOrEmpty(ExpenseType) && !IsPurchase && !IsInvoicePayment && !IsSupplierPayment && !IsGas && !IsCoal && !IsBread;
-    public bool IsPurchase => ExpenseType == "مشتريات";
-    public bool IsInvoicePayment => ExpenseType == "دفعة فاتورة";
-    public bool IsWorkerWage => ExpenseType == "أجرة عامل" || ExpenseType == "يومية عامل";
-    public bool IsSupplierPayment => ExpenseType == "دفعة مورد";
-    public bool IsGas => ExpenseType == "غاز";
-    public bool IsCoal => ExpenseType == "فحم";
-    public bool IsBread => ExpenseType == "الخبزة";
-    // المورد: يظهر للمشتريات والغاز والفحم والخبزة ودفعة المورد ودفعة الفاتورة (للمطابقة مع الموردين)
-    public bool HasSupplier => IsPurchase || IsGas || IsCoal || IsBread || IsSupplierPayment || IsInvoicePayment;
-    // رقم الفاتورة: يظهر للمشتريات، دفعة مورد، ودفعة فاتورة
-    public bool HasInvoiceNumber => IsPurchase || IsSupplierPayment || IsInvoicePayment;
-    // الملاحظات: تظهر لكل الأنواع
-    public bool HasNotes => !string.IsNullOrEmpty(ExpenseType);
-
-    partial void OnExpenseTypeChanged(string value)
-    {
-        OnPropertyChanged(nameof(IsSimpleExpense));
-        OnPropertyChanged(nameof(IsPurchase));
-        OnPropertyChanged(nameof(IsInvoicePayment));
-        OnPropertyChanged(nameof(IsWorkerWage));
-        OnPropertyChanged(nameof(IsSupplierPayment));
-        OnPropertyChanged(nameof(IsGas));
-        OnPropertyChanged(nameof(IsCoal));
-        OnPropertyChanged(nameof(IsBread));
-        OnPropertyChanged(nameof(HasSupplier));
-        OnPropertyChanged(nameof(HasInvoiceNumber));
-        OnPropertyChanged(nameof(HasNotes));
-    }
-}
-
-public partial class BankingItemViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int sequenceNumber;  // رقم التسلسل
-
-    [ObservableProperty]
-    private decimal? amount;
-
-    [ObservableProperty]
-    private string invoiceNumber = string.Empty;  // رقم فاتورة المطعم
-
-    [ObservableProperty]
-    private string bankName = string.Empty;  // اسم المصرف
-
-    [ObservableProperty]
-    private string last4Digits = string.Empty;  // رقم التحويل اخر 4 ارقام من عملية الخدمة
-
-    [ObservableProperty]
-    private int? bankAccountId;
-}
-
-public partial class BankSaleInputViewModel : ObservableObject
-{
-    [ObservableProperty]
-    private int bankAccountId;
-
-    [ObservableProperty]
-    private string bankFriendlyName = string.Empty;
-
-    [ObservableProperty]
-    private string bankName = string.Empty;
-
-    [ObservableProperty]
-    private decimal? amount;
-}
-
 public partial class DailyJournalViewModel : ObservableObject
 {
     private readonly IWagesService _wagesService;
     private readonly IBankService _bankService;
     private readonly ILedgerService _ledgerService;
-    private readonly IServiceScopeFactory? _scopeFactory;
+    private readonly IDailyJournalService _journalService;
+    private readonly MeezanPOS.Application.Services.Queries.ILookupService _lookups;
 
     public DailyJournalViewModel() : this(
         AppServiceProvider.Resolve<IWagesService>(),
@@ -181,10 +39,11 @@ public partial class DailyJournalViewModel : ObservableObject
         ILedgerService ledgerService,
         IServiceScopeFactory? scopeFactory = null)
     {
-        _scopeFactory = scopeFactory;
         _wagesService = wagesService ?? throw new ArgumentNullException(nameof(wagesService));
         _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         _ledgerService = ledgerService ?? throw new ArgumentNullException(nameof(ledgerService));
+        _journalService = new DailyJournalService(DefaultDbContextFactory.Instance, scopeFactory, bankService, ledgerService);
+        _lookups = MeezanPOS.Application.Services.Queries.LookupService.Default;
 
         _ = LoadSuppliersAsync();
         _ = LoadCustomExpenseTypesAsync();
@@ -412,8 +271,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var list = await context.BankAccounts.Where(b => b.IsActive && !b.IsDeleted).ToListAsync();
+            var list = await _lookups.GetActiveBankAccountsAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 ActiveBankAccounts.Clear();
@@ -458,32 +316,27 @@ public partial class DailyJournalViewModel : ObservableObject
         journalId,
         AppServiceProvider.Resolve<IWagesService>(),
         AppServiceProvider.Resolve<IBankService>(),
-        AppServiceProvider.Resolve<ILedgerService>())
+        AppServiceProvider.Resolve<ILedgerService>(),
+        AppServiceProvider.Provider.GetRequiredService<IServiceScopeFactory>())
     {
     }
 
+    // تعديل يومية قائمة: يجب أن يصل مصنع النطاقات أيضاً، وإلا يُحفظ التعديل خارج المعاملة الواحدة
     public DailyJournalViewModel(
         int journalId,
         IWagesService wagesService,
         IBankService bankService,
-        ILedgerService ledgerService) : this(wagesService, bankService, ledgerService)
+        ILedgerService ledgerService,
+        IServiceScopeFactory? scopeFactory = null) : this(wagesService, bankService, ledgerService, scopeFactory)
     {
         // استخدام ديسباتشر لتنفيذ التحميل في الخلفية أو بعد التهيئة
         System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => 
         {
             try
             {
-                using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-                
                 // تحميل جميع الحسابات البنكية النشطة أولاً لبناء الحقول
-                var activeBanks = await context.BankAccounts.Where(b => b.IsActive && !b.IsDeleted).ToListAsync();
-                
-                var journal = await context.DailyJournals
-                    .Include(j => j.ExpenseItems)
-                    .Include(j => j.BankingItems)
-                    .Include(j => j.Adjustments)
-                    .Include(j => j.BankSales)
-                    .FirstOrDefaultAsync(j => j.Id == journalId);
+                var activeBanks = await _lookups.GetActiveBankAccountsAsync();
+                var journal = await _journalService.GetJournalWithDetailsAsync(journalId);
                     
                 if (journal != null)
                 {
@@ -536,8 +389,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var list = await context.Suppliers.Where(s => s.IsActive && !s.IsDeleted).ToListAsync();
+            var list = await _lookups.GetActiveSuppliersAsync();
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 foreach (var supplier in list)
@@ -551,12 +403,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var customTypes = await context.DailyExpenseItems
-                .Where(e => !string.IsNullOrEmpty(e.Category))
-                .Select(e => e.Category)
-                .Distinct()
-                .ToListAsync();
+            var customTypes = await _journalService.GetUsedExpenseCategoriesAsync();
 
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
@@ -736,12 +583,7 @@ public partial class DailyJournalViewModel : ObservableObject
     {
         try
         {
-            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var targetDate = date.Date;
-            var registeredShifts = await context.DailyJournals
-                .Where(j => j.JournalDate.Year == targetDate.Year && j.JournalDate.Month == targetDate.Month && j.JournalDate.Day == targetDate.Day)
-                .Select(j => j.ShiftType)
-                .ToListAsync(cancellationToken);
+            var registeredShifts = await _journalService.GetRegisteredShiftsAsync(date, cancellationToken);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -817,440 +659,16 @@ public partial class DailyJournalViewModel : ObservableObject
 
         try
         {
-            // نطاق واحد: السياق والخدمات تتشارك AppDbContext واحداً، فتدخل كل الكتابات في معاملة واحدة.
-            // أي فشل في المنتصف (حركة بنكية، دفتر مورد...) يتراجع عن الحفظ كله بدلاً من ترك يومية نصف محفوظة.
-            using var scope = _scopeFactory?.CreateScope();
-            using var ownedContext = scope == null ? new AppDbContext() : null;
-            var context = scope?.ServiceProvider.GetRequiredService<AppDbContext>() ?? ownedContext!;
-            var bankService = scope?.ServiceProvider.GetRequiredService<IBankService>() ?? _bankService;
-            var ledgerService = scope?.ServiceProvider.GetRequiredService<ILedgerService>() ?? _ledgerService;
-            await using var saveTx = await context.Database.BeginOrJoinTransactionAsync();
-            var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
-
-            // Check for duplicate shifts on the same day
-            var targetDate = JournalDate.Date;
-            var selectedShift = SelectedShiftType;
-            
-            bool isDuplicate = await context.DailyJournals.AnyAsync(j => 
-                j.JournalDate.Year == targetDate.Year && 
-                j.JournalDate.Month == targetDate.Month && 
-                j.JournalDate.Day == targetDate.Day &&
-                j.ShiftType == selectedShift &&
-                (!editingJournalId.HasValue || j.Id != editingJournalId.Value));
-
-            if (isDuplicate)
+            var result = await _journalService.SaveAsync(BuildSaveRequest());
+            if (!result.Success)
             {
-                StatusMessage = $"عذراً، تم تسجيل الوردية {GetShiftDisplayName(selectedShift)} مسبقاً في هذا اليوم ولا يمكن تكرارها.";
+                StatusMessage = result.Error ?? "تعذر الحفظ.";
                 return;
             }
-
-            if (await MeezanPOS.Application.Services.PeriodLock.IsDateLockedAsync(context, targetDate))
-            {
-                StatusMessage = MeezanPOS.Application.Services.PeriodLock.LockedMessage;
-                return;
-            }
-
-            MeezanPOS.Domain.Entities.DailyJournal? journal;
-            var oldExpenseIds = new System.Collections.Generic.List<int>();
-
-            if (editingJournalId.HasValue)
-            {
-                journal = await context.DailyJournals
-                    .Include(j => j.ExpenseItems)
-                    .Include(j => j.BankingItems)
-                    .Include(j => j.Adjustments)
-                    .FirstOrDefaultAsync(j => j.Id == editingJournalId.Value);
-
-                if (journal == null)
-                {
-                    StatusMessage = "خطأ: لم يتم العثور على السجل لتعديله.";
-                    return;
-                }
-
-                // حماية على مستوى الحفظ وليس الواجهة فقط: اليومية المرحلة لا تُعدَّل إلا بعد فك ترحيلها
-                if (journal.FinancialStatus != FinancialStatus.Draft)
-                {
-                    StatusMessage = "لا يمكن تعديل يومية مرحّلة. يجب فك ترحيلها أولاً.";
-                    return;
-                }
-
-                if (await MeezanPOS.Application.Services.PeriodLock.IsDateLockedAsync(context, journal.JournalDate))
-                {
-                    StatusMessage = MeezanPOS.Application.Services.PeriodLock.LockedMessage;
-                    return;
-                }
-
-                journal.JournalDate = JournalDate;
-                journal.ShiftType = SelectedShiftType;
-                journal.EmployeeName = EmployeeName;
-                journal.Notes = Notes;
-                journal.CashFloat = CashFloat ?? 0m;
-                journal.TotalSales = TotalSales;
-                journal.BankingTotal = EffectiveBankingTotal;
-                journal.TotalExpenses = TotalExpenses;
-                journal.ReturnsTotal = ReturnsAmount;
-                journal.FreeOrdersTotal = FreeOrdersAmount;
-                journal.ActualCash = ActualCash ?? 0m;
-                journal.UpdatedAt = System.DateTime.UtcNow;
-
-                // حذف العناصر القديمة صراحة لأن قاعدة البيانات تمنع Cascade Delete
-                context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
-                context.BankingItems.RemoveRange(journal.BankingItems);
-                
-                var oldBankSales = await context.DailyJournalBankSales.Where(s => s.DailyJournalId == journal.Id).ToListAsync();
-                context.DailyJournalBankSales.RemoveRange(oldBankSales);
-
-                // إزالة المطابقات البنكية التابعة لهذه الوردية
-                var oldCardRecons = await context.CardPaymentReconciliations
-                    .Where(r => r.DailyJournalId == journal.Id)
-                    .ToListAsync();
-                context.CardPaymentReconciliations.RemoveRange(oldCardRecons);
-
-                // إزالة الحركات البنكية المباشرة القديمة المرتبطة بهذه الوردية وإعادة بناء أرصدتها
-                await bankService.DeleteTransactionBySourceAsync("DailyJournal", journal.Id);
-
-                // إزالة حركات الدفتر المرتبطة بالمصروفات المحذوفة
-                oldExpenseIds = journal.ExpenseItems.Select(e => e.Id).ToList();
-                // الموردون السابقون يُعاد بناء أرصدتهم أيضاً (وإلا يبقى رصيد المورد القديم محسوباً بالدفعة المحذوفة عند تغيير المورد)
-                foreach (var oldSupplierId in journal.ExpenseItems.Where(e => e.SupplierId.HasValue).Select(e => e.SupplierId!.Value))
-                    affectedSuppliers.Add(oldSupplierId);
-                if (oldExpenseIds.Any())
-                {
-                    var linkedTxs = await context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToListAsync();
-                    foreach (var linked in linkedTxs)
-                        affectedSuppliers.Add(linked.SupplierId);
-                    context.SupplierTransactions.RemoveRange(linkedTxs);
-
-                    // إزالة حركات العمال المرتبطة بالمصروفات المحذوفة
-                    var oldWorkerTxs = await context.WorkerTransactions.Where(t => t.DailyExpenseItemId != null && oldExpenseIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted).ToListAsync();
-                    foreach (var tx in oldWorkerTxs)
-                    {
-                        tx.IsDeleted = true;
-                        tx.UpdatedAt = System.DateTime.UtcNow;
-                    }
-                }
-
-                context.OrderAdjustmentItems.RemoveRange(journal.Adjustments);
-                
-                journal.ExpenseItems.Clear();
-                journal.BankingItems.Clear();
-                journal.Adjustments.Clear();
-            }
-            else
-            {
-                journal = new MeezanPOS.Domain.Entities.DailyJournal
-                {
-                    JournalDate = JournalDate,
-                    ShiftType = SelectedShiftType,
-                    EmployeeName = EmployeeName,
-                    Notes = Notes,
-                    CashFloat = CashFloat ?? 0m,
-                    TotalSales = TotalSales,
-                    BankingTotal = EffectiveBankingTotal,
-                    TotalExpenses = TotalExpenses,
-                    ReturnsTotal = ReturnsAmount,
-                    FreeOrdersTotal = FreeOrdersAmount,
-                    ActualCash = ActualCash ?? 0m,
-                    CreatedAt = System.DateTime.UtcNow
-                };
-            }
-
-            // إضافة المصروفات
-            foreach (var exp in ExpenseItems)
-            {
-                    if ((exp.Amount ?? 0m) > 0)
-                    {
-                        string desc = exp.ExpenseType;
-                        ExpenseType dbExpenseType = ExpenseType.Other;
-                        int? dbSupplierId = null;
-
-                        if (exp.IsPurchase || exp.IsInvoicePayment || exp.IsSupplierPayment || exp.IsGas || exp.IsCoal || exp.IsBread)
-                        {
-                            if (exp.IsPurchase) dbExpenseType = ExpenseType.Purchase;
-                            else if (exp.IsInvoicePayment) dbExpenseType = ExpenseType.InvoicePayment;
-                            else if (exp.IsSupplierPayment) dbExpenseType = ExpenseType.SupplierPayment;
-                            else if (exp.IsGas) dbExpenseType = ExpenseType.Gas;
-                            else if (exp.IsCoal) dbExpenseType = ExpenseType.Coal;
-                            else if (exp.IsBread) dbExpenseType = ExpenseType.Bread;
-
-                            dbSupplierId = exp.SelectedSupplierId;
-
-                            var parts = new[] { exp.SupplierName, exp.InvoiceNumber, exp.Notes }
-                                .Where(p => !string.IsNullOrWhiteSpace(p));
-                            if (parts.Any()) desc = string.Join(" - ", parts);
-                        }
-                        else if (exp.IsWorkerWage)
-                        {
-                            dbExpenseType = ExpenseType.WorkerWage;
-                            if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
-                        }
-                        else
-                        {
-                            // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري
-                            switch (exp.ExpenseType)
-                            {
-                                case "نظافة": dbExpenseType = ExpenseType.Cleaning; break;
-                                case "صيانة": dbExpenseType = ExpenseType.Maintenance; break;
-                                case "مواصلات": dbExpenseType = ExpenseType.Transport; break;
-                                case "مصروف نثري": dbExpenseType = ExpenseType.PettyCash; break;
-                                default: dbExpenseType = ExpenseType.Regular; break;
-                            }
-                            if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
-                        }
-
-                        journal.ExpenseItems.Add(new MeezanPOS.Domain.Entities.DailyExpenseItem
-                        {
-                            SequenceNumber = exp.SequenceNumber,
-                            Amount = exp.Amount ?? 0m,
-                            Category = exp.ExpenseType,
-                            CategoryName = exp.ExpenseType,
-                            Description = desc,
-                            Type = dbExpenseType,
-                            SupplierId = dbSupplierId,
-                            SupplierName = exp.SupplierName,
-                            Notes = exp.Notes,
-                            InvoiceNumber = exp.InvoiceNumber,
-                            WorkerName = exp.IsWorkerWage ? (exp.IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(exp.WorkerName) ? exp.WorkerName : null)) : null,
-                            WorkerId = (exp.IsWorkerWage && !exp.IsDetailedWage) ? exp.WorkerId : null,
-                            CreatedAt = System.DateTime.UtcNow
-                        });
-                    }
-            }
-
-            // إضافة الخدمات المصرفية
-            foreach (var bank in BankingItems)
-            {
-                if ((bank.Amount ?? 0m) > 0)
-                {
-                    journal.BankingItems.Add(new MeezanPOS.Domain.Entities.BankingItem
-                    {
-                        Amount = bank.Amount ?? 0m,
-                        Description = bank.InvoiceNumber?.Trim(),
-                        BankAccountId = bank.BankAccountId,
-                        ReferenceNumber = bank.Last4Digits?.Trim(),
-                        CreatedAt = System.DateTime.UtcNow
-                    });
-                }
-            }
-
-            // إضافة تقسيم مبيعات الخدمات المصرفية
-            foreach (var bSale in BankSalesInputs)
-            {
-                if ((bSale.Amount ?? 0m) > 0)
-                {
-                    journal.BankSales.Add(new DailyJournalBankSale
-                    {
-                        BankAccountId = bSale.BankAccountId,
-                        BankName = bSale.BankFriendlyName,
-                        Amount = bSale.Amount ?? 0m,
-                        CreatedAt = System.DateTime.UtcNow
-                    });
-                }
-            }
-
-            // إضافة المرتجعات
-            foreach (var ret in Returns)
-            {
-                if ((ret.Amount ?? 0m) > 0)
-                {
-                    journal.Adjustments.Add(new MeezanPOS.Domain.Entities.OrderAdjustmentItem
-                    {
-                        IsFreeOrder = false,
-                        Amount = ret.Amount ?? 0m,
-                        InvoiceNumber = ret.InvoiceNumber,
-                        Notes = ret.Notes,
-                        PersonName = ret.PersonName?.Trim(),
-                        CreatedAt = System.DateTime.UtcNow
-                    });
-                }
-            }
-
-            // إضافة المجاني
-            foreach (var free in FreeOrders)
-            {
-                if ((free.Amount ?? 0m) > 0)
-                {
-                    journal.Adjustments.Add(new MeezanPOS.Domain.Entities.OrderAdjustmentItem
-                    {
-                        IsFreeOrder = true,
-                        Amount = free.Amount ?? 0m,
-                        InvoiceNumber = free.InvoiceNumber,
-                        Notes = free.Notes,
-                        PersonName = free.PersonName?.Trim(),
-                        CreatedAt = System.DateTime.UtcNow
-                    });
-                }
-            }
-
-            if (!editingJournalId.HasValue)
-            {
-                context.DailyJournals.Add(journal);
-            }
-            await context.SaveChangesAsync();
-
-            // حفظ حركات العمال التفصيلية للوردية
-            bool hasWorkerDetailsToSave = false;
-            foreach (var exp in ExpenseItems)
-            {
-                if (exp.IsWorkerWage && exp.IsDetailedWage && exp.SelectedWorkerWagesDetails != null && exp.SelectedWorkerWagesDetails.Any())
-                {
-                    // Find the saved DailyExpenseItem matching this expense item by SequenceNumber
-                    var dei = journal.ExpenseItems.FirstOrDefault(e => e.SequenceNumber == exp.SequenceNumber);
-                    if (dei != null)
-                    {
-                        foreach (var d in exp.SelectedWorkerWagesDetails)
-                        {
-                            if (d.IsAttended)
-                            {
-                                var accrualTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = JournalDate,
-                                    Type = WorkerTransactionType.WageAccrual,
-                                    DebitAmount = 0m,
-                                    CreditAmount = d.ActualWage,
-                                    DailyExpenseItemId = dei.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - وردية يومية" : $"استحقاق: {d.Notes}"
-                                };
-                                context.WorkerTransactions.Add(accrualTx);
-
-                                if (d.AmountPaid > 0)
-                                {
-                                    var payTx = new WorkerTransaction
-                                    {
-                                        WorkerId = d.WorkerId,
-                                        WorkerName = d.WorkerName,
-                                        TransactionDate = JournalDate,
-                                        Type = WorkerTransactionType.Payment,
-                                        DebitAmount = d.AmountPaid,
-                                        CreditAmount = 0m,
-                                        DailyExpenseItemId = dei.Id,
-                                        Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - وردية يومية" : $"سداد: {d.Notes}"
-                                    };
-                                    context.WorkerTransactions.Add(payTx);
-                                }
-                            }
-
-                            if (d.Advance > 0)
-                            {
-                                var advTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = JournalDate,
-                                    Type = WorkerTransactionType.Advance,
-                                    DebitAmount = d.Advance,
-                                    CreditAmount = 0m,
-                                    DailyExpenseItemId = dei.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - وردية يومية" : $"سلفة: {d.Notes}"
-                                };
-                                context.WorkerTransactions.Add(advTx);
-                            }
-
-                            if (d.Deduction > 0)
-                            {
-                                var dedTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = JournalDate,
-                                    Type = WorkerTransactionType.Deduction,
-                                    DebitAmount = d.Deduction,
-                                    CreditAmount = 0m,
-                                    DailyExpenseItemId = dei.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - وردية يومية" : $"خصم: {d.Notes}"
-                                };
-                                context.WorkerTransactions.Add(dedTx);
-                            }
-                        }
-                        hasWorkerDetailsToSave = true;
-                    }
-                }
-            }
-
-            if (hasWorkerDetailsToSave)
-            {
-                await context.SaveChangesAsync();
-            }
-
-            // تسجيل الدفعات المصرفية مباشرة في الحسابات البنكية المحددة
-            if (journal.BankingItems.Any())
-            {
-                foreach (var bItem in journal.BankingItems)
-                {
-                    if (bItem.BankAccountId.HasValue)
-                    {
-                        string notes = $"مبيعات إلكترونية - {journal.ShiftName}";
-                        if (!string.IsNullOrWhiteSpace(bItem.Description))
-                        {
-                            notes += $" - {bItem.Description}";
-                        }
-                        
-                        await bankService.RecordTransactionAsync(
-                            bankAccountId: bItem.BankAccountId.Value,
-                            type: MeezanPOS.Domain.Enums.BankTransactionType.CardSalesDeposit,
-                            amount: bItem.Amount,
-                            referenceNumber: bItem.ReferenceNumber,
-                            notes: notes,
-                            sourceType: "DailyJournal",
-                            sourceId: journal.Id,
-                            transactionDate: journal.JournalDate
-                        );
-                    }
-                }
-            }
-            else
-            {
-                // إذا لم يتم إدخال تفاصيل الدفتر، نسجل حركة إيداع مباشرة لكل مصرف تم إدخال مبيعاته
-                foreach (var bSale in journal.BankSales)
-                {
-                    if (bSale.BankAccountId.HasValue)
-                    {
-                        await bankService.RecordTransactionAsync(
-                            bankAccountId: bSale.BankAccountId.Value,
-                            type: MeezanPOS.Domain.Enums.BankTransactionType.CardSalesDeposit,
-                            amount: bSale.Amount,
-                            referenceNumber: null,
-                            notes: $"إجمالي مبيعات إلكترونية - {bSale.BankName} - {journal.ShiftName}",
-                            sourceType: "DailyJournal",
-                            sourceId: journal.Id,
-                            transactionDate: journal.JournalDate
-                        );
-                    }
-                }
-            }
-
-            // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
-            foreach (var newExp in journal.ExpenseItems.Where(e => e.SupplierId != null))
-            {
-                if (newExp.SupplierId.HasValue)
-                {
-                    affectedSuppliers.Add(newExp.SupplierId.Value);
-                    if (newExp.Type == ExpenseType.SupplierPayment || newExp.Type == ExpenseType.Purchase || newExp.Type == ExpenseType.InvoicePayment)
-                    {
-                        // تسجل المشتريات والدفعات كحركة مالية
-                        await ledgerService.PostPaymentAsync(
-                            newExp.SupplierId.Value, 
-                            newExp.Amount, 
-                            TransactionSourceType.DailyJournalPayment, 
-                            newExp.Id,
-                            journal.JournalDate.Date); // تاريخ اليومية لا لحظة الحفظ، ليظهر في يومه الصحيح بكشف المورد
-                    }
-                }
-            }
-
-            // إعادة بناء أرصدة الموردين المتأثرين: الحاليون والسابقون قبل التعديل
-            foreach (var supId in affectedSuppliers)
-            {
-                await ledgerService.RebuildSupplierLedgerAsync(supId);
-            }
-
-            await saveTx.CommitAsync();
 
             StatusMessage = "تم حفظ الحركة اليومية بنجاح ✓";
             IsSaved = true;
-            
+
             // إغلاق النافذة والعودة بعد الحفظ
             CloseForm();
         }
@@ -1258,6 +676,169 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             StatusMessage = "حدث خطأ أثناء الحفظ: " + (ex.InnerException?.Message ?? ex.Message);
         }
+    }
+
+    /// <summary>
+    /// تحويل حقول الشاشة إلى بيانات حفظ: البنود ذات المبلغ الموجب فقط، وحركات العمال التفصيلية لكل بند أجور.
+    /// </summary>
+    private JournalSaveRequest BuildSaveRequest()
+    {
+        var request = new JournalSaveRequest
+        {
+            EditingJournalId = editingJournalId,
+            JournalDate = JournalDate,
+            Shift = SelectedShiftType,
+            ShiftDisplayName = GetShiftDisplayName(SelectedShiftType),
+            EmployeeName = EmployeeName,
+            Notes = Notes,
+            CashFloat = CashFloat ?? 0m,
+            TotalSales = TotalSales,
+            BankingTotal = EffectiveBankingTotal,
+            TotalExpenses = TotalExpenses,
+            ReturnsTotal = ReturnsAmount,
+            FreeOrdersTotal = FreeOrdersAmount,
+            ActualCash = ActualCash ?? 0m,
+        };
+
+        // المصروفات
+        foreach (var exp in ExpenseItems.Where(e => (e.Amount ?? 0m) > 0))
+        {
+            string desc = exp.ExpenseType;
+            ExpenseType dbExpenseType;
+            int? dbSupplierId = null;
+
+            if (exp.IsPurchase || exp.IsInvoicePayment || exp.IsSupplierPayment || exp.IsGas || exp.IsCoal || exp.IsBread)
+            {
+                if (exp.IsPurchase) dbExpenseType = ExpenseType.Purchase;
+                else if (exp.IsInvoicePayment) dbExpenseType = ExpenseType.InvoicePayment;
+                else if (exp.IsSupplierPayment) dbExpenseType = ExpenseType.SupplierPayment;
+                else if (exp.IsGas) dbExpenseType = ExpenseType.Gas;
+                else if (exp.IsCoal) dbExpenseType = ExpenseType.Coal;
+                else dbExpenseType = ExpenseType.Bread;
+
+                dbSupplierId = exp.SelectedSupplierId;
+
+                var parts = new[] { exp.SupplierName, exp.InvoiceNumber, exp.Notes }
+                    .Where(part => !string.IsNullOrWhiteSpace(part));
+                if (parts.Any()) desc = string.Join(" - ", parts);
+            }
+            else if (exp.IsWorkerWage)
+            {
+                dbExpenseType = ExpenseType.WorkerWage;
+                if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
+            }
+            else
+            {
+                // الأنواع البسيطة: نظافة، صيانة، مواصلات، مصروف نثري
+                dbExpenseType = exp.ExpenseType switch
+                {
+                    "نظافة" => ExpenseType.Cleaning,
+                    "صيانة" => ExpenseType.Maintenance,
+                    "مواصلات" => ExpenseType.Transport,
+                    "مصروف نثري" => ExpenseType.PettyCash,
+                    _ => ExpenseType.Regular
+                };
+                if (!string.IsNullOrWhiteSpace(exp.Description)) desc = exp.Description;
+            }
+
+            request.ExpenseItems.Add(new MeezanPOS.Domain.Entities.DailyExpenseItem
+            {
+                SequenceNumber = exp.SequenceNumber,
+                Amount = exp.Amount ?? 0m,
+                Category = exp.ExpenseType,
+                CategoryName = exp.ExpenseType,
+                Description = desc,
+                Type = dbExpenseType,
+                SupplierId = dbSupplierId,
+                SupplierName = exp.SupplierName,
+                Notes = exp.Notes,
+                InvoiceNumber = exp.InvoiceNumber,
+                WorkerName = exp.IsWorkerWage ? (exp.IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(exp.WorkerName) ? exp.WorkerName : null)) : null,
+                WorkerId = (exp.IsWorkerWage && !exp.IsDetailedWage) ? exp.WorkerId : null,
+                CreatedAt = System.DateTime.UtcNow
+            });
+
+            if (exp.IsWorkerWage && exp.IsDetailedWage && exp.SelectedWorkerWagesDetails != null && exp.SelectedWorkerWagesDetails.Any())
+                request.WorkerTransactionsBySequence[exp.SequenceNumber] = BuildWorkerTransactions(exp.SelectedWorkerWagesDetails);
+        }
+
+        // الخدمات المصرفية
+        foreach (var bank in BankingItems.Where(b => (b.Amount ?? 0m) > 0))
+        {
+            request.BankingItems.Add(new MeezanPOS.Domain.Entities.BankingItem
+            {
+                Amount = bank.Amount ?? 0m,
+                Description = bank.InvoiceNumber?.Trim(),
+                BankAccountId = bank.BankAccountId,
+                ReferenceNumber = bank.Last4Digits?.Trim(),
+                CreatedAt = System.DateTime.UtcNow
+            });
+        }
+
+        // تقسيم مبيعات الخدمات المصرفية
+        foreach (var bSale in BankSalesInputs.Where(b => (b.Amount ?? 0m) > 0))
+        {
+            request.BankSales.Add(new DailyJournalBankSale
+            {
+                BankAccountId = bSale.BankAccountId,
+                BankName = bSale.BankFriendlyName,
+                Amount = bSale.Amount ?? 0m,
+                CreatedAt = System.DateTime.UtcNow
+            });
+        }
+
+        // المرتجعات ثم المجاني
+        foreach (var ret in Returns.Where(x => (x.Amount ?? 0m) > 0))
+            request.Adjustments.Add(NewAdjustment(false, ret.Amount ?? 0m, ret.InvoiceNumber, ret.Notes, ret.PersonName));
+        foreach (var free in FreeOrders.Where(x => (x.Amount ?? 0m) > 0))
+            request.Adjustments.Add(NewAdjustment(true, free.Amount ?? 0m, free.InvoiceNumber, free.Notes, free.PersonName));
+
+        return request;
+    }
+
+    private static MeezanPOS.Domain.Entities.OrderAdjustmentItem NewAdjustment(bool isFree, decimal amount, string? invoice, string? notes, string? person) => new()
+    {
+        IsFreeOrder = isFree,
+        Amount = amount,
+        InvoiceNumber = invoice,
+        Notes = notes,
+        PersonName = person?.Trim(),
+        CreatedAt = System.DateTime.UtcNow
+    };
+
+    /// <summary>استحقاق وسداد وسلفة وخصم لكل عامل في بند الأجور التفصيلي.</summary>
+    private System.Collections.Generic.List<WorkerTransaction> BuildWorkerTransactions(System.Collections.Generic.IEnumerable<WorkerTransactionDetailDto> details)
+    {
+        var list = new System.Collections.Generic.List<WorkerTransaction>();
+        WorkerTransaction Tx(WorkerTransactionDetailDto d, WorkerTransactionType type, decimal debit, decimal credit, string notes) => new()
+        {
+            WorkerId = d.WorkerId,
+            WorkerName = d.WorkerName,
+            TransactionDate = JournalDate,
+            Type = type,
+            DebitAmount = debit,
+            CreditAmount = credit,
+            Notes = notes
+        };
+
+        foreach (var d in details)
+        {
+            if (d.IsAttended)
+            {
+                list.Add(Tx(d, WorkerTransactionType.WageAccrual, 0m, d.ActualWage,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "استحقاق حضور - وردية يومية" : $"استحقاق: {d.Notes}"));
+                if (d.AmountPaid > 0)
+                    list.Add(Tx(d, WorkerTransactionType.Payment, d.AmountPaid, 0m,
+                        string.IsNullOrWhiteSpace(d.Notes) ? "سداد أجر - وردية يومية" : $"سداد: {d.Notes}"));
+            }
+            if (d.Advance > 0)
+                list.Add(Tx(d, WorkerTransactionType.Advance, d.Advance, 0m,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "سلفة - وردية يومية" : $"سلفة: {d.Notes}"));
+            if (d.Deduction > 0)
+                list.Add(Tx(d, WorkerTransactionType.Deduction, d.Deduction, 0m,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "خصم وغرامة - وردية يومية" : $"خصم: {d.Notes}"));
+        }
+        return list;
     }
 
     [ObservableProperty]
@@ -1389,16 +970,7 @@ public partial class DailyJournalViewModel : ObservableObject
         if (journal.ExpenseItems != null)
         {
             var multiWorkerItemIds = journal.ExpenseItems.Where(x => x.WorkerName == "[متعدد]").Select(x => x.Id).ToList();
-            var workerTxsByItem = new System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<WorkerTransaction>>();
-            if (multiWorkerItemIds.Count > 0)
-            {
-                using var db = new AppDbContext();
-                workerTxsByItem = db.WorkerTransactions
-                    .Where(t => t.DailyExpenseItemId != null && multiWorkerItemIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted)
-                    .AsEnumerable()
-                    .GroupBy(t => t.DailyExpenseItemId!.Value)
-                    .ToDictionary(g => g.Key, g => g.ToList());
-            }
+            var workerTxsByItem = _journalService.GetWorkerTransactionsByExpenseItem(multiWorkerItemIds);
             foreach (var e in journal.ExpenseItems)
             {
                 var item = new ExpenseItemViewModel
