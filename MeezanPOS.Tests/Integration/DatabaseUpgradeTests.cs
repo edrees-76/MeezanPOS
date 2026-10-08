@@ -88,6 +88,72 @@ public class DatabaseUpgradeTests
         }
     }
 
+    [Fact]
+    public void JournalSupplierPayments_GetTheirJournalDate_EvenWhenPosted()
+    {
+        MessageBoxMock.Initialize();
+        var dbPath = AppDbContext.GetDatabasePath();
+        dbPath.Should().NotContain(Path.Combine("AppData", "Local", "MeezanPOS" + Path.DirectorySeparatorChar),
+            "the test must never touch the real database");
+
+        var journalDate = new DateTime(2026, 6, 10, 0, 0, 0);
+        DeleteDatabase(dbPath);
+        try
+        {
+            int wrongId, rightId;
+            // 1) المخطط قبل الإصلاح، مع دفعة مسجلة بتاريخ الحفظ لا تاريخ اليومية (اليومية مرحّلة)
+            using (var old = new AppDbContext())
+            {
+                old.GetService<IMigrator>().Migrate("20261008163212_MoveManualSqlToMigrations");
+                var supplier = new MeezanPOS.Domain.Entities.Supplier { Name = "مورد", IsActive = true };
+                var journal = new MeezanPOS.Domain.Entities.DailyJournal
+                {
+                    JournalDate = journalDate,
+                    EmployeeName = "كاشير",
+                    FinancialStatus = MeezanPOS.Domain.Enums.FinancialStatus.Posted,
+                };
+                var item = new MeezanPOS.Domain.Entities.DailyExpenseItem { SequenceNumber = 1, Amount = 40m, Category = "دفعة مورد" };
+                journal.ExpenseItems.Add(item);
+                old.AddRange(supplier, journal);
+                old.SaveChanges();
+
+                var wrong = new MeezanPOS.Domain.Entities.SupplierTransaction
+                {
+                    SupplierId = supplier.Id, Amount = 40m,
+                    SourceType = MeezanPOS.Domain.Enums.TransactionSourceType.DailyJournalPayment, SourceId = item.Id,
+                    TransactionDate = journalDate.AddDays(3).AddHours(14),
+                };
+                var right = new MeezanPOS.Domain.Entities.SupplierTransaction
+                {
+                    SupplierId = supplier.Id, Amount = 10m,
+                    SourceType = MeezanPOS.Domain.Enums.TransactionSourceType.ExternalPayment, SourceId = 999,
+                    TransactionDate = journalDate.AddDays(5),
+                };
+                old.AddRange(wrong, right);
+                old.SaveChanges();
+                wrongId = wrong.Id;
+                rightId = right.Id;
+            }
+
+            // 2) الترقية
+            using (var context = new AppDbContext())
+                context.Database.Migrate();
+
+            // 3) التاريخ صُحح رغم أن اليومية مرحّلة، والدفعات الأخرى لم تُمس، والمشغّلات عادت
+            using var check = new AppDbContext();
+            check.SupplierTransactions.Single(t => t.Id == wrongId).TransactionDate.Date.Should().Be(journalDate.Date);
+            check.SupplierTransactions.Single(t => t.Id == rightId).TransactionDate.Should().Be(journalDate.AddDays(5));
+            var act = () => check.Database.ExecuteSqlRaw($"UPDATE SupplierTransactions SET Amount = 1 WHERE Id = {wrongId}");
+            act.Should().Throw<Exception>("the posted-journal trigger is recreated after the fix");
+        }
+        finally
+        {
+            DeleteDatabase(dbPath);
+            using var fresh = new AppDbContext();
+            fresh.Database.EnsureCreated();
+        }
+    }
+
     private static void DeleteDatabase(string dbPath)
     {
         SqliteConnection.ClearAllPools();
