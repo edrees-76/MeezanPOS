@@ -143,7 +143,7 @@ public partial class ClosingAccountViewModel : ObservableObject
 
                 var data = await _reportingService.GenerateSummaryAsync(start, end);
                 
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                UiThread.Run(() =>
                 {
                     Summary = data;
                 });
@@ -152,7 +152,7 @@ public partial class ClosingAccountViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error loading closing account summary");
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 Dialogs.Show("حدث خطأ أثناء تحميل التقرير المالي: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             });
@@ -200,7 +200,7 @@ public partial class ClosingAccountViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error exporting closing account PDF");
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 Dialogs.Show("حدث خطأ أثناء تصدير تقرير الـ PDF: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             });

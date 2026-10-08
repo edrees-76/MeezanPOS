@@ -28,7 +28,7 @@ namespace MeezanPOS.Application.Services
                     page.Margin(1.0f, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
-                    
+
                     // تفعيل اتجاه اليمين إلى اليسار للصفحة بالكامل
                     page.ContentFromRightToLeft();
 
@@ -50,9 +50,10 @@ namespace MeezanPOS.Application.Services
                     };
                     System.Diagnostics.Process.Start(psi);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // تجاهل الأخطاء إذا فشل الفتح التلقائي
+                    // التقرير محفوظ؛ فشل الفتح التلقائي فقط
+                    Serilog.Log.Warning(ex, "تعذر فتح كشف العامل تلقائياً: {Path}", filePath);
                 }
             }
         }
@@ -65,7 +66,7 @@ namespace MeezanPOS.Application.Services
                 {
                     column.Item().Text("كشف حساب عامل").FontSize(22).Bold().FontColor(Colors.Indigo.Darken3);
                     column.Item().Text($"العامل: {workerName}").FontSize(14).SemiBold();
-                    
+
                     string dateText = $"تاريخ التوليد: {DateTime.Now:yyyy/MM/dd HH:mm}";
                     column.Item().Text(dateText).FontSize(10).FontColor(Colors.Grey.Darken1);
                 });
@@ -79,7 +80,7 @@ namespace MeezanPOS.Application.Services
                         column.Item().Text("الرصيد الحالي").FontSize(10).SemiBold().AlignCenter().FontColor(Colors.Grey.Darken3);
                         column.Item().Text($"{Math.Abs(remainingBalance):N2} د.ل").FontSize(14).Bold().AlignCenter()
                             .FontColor(remainingBalance > 0 ? Colors.Green.Darken2 : (remainingBalance < 0 ? Colors.Red.Darken2 : Colors.Black));
-                        
+
                         string status = remainingBalance > 0 ? "دائن (له مستحقات)" : (remainingBalance < 0 ? "مدين (عليه سلفة/سحوبات)" : "خالص");
                         column.Item().Text(status).FontSize(9).SemiBold().AlignCenter().FontColor(Colors.Grey.Darken2);
                     });
@@ -184,7 +185,7 @@ namespace MeezanPOS.Application.Services
                     }
 
                     // صف إجماليات نهائية في أسفل الجدول
-                    table.Cell().BorderTop(2).BorderColor(Colors.Grey.Darken2).Text(""); 
+                    table.Cell().BorderTop(2).BorderColor(Colors.Grey.Darken2).Text("");
                     table.Cell().BorderTop(2).BorderColor(Colors.Grey.Darken2).Text("");
                     table.Cell().BorderTop(2).BorderColor(Colors.Grey.Darken2).Text("");
                     table.Cell().BorderTop(2).BorderColor(Colors.Grey.Darken2).Padding(6).AlignRight().Text("الإجماليات والـصافي").Bold().FontSize(9);

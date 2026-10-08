@@ -144,6 +144,11 @@ public static class DatabaseBackupHelper
 
     private static void TryDelete(string path)
     {
-        try { if (File.Exists(path)) File.Delete(path); } catch { }
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch (Exception ex)
+        {
+            // نسخة قديمة لم تُحذف: لا يوقف النسخ الاحتياطي، لكن تراكمها يملأ القرص
+            Serilog.Log.Warning(ex, "تعذر حذف النسخة الاحتياطية القديمة {Path}", path);
+        }
     }
 }

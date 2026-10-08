@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace MeezanPOS.Application.ViewModels;
 public partial class DailyJournalViewModel : ObservableObject
 {
+    private readonly LoadFailureReporter _loadErrors = new();
     private readonly IWagesService _wagesService;
     private readonly IBankService _bankService;
     private readonly ILedgerService _ledgerService;
@@ -207,7 +208,7 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             var service = _wagesService;
             var names = await service.GetUniqueWorkerNamesAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 AvailableWorkerNames.Clear();
                 foreach (var name in names)
@@ -218,7 +219,7 @@ public partial class DailyJournalViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading worker names: {ex.Message}");
+            _loadErrors.Report(ex, "أسماء العمال");
         }
     }
     public ObservableCollection<BankingItemViewModel> BankingItems { get; } = new();
@@ -272,7 +273,7 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             var list = await _lookups.GetActiveBankAccountsAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 ActiveBankAccounts.Clear();
                 BankSalesInputs.Clear();
@@ -299,7 +300,7 @@ public partial class DailyJournalViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading bank accounts: {ex.Message}");
+            _loadErrors.Report(ex, "الحسابات المصرفية");
         }
     }
 
@@ -330,17 +331,17 @@ public partial class DailyJournalViewModel : ObservableObject
         IServiceScopeFactory? scopeFactory = null) : this(wagesService, bankService, ledgerService, scopeFactory)
     {
         // استخدام ديسباتشر لتنفيذ التحميل في الخلفية أو بعد التهيئة
-        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () => 
+        System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
         {
             try
             {
                 // تحميل جميع الحسابات البنكية النشطة أولاً لبناء الحقول
                 var activeBanks = await _lookups.GetActiveBankAccountsAsync();
                 var journal = await _journalService.GetJournalWithDetailsAsync(journalId);
-                    
+
                 if (journal != null)
                 {
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    UiThread.Run(() =>
                     {
                         ActiveBankAccounts.Clear();
                         BankSalesInputs.Clear();
@@ -380,7 +381,10 @@ public partial class DailyJournalViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"خطأ في تحميل الوردية للتعديل أو العرض: {ex.Message}");
+                // كان الخطأ يُكتب في نافذة التصحيح فقط فتظهر اليومية فارغة، وقد يحفظها المستخدم كأنها جديدة
+                Serilog.Log.Error(ex, "خطأ في تحميل الوردية {JournalId} للتعديل أو العرض", journalId);
+                Dialogs.Show($"تعذر تحميل بيانات اليومية:\n{ex.Message}\n\nلا تحفظ هذه الشاشة؛ أغلقها وأعد فتح اليومية.",
+                    "خطأ في التحميل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         });
     }
@@ -390,13 +394,13 @@ public partial class DailyJournalViewModel : ObservableObject
         try
         {
             var list = await _lookups.GetActiveSuppliersAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 foreach (var supplier in list)
                     Suppliers.Add(supplier);
             });
         }
-        catch (Exception) { /* تجاهل الأخطاء الصامتة */ }
+        catch (Exception ex) { _loadErrors.Report(ex, "قائمة الموردين"); }
     }
 
     private async System.Threading.Tasks.Task LoadCustomExpenseTypesAsync()
@@ -405,7 +409,7 @@ public partial class DailyJournalViewModel : ObservableObject
         {
             var customTypes = await _journalService.GetUsedExpenseCategoriesAsync();
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 foreach (var t in customTypes)
                 {
@@ -416,7 +420,7 @@ public partial class DailyJournalViewModel : ObservableObject
                 }
             });
         }
-        catch (Exception) { /* تجاهل الأخطاء الصامتة */ }
+        catch (Exception ex) { _loadErrors.Report(ex, "أنواع المصروفات المضافة"); }
     }
 
     // --- إعادة حساب تلقائية عند تغيير أي قيمة ---
@@ -598,7 +602,7 @@ public partial class DailyJournalViewModel : ObservableObject
                 .Select(s => new ShiftOption(s, GetShiftDisplayName(s)))
                 .ToList();
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 ShiftTypes.Clear();
                 foreach (var shift in availableShifts)
@@ -618,9 +622,9 @@ public partial class DailyJournalViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ في تحديث الورديات المتاحة: {ex.Message}");
+            Serilog.Log.Warning(ex, "خطأ في تحديث الورديات المتاحة؛ تُعرض كل الورديات");
             // احتياطي: عرض جميع الورديات عند فشل الاستعلام
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 if (ShiftTypes.Count == 0)
                 {
@@ -868,12 +872,12 @@ public partial class DailyJournalViewModel : ObservableObject
         CashSalesInput = null;
         BankingSalesInput = null;
         ActualCash = null;
-        
+
         foreach (var input in BankSalesInputs)
         {
             input.Amount = null;
         }
-        
+
         ExpenseItems.Clear();
         BankingItems.Clear();
         Returns.Clear();
@@ -922,10 +926,10 @@ public partial class DailyJournalViewModel : ObservableObject
             string shiftName = GetShiftDisplayName(SelectedShiftType);
             string fileName = $"حركة يومية - {JournalDate:yyyy-MM-dd} - الوردية {shiftName}.pdf";
             var filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
-            
+
             // Generate PDF
             report.GeneratePdf(filePath);
-            
+
             // Open PDF
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
         }
@@ -961,7 +965,7 @@ public partial class DailyJournalViewModel : ObservableObject
         EmployeeName = journal.EmployeeName;
         Notes = journal.Notes ?? "";
         CashFloat = journal.CashFloat;
-        
+
         CashSalesInput = journal.TotalSales - journal.BankingTotal;
         BankingSalesInput = journal.BankingTotal;
         ActualCash = journal.ActualCash;

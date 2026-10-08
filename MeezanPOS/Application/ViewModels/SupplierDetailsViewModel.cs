@@ -198,6 +198,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
     private readonly MeezanPOS.Application.Services.Queries.ISupplierQueryService _suppliers = new MeezanPOS.Application.Services.Queries.SupplierQueryService();
 
+    private readonly LoadFailureReporter _loadErrors = new();
+
     public SupplierDetailsViewModel(int supplierId, string supplierName)
     {
         SupplierId = supplierId;
@@ -217,7 +219,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
             var namesList = await ownerDebtService.GetPartnerNamesAsync();
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 BankAccounts = new ObservableCollection<BankAccount>(accountsList.Where(a => a.IsActive));
                 PartnerNames = new ObservableCollection<string>(namesList);
@@ -228,7 +230,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     PartnerNameForPayment = PartnerNames.First();
             });
         }
-        catch { /* تجاهل الأخطاء الصامتة */ }
+        catch (Exception ex) { _loadErrors.Report(ex, "الحسابات المصرفية وأسماء الشركاء"); }
     }
 
     [RelayCommand]
@@ -951,9 +953,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 last4 = bankTx.ReferenceNumber ?? "----";
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // في حال حدوث أي خطأ، نعتمد على المعالجة النصية كبديل
+            // نعتمد على المعالجة النصية كبديل، مع تسجيل السبب
+            Serilog.Log.Warning(ex, "تعذر جلب التحويل المصرفي لدفعة المورد {TransactionId}", row.TransactionId);
         }
 
         if (bankName == "غير محدد" || last4 == "----")

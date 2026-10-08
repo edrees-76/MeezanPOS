@@ -332,7 +332,9 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading data: {ex.Message}");
+            // كان الخطأ يُكتب في نافذة التصحيح فقط فتظهر شاشة المبيعات فارغة بلا تفسير
+            Serilog.Log.Error(ex, "خطأ في تحميل بيانات المبيعات");
+            Dialogs.Show($"تعذر تحميل بيانات المبيعات:\n{ex.Message}", "خطأ في التحميل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {

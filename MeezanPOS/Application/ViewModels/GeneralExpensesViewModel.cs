@@ -14,6 +14,7 @@ using System.Windows;
 namespace MeezanPOS.Application.ViewModels;
 public partial class GeneralExpensesViewModel : ObservableObject
 {
+    private readonly LoadFailureReporter _loadErrors = new();
     private readonly IBankService _bankService;
     private readonly IOwnerDebtService _ownerDebtService;
     private readonly IWagesService _wagesService;
@@ -122,7 +123,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
     // --- بيانات العرض ---
     public ObservableCollection<GeneralExpenseDisplayItem> Expenses { get; } = new();
-    
+
     // --- ملخصات ---
     [ObservableProperty]
     private decimal totalAmount;
@@ -191,7 +192,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             var bankService = _bankService;
             var accountsList = await bankService.GetAllAccountsAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 BankAccounts.Clear();
                 foreach (var account in accountsList.Where(a => a.IsActive))
@@ -202,7 +203,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading bank accounts: {ex.Message}");
+            _loadErrors.Report(ex, "الحسابات المصرفية");
         }
     }
 
@@ -212,7 +213,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             var ownerDebtService = _ownerDebtService;
             var names = await ownerDebtService.GetPartnerNamesAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 PartnerNames.Clear();
                 foreach (var name in names)
@@ -223,7 +224,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading partner names: {ex.Message}");
+            _loadErrors.Report(ex, "أسماء الشركاء");
         }
     }
 
@@ -233,7 +234,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             var service = _wagesService;
             var names = await service.GetUniqueWorkerNamesAsync();
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 AvailableWorkerNames.Clear();
                 foreach (var name in names)
@@ -244,7 +245,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error loading worker names: {ex.Message}");
+            _loadErrors.Report(ex, "أسماء العمال");
         }
     }
 
@@ -434,7 +435,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
             Dialogs.Show("يرجى تحديد تفاصيل أجور حضور العمال.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
-        
+
         if (SelectedExpenseType == GeneralExpenseType.Other && string.IsNullOrWhiteSpace(InputCustomExpenseType))
         {
             Dialogs.Show("يرجى كتابة نوع المصروف اليدوي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -604,7 +605,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         try
         {
             string bankDetails = "";
-            
+
             if (item.PaymentMethod == PaymentMethodType.BankTransfer)
             {
                 var payment = await _expenses.GetPaymentInfoAsync(item.Id, item.ExpenseType == GeneralExpenseType.SupplierPayment);
@@ -772,7 +773,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         var result = Dialogs.Show(
             $"هل أنت متأكد من ترحيل المصروف بقيمة {item.Amount:N2}؟\nلن تتمكن من تعديله أو حذفه بعد الترحيل.",
             "تأكيد الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            
+
         if (result != MessageBoxResult.Yes) return;
 
         try
@@ -780,7 +781,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var postingService = _postingService;
             var currentUserId = _sessionService.CurrentUserId;
             await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, currentUserId);
-            
+
             Dialogs.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
         }
@@ -824,7 +825,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         var result = Dialogs.Show(
             $"هل أنت متأكد من فك ترحيل المصروف؟\nهذا الإجراء سيتم تسجيله في سجل التدقيق (Audit Log) باسمك.",
             "تأكيد فك الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            
+
         if (result != MessageBoxResult.Yes) return;
 
         try
@@ -832,7 +833,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var postingService = _postingService;
             var currentUserId = sessionService.CurrentUserId;
             await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, currentUserId);
-            
+
             Dialogs.Show("تم فك الترحيل بنجاح وتم تسجيل العملية في سجل التدقيق.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
         }

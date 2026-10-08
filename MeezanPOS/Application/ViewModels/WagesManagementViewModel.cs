@@ -176,7 +176,7 @@ public partial class WagesManagementViewModel : ObservableObject
             var summaries = await _wagesService.GetWorkerSummariesAsync();
             _allSummaries = summaries;
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 TotalWorkersCount = workers.Count;
                 ActiveWorkersCount = workers.Count(w => w.IsActive);
@@ -227,7 +227,7 @@ public partial class WagesManagementViewModel : ObservableObject
             // تصفية الحضور حسب الوردية المحددة في الواجهة
             existingAttendances = existingAttendances.Where(a => a.ShiftType == SelectedAttendanceShift.Type).ToList();
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 AttendanceList.Clear();
 
@@ -437,7 +437,7 @@ public partial class WagesManagementViewModel : ObservableObject
     {
         if (SelectedWorkerSummary == null)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 WorkerLedger.Clear();
                 SelectedWorkerBalance = 0;
@@ -454,7 +454,7 @@ public partial class WagesManagementViewModel : ObservableObject
         {
             var ledger = await _wagesService.GetWorkerLedgerAsync(SelectedWorkerSummary.WorkerId);
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 WorkerLedger.Clear();
                 // نعرض الحركات من الأحدث إلى الأقدم في الـ Timeline
@@ -646,7 +646,7 @@ public partial class WagesManagementViewModel : ObservableObject
             var summaries = await _wagesService.GetWorkerSummariesAsync();
             _allSummaries = summaries;
 
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 ApplyFilter();
                 TotalOutstandingBalance = _allSummaries.Sum(s => s.Balance);
@@ -768,7 +768,7 @@ public partial class WagesManagementViewModel : ObservableObject
 
     private void ApplyWorkerFilter()
     {
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+        UiThread.Run(() =>
         {
             WorkersList.Clear();
             var filtered = _allWorkers;

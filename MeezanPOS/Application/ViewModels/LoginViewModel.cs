@@ -56,7 +56,11 @@ public partial class LoginViewModel : ObservableObject
                     Username = parts[1];
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                // تذكر اسم المستخدم اختياري
+                Serilog.Log.Warning(ex, "تعذر قراءة إعداد تذكر المستخدم");
+            }
         }
     }
 
@@ -77,7 +81,10 @@ public partial class LoginViewModel : ObservableObject
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Serilog.Log.Warning(ex, "تعذر حفظ إعداد تذكر المستخدم");
+        }
     }
 
     [RelayCommand]

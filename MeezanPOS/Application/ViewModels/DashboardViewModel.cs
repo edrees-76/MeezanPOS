@@ -246,7 +246,7 @@ public partial class DashboardViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error exporting dashboard to PDF");
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 Dialogs.Show(
                     "حدث خطأ أثناء تصدير تقرير الـ PDF: " + ex.Message,
@@ -661,7 +661,7 @@ public partial class DashboardViewModel : ObservableObject
                 }
 
                 // 9. Update UI properties safely using Dispatcher
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                UiThread.Run(() =>
                 {
                     TotalSales = salesVal;
                     TotalSalesTrend = salesTrendVal;
@@ -770,7 +770,7 @@ public partial class DashboardViewModel : ObservableObject
         {
             IsRefreshing = false;
             // Start the auto-refresh timer only after the first load succeeds
-            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            UiThread.Run(() =>
             {
                 if (!_isTimerStarted && _autoRefreshTimer != null)
                 {
