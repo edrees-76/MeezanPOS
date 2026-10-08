@@ -93,6 +93,9 @@ public partial class App : System.Windows.Application
 
         base.OnStartup(e);
 
+        // قبول الأرقام العربية في كل حقول الإدخال
+        MeezanPOS.Presentation.Behaviors.ArabicDigitsInput.Register();
+
         // إظهار واجهة الانتظار (Splash Screen) فوراً لمنع تجميد التطبيق
         var splash = new MeezanPOS.Presentation.Views.SplashView();
         splash.Show();

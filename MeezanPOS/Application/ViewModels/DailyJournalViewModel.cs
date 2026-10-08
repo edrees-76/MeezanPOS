@@ -185,6 +185,7 @@ public partial class DailyJournalViewModel : ObservableObject
         AddExpenseItem();
         AddBankingItem();
         _ = UpdateAvailableShiftsAsync(JournalDate);
+        MarkClean();
     }
 
     // --- معلومات الوردية ---
@@ -512,6 +513,8 @@ public partial class DailyJournalViewModel : ObservableObject
                     {
                         LoadJournalForEditing(journal);
                     }
+
+                    MarkClean();
                 }
             }
             catch (Exception ex)
@@ -1297,7 +1300,22 @@ public partial class DailyJournalViewModel : ObservableObject
         IsSaved = false;
         RefreshCalculations();
         _ = UpdateAvailableShiftsAsync(JournalDate);
+        MarkClean();
     }
+
+    // --- كشف البيانات غير المحفوظة ---
+    private string _cleanSignature = string.Empty;
+
+    /// <summary>بصمة الحقول التي يدخلها المستخدم؛ تغيّرها يعني وجود بيانات غير محفوظة.</summary>
+    private string CurrentSignature() => string.Join("|",
+        JournalDate.ToString("yyyyMMdd"), EmployeeName, Notes, CashFloat, CashSalesInput, BankingSalesInput, ActualCash,
+        TotalSales, TotalExpenses, EffectiveBankingTotal, ReturnsAmount, FreeOrdersAmount,
+        ExpenseItems.Count, BankingItems.Count, Returns.Count, FreeOrders.Count);
+
+    private void MarkClean() => _cleanSignature = CurrentSignature();
+
+    /// <summary>هل توجد تعديلات لم تُحفظ (تُستخدم للتنبيه قبل مغادرة الشاشة)؟</summary>
+    public bool HasUnsavedChanges => !IsSaved && !IsViewingMode && CurrentSignature() != _cleanSignature;
 
     public System.Action? OnClose { get; set; }
 

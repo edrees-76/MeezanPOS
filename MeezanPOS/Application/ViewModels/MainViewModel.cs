@@ -121,6 +121,21 @@ public partial class MainViewModel : ObservableObject
             return;
         }
 
+        // تنبيه قبل مغادرة يومية فيها بيانات غير محفوظة
+        if (CurrentViewModel is DailyJournalViewModel journalVm && journalVm.HasUnsavedChanges)
+        {
+            var answer = MessageBox.Show(
+                "توجد بيانات في اليومية الحالية لم تُحفظ بعد وستضيع عند المغادرة.\n\nهل تريد المغادرة دون حفظ؟",
+                "بيانات غير محفوظة", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No,
+                MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
+            if (answer != MessageBoxResult.Yes)
+            {
+                // إعادة تحديد عنصر القائمة الحالي
+                OnPropertyChanged(nameof(SelectedNavIndex));
+                return;
+            }
+        }
+
         // يمنع إعادة الدخول: تغيير SelectedNavIndex داخل التنقل لا يعيد إنشاء الشاشة
         _isNavigating = true;
         try
