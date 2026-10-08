@@ -187,6 +187,18 @@ public partial class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool CanManageUsers => _sessionService.HasPermission(Permissions.ManageUsers);
+    public bool CanRestore => _sessionService.HasPermission(Permissions.RestoreBackup);
+    public bool CanResetSystem => _sessionService.HasPermission(Permissions.SystemReset);
+
+    [RelayCommand]
+    private void OpenUserManagement()
+    {
+        if (!CanManageUsers) return;
+        var window = new Presentation.Views.UserManagementWindow { Owner = System.Windows.Application.Current.MainWindow };
+        window.ShowDialog();
+    }
+
     [RelayCommand]
     private async Task BackupNowAsync()
     {
@@ -219,6 +231,12 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task RestoreNowAsync()
     {
+        if (!_sessionService.HasPermission(Permissions.RestoreBackup))
+        {
+            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         try
         {
             // Verify no active shifts (Draft)
@@ -293,6 +311,12 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void ResetSystem()
     {
+        if (!_sessionService.HasPermission(Permissions.SystemReset))
+        {
+            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         var result = MessageBox.Show(
             "تحذير حرج للغاية: إعادة ضبط المنظومة ستؤدي إلى حذف جميع البيانات والعمليات المالية والتقارير والنسخ الاحتياطي نهائياً، ولا يمكن التراجع عن ذلك.\n\nسيتم الإبقاء فقط على حسابات المستخدمين.\n\nهل أنت متأكد من رغبتك في الاستمرار؟",
             "تأكيد إعادة الضبط النهائي",
@@ -315,6 +339,12 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task ConfirmResetAsync(object parameter)
     {
+        if (!_sessionService.HasPermission(Permissions.SystemReset))
+        {
+            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         if (parameter is System.Windows.Controls.PasswordBox passwordBox)
         {
             string password = passwordBox.Password;

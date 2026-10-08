@@ -14,9 +14,15 @@ namespace MeezanPOS.Application.Services
         private readonly AppDbContext _context;
         private readonly ICashLedgerService _cashLedgerService;
         private readonly AuditService _auditService;
+        private readonly ISessionService? _session;
 
-        public PostingService(AppDbContext context, ICashLedgerService cashLedgerService, AuditService auditService)
+        /// <param name="session">
+        /// للتحقق من الصلاحيات داخل الخدمة نفسها (وليس في الواجهة فقط). يُمرَّر دائماً من حاوية الخدمات؛
+        /// يكون null فقط عند إنشاء الخدمة يدوياً في الاختبارات.
+        /// </param>
+        public PostingService(AppDbContext context, ICashLedgerService cashLedgerService, AuditService auditService, ISessionService? session = null)
         {
+            _session = session;
             _context = context;
             _cashLedgerService = cashLedgerService;
             _auditService = auditService;
@@ -89,6 +95,8 @@ namespace MeezanPOS.Application.Services
 
         public async Task<bool> UnpostEntityAsync<T>(int entityId, string reason, string unpostedByUserId) where T : class
         {
+            _session?.RequirePermission(Permissions.UnpostFinancial);
+
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 20)
                 throw new Exception("يجب إدخال سبب معتمد وشرح لا يقل عن 20 حرفاً لفك الترحيل المالي.");
 
@@ -776,6 +784,8 @@ namespace MeezanPOS.Application.Services
 
         public async Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId)
         {
+            _session?.RequirePermission(Permissions.UnlockPeriod);
+
             if (string.IsNullOrWhiteSpace(reason) || string.IsNullOrWhiteSpace(detailReason) || detailReason.Length < 20)
                 throw new Exception("يجب تحديد سبب وإدخال تفاصيل شرح لا تقل عن 20 حرفاً لإلغاء القفل.");
 
@@ -831,6 +841,8 @@ namespace MeezanPOS.Application.Services
 
         public async Task<bool> UnpostPeriodAsync(int sessionId, string reason, string unpostedByUserId)
         {
+            _session?.RequirePermission(Permissions.UnpostFinancial);
+
             if (string.IsNullOrWhiteSpace(reason) || reason.Length < 20)
                 throw new Exception("يجب إدخال سبب معتمد وشرح تفصيلي لا يقل عن 20 حرفاً لفك ترحيل الفترة.");
 

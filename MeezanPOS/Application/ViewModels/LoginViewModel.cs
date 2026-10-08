@@ -33,9 +33,17 @@ public partial class LoginViewModel : ObservableObject
         LoadSettings();
     }
 
+    /// <summary>
+    /// ملف "تذكرني" في مجلد بيانات المستخدم وليس بجوار البرنامج
+    /// (مجلد Program Files للقراءة فقط بعد التثبيت فيفشل الحفظ بصمت).
+    /// </summary>
+    private static string SettingsFilePath => System.IO.Path.Combine(
+        System.IO.Path.GetDirectoryName(MeezanPOS.Infrastructure.Data.AppDbContext.GetDatabasePath())!,
+        "user.settings");
+
     private void LoadSettings()
     {
-        var settingsPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "user.settings");
+        var settingsPath = SettingsFilePath;
         if (System.IO.File.Exists(settingsPath))
         {
             try
@@ -54,7 +62,7 @@ public partial class LoginViewModel : ObservableObject
 
     private void SaveSettings()
     {
-        var settingsPath = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "user.settings");
+        var settingsPath = SettingsFilePath;
         try
         {
             if (RememberMe)
@@ -100,11 +108,20 @@ public partial class LoginViewModel : ObservableObject
 
             SaveSettings();
 
-            // فحص MustChangePassword
-            if (user.MustChangePassword)
+            // كلمة مرور افتراضية أو مؤقتة: لا دخول قبل تغييرها
+            // تُفرض أيضاً إذا كانت كلمة المرور الحالية ضعيفة (مثل admin/admin الافتراضية)
+            if (user.MustChangePassword || UserManagementService.ValidatePassword(Password, user.Username) != null)
             {
-                MessageBox.Show("يجب تغيير كلمة المرور عند أول دخول.", "تنبيه أمني",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                var dialog = new Presentation.Views.ChangePasswordDialog(isForced: true)
+                {
+                    Owner = System.Windows.Application.Current.MainWindow
+                };
+                if (dialog.ShowDialog() != true)
+                {
+                    session.ClearSession();
+                    ErrorMessage = "يجب تغيير كلمة المرور للمتابعة.";
+                    return;
+                }
             }
 
             var mainView = new Presentation.Views.MainView();

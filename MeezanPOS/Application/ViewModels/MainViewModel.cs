@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Linq;
 using System.Windows;
 
 namespace MeezanPOS.Application.ViewModels;
@@ -21,24 +22,63 @@ public partial class MainViewModel : ObservableObject
         IsSidebarVisible = !IsSidebarVisible;
     }
 
+    private readonly MeezanPOS.Application.Interfaces.ISessionService? _session;
+
     public MainViewModel()
     {
-        CurrentViewModel = new DashboardViewModel();
-
         try
         {
-            var user = MeezanPOS.Application.Services.AppServiceProvider
-                .Resolve<MeezanPOS.Application.Interfaces.ISessionService>().CurrentUser;
+            _session = MeezanPOS.Application.Services.AppServiceProvider
+                .Resolve<MeezanPOS.Application.Interfaces.ISessionService>();
+            var user = _session.CurrentUser;
             if (user != null)
             {
                 CurrentUserName = string.IsNullOrWhiteSpace(user.FullName) ? user.Username : user.FullName;
-                CurrentUserRole = user.Role?.Name ?? string.Empty;
+                CurrentUserRole = user.Role != null
+                    ? MeezanPOS.Application.Services.UserManagementService.RoleDisplayName(user.Role.Type)
+                    : string.Empty;
             }
         }
         catch (InvalidOperationException)
         {
             // الخدمات غير مهيأة (وضع التصميم) — تبقى بيانات المستخدم فارغة
         }
+
+        NavVisible = NavOrder.Select(IsAllowed).ToArray();
+        CurrentViewModel = new DashboardViewModel();
+    }
+
+    // الصلاحية المطلوبة لكل شاشة رئيسية في القائمة الجانبية
+    private static readonly System.Collections.Generic.Dictionary<string, string> NavPermissions = new()
+    {
+        ["Dashboard"] = MeezanPOS.Application.Services.Permissions.ViewDashboard,
+        ["AddJournal"] = MeezanPOS.Application.Services.Permissions.CreateJournal,
+        ["Sales"] = MeezanPOS.Application.Services.Permissions.ViewSales,
+        ["Suppliers"] = MeezanPOS.Application.Services.Permissions.ManageSuppliers,
+        ["Expenses"] = MeezanPOS.Application.Services.Permissions.ManageExpenses,
+        ["Wages"] = MeezanPOS.Application.Services.Permissions.ManageWages,
+        ["Banking"] = MeezanPOS.Application.Services.Permissions.ManageBanking,
+        ["FreeOrdersReturns"] = MeezanPOS.Application.Services.Permissions.ManageReturns,
+        ["ClosingAccount"] = MeezanPOS.Application.Services.Permissions.ClosingAccount,
+        ["Settings"] = MeezanPOS.Application.Services.Permissions.ViewSettings,
+    };
+
+    private bool IsAllowed(string viewName)
+        => _session == null
+           || !NavPermissions.TryGetValue(viewName, out var permission)
+           || _session.HasPermission(permission);
+
+    /// <summary>ظهور عناصر القائمة الجانبية بنفس ترتيب NavOrder حسب صلاحيات المستخدم.</summary>
+    public bool[] NavVisible { get; }
+
+    [RelayCommand]
+    private void ChangePassword()
+    {
+        var dialog = new Presentation.Views.ChangePasswordDialog(isForced: false)
+        {
+            Owner = System.Windows.Application.Current.MainWindow
+        };
+        dialog.ShowDialog();
     }
 
     // ترتيب عناصر القائمة الجانبية (يطابق MainView.xaml واختصارات Ctrl+1..Ctrl+0)
@@ -73,6 +113,14 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Navigate(string viewName)
     {
+        if (!IsAllowed(viewName))
+        {
+            MessageBox.Show(MeezanPOS.Application.Services.Permissions.DeniedMessage, "صلاحية غير كافية",
+                MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK,
+                MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
+            return;
+        }
+
         // يمنع إعادة الدخول: تغيير SelectedNavIndex داخل التنقل لا يعيد إنشاء الشاشة
         _isNavigating = true;
         try
@@ -192,6 +240,8 @@ public partial class MainViewModel : ObservableObject
         {
             return;
         }
+
+        _session?.ClearSession();
 
         var currentWindow = System.Windows.Application.Current.MainWindow;
         var loginView = new Presentation.Views.LoginView();

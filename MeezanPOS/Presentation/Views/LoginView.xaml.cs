@@ -36,7 +36,7 @@ namespace MeezanPOS.Presentation.Views
         // Login Button Event
         // =========================================================
 
-        private void btnLogin_Click(object sender, RoutedEventArgs e)
+        private async void btnLogin_Click(object sender, RoutedEventArgs e)
         {
             string username = txtUsername.Text;
             string password = _isPasswordVisible ? txtVisiblePassword.Text : txtPassword.Password;
@@ -80,7 +80,16 @@ namespace MeezanPOS.Presentation.Views
 
                 if (vm.LoginCommand.CanExecute(null))
                 {
-                    vm.LoginCommand.Execute(null);
+                    // انتظار اكتمال الدخول قبل فحص النتيجة (كان يُفحص الخطأ قبل انتهاء المصادقة)
+                    try
+                    {
+                        btnLogin.IsEnabled = false;
+                        await vm.LoginCommand.ExecuteAsync(null);
+                    }
+                    finally
+                    {
+                        btnLogin.IsEnabled = true;
+                    }
 
                     // Show error if authentication fails
                     if (vm.HasError)

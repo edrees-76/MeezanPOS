@@ -10,6 +10,8 @@ public class AuthenticationService : IAuthenticationService
 {
     private readonly AppDbContext _context;
 
+    public const int MaxAttemptsBeforeLockout = 5;
+
     public AuthenticationService(AppDbContext context) => _context = context;
 
     public async Task<User?> AuthenticateAsync(string username, string password)
@@ -20,7 +22,7 @@ public class AuthenticationService : IAuthenticationService
 
         if (user == null)
         {
-            Log.Warning("محاولة دخول فاشلة: المستخدم {Username} غير موجود", username);
+            Log.Warning("محاولة دخول فاشلة: اسم مستخدم غير معروف (الطول {Length})", username?.Length ?? 0);
             return null;
         }
 
@@ -34,10 +36,15 @@ public class AuthenticationService : IAuthenticationService
         if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
             user.FailedLoginAttempts++;
-            if (user.FailedLoginAttempts >= 5)
+            if (user.FailedLoginAttempts >= MaxAttemptsBeforeLockout)
             {
-                user.LockoutEnd = DateTime.UtcNow.AddMinutes(5);
-                Log.Warning("تم قفل المستخدم {Username} بعد 5 محاولات فاشلة", username);
+                // قفل متصاعد: 5 دقائق، ثم يتضاعف مع كل محاولة فاشلة إضافية (بحد أقصى 24 ساعة).
+                // العداد لا يُصفَّر بانتهاء القفل، بل عند الدخول الناجح فقط.
+                var extra = Math.Min(user.FailedLoginAttempts - MaxAttemptsBeforeLockout, 9);
+                var minutes = Math.Min(5 * Math.Pow(2, extra), 24 * 60);
+                user.LockoutEnd = DateTime.UtcNow.AddMinutes(minutes);
+                Log.Warning("تم قفل المستخدم {Username} لمدة {Minutes} دقيقة بعد {Attempts} محاولات فاشلة",
+                    username, minutes, user.FailedLoginAttempts);
             }
             await _context.SaveChangesAsync();
             return null;

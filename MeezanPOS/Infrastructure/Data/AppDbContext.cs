@@ -650,12 +650,87 @@ public class AppDbContext : DbContext
     public override int SaveChanges()
     {
         SyncWorkerTransactions();
+        AddAutomaticAuditEntries();
         return base.SaveChanges();
     }
 
     public override Task<int> SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default)
     {
         SyncWorkerTransactions();
+        AddAutomaticAuditEntries();
         return base.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// كيانات لا تُسجَّل تلقائياً: سجلات التدقيق نفسها، والإعدادات، وبنود اليومية الفرعية
+    /// (تُحذف وتُعاد كتابتها في كل حفظ لمسودة اليومية، وتغيّر إجماليات اليومية يُسجَّل على اليومية نفسها).
+    /// </summary>
+    private static readonly HashSet<Type> AuditExcludedTypes = new()
+    {
+        typeof(AuditLog), typeof(UserActionLog), typeof(Setting),
+        typeof(DailyExpenseItem), typeof(BankingItem), typeof(OrderAdjustmentItem), typeof(DailyJournalBankSale),
+        typeof(PostingSessionDetail), typeof(SupplierInvoiceItem), typeof(WorkerAttendance)
+    };
+
+    /// <summary>أرصدة تراكمية يُعاد حسابها آلياً؛ تسجيلها يغرق السجل بلا فائدة.</summary>
+    private static readonly HashSet<string> AuditIgnoredProperties = new() { "BalanceAfter", "CurrentBalance" };
+
+    /// <summary>
+    /// سجل تدقيق تلقائي لكل حذف (فعلي أو منطقي) ولكل تعديل على المبالغ، مع المستخدم والقيم قبل/بعد.
+    /// يعمل فقط عند وجود مستخدم مسجل (لا يُسجَّل أثناء ترقية قاعدة البيانات أو في الاختبارات).
+    /// </summary>
+    private void AddAutomaticAuditEntries()
+    {
+        if (AuditContext.CurrentUserId is not int userId) return;
+
+        var logs = new List<AuditLog>();
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            if (AuditExcludedTypes.Contains(entry.Entity.GetType())) continue;
+
+            string? action = null;
+            var changes = new List<string>();
+
+            if (entry.State == EntityState.Deleted)
+            {
+                action = "AutoDelete";
+                foreach (var prop in entry.Properties.Where(p => p.Metadata.ClrType == typeof(decimal)))
+                    changes.Add($"{prop.Metadata.Name}={prop.OriginalValue}");
+            }
+            else if (entry.State == EntityState.Modified)
+            {
+                var deletedProp = entry.Property(nameof(BaseEntity.IsDeleted));
+                if (deletedProp.IsModified && deletedProp.OriginalValue is false && deletedProp.CurrentValue is true)
+                {
+                    action = "AutoSoftDelete";
+                    foreach (var prop in entry.Properties.Where(p => p.Metadata.ClrType == typeof(decimal)))
+                        changes.Add($"{prop.Metadata.Name}={prop.OriginalValue}");
+                }
+                else
+                {
+                    foreach (var prop in entry.Properties.Where(p => p.IsModified
+                                 && (p.Metadata.ClrType == typeof(decimal) || p.Metadata.ClrType == typeof(decimal?))
+                                 && !AuditIgnoredProperties.Contains(p.Metadata.Name)
+                                 && !Equals(p.OriginalValue, p.CurrentValue)))
+                    {
+                        changes.Add($"{prop.Metadata.Name}: {prop.OriginalValue} → {prop.CurrentValue}");
+                    }
+                    if (changes.Count > 0) action = "AutoUpdate";
+                }
+            }
+
+            if (action == null) continue;
+            logs.Add(new AuditLog
+            {
+                UserId = userId,
+                Action = action,
+                EntityName = entry.Entity.GetType().Name,
+                EntityId = entry.Entity.Id,
+                Changes = string.Join(" | ", changes),
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        if (logs.Count > 0) AuditLogs.AddRange(logs);
     }
 }

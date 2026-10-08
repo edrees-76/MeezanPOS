@@ -11,18 +11,27 @@ public class SessionService : ISessionService
     public string CurrentUsername => CurrentUser?.Username ?? "Unknown";
     public bool MustChangePassword => CurrentUser?.MustChangePassword ?? false;
 
-    public void SetUser(User user) => CurrentUser = user;
-    public void ClearSession() => CurrentUser = null;
+    public void SetUser(User user)
+    {
+        CurrentUser = user;
+        MeezanPOS.Infrastructure.Data.AuditContext.CurrentUserId = user.Id;
+    }
+
+    public void ClearSession()
+    {
+        CurrentUser = null;
+        MeezanPOS.Infrastructure.Data.AuditContext.CurrentUserId = null;
+    }
 
     public bool HasPermission(string operation)
     {
         if (CurrentUser?.Role == null) return false;
-        return CurrentUser.Role.Type switch
-        {
-            RoleType.Admin => true,
-            RoleType.Manager => operation is not "DeleteSystem" and not "UnpostFinancial",
-            RoleType.Cashier => operation is "CreateJournal" or "ViewSales" or "ViewDashboard",
-            _ => false
-        };
+        return Permissions.RoleAllows(CurrentUser.Role.Type, operation);
+    }
+
+    public void RequirePermission(string operation)
+    {
+        if (!HasPermission(operation))
+            throw new PermissionDeniedException();
     }
 }

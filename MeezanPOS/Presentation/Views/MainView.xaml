@@ -115,61 +115,61 @@
                          ItemContainerStyle="{StaticResource NavItem}"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          SelectedIndex="{Binding SelectedNavIndex}">
-                    <ListBoxItem ToolTip="Ctrl+1">
+                    <ListBoxItem ToolTip="Ctrl+1" Visibility="{Binding NavVisible[0], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="ViewDashboardOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="لوحة التحكم" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+2">
+                    <ListBoxItem ToolTip="Ctrl+2" Visibility="{Binding NavVisible[1], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="CalendarEditOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="تسجيل حركة يومية" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+3">
+                    <ListBoxItem ToolTip="Ctrl+3" Visibility="{Binding NavVisible[2], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="CashRegister" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="المبيعات والإيرادات" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+4">
+                    <ListBoxItem ToolTip="Ctrl+4" Visibility="{Binding NavVisible[3], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="TruckOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="إدارة الموردين" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+5">
+                    <ListBoxItem ToolTip="Ctrl+5" Visibility="{Binding NavVisible[4], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="ReceiptTextOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="إدارة المصروفات" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+6">
+                    <ListBoxItem ToolTip="Ctrl+6" Visibility="{Binding NavVisible[5], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="أجور ومستحقات العمال" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+7">
+                    <ListBoxItem ToolTip="Ctrl+7" Visibility="{Binding NavVisible[6], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="Bank" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="الحسابات البنكية والخزينة" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+8">
+                    <ListBoxItem ToolTip="Ctrl+8" Visibility="{Binding NavVisible[7], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="GiftOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="الطلبات المجانية والمرتجعات" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+9">
+                    <ListBoxItem ToolTip="Ctrl+9" Visibility="{Binding NavVisible[8], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="ChartBoxOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="الحساب الختامي والتقارير" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
-                    <ListBoxItem ToolTip="Ctrl+0">
+                    <ListBoxItem ToolTip="Ctrl+0" Visibility="{Binding NavVisible[9], Converter={StaticResource BooleanToVisibilityConverter}}">
                         <DockPanel>
                             <materialDesign:PackIcon Kind="CogOutline" Style="{StaticResource NavIcon}"/>
                             <TextBlock Text="الإعدادات" Style="{StaticResource NavText}"/>
@@ -183,6 +183,10 @@
                         <Button DockPanel.Dock="Right" Command="{Binding LogoutCommand}" ToolTip="تسجيل الخروج"
                                 Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36" Foreground="#FFCDD2">
                             <materialDesign:PackIcon Kind="Logout" Width="20" Height="20"/>
+                        </Button>
+                        <Button DockPanel.Dock="Right" Command="{Binding ChangePasswordCommand}" ToolTip="تغيير كلمة المرور"
+                                Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36" Foreground="{StaticResource Brush.SidebarText}">
+                            <materialDesign:PackIcon Kind="KeyChange" Width="19" Height="19"/>
                         </Button>
                         <Border Width="38" Height="38" CornerRadius="19" Background="{StaticResource Brush.Accent}">
                             <TextBlock Text="{Binding CurrentUserInitial}" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="16"

@@ -11,4 +11,7 @@ public interface ISessionService
     void SetUser(User user);
     void ClearSession();
     bool HasPermission(string operation);
+
+    /// <summary>يرمي PermissionDeniedException إذا لم يملك المستخدم الصلاحية.</summary>
+    void RequirePermission(string operation);
 }
