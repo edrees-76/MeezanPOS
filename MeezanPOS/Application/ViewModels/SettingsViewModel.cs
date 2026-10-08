@@ -191,6 +191,11 @@ public partial class SettingsViewModel : ObservableObject
     public bool CanRestore => _sessionService.HasPermission(Permissions.RestoreBackup);
     public bool CanResetSystem => _sessionService.HasPermission(Permissions.SystemReset);
 
+    public string AppVersionText => $"الإصدار {UpdateChecker.CurrentVersion}";
+
+    [RelayCommand]
+    private Task CheckForUpdatesAsync() => UpdateChecker.NotifyIfNewerAsync(manual: true);
+
     [RelayCommand]
     private void OpenUserManagement()
     {

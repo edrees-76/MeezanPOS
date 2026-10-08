@@ -135,6 +135,9 @@ public partial class LoginViewModel : ObservableObject
             System.Windows.Application.Current.MainWindow = mainView;
             mainView.Show();
 
+            // تحقق صامت من وجود إصدار أحدث (مرة يومياً، لا يعطل الدخول)
+            _ = UpdateChecker.NotifyIfNewerAsync(manual: false);
+
             // Close all other windows (like LoginView)
             foreach (Window window in System.Windows.Application.Current.Windows)
             {

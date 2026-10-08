@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MeezanPOS.Presentation.Views
 {
@@ -12,6 +13,7 @@ namespace MeezanPOS.Presentation.Views
     {
         public string SelectedReason { get; private set; } = string.Empty;
         public string SelectedDetailReason { get; private set; } = string.Empty;
+        public string ApproverUsername { get; private set; } = string.Empty;
 
         public PeriodUnlockDialog()
         {
@@ -48,7 +50,7 @@ namespace MeezanPOS.Presentation.Views
             }
         }
 
-        private void Confirm_Click(object sender, RoutedEventArgs e)
+        private async void Confirm_Click(object sender, RoutedEventArgs e)
         {
             var reasonItem = CbReason.SelectedItem as ComboBoxItem;
             SelectedReason = reasonItem?.Content?.ToString() ?? "سبب آخر";
@@ -58,6 +60,35 @@ namespace MeezanPOS.Presentation.Views
             {
                 Dialogs.Show("الشرح التفصيلي يجب أن لا يقل عن 20 حرفاً لتأكيد العملية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
+            }
+
+            BtnConfirm.IsEnabled = false;
+            try
+            {
+                using var scope = MeezanPOS.Application.Services.AppServiceProvider.Provider.CreateScope();
+                var approval = scope.ServiceProvider.GetRequiredService<MeezanPOS.Application.Services.PeriodUnlockApproval>();
+                var session = scope.ServiceProvider.GetRequiredService<MeezanPOS.Application.Interfaces.ISessionService>();
+                var result = await approval.VerifyAsync(TxtApproverUser.Text, TxtApproverPassword.Password, session.CurrentUser?.Id ?? 0);
+                if (!result.IsApproved)
+                {
+                    Dialogs.Show(result.Error!, "اعتماد فك القفل", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    TxtApproverPassword.Clear();
+                    return;
+                }
+
+                ApproverUsername = result.Approver!.Username;
+                // يُحفظ المعتمِد ضمن سبب فك القفل في سجل التدقيق
+                SelectedDetailReason = $"{SelectedDetailReason} | اعتمده: {ApproverUsername}";
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "خطأ أثناء التحقق من اعتماد فك القفل");
+                Dialogs.Show("تعذر التحقق من بيانات المعتمِد.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+            finally
+            {
+                BtnConfirm.IsEnabled = SelectedDetailReason.Length >= 20;
             }
 
             DialogResult = true;

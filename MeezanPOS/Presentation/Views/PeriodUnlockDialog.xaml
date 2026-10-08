@@ -7,7 +7,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="إلغاء قفل الفترة المالية" 
-        Height="420" Width="480"
+        Height="600" Width="480"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
         AllowsTransparency="True"
@@ -76,6 +76,24 @@
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="اكتب هنا تفاصيل وسبب فتح الفترة وإجراء التعديلات..."
                          TextChanged="TxtDetailReason_TextChanged"/>
+
+                <!-- اعتماد العملية بكلمة مرور (مستخدم مخوَّل آخر إن وُجد) -->
+                <TextBlock Text="اعتماد فك القفل:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,16,0,4"/>
+                <TextBlock Text="يُدخلها مستخدم مخوَّل آخر إن وُجد، وإلا يعيد المدير العام إدخال كلمة مروره."
+                           FontSize="11" Foreground="{StaticResource Brush.TextMuted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" x:Name="TxtApproverUser" Height="45" FontSize="13"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                             materialDesign:HintAssist.Hint="اسم المستخدم المعتمِد"/>
+                    <PasswordBox Grid.Column="2" x:Name="TxtApproverPassword" Height="45" FontSize="13"
+                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}"
+                                 materialDesign:HintAssist.Hint="كلمة المرور"/>
+                </Grid>
             </StackPanel>
 
             <!-- Footer Buttons -->

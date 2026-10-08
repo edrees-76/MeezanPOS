@@ -27,6 +27,7 @@ public static class AppServiceProvider
         // Authentication
         services.AddTransient<IAuthenticationService, AuthenticationService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+        services.AddScoped<PeriodUnlockApproval>();
 
         // الخدمات المالية — Scoped لمنع تعارض المعاملات وقفل قاعدة البيانات (SQLite Deadlock)
         services.AddScoped<ILedgerService, LedgerService>();
