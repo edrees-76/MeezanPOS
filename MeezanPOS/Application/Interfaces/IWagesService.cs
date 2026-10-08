@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MeezanPOS.Application.Services;
 using MeezanPOS.Domain.Entities;
 
 namespace MeezanPOS.Application.Interfaces;
+
+/// <summary>صرف مستحقات عامل نقداً: من درج الكاشير (على يومية اليوم) أو كمصروف عام من نقدية المطعم.</summary>
+public sealed record WorkerPaymentRequest(
+    int WorkerId, string WorkerName, decimal Amount, DateTime Date, string? Notes, bool FromCashier);
 
 public class WorkerWageSummary
 {
@@ -51,7 +56,8 @@ public interface IWagesService
     Task DeleteTransactionAsync(int transactionId, string reason, string deletedBy, int? deletedByUserId);
     Task<List<WorkerLedgerEntry>> GetWorkerLedgerAsync(int workerId);
     Task<List<WorkerWageSummary>> GetWorkerSummariesAsync();
-    
+    Task<OperationResult> PayWorkerAsync(WorkerPaymentRequest request);
+
     // التوافق التاريخي مع بقية أجزاء النظام
     Task<List<string>> GetUniqueWorkerNamesAsync();
 }

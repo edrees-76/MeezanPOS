@@ -18,6 +18,8 @@ namespace MeezanPOS.Presentation.Views
 {
     public partial class TransactionDetailsViewWindow : Window, INotifyPropertyChanged
     {
+        private readonly MeezanPOS.Application.Services.Queries.ITransactionSourceQueryService _queries
+            = new MeezanPOS.Application.Services.Queries.TransactionSourceQueryService();
         private CashMovement? _cashMovement;
         private readonly string _sourceType;
         private readonly int _sourceId;
@@ -190,13 +192,10 @@ namespace MeezanPOS.Presentation.Views
             IsLoading = true;
             try
             {
-                using var outerDb = new AppDbContext();
-
                 // 1. Try to load the corresponding CashMovement if not already loaded
                 if (_cashMovement == null && _sourceId > 0 && !string.IsNullOrEmpty(_sourceType))
                 {
-                    _cashMovement = await outerDb.CashMovements
-                        .FirstOrDefaultAsync(m => m.SourceType == _sourceType && m.SourceId == _sourceId);
+                    _cashMovement = await _queries.GetCashMovementAsync(_sourceType, _sourceId);
                 }
 
                 if (_cashMovement != null)
@@ -208,7 +207,7 @@ namespace MeezanPOS.Presentation.Views
                     CashMovementTypeString = _cashMovement.Type == CashMovementType.CashIn ? "وارد (+)" : "صادر (-)";
                     CashMovementBalanceAfterString = $"{_cashMovement.BalanceAfter:N2} د.ل";
                     CashMovementStatusString = _cashMovement.IsReversed ? "معكوسة" : "سارية";
-                    CashMovementStatusColor = _cashMovement.IsReversed 
+                    CashMovementStatusColor = _cashMovement.IsReversed
                         ? new SolidColorBrush(Color.FromRgb(220, 38, 38)) // Red 600
                         : new SolidColorBrush(Color.FromRgb(22, 163, 74)); // Green 600
                     CashMovementNotes = string.IsNullOrEmpty(_cashMovement.Notes) ? "لا يوجد" : _cashMovement.Notes;
@@ -233,8 +232,7 @@ namespace MeezanPOS.Presentation.Views
                         HeaderColor = new SolidColorBrush(Color.FromRgb(225, 29, 72)); // Rose 600
                     }
 
-                    var expense = await outerDb.GeneralExpenses
-                        .FirstOrDefaultAsync(x => x.Id == _sourceId);
+                    var expense = await _queries.GetGeneralExpenseAsync(_sourceId);
 
                     if (expense != null)
                     {
@@ -247,7 +245,7 @@ namespace MeezanPOS.Presentation.Views
                         ExpenseWorkerName = expense.WorkerName ?? "غير محدد";
                         ExpenseFinancialStatusName = expense.FinancialStatus == FinancialStatus.Posted ? "معتمد" : "مسودة";
                         ExpenseDescription = string.IsNullOrEmpty(expense.Description) ? "لا يوجد بيان مدخل" : expense.Description;
-                        StatusColor = expense.FinancialStatus == FinancialStatus.Posted 
+                        StatusColor = expense.FinancialStatus == FinancialStatus.Posted
                             ? new SolidColorBrush(Color.FromRgb(22, 163, 74)) // Green 600
                             : new SolidColorBrush(Color.FromRgb(217, 119, 6)); // Amber 600
                     }
@@ -263,12 +261,7 @@ namespace MeezanPOS.Presentation.Views
                     HeaderIcon = "AccountCashOutline";
                     HeaderColor = new SolidColorBrush(Color.FromRgb(37, 99, 235)); // Blue 600
 
-                    using var db = new AppDbContext();
-                    var trans = await db.SupplierTransactions
-                        .Include(t => t.Supplier)
-                        .Include(t => t.SupplierInvoice)
-                            .ThenInclude(i => i!.Items)
-                        .FirstOrDefaultAsync(t => t.Id == _sourceId);
+                    var trans = await _queries.GetSupplierPaymentAsync(_sourceId);
 
                     if (trans != null)
                     {
@@ -284,8 +277,8 @@ namespace MeezanPOS.Presentation.Views
                             InvoiceNumber = trans.SupplierInvoice.InvoiceNumber ?? "غير محدد";
                             InvoiceDateString = trans.SupplierInvoice.InvoiceDate.ToString("yyyy/MM/dd");
                             InvoiceTotalString = $"{trans.SupplierInvoice.TotalAmount:N2} د.ل";
-                            InvoiceStatusName = trans.SupplierInvoice.Status == InvoiceStatus.Paid ? "مسددة" 
-                                              : trans.SupplierInvoice.Status == InvoiceStatus.PartiallyPaid ? "مسددة جزئياً" 
+                            InvoiceStatusName = trans.SupplierInvoice.Status == InvoiceStatus.Paid ? "مسددة"
+                                              : trans.SupplierInvoice.Status == InvoiceStatus.PartiallyPaid ? "مسددة جزئياً"
                                               : "غير مسددة";
                             InvoiceItems = trans.SupplierInvoice.Items ?? new List<SupplierInvoiceItem>();
                         }
@@ -302,23 +295,21 @@ namespace MeezanPOS.Presentation.Views
                     HeaderIcon = "HandCoinOutline";
                     HeaderColor = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald 500
 
-                    using var db = new AppDbContext();
                     // محاولة جلب الدين حسب الـ ID
                     // ملاحظة: إذا كان الـ sourceType هو "Bank" أو "Cash" فهذا يعني أنه تمويل يدوي (في النسخة الجديدة)
                     // والـ sourceId هو الـ BankAccountId أو null.
                     // لكن في كشف حساب الشريك، الـ ReferenceNumber هو ID الدين.
                     // والـ SourceId في الـ DTO يتم تعبئته من d.SourceId.
-                    
+
                     // لحظة، في GetPartnerStatementAsync:
                     // SourceType = d.SourceType,
                     // SourceId = d.SourceId,
                     // ReferenceNumber = d.Id.ToString()
-                    
+
                     // إذاً يجب أن أستخدم d.Id وهو موجود في الـ ReferenceNumber.
                     // لكن النافذة تستقبل _sourceId.
-                    
-                    var debt = await db.OwnerDebts
-                        .FirstOrDefaultAsync(x => x.Id == _sourceId);
+
+                    var debt = await _queries.GetOwnerDebtAsync(_sourceId);
 
                     if (debt != null)
                     {
@@ -327,14 +318,14 @@ namespace MeezanPOS.Presentation.Views
                         PaymentDateString = debt.TransactionDate.ToString("yyyy/MM/dd");
                         ReceiptNumber = debt.ExpenseCategory ?? "تمويل تشغيلي";
                         PaymentNotes = string.IsNullOrEmpty(debt.Notes) ? "لا توجد ملاحظات" : debt.Notes;
-                        
+
                         PaymentMethod = debt.PaymentMethod == "Transfer" ? "تحويل مصرفي" : (debt.PaymentMethod == "Cash" ? "نقدي" : "-");
                         TransferReference = debt.TransferReference ?? "غير محدد";
-                        
+
                         // إذا كان تمويلاً بنكياً، نحاول معرفة البنك
                         if (debt.SourceType == "Bank" && debt.SourceId.HasValue)
                         {
-                            var bank = await db.BankAccounts.FirstOrDefaultAsync(b => b.Id == debt.SourceId.Value);
+                            var bank = await _queries.GetBankAccountAsync(debt.SourceId.Value);
                             if (bank != null)
                             {
                                 InvoiceNumber = bank.FriendlyName; // استعارة الحقل لاسم البنك
@@ -354,21 +345,18 @@ namespace MeezanPOS.Presentation.Views
                     HeaderIcon = "CashCheck";
                     HeaderColor = new SolidColorBrush(Color.FromRgb(245, 158, 11)); // Amber 500
 
-                    using var db = new AppDbContext();
-                    var sett = await db.OwnerDebtSettlements
-                        .Include(s => s.BankAccount)
-                        .FirstOrDefaultAsync(s => s.Id == _sourceId);
+                    var sett = await _queries.GetSettlementAsync(_sourceId);
 
                     if (sett != null)
                     {
                         SupplierName = sett.PartnerName;
                         PaymentAmountString = $"{sett.Amount:N2} د.ل";
                         PaymentDateString = sett.SettlementDate.ToString("yyyy/MM/dd");
-                        ReceiptNumber = sett.SettlementSource == OwnerDebtSettlementSource.Bank ? "تسوية مصرفية" 
-                                      : sett.SettlementSource == OwnerDebtSettlementSource.PettyCash ? "تسوية من الخزينة" 
+                        ReceiptNumber = sett.SettlementSource == OwnerDebtSettlementSource.Bank ? "تسوية مصرفية"
+                                      : sett.SettlementSource == OwnerDebtSettlementSource.PettyCash ? "تسوية من الخزينة"
                                       : "تسوية من الكاشير";
                         PaymentNotes = string.IsNullOrEmpty(sett.Notes) ? "لا توجد ملاحظات" : sett.Notes;
-                        
+
                         if (sett.BankAccount != null)
                         {
                             InvoiceNumber = sett.BankAccount.FriendlyName;
@@ -387,9 +375,7 @@ namespace MeezanPOS.Presentation.Views
                     HeaderIcon = "CalendarSyncOutline";
                     HeaderColor = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald 500
 
-                    using var db = new AppDbContext();
-                    var journal = await db.DailyJournals
-                        .FirstOrDefaultAsync(x => x.Id == _sourceId);
+                    var journal = await _queries.GetJournalAsync(_sourceId);
 
                     if (journal != null)
                     {
@@ -502,7 +488,7 @@ namespace MeezanPOS.Presentation.Views
             {
 
                 var filePath = System.IO.Path.Combine(
-                    System.IO.Path.GetTempPath(), 
+                    System.IO.Path.GetTempPath(),
                     $"إيصال_حركة_{_cashMovement?.Id ?? _sourceId}_{System.DateTime.Now:yyyyMMdd_HHmmss}.pdf");
 
                 QuestPDF.Fluent.Document.Create(container =>
@@ -547,9 +533,9 @@ namespace MeezanPOS.Presentation.Views
                                 col.Item().Text($"المصدر: يومية عمل ({ReceiptNumber})");
                                 col.Item().Text($"الكاشير: {SupplierName}");
                             }
-                            
+
                             col.Item().Text($"البيان: {CashMovementNotes}").FontSize(8.5f).FontColor(QuestPDF.Helpers.Colors.Grey.Darken2);
-                            
+
                             col.Item().PaddingVertical(8);
                             col.Item().LineHorizontal(1).LineColor(QuestPDF.Helpers.Colors.Grey.Lighten2);
                             col.Item().AlignCenter().Text("شكراً لتعاملكم معنا").FontSize(8).Italic();
@@ -572,19 +558,27 @@ namespace MeezanPOS.Presentation.Views
             }
         }
 
-        private void GoToSource_Click(object sender, RoutedEventArgs e)
+        private async void GoToSource_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await GoToSourceAsync();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "تعذر فتح مصدر الحركة {SourceType}#{SourceId}", _sourceType, _sourceId);
+                Dialogs.Show($"تعذر فتح مصدر الحركة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async Task GoToSourceAsync()
         {
             var mainWindow = System.Windows.Application.Current.MainWindow;
             if (mainWindow?.DataContext is MainViewModel mainVM)
             {
                 if (_sourceType == "DailyJournal")
                 {
-                    using var db = new AppDbContext();
-                    var journal = db.DailyJournals
-                        .Include(j => j.ExpenseItems)
-                        .Include(j => j.BankingItems)
-                        .Include(j => j.Adjustments)
-                        .FirstOrDefault(x => x.Id == _sourceId);
+                    var journal = await _queries.GetJournalWithItemsAsync(_sourceId);
 
                     if (journal != null)
                     {
@@ -613,8 +607,7 @@ namespace MeezanPOS.Presentation.Views
                 }
                 else if (_sourceType == "SupplierTransaction")
                 {
-                    using var db = new AppDbContext();
-                    var trans = db.SupplierTransactions.FirstOrDefault(x => x.Id == _sourceId);
+                    var trans = await _queries.GetSupplierPaymentAsync(_sourceId);
                     if (trans != null && trans.SupplierId > 0)
                     {
                         var supplierVM = new SupplierDetailsViewModel(trans.SupplierId, SupplierName);

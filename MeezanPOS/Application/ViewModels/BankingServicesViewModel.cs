@@ -240,6 +240,8 @@ public partial class BankingServicesViewModel : ObservableObject
     [ObservableProperty]
     private DateTime debtDate = DateTime.Now;
 
+    private readonly MeezanPOS.Application.Services.Queries.IBankingQueryService _bankingQueries = new MeezanPOS.Application.Services.Queries.BankingQueryService();
+
     public BankingServicesViewModel()
     {
         _bankService = AppServiceProvider.Resolve<IBankService>();
@@ -999,7 +1001,7 @@ public partial class BankingServicesViewModel : ObservableObject
 
             var groupedCardSales = cardSales
                 .GroupBy(t => t.TransactionDate.Date)
-                .Select(g => 
+                .Select(g =>
                 {
                     var lastTx = g.OrderBy(t => t.Id).Last();
                     return new BankTransaction
@@ -1030,7 +1032,7 @@ public partial class BankingServicesViewModel : ObservableObject
                     currentBalance += tx.Amount;
                 else
                     currentBalance -= tx.Amount;
-                
+
                 tx.BalanceAfter = currentBalance;
             }
 
@@ -1203,32 +1205,9 @@ public partial class BankingServicesViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var targetDate = transaction.TransactionDate.Date;
-            var bankAccountId = transaction.BankAccountId;
-
-            // جلب بنود المعاملات البنكية التفصيلية من الورديات لنفس اليوم ولنفس الحساب
-            var details = await Task.Run(() =>
-            {
-                using var context = new AppDbContext();
-                return context.BankingItems
-                    .Include(b => b.DailyJournal)
-                    .Where(b => b.BankAccountId == bankAccountId 
-                             && !b.IsDeleted 
-                             && b.DailyJournal != null 
-                             && b.DailyJournal.JournalDate.Date == targetDate 
-                             && !b.DailyJournal.IsDeleted)
-                    .Select(b => new BankingItemDetailDto
-                    {
-                        Id = b.Id,
-                        CashierName = b.DailyJournal!.EmployeeName,
-                        ShiftName = b.DailyJournal!.ShiftType == ShiftType.FirstShift ? "الوردية الأولى" : b.DailyJournal!.ShiftType == ShiftType.SecondShift ? "الوردية الثانية" : "يوم كامل",
-                        Amount = b.Amount,
-                        InvoiceNumber = b.Description ?? "غير محدد",
-                        TransferReference = b.ReferenceNumber ?? "غير محدد",
-                        IsReconciled = b.IsReconciled
-                    })
-                    .ToList();
-            });
+            // بنود المعاملات البنكية التفصيلية من الورديات لنفس اليوم ولنفس الحساب
+            // خارج خيط الواجهة: مزود SQLite ينفذ الاستعلامات غير المتزامنة بشكل متزامن فعلياً
+            var details = await Task.Run(() => _bankingQueries.GetShiftBankingDetailsAsync(transaction.BankAccountId, transaction.TransactionDate));
 
             _allTransactionDetails = details;
 
@@ -1268,17 +1247,7 @@ public partial class BankingServicesViewModel : ObservableObject
         if (item == null) return;
         try
         {
-            await Task.Run(() =>
-            {
-                using var context = new AppDbContext();
-                var dbItem = context.BankingItems.FirstOrDefault(b => b.Id == item.Id);
-                if (dbItem != null)
-                {
-                    dbItem.IsReconciled = item.IsReconciled;
-                    dbItem.UpdatedAt = DateTime.UtcNow;
-                    context.SaveChanges();
-                }
-            });
+            await Task.Run(() => _bankingQueries.SetReconciledAsync(item.Id, item.IsReconciled));
         }
         catch (Exception ex)
         {
@@ -1314,10 +1283,10 @@ public partial class BankingServicesViewModel : ObservableObject
             string dateStr = SelectedTransactionDate.ToString("yyyy-MM-dd");
             string timeStr = DateTime.Now.ToString("HH_mm_ss");
             string fileName = $"{bankName} - {dateStr} - {timeStr}.pdf";
-            
+
             var filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
             report.GeneratePdf(filePath);
-            
+
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(filePath) { UseShellExecute = true });
         }
         catch (Exception ex)

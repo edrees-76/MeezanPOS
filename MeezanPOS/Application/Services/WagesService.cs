@@ -14,11 +14,13 @@ public class WagesService : IWagesService
 {
     private readonly AppDbContext _context;
     private readonly ISessionService? _sessionService;
+    private readonly ICashLedgerService? _cashLedger;
 
-    public WagesService(AppDbContext context, ISessionService? sessionService = null)
+    public WagesService(AppDbContext context, ISessionService? sessionService = null, ICashLedgerService? cashLedger = null)
     {
         _context = context;
         _sessionService = sessionService;
+        _cashLedger = cashLedger;
     }
 
     // --- إدارة بيانات العمال (Worker CRUD) ---
@@ -138,7 +140,7 @@ public class WagesService : IWagesService
             if (att.WorkerId == 0 || att.WorkerId == null) continue;
 
             att.WorkDate = targetDate;
-            
+
             // حساب الاستحقاق الفعلي بناء على حالة الحضور
             att.AccruedWage = att.Status switch
             {
@@ -169,9 +171,9 @@ public class WagesService : IWagesService
 
             // 1. حركة استحقاق الأجر (WageAccrual)
             var existingAccrual = await _context.WorkerTransactions
-                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
-                                          t.AttendanceId == att.Id && 
-                                          t.Type == WorkerTransactionType.WageAccrual && 
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value &&
+                                          t.AttendanceId == att.Id &&
+                                          t.Type == WorkerTransactionType.WageAccrual &&
                                           !t.IsDeleted);
 
             if (att.Status == AttendanceStatus.Present || att.Status == AttendanceStatus.HalfDay)
@@ -211,9 +213,9 @@ public class WagesService : IWagesService
 
             // 2. حركة الخصم (Deduction)
             var existingDeduction = await _context.WorkerTransactions
-                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
-                                          t.AttendanceId == att.Id && 
-                                          t.Type == WorkerTransactionType.Deduction && 
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value &&
+                                          t.AttendanceId == att.Id &&
+                                          t.Type == WorkerTransactionType.Deduction &&
                                           !t.IsDeleted);
 
             if (att.DeductionAmount > 0)
@@ -252,9 +254,9 @@ public class WagesService : IWagesService
 
             // 3. حركة تسوية السلفة (Advance Settlement)
             var existingAdvanceSettlement = await _context.WorkerTransactions
-                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value && 
-                                          t.AttendanceId == att.Id && 
-                                          t.Type == WorkerTransactionType.Adjustment && 
+                .FirstOrDefaultAsync(t => t.WorkerId == att.WorkerId.Value &&
+                                          t.AttendanceId == att.Id &&
+                                          t.Type == WorkerTransactionType.Adjustment &&
                                           t.Notes != null && t.Notes.Contains("تسوية سلفة") &&
                                           !t.IsDeleted);
 
@@ -320,6 +322,92 @@ public class WagesService : IWagesService
         }
 
         await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// كان هذا الكود داخل WagesManagementViewModel. العملية كلها في معاملة واحدة:
+    /// الصرف من الكاشير يُسجل بنداً في مصروفات يومية اليوم المسودة (فيُنقص نقدها المتوقع)،
+    /// والصرف من نقدية المطعم يُسجل مصروفاً عاماً وحركة نقدية صادرة.
+    /// </summary>
+    public async Task<OperationResult> PayWorkerAsync(WorkerPaymentRequest request)
+    {
+        if (request.Amount <= 0) return OperationResult.Fail("يرجى إدخال مبلغ صحيح أكبر من الصفر للصرف.", "تنبيه");
+
+        await using var payTx = await _context.Database.BeginOrJoinTransactionAsync();
+
+        var paymentDay = request.Date.Date;
+        if (await PeriodLock.IsDateLockedAsync(_context, paymentDay))
+            return OperationResult.Fail(PeriodLock.LockedMessage, "تنبيه");
+
+        var description = !string.IsNullOrWhiteSpace(request.Notes)
+            ? request.Notes.Trim()
+            : $"صرف مستحقات للعامل {request.WorkerName}";
+
+        if (request.FromCashier)
+        {
+            // على يومية مسودة بتاريخ الصرف نفسه (آخر وردية في ذلك اليوم).
+            // سابقاً كانت تُضاف لآخر مسودة أياً كان تاريخها، فتظهر في يوم قديم.
+            var nextDay = paymentDay.AddDays(1);
+            var openJournal = await _context.DailyJournals
+                .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= paymentDay && j.JournalDate < nextDay)
+                .OrderByDescending(j => j.ShiftType)
+                .ThenByDescending(j => j.Id)
+                .FirstOrDefaultAsync();
+
+            if (openJournal == null)
+                return OperationResult.Fail($"لا توجد يومية مسودة بتاريخ {paymentDay:yyyy/MM/dd} لتسجيل الصرف عليها. أنشئ يومية هذا اليوم أولاً أو اصرف كـ (مصروف عام).", "تنبيه");
+
+            // المصروف يُنقص النقد المتوقع لليومية، فيجب أن يدخل في إجمالي مصروفاتها
+            openJournal.TotalExpenses += request.Amount;
+            openJournal.UpdatedAt = DateTime.UtcNow;
+
+            _context.DailyExpenseItems.Add(new DailyExpenseItem
+            {
+                DailyJournalId = openJournal.Id,
+                SequenceNumber = await _context.DailyExpenseItems.CountAsync(e => e.DailyJournalId == openJournal.Id) + 1,
+                Amount = request.Amount,
+                Category = "يومية عامل",
+                CategoryName = "يومية عامل",
+                Description = description,
+                Type = ExpenseType.WorkerWage,
+                WorkerName = request.WorkerName,
+                WorkerId = request.WorkerId,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        else
+        {
+            var cashLedger = _cashLedger
+                ?? throw new InvalidOperationException("خدمة دفتر النقدية غير متاحة لتسجيل الصرف من نقدية المطعم.");
+
+            var generalExpense = new GeneralExpense
+            {
+                ExpenseType = GeneralExpenseType.Salaries,
+                Amount = request.Amount,
+                PaymentDate = request.Date,
+                PaymentMethod = PaymentMethodType.Cash,
+                Description = description,
+                WorkerName = request.WorkerName,
+                WorkerId = request.WorkerId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.GeneralExpenses.Add(generalExpense);
+            await _context.SaveChangesAsync();
+
+            // الصرف من نقدية المطعم يُخرج نقداً فعلياً (مثل بقية المصروفات العامة النقدية)
+            await cashLedger.RecordMovementAsync(
+                CashMovementType.CashOut,
+                request.Amount,
+                SourceTypes.GeneralExpense,
+                generalExpense.Id,
+                $"مصروف عام: رواتب | {generalExpense.Description}",
+                paymentDay);
+        }
+
+        await _context.SaveChangesAsync();
+        await payTx.CommitAsync();
+        return OperationResult.Ok;
     }
 
     public async Task DeleteTransactionAsync(int transactionId, string reason, string deletedBy, int? deletedByUserId)
@@ -441,7 +529,7 @@ public class WagesService : IWagesService
     public async Task<List<WorkerWageSummary>> GetWorkerSummariesAsync()
     {
         var workers = await _context.Workers.AsNoTracking().Where(w => !w.IsDeleted).ToListAsync();
-        
+
         // الجمع في الذاكرة بالنوع decimal: SQLite لا يجمع decimal، والتحويل إلى double كان يُدخل أخطاء تقريب في الأرصدة
         var balances = (await _context.WorkerTransactions
             .AsNoTracking()

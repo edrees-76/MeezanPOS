@@ -162,7 +162,7 @@ public partial class MainViewModel : ObservableObject
                 Title = "ميزان للمالية - إدارة الموردين";
                 SelectedNavIndex = 3;
                 var supplierVM = new SupplierListViewModel();
-                supplierVM.OnViewSupplierDetails = (supplier) => 
+                supplierVM.OnViewSupplierDetails = (supplier) =>
                 {
                     Title = $"مورد: {supplier.Name} - الفواتير وكشف الحساب";
                     var detailsVM = new SupplierDetailsViewModel(supplier.Id, supplier.Name);
@@ -176,13 +176,12 @@ public partial class MainViewModel : ObservableObject
                 SelectedNavIndex = 4;
                 var expenseVM = new ExpenseManagementViewModel();
                 expenseVM.OnBack = () => Navigate("Dashboard");
-                expenseVM.OnEditJournal = (journalId) => 
+                expenseVM.OnEditJournal = async (journalId) =>
                 {
                     try
                     {
-                        using var db = new MeezanPOS.Infrastructure.Data.AppDbContext();
-                        var journal = db.DailyJournals.FirstOrDefault(j => j.Id == journalId);
-                        if (journal != null && (journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Posted || journal.FinancialStatus == MeezanPOS.Domain.Enums.FinancialStatus.Archived))
+                        var status = await MeezanPOS.Application.Services.Queries.LookupService.Default.GetJournalStatusAsync(journalId);
+                        if (status == MeezanPOS.Domain.Enums.FinancialStatus.Posted || status == MeezanPOS.Domain.Enums.FinancialStatus.Archived)
                         {
                             Title = "ميزان للمالية - عرض حركة يومية مرحّلة";
                         }
@@ -191,8 +190,10 @@ public partial class MainViewModel : ObservableObject
                             Title = "ميزان للمالية - تعديل حركة يومية";
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        // العنوان فقط: نكمل فتح اليومية بالعنوان الافتراضي
+                        Serilog.Log.Warning(ex, "تعذر قراءة حالة اليومية {JournalId} لعنوان الشاشة", journalId);
                         Title = "ميزان للمالية - تعديل حركة يومية";
                     }
                     var journalVM = new DailyJournalViewModel(journalId);

@@ -182,11 +182,7 @@ namespace MeezanPOS.Application.ViewModels
         {
             WorkersList.Clear();
 
-            using var db = new AppDbContext();
-            var activeWorkers = await db.Workers
-                .Where(w => w.IsActive && !w.IsDeleted)
-                .OrderBy(w => w.WorkerName)
-                .ToListAsync();
+            var activeWorkers = await MeezanPOS.Application.Services.Queries.LookupService.Default.GetActiveWorkersAsync();
 
             TotalActiveWorkers = activeWorkers.Count;
 
@@ -249,9 +245,9 @@ namespace MeezanPOS.Application.ViewModels
             if (unselectedWorkers.Any())
             {
                 var names = string.Join("، ", unselectedWorkers.Select(w => w.WorkerName));
-                Dialogs.Show($"يرجى تحديد حالة الحضور أو الغياب للعمال التاليين أولاً:\n{names}", 
-                                "تنبيه التحقق من الحضور", 
-                                MessageBoxButton.OK, 
+                Dialogs.Show($"يرجى تحديد حالة الحضور أو الغياب للعمال التاليين أولاً:\n{names}",
+                                "تنبيه التحقق من الحضور",
+                                MessageBoxButton.OK,
                                 MessageBoxImage.Warning);
                 return;
             }

@@ -101,12 +101,7 @@ public partial class FreeOrdersReturnsViewModel : ObservableObject
     public async Task LoadDataAsync()
     {
         IsLoading = true;
-        using var db = new AppDbContext();
-        _allJournals = await db.DailyJournals
-            .AsNoTracking()
-            .Include(j => j.Adjustments)
-            .OrderByDescending(j => j.JournalDate)
-            .ToListAsync();
+        _allJournals = await new MeezanPOS.Application.Services.Queries.JournalExpenseQueryService().GetJournalsWithAdjustmentsAsync();
         ApplyFilters();
         IsLoading = false;
     }

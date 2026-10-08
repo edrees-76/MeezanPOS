@@ -112,7 +112,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
 
     // --- البيانات ---
     public ObservableCollection<DailyExpenseSummaryItem> DailySummaries { get; } = new();
-    
+
     // --- تفاصيل اليوم المعروض ---
     [ObservableProperty]
     private DateTime selectedDateDetails;
@@ -135,8 +135,11 @@ public partial class ExpenseManagementViewModel : ObservableObject
     [ObservableProperty]
     private decimal totalFilteredExpensesAmount;
 
-    public ExpenseManagementViewModel()
+    private readonly MeezanPOS.Application.Services.Queries.IJournalExpenseQueryService _queries;
+
+    public ExpenseManagementViewModel(MeezanPOS.Application.Services.Queries.IJournalExpenseQueryService? queries = null)
     {
+        _queries = queries ?? new MeezanPOS.Application.Services.Queries.JournalExpenseQueryService();
         InitializeFilters();
         LoadCashiers();
         LoadExpenses();
@@ -155,13 +158,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            var names = db.DailyJournals
-                .Where(j => !string.IsNullOrEmpty(j.EmployeeName))
-                .Select(j => j.EmployeeName)
-                .Distinct()
-                .OrderBy(n => n)
-                .ToList();
+            var names = _queries.GetCashierNames();
 
             Cashiers.Clear();
             Cashiers.Add("الكل");
@@ -172,7 +169,8 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ في تحميل الكاشيرية: {ex.Message}");
+            // فلتر الكاشير اختياري: الشاشة تعمل بدونه، لكن يجب أن يُسجل السبب
+            Serilog.Log.Warning(ex, "تعذر تحميل أسماء الكاشيرية لفلتر المصروفات");
         }
     }
 
@@ -181,24 +179,10 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-
             // 1) جلب كل الأيام التي فيها مصاريف لبناء تسلسل ثابت عالمي للتبويب النشط
-            var journalsForSeq = db.DailyJournals
-                .Include(j => j.ExpenseItems)
-                .AsNoTracking();
-
-            if (ShowPostedArchive)
-            {
-                journalsForSeq = journalsForSeq.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
-            }
-            else
-            {
-                journalsForSeq = journalsForSeq.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
-            }
+            var journalsForSeq = _queries.GetJournalsWithExpenses(ShowPostedArchive);
 
             var allDays = journalsForSeq
-                .ToList()
                 .GroupBy(j => j.JournalDate.Date)
                 .Where(g => g.Sum(j => j.ExpenseItems.Sum(e => e.Amount)) > 0)
                 .OrderBy(g => g.Key)
@@ -215,30 +199,8 @@ public partial class ExpenseManagementViewModel : ObservableObject
                 endFilter = startFilter.AddMonths(1).AddDays(-1);
             }
 
-            var query = db.DailyJournals
-                .Include(j => j.ExpenseItems)
-                .Where(j => j.JournalDate >= startFilter && j.JournalDate <= endFilter);
-
-            if (ShowPostedArchive)
-            {
-                query = query.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
-            }
-            else
-            {
-                query = query.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
-            }
-
-            if (SelectedShiftType.HasValue)
-            {
-                query = query.Where(j => j.ShiftType == SelectedShiftType.Value);
-            }
-
-            if (!string.IsNullOrEmpty(SelectedCashierName) && SelectedCashierName != "الكل")
-            {
-                query = query.Where(j => j.EmployeeName == SelectedCashierName);
-            }
-
-            var journals = query.ToList();
+            var journals = _queries.GetJournalsWithExpenses(new MeezanPOS.Application.Services.Queries.JournalExpenseFilter(
+                ShowPostedArchive, startFilter, endFilter, SelectedShiftType, SelectedCashierName));
 
             var dailyGroup = journals
                 .GroupBy(j => j.JournalDate.Date)
@@ -269,7 +231,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ في تحميل المصروفات: {ex.Message}");
+            Serilog.Log.Error(ex, "خطأ في تحميل المصروفات");
             Dialogs.Show($"حدث خطأ أثناء تحميل المصروفات:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
@@ -289,8 +251,6 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            
             // تحديث العنوان بناءً على حالة الأرشيف
             if (ShowPostedArchive)
             {
@@ -301,31 +261,9 @@ public partial class ExpenseManagementViewModel : ObservableObject
                 SelectedDateDetailsTitle = "تفاصيل مصاريف يوم: ";
             }
 
-            var query = db.DailyJournals
-                .Include(j => j.ExpenseItems)
-                .ThenInclude(e => e.Supplier)
-                .Where(j => j.JournalDate.Date == date.Date);
-
-            if (ShowPostedArchive)
-            {
-                query = query.Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived);
-            }
-            else
-            {
-                query = query.Where(j => j.FinancialStatus != FinancialStatus.Posted && j.FinancialStatus != FinancialStatus.Archived);
-            }
-
-            if (SelectedShiftType.HasValue)
-            {
-                query = query.Where(j => j.ShiftType == SelectedShiftType.Value);
-            }
-
-            if (!string.IsNullOrEmpty(SelectedCashierName) && SelectedCashierName != "الكل")
-            {
-                query = query.Where(j => j.EmployeeName == SelectedCashierName);
-            }
-
-            var journals = query.ToList();
+            var journals = _queries.GetJournalsWithExpenses(new MeezanPOS.Application.Services.Queries.JournalExpenseFilter(
+                ShowPostedArchive, date.Date, date.Date.AddDays(1).AddTicks(-1), SelectedShiftType, SelectedCashierName,
+                IncludeSuppliers: true));
 
             DayShifts.Clear();
             decimal grandTotal = 0;
@@ -441,16 +379,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         try
         {
-            // الأعمدة المطلوبة فقط، بلا تحميل بنود كل اليوميات المؤرشفة، وخارج خيط الواجهة
-            var journals = await Task.Run(async () =>
-            {
-                await using var db = new AppDbContext();
-                return await db.DailyJournals
-                    .AsNoTracking()
-                    .Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)
-                    .Select(j => new { j.JournalDate, j.FinancialStatus, j.TotalSales, j.BankingTotal, j.TotalExpenses })
-                    .ToListAsync();
-            });
+            var journals = await _queries.GetArchivedJournalTotalsAsync();
 
             var grouped = journals
                 .GroupBy(j => new { j.JournalDate.Year, j.JournalDate.Month })
@@ -487,7 +416,9 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ في تحميل كروت أشهر الأرشيف: {ex.Message}");
+            // كان الخطأ يُكتب في نافذة التصحيح فقط فتظهر شاشة الأرشيف فارغة بلا تفسير
+            Serilog.Log.Error(ex, "خطأ في تحميل كروت أشهر الأرشيف");
+            Dialogs.Show($"تعذر تحميل أشهر الأرشيف:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -503,7 +434,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
             }
 
             string pdfPath = Path.Combine(Path.GetTempPath(), $"ExpenseSummaries_{DateTime.Now.Ticks}.pdf");
-            
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>
@@ -551,10 +482,10 @@ public partial class ExpenseManagementViewModel : ObservableObject
             {
                 column.Item().Text("تقرير المصروفات الإجمالي").FontSize(20).SemiBold().FontColor(Colors.Blue.Darken2);
                 column.Item().Text($"من تاريخ: {DateFrom:yyyy/MM/dd} إلى تاريخ: {DateTo:yyyy/MM/dd}").FontSize(14);
-                
+
                 string shiftName = SelectedShiftType.HasValue ? DailyJournalViewModel.GetShiftDisplayName(SelectedShiftType.Value) : "الكل";
                 string cashierName = string.IsNullOrEmpty(SelectedCashierName) ? "الكل" : SelectedCashierName;
-                
+
                 column.Item().Text($"الوردية: {shiftName}  |  الكاشير: {cashierName}").FontSize(12).FontColor(Colors.Grey.Darken2);
             });
         });
@@ -599,7 +530,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         try
         {
             string pdfPath = Path.Combine(Path.GetTempPath(), $"Expenses_{SelectedDateDetails:yyyyMMdd}_{DateTime.Now.Ticks}.pdf");
-            
+
             var document = Document.Create(container =>
             {
                 container.Page(page =>

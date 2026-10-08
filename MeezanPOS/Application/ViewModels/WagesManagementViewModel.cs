@@ -34,7 +34,7 @@ public partial class WagesManagementViewModel : ObservableObject
 
     public ObservableCollection<ShiftOption> ShiftTypes { get; } = new();
 
-    public System.Collections.Generic.List<AttendanceStatus> AttendanceStatuses { get; } = 
+    public System.Collections.Generic.List<AttendanceStatus> AttendanceStatuses { get; } =
         System.Enum.GetValues(typeof(AttendanceStatus)).Cast<AttendanceStatus>().ToList();
 
     // ==========================================
@@ -171,7 +171,7 @@ public partial class WagesManagementViewModel : ObservableObject
             // 1. تحميل قائمة ملفات العمال (التبويب الثاني)
             var workers = await _wagesService.GetAllWorkersAsync(includeInactive: true);
             _allWorkers = workers;
-            
+
             // 2. تحميل ملخصات أرصدة العمال (التبويب الثالث)
             var summaries = await _wagesService.GetWorkerSummariesAsync();
             _allSummaries = summaries;
@@ -272,7 +272,7 @@ public partial class WagesManagementViewModel : ObservableObject
         try
         {
             await _wagesService.SaveAttendanceBatchAsync(AttendanceList.ToList());
-            
+
             // تحديث الأرصدة والملخصات
             await LoadAllDataAsync();
 
@@ -408,7 +408,7 @@ public partial class WagesManagementViewModel : ObservableObject
     private bool FilterLedgerEntries(object item)
     {
         if (item is not WorkerLedgerEntry entry) return false;
-        
+
         bool matchesFilter = ActiveTimelineFilter switch
         {
             WorkerLedgerFilter.All => true,
@@ -453,7 +453,7 @@ public partial class WagesManagementViewModel : ObservableObject
         try
         {
             var ledger = await _wagesService.GetWorkerLedgerAsync(SelectedWorkerSummary.WorkerId);
-            
+
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
                 WorkerLedger.Clear();
@@ -507,85 +507,19 @@ public partial class WagesManagementViewModel : ObservableObject
 
         try
         {
-            using var scope = AppServiceProvider.Provider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-            await using var payTx = await db.Database.BeginOrJoinTransactionAsync();
+            var result = await _wagesService.PayWorkerAsync(new WorkerPaymentRequest(
+                SelectedWorkerSummary.WorkerId,
+                SelectedWorkerSummary.WorkerName,
+                InputPaymentAmount,
+                InputPaymentDate,
+                InputPaymentNotes,
+                FromCashier: SelectedPaymentSource == "Cashier"));
 
-            var paymentDay = InputPaymentDate.Date;
-            if (await PeriodLock.IsDateLockedAsync(db, paymentDay))
+            if (!result.Success)
             {
-                Dialogs.Show(PeriodLock.LockedMessage, "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show(result.Error!, result.ErrorTitle ?? "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-
-            if (SelectedPaymentSource == "Cashier")
-            {
-                // صرف من صندوق الكاشير: على يومية مسودة بتاريخ الصرف نفسه (آخر وردية في ذلك اليوم).
-                // سابقاً كانت تُضاف لآخر مسودة أياً كان تاريخها، فتظهر في يوم قديم.
-                var nextDay = paymentDay.AddDays(1);
-                var openJournal = await db.DailyJournals
-                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= paymentDay && j.JournalDate < nextDay)
-                    .OrderByDescending(j => j.ShiftType)
-                    .ThenByDescending(j => j.Id)
-                    .FirstOrDefaultAsync();
-
-                if (openJournal == null)
-                {
-                    Dialogs.Show($"لا توجد يومية مسودة بتاريخ {paymentDay:yyyy/MM/dd} لتسجيل الصرف عليها. أنشئ يومية هذا اليوم أولاً أو اصرف كـ (مصروف عام).", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // المصروف يُنقص النقد المتوقع لليومية، فيجب أن يدخل في إجمالي مصروفاتها
-                openJournal.TotalExpenses += InputPaymentAmount;
-                openJournal.UpdatedAt = DateTime.UtcNow;
-
-                var expenseItem = new DailyExpenseItem
-                {
-                    DailyJournalId = openJournal.Id,
-                    SequenceNumber = db.DailyExpenseItems.Count(e => e.DailyJournalId == openJournal.Id) + 1,
-                    Amount = InputPaymentAmount,
-                    Category = "يومية عامل",
-                    CategoryName = "يومية عامل",
-                    Description = !string.IsNullOrWhiteSpace(InputPaymentNotes) ? InputPaymentNotes.Trim() : $"صرف مستحقات للعامل {SelectedWorkerSummary.WorkerName}",
-                    Type = ExpenseType.WorkerWage,
-                    WorkerName = SelectedWorkerSummary.WorkerName,
-                    WorkerId = SelectedWorkerSummary.WorkerId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                db.DailyExpenseItems.Add(expenseItem);
-            }
-            else
-            {
-                // صرف كـ مصروف عام من نقدية المطعم
-                var generalExpense = new GeneralExpense
-                {
-                    ExpenseType = GeneralExpenseType.Salaries,
-                    Amount = InputPaymentAmount,
-                    PaymentDate = InputPaymentDate,
-                    PaymentMethod = PaymentMethodType.Cash,
-                    Description = !string.IsNullOrWhiteSpace(InputPaymentNotes) ? InputPaymentNotes.Trim() : $"صرف مستحقات للعامل {SelectedWorkerSummary.WorkerName}",
-                    WorkerName = SelectedWorkerSummary.WorkerName,
-                    WorkerId = SelectedWorkerSummary.WorkerId,
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                db.GeneralExpenses.Add(generalExpense);
-                await db.SaveChangesAsync();
-
-                // الصرف من نقدية المطعم يُخرج نقداً فعلياً (مثل بقية المصروفات العامة النقدية)
-                var cashLedger = scope.ServiceProvider.GetRequiredService<ICashLedgerService>();
-                await cashLedger.RecordMovementAsync(
-                    CashMovementType.CashOut,
-                    InputPaymentAmount,
-                    SourceTypes.GeneralExpense,
-                    generalExpense.Id,
-                    $"مصروف عام: رواتب | {generalExpense.Description}",
-                    paymentDay);
-            }
-
-            await db.SaveChangesAsync();
-            await payTx.CommitAsync();
 
             // حفظ الاسم لإعادة التحديد بعد التحديث
             int currentWorkerId = SelectedWorkerSummary.WorkerId;
