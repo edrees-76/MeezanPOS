@@ -83,16 +83,6 @@ public partial class App : System.Windows.Application
         AppLogger.Initialize();
         Log.Information("بدء تشغيل منظومة ميزان POS");
 
-        // تسجيل محلل الخطوط لـ PDFsharp
-        try
-        {
-            PdfSharp.Fonts.GlobalFontSettings.FontResolver = new MeezanPOS.Infrastructure.Reports.AppFontResolver();
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "خطأ أثناء تسجيل AppFontResolver لـ PDFsharp");
-        }
-
 
         const string mutexName = "MeezanPOS_SingleInstance_Mutex";
         bool createdNew;
