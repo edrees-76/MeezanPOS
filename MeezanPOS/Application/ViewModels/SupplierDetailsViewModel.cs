@@ -19,7 +19,7 @@ public partial class UnifiedLedgerRow : ObservableObject
 {
     [ObservableProperty] private int sequence;
     [ObservableProperty] private decimal openingBalance;
-    
+
     // Invoice side
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasInvoice))]
@@ -27,7 +27,7 @@ public partial class UnifiedLedgerRow : ObservableObject
 
     [ObservableProperty] private DateTime? invoiceDate;
     [ObservableProperty] private string invoiceNumber = string.Empty;
-    
+
     // Payment side
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPayment))]
@@ -36,7 +36,7 @@ public partial class UnifiedLedgerRow : ObservableObject
     [ObservableProperty] private DateTime? paymentDate;
     [ObservableProperty] private string paymentMethod = string.Empty;
     [ObservableProperty] private string receiptNumber = string.Empty;
-    
+
     [ObservableProperty] private decimal remainingBalance;
     [ObservableProperty] private string notes = string.Empty;
 
@@ -62,9 +62,9 @@ public partial class SupplierDetailsViewModel : ObservableObject
 {
     private int? _editingInvoiceId;
     private int? _editingPaymentTransactionId;
-    
+
     public int SupplierId { get; }
-    
+
     [ObservableProperty]
     private string supplierName;
 
@@ -196,11 +196,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<string> partnerNames = new();
 
+    private readonly MeezanPOS.Application.Services.Queries.ISupplierQueryService _suppliers = new MeezanPOS.Application.Services.Queries.SupplierQueryService();
+
     public SupplierDetailsViewModel(int supplierId, string supplierName)
     {
         SupplierId = supplierId;
         SupplierName = supplierName;
-        
+
         _ = LoadDataAsync();
         _ = LoadBankAccountsAndPartnersAsync();
     }
@@ -211,7 +213,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         {
             var bankService = AppServiceProvider.Resolve<IBankService>();
             var accountsList = await bankService.GetAllAccountsAsync();
-            
+
             var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
             var namesList = await ownerDebtService.GetPartnerNamesAsync();
 
@@ -219,7 +221,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             {
                 BankAccounts = new ObservableCollection<BankAccount>(accountsList.Where(a => a.IsActive));
                 PartnerNames = new ObservableCollection<string>(namesList);
-                
+
                 if (BankAccounts.Any())
                     SelectedBankAccountForPayment = BankAccounts.First();
                 if (PartnerNames.Any())
@@ -241,17 +243,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
             var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
-            var supplier = await context.Suppliers.FindAsync(SupplierId);
+            var supplier = await _suppliers.GetSupplierAsync(SupplierId);
             if (supplier != null) CurrentBalance = supplier.CurrentBalance;
+            _openingBalance = supplier?.OpeningBalance ?? 0;
 
-            var invoicesList = await context.SupplierInvoices
-                .Where(i => i.SupplierId == SupplierId && !i.IsDeleted)
-                .OrderByDescending(i => i.InvoiceDate)
-                .ThenByDescending(i => i.Id)
-                .ToListAsync();
+            var invoicesList = await _suppliers.GetInvoicesAsync(SupplierId);
             Invoices = new ObservableCollection<SupplierInvoice>(invoicesList);
 
             var transactionsList = await ledgerService.GetStatementAsync(SupplierId, DateTime.MinValue, DateTime.MaxValue);
@@ -270,15 +268,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
     }
 
+    private decimal _openingBalance;
+
     [RelayCommand]
     public void FilterStatement()
     {
-        using var context = new AppDbContext();
-        if (context.Suppliers.Find(SupplierId) is var supplier)
-        {
-            var allTransactions = Transactions.OrderBy(t => t.TransactionDate).ThenBy(t => t.Id).ToList();
-            GenerateUnifiedLedger(supplier?.OpeningBalance ?? 0, allTransactions);
-        }
+        var allTransactions = Transactions.OrderBy(t => t.TransactionDate).ThenBy(t => t.Id).ToList();
+        GenerateUnifiedLedger(_openingBalance, allTransactions);
     }
 
     [RelayCommand]
@@ -293,7 +289,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         UnifiedLedger.Clear();
         decimal currentBal = openingBal;
-        
+
         // حساب الرصيد المتراكم للحركات السابقة قبل تاريخ الفلتر
         var pastTransactions = sortedTransactions.Where(t => FilterStartDate.HasValue && t.TransactionDate.Date < FilterStartDate.Value.Date).ToList();
         foreach(var pt in pastTransactions)
@@ -308,7 +304,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         int seq = 1;
 
         // الحركات التي سيتم عرضها بناءً على الفلتر
-        var displayTransactions = sortedTransactions.Where(t => 
+        var displayTransactions = sortedTransactions.Where(t =>
             (!FilterStartDate.HasValue || t.TransactionDate.Date >= FilterStartDate.Value.Date) &&
             (!FilterEndDate.HasValue || t.TransactionDate.Date <= FilterEndDate.Value.Date)
         ).ToList();
@@ -340,7 +336,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             {
                 row.PaymentAmount = trans.Amount;
                 row.PaymentDate = trans.TransactionDate;
-                
+
                 // Try to infer payment method/receipt
                 row.PaymentMethod = "نقدي";
                 if (trans.SourceType == TransactionSourceType.DailyJournalPayment)
@@ -362,7 +358,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     }
 
                 row.ReceiptNumber = trans.ReceiptNumber ?? (trans.SourceId > 0 ? trans.SourceId.ToString() : "");
-                
+
                 string displayNotes = trans.Notes ?? string.Empty;
                 if (row.IsTransferPayment)
                 {
@@ -379,13 +375,13 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     }
                 }
                 row.Notes = displayNotes;
-                
+
                 currentBal -= trans.Amount;
                 sumPayments += trans.Amount;
             }
 
             row.RemainingBalance = currentBal;
-            
+
             UnifiedLedger.Add(row);
         }
 
@@ -398,10 +394,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
     public void OpenAddInvoiceForm()
     {
         _editingInvoiceId = null;
-        NewInvoice = new SupplierInvoice 
-        { 
-            SupplierId = SupplierId, 
-            InvoiceDate = DateTime.Now 
+        NewInvoice = new SupplierInvoice
+        {
+            SupplierId = SupplierId,
+            InvoiceDate = DateTime.Now
         };
         InvoiceItems.Clear();
         InvoiceItemsTotal = 0;
@@ -489,7 +485,6 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
         try
         {
-            using var context = new AppDbContext();
             var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
             if (_editingInvoiceId.HasValue)
@@ -507,26 +502,18 @@ public partial class SupplierDetailsViewModel : ObservableObject
             }
             else
             {
-                // إضافة فاتورة جديدة
-                await ledgerService.PostInvoiceAsync(NewInvoice);
-
-                // حفظ تفاصيل الأصناف في قاعدة البيانات
-                if (InvoiceItems.Count > 0)
+                // إضافة فاتورة جديدة مع أصنافها في معاملة واحدة (كانت الأصناف تُحفظ بعدها منفصلة)
+                foreach (var item in InvoiceItems)
                 {
-                    foreach (var item in InvoiceItems)
+                    NewInvoice.Items.Add(new MeezanPOS.Domain.Entities.SupplierInvoiceItem
                     {
-                        var dbItem = new MeezanPOS.Domain.Entities.SupplierInvoiceItem
-                        {
-                            SupplierInvoiceId = NewInvoice.Id,
-                            Description = item.Description,
-                            Quantity = item.Quantity,
-                            UnitPrice = item.UnitPrice,
-                            TotalValue = item.TotalValue
-                        };
-                        context.SupplierInvoiceItems.Add(dbItem);
-                    }
-                    await context.SaveChangesAsync();
+                        Description = item.Description,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        TotalValue = item.TotalValue
+                    });
                 }
+                await ledgerService.PostInvoiceAsync(NewInvoice);
                 Dialogs.Show("تم حفظ الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
@@ -616,7 +603,6 @@ public partial class SupplierDetailsViewModel : ObservableObject
             else
                 finalNotes += " | سداد نقدي";
 
-            using var context = new AppDbContext();
             var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
 
             if (_editingPaymentTransactionId.HasValue)
@@ -655,7 +641,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
                 Dialogs.Show("تم تسجيل الدفعة بنجاح في كشف حساب المورد.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            
+
             _editingPaymentTransactionId = null;
             IsPaymentFormOpen = false;
             await LoadDataAsync();
@@ -674,10 +660,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var invoice = await context.SupplierInvoices
-                .Include(i => i.Items)
-                .FirstOrDefaultAsync(i => i.Id == row.SourceId);
+            var invoice = await _suppliers.GetInvoiceWithItemsAsync(row.SourceId);
 
             if (invoice == null)
             {
@@ -732,11 +715,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            using var context = new AppDbContext();
-            var trans = await context.SupplierTransactions
-                .FirstOrDefaultAsync(t => t.Id == row.TransactionId);
+            var details = await _suppliers.GetPaymentDetailsAsync(row.TransactionId);
+            var trans = details?.Transaction;
 
-            if (trans == null)
+            if (trans == null || details == null)
             {
                 Dialogs.Show("لم يتم العثور على الدفعة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -759,11 +741,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
             }
             else
             {
-                var bankTx = await context.BankTransactions
-                    .FirstOrDefaultAsync(t => t.SourceType == "SupplierTransaction" && t.SourceId == trans.Id && !t.IsDeleted);
-
-                var ownerDebt = await context.OwnerDebts
-                    .FirstOrDefaultAsync(d => d.SourceType == "SupplierTransaction" && d.SourceId == trans.Id && !d.IsDeleted);
+                var bankTx = details.BankTransaction;
+                var ownerDebt = details.OwnerDebt;
 
                 if (bankTx != null)
                 {
@@ -790,14 +769,10 @@ public partial class SupplierDetailsViewModel : ObservableObject
             }
 
             // الفاتورة المرتبطة بالدفعة إن وجدت
-            if (trans.SupplierInvoiceId.HasValue)
-            {
-                SelectedInvoiceForPayment = await context.SupplierInvoices.FindAsync(trans.SupplierInvoiceId.Value);
-            }
-            else
-            {
-                SelectedInvoiceForPayment = null;
-            }
+            // من قائمة الفواتير المحملة (نفس الكائن ليظهر محدداً في القائمة)، وإلا من الاستعلام
+            SelectedInvoiceForPayment = trans.SupplierInvoiceId.HasValue
+                ? Invoices.FirstOrDefault(i => i.Id == trans.SupplierInvoiceId.Value) ?? details.Invoice
+                : null;
 
             IsPaymentFormOpen = true;
         }
@@ -838,12 +813,12 @@ public partial class SupplierDetailsViewModel : ObservableObject
             string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
 
             SupplierStatementPdfReport.GeneratePdf(
-                filePath, 
-                SupplierName, 
-                TotalOpeningBalance, 
-                TotalInvoicesSum, 
-                TotalPaymentsSum, 
-                CurrentBalance, 
+                filePath,
+                SupplierName,
+                TotalOpeningBalance,
+                TotalInvoicesSum,
+                TotalPaymentsSum,
+                CurrentBalance,
                 UnifiedLedger.ToList(),
                 FilterStartDate,
                 FilterEndDate
@@ -880,26 +855,20 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
             if (invoiceIds.Any())
             {
-                using var context = new AppDbContext();
                 // 2. تحميل الفواتير بكافة أصنافها
-                detailedInvoices = await context.SupplierInvoices
-                    .Include(i => i.Items)
-                    .Where(i => invoiceIds.Contains(i.Id) && !i.IsDeleted)
-                    .OrderBy(i => i.InvoiceDate)
-                    .ThenBy(i => i.Id)
-                    .ToListAsync();
+                detailedInvoices = await _suppliers.GetInvoicesWithItemsAsync(invoiceIds);
             }
 
             string fileName = $"كشف_حساب_مفصل_{SupplierName}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
             string filePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
 
             SupplierStatementPdfReport.GeneratePdf(
-                filePath, 
-                SupplierName, 
-                TotalOpeningBalance, 
-                TotalInvoicesSum, 
-                TotalPaymentsSum, 
-                CurrentBalance, 
+                filePath,
+                SupplierName,
+                TotalOpeningBalance,
+                TotalInvoicesSum,
+                TotalPaymentsSum,
+                CurrentBalance,
                 UnifiedLedger.ToList(),
                 FilterStartDate,
                 FilterEndDate,
@@ -931,10 +900,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
         try
         {
-            using var context = new AppDbContext();
-            var expenseItem = await context.DailyExpenseItems
-                .Include(e => e.DailyJournal)
-                .FirstOrDefaultAsync(e => e.Id == row.SourceId);
+            var expenseItem = await _suppliers.GetJournalExpenseItemAsync(row.SourceId);
 
             if (expenseItem == null || expenseItem.DailyJournal == null)
             {
@@ -943,7 +909,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             }
 
             var journal = expenseItem.DailyJournal;
-            
+
             string shiftDetails = $"🔍 تفاصيل عملية الدفع من الكاشير:\n" +
                                  $"------------------------------------------------------\n" +
                                  $"📅 تاريخ الدفع: {expenseItem.CreatedAt:yyyy/MM/dd HH:mm}\n" +
@@ -978,17 +944,11 @@ public partial class SupplierDetailsViewModel : ObservableObject
         try
         {
             // محاولة جلب تفاصيل التحويل بدقة مباشرة من قاعدة البيانات لضمان الدقة الكاملة
-            using (var db = new AppDbContext())
+            var bankTx = _suppliers.GetBankTransferForPayment(row.TransactionId);
+            if (bankTx != null)
             {
-                var bankTx = db.BankTransactions
-                    .Include(t => t.BankAccount)
-                    .FirstOrDefault(t => t.SourceType == "SupplierTransaction" && t.SourceId == row.TransactionId && !t.IsDeleted);
-
-                if (bankTx != null)
-                {
-                    bankName = bankTx.BankAccount?.FriendlyName ?? "غير محدد";
-                    last4 = bankTx.ReferenceNumber ?? "----";
-                }
+                bankName = bankTx.BankAccount?.FriendlyName ?? "غير محدد";
+                last4 = bankTx.ReferenceNumber ?? "----";
             }
         }
         catch

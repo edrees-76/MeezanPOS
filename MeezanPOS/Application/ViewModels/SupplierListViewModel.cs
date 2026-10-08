@@ -12,7 +12,7 @@ namespace MeezanPOS.Application.ViewModels;
 
 public partial class SupplierListViewModel : ObservableObject
 {
-    private readonly AppDbContext _context;
+    private readonly MeezanPOS.Application.Services.Queries.ISupplierQueryService _suppliers;
 
     [ObservableProperty]
     private ObservableCollection<Supplier> suppliers = new();
@@ -40,7 +40,7 @@ public partial class SupplierListViewModel : ObservableObject
 
     public SupplierListViewModel()
     {
-        _context = new AppDbContext();
+        _suppliers = new MeezanPOS.Application.Services.Queries.SupplierQueryService();
         _ = LoadSuppliersAsync();
     }
 
@@ -50,26 +50,20 @@ public partial class SupplierListViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var query = _context.Suppliers.AsQueryable();
+            var list = await _suppliers.SearchAsync(SearchText);
 
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                query = query.Where(s => s.Name.Contains(SearchText) || (s.Phone != null && s.Phone.Contains(SearchText)));
-            }
-
-            var list = await query.OrderBy(s => s.Name).ToListAsync();
-            
             int seq = 1;
             foreach (var s in list)
             {
                 s.Sequence = seq++;
             }
-            
+
             Suppliers = new ObservableCollection<Supplier>(list);
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ تحميل الموردين: {ex.Message}");
+            Serilog.Log.Error(ex, "خطأ تحميل الموردين");
+            Dialogs.Show($"تعذر تحميل قائمة الموردين:\n{ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -89,7 +83,7 @@ public partial class SupplierListViewModel : ObservableObject
     public void OpenEditForm(Supplier supplier)
     {
         if (supplier == null) return;
-        
+
         FormSupplier = new Supplier
         {
             Id = supplier.Id,
@@ -125,34 +119,15 @@ public partial class SupplierListViewModel : ObservableObject
 
         try
         {
-            if (FormSupplier.Id == 0)
-            {
-                // إضافة جديد
-                FormSupplier.CurrentBalance = FormSupplier.OpeningBalance; // الرصيد الافتتاحي هو الرصيد الحالي مبدئياً
-                _context.Suppliers.Add(FormSupplier);
-            }
-            else
-            {
-                // تعديل
-                var existing = await _context.Suppliers.FindAsync(FormSupplier.Id);
-                if (existing != null)
-                {
-                    existing.Name = FormSupplier.Name;
-                    existing.Phone = FormSupplier.Phone;
-                    existing.CreditLimit = FormSupplier.CreditLimit;
-                    existing.IsActive = FormSupplier.IsActive;
-                    // لا نُعدل CurrentBalance أو OpeningBalance هنا منعاً للتلاعب
-                    _context.Suppliers.Update(existing);
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            await _suppliers.SaveSupplierAsync(FormSupplier);
             IsFormOpen = false;
             await LoadSuppliersAsync();
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"خطأ حفظ بيانات المورد: {ex.Message}");
+            // كان الخطأ يُكتب في نافذة التصحيح فقط فيظن المستخدم أن الحفظ تم
+            Serilog.Log.Error(ex, "خطأ حفظ بيانات المورد");
+            Dialogs.Show($"تعذر حفظ بيانات المورد:\n{ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
 }
