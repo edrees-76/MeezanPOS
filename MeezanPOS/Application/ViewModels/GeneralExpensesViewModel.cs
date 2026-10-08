@@ -548,7 +548,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
             if (EditingId.HasValue)
             {
                 // --- تعديل ---
-                var existing = db.GeneralExpenses.Find(EditingId.Value);
+                var existing = await db.GeneralExpenses.FindAsync(EditingId.Value);
                 if (existing != null)
                 {
                     if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
@@ -910,9 +910,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
         if (IsDetailedWage)
         {
             using var db = new AppDbContext();
-            var txs = db.WorkerTransactions
+            var txs = await db.WorkerTransactions
                 .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
-                .ToList();
+                .ToListAsync();
 
             var grouped = txs.GroupBy(t => t.WorkerId);
             SelectedWorkerWagesDetails = grouped.Select(g => {
@@ -944,9 +944,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
         if (IsDetailedWage)
         {
             using var db = new AppDbContext();
-            var txs = db.WorkerTransactions
+            var txs = await db.WorkerTransactions
                 .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
-                .ToList();
+                .ToListAsync();
 
             var grouped = txs.GroupBy(t => t.WorkerId);
             SelectedWorkerWagesDetails = grouped.Select(g => {
@@ -1183,7 +1183,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         try
         {
             using var db = new AppDbContext();
-            var existing = db.GeneralExpenses.Find(item.Id);
+            var existing = await db.GeneralExpenses.FindAsync(item.Id);
             if (existing != null)
             {
                 if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)

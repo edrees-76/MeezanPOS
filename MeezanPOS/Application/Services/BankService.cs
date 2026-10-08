@@ -335,8 +335,7 @@ public class BankService : IBankService
         var priorTransactions = await _context.BankTransactions
             .Where(t => t.BankAccountId == bankAccountId && !t.IsDeleted
                          && t.TransactionDate.Date < beforeDate.Date)
-            .OrderBy(t => t.TransactionDate)
-            .ThenBy(t => t.CreatedAt)
+            .Select(t => new { t.Type, t.Amount, t.Notes })
             .ToListAsync();
 
         decimal balance = account.OpeningBalance;

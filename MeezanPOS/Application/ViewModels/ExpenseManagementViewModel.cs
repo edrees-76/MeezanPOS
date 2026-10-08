@@ -80,7 +80,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         SelectedArchivedMonth = null;
         if (value)
         {
-            LoadArchivedMonths();
+            _ = LoadArchivedMonthsAsync();
         }
         else
         {
@@ -416,7 +416,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
     {
         ArchiveLevel = 0;
         SelectedArchivedMonth = null;
-        LoadArchivedMonths();
+        _ = LoadArchivedMonthsAsync();
     }
 
     public static string GetArabicMonthName(int month) => month switch
@@ -437,19 +437,20 @@ public partial class ExpenseManagementViewModel : ObservableObject
     };
 
     [RelayCommand]
-    public void LoadArchivedMonths()
+    public async Task LoadArchivedMonthsAsync()
     {
         try
         {
-            using var db = new AppDbContext();
-            
-            var journals = db.DailyJournals
-                .Include(j => j.ExpenseItems)
-                .Include(j => j.BankingItems)
-                .Include(j => j.Adjustments)
-                .Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)
-                .OrderBy(j => j.JournalDate)
-                .ToList();
+            // الأعمدة المطلوبة فقط، بلا تحميل بنود كل اليوميات المؤرشفة، وخارج خيط الواجهة
+            var journals = await Task.Run(async () =>
+            {
+                await using var db = new AppDbContext();
+                return await db.DailyJournals
+                    .AsNoTracking()
+                    .Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)
+                    .Select(j => new { j.JournalDate, j.FinancialStatus, j.TotalSales, j.BankingTotal, j.TotalExpenses })
+                    .ToListAsync();
+            });
 
             var grouped = journals
                 .GroupBy(j => new { j.JournalDate.Year, j.JournalDate.Month })
@@ -463,7 +464,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
                         Month = month,
                         MonthName = $"{GetArabicMonthName(month)} {year}",
                         TotalSales = g.Sum(j => j.TotalSales),
-                        TotalCashSales = g.Sum(j => j.CashSales),
+                        TotalCashSales = g.Sum(j => j.TotalSales - j.BankingTotal),
                         TotalBankingSales = g.Sum(j => j.BankingTotal),
                         TotalExpenses = g.Sum(j => j.TotalExpenses),
                         DaysCount = g.Select(j => j.JournalDate.Date).Distinct().Count(),

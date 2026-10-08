@@ -835,7 +835,7 @@ public partial class DailyJournalViewModel : ObservableObject
             var targetDate = JournalDate.Date;
             var selectedShift = SelectedShiftType;
             
-            bool isDuplicate = context.DailyJournals.Any(j => 
+            bool isDuplicate = await context.DailyJournals.AnyAsync(j => 
                 j.JournalDate.Year == targetDate.Year && 
                 j.JournalDate.Month == targetDate.Month && 
                 j.JournalDate.Day == targetDate.Day &&
@@ -859,11 +859,11 @@ public partial class DailyJournalViewModel : ObservableObject
 
             if (editingJournalId.HasValue)
             {
-                journal = context.DailyJournals
+                journal = await context.DailyJournals
                     .Include(j => j.ExpenseItems)
                     .Include(j => j.BankingItems)
                     .Include(j => j.Adjustments)
-                    .FirstOrDefault(j => j.Id == editingJournalId.Value);
+                    .FirstOrDefaultAsync(j => j.Id == editingJournalId.Value);
 
                 if (journal == null)
                 {
@@ -901,13 +901,13 @@ public partial class DailyJournalViewModel : ObservableObject
                 context.DailyExpenseItems.RemoveRange(journal.ExpenseItems);
                 context.BankingItems.RemoveRange(journal.BankingItems);
                 
-                var oldBankSales = context.DailyJournalBankSales.Where(s => s.DailyJournalId == journal.Id).ToList();
+                var oldBankSales = await context.DailyJournalBankSales.Where(s => s.DailyJournalId == journal.Id).ToListAsync();
                 context.DailyJournalBankSales.RemoveRange(oldBankSales);
 
                 // إزالة المطابقات البنكية التابعة لهذه الوردية
-                var oldCardRecons = context.CardPaymentReconciliations
+                var oldCardRecons = await context.CardPaymentReconciliations
                     .Where(r => r.DailyJournalId == journal.Id)
-                    .ToList();
+                    .ToListAsync();
                 context.CardPaymentReconciliations.RemoveRange(oldCardRecons);
 
                 // إزالة الحركات البنكية المباشرة القديمة المرتبطة بهذه الوردية وإعادة بناء أرصدتها
@@ -920,13 +920,13 @@ public partial class DailyJournalViewModel : ObservableObject
                     affectedSuppliers.Add(oldSupplierId);
                 if (oldExpenseIds.Any())
                 {
-                    var linkedTxs = context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToList();
+                    var linkedTxs = await context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToListAsync();
                     foreach (var linked in linkedTxs)
                         affectedSuppliers.Add(linked.SupplierId);
                     context.SupplierTransactions.RemoveRange(linkedTxs);
 
                     // إزالة حركات العمال المرتبطة بالمصروفات المحذوفة
-                    var oldWorkerTxs = context.WorkerTransactions.Where(t => t.DailyExpenseItemId != null && oldExpenseIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted).ToList();
+                    var oldWorkerTxs = await context.WorkerTransactions.Where(t => t.DailyExpenseItemId != null && oldExpenseIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted).ToListAsync();
                     foreach (var tx in oldWorkerTxs)
                     {
                         tx.IsDeleted = true;
@@ -1392,7 +1392,17 @@ public partial class DailyJournalViewModel : ObservableObject
         ExpenseItems.Clear();
         if (journal.ExpenseItems != null)
         {
-            using var db = new AppDbContext();
+            var multiWorkerItemIds = journal.ExpenseItems.Where(x => x.WorkerName == "[متعدد]").Select(x => x.Id).ToList();
+            var workerTxsByItem = new System.Collections.Generic.Dictionary<int, System.Collections.Generic.List<WorkerTransaction>>();
+            if (multiWorkerItemIds.Count > 0)
+            {
+                using var db = new AppDbContext();
+                workerTxsByItem = db.WorkerTransactions
+                    .Where(t => t.DailyExpenseItemId != null && multiWorkerItemIds.Contains(t.DailyExpenseItemId.Value) && !t.IsDeleted)
+                    .AsEnumerable()
+                    .GroupBy(t => t.DailyExpenseItemId!.Value)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+            }
             foreach (var e in journal.ExpenseItems)
             {
                 var item = new ExpenseItemViewModel
@@ -1411,9 +1421,7 @@ public partial class DailyJournalViewModel : ObservableObject
 
                 if (e.WorkerName == "[متعدد]")
                 {
-                    var txs = db.WorkerTransactions
-                        .Where(t => t.DailyExpenseItemId == e.Id && !t.IsDeleted)
-                        .ToList();
+                    var txs = workerTxsByItem.TryGetValue(e.Id, out var itemTxs) ? itemTxs : new System.Collections.Generic.List<WorkerTransaction>();
 
                     var grouped = txs.GroupBy(t => t.WorkerId);
                     item.SelectedWorkerWagesDetails = grouped.Select(g => {

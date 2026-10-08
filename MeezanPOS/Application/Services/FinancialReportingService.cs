@@ -127,6 +127,8 @@ public class FinancialReportingService : IFinancialReportingService
         var allPriorSupplierTx = await context.SupplierTransactions
             .AsNoTracking()
             .Where(t => supplierIds.Contains(t.SupplierId) && t.TransactionDate < start && !t.IsDeleted)
+            // للرصيد الافتتاحي تكفي ثلاثة أعمدة؛ تحميل الكيانات كاملة لكل التاريخ يبطئ التقرير مع الوقت
+            .Select(t => new SupplierTransaction { SupplierId = t.SupplierId, Type = t.Type, Amount = t.Amount })
             .ToListAsync();
 
         var allPeriodSupplierTx = await context.SupplierTransactions
@@ -337,6 +339,7 @@ public class FinancialReportingService : IFinancialReportingService
         var allPriorBankTxns = await context.BankTransactions
             .AsNoTracking()
             .Where(t => accountIds.Contains(t.BankAccountId) && !t.IsDeleted && t.TransactionDate < start)
+            .Select(t => new BankTransaction { BankAccountId = t.BankAccountId, Type = t.Type, Amount = t.Amount, Notes = t.Notes, TransactionDate = t.TransactionDate, CreatedAt = t.CreatedAt })
             .ToListAsync();
 
         var allPeriodBankTxns = await context.BankTransactions
