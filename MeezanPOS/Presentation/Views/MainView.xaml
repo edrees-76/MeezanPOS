@@ -181,7 +181,7 @@
                 <Border Grid.Row="2" Margin="12,8,12,16" Padding="12,10" CornerRadius="10" Background="#26000000">
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Command="{Binding LogoutCommand}" ToolTip="تسجيل الخروج"
-                                Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36" Foreground="#FFCDD2">
+                                Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36" Foreground="{StaticResource Brush.ExpenseSoft}">
                             <materialDesign:PackIcon Kind="Logout" Width="20" Height="20"/>
                         </Button>
                         <Button DockPanel.Dock="Right" Command="{Binding ChangePasswordCommand}" ToolTip="تغيير كلمة المرور"

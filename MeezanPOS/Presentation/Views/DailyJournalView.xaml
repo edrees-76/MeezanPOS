@@ -310,7 +310,7 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <DataGrid ItemsSource="{Binding BankingItems}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,12">
+                        <DataGrid CanUserSortColumns="False" ItemsSource="{Binding BankingItems}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,12">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="Auto">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -406,7 +406,7 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <DataGrid ItemsSource="{Binding ExpenseItems}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,12">
+                        <DataGrid CanUserSortColumns="False" ItemsSource="{Binding ExpenseItems}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" Margin="0,0,0,12">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Width="Auto">
                                     <DataGridTemplateColumn.CellTemplate>
@@ -614,7 +614,7 @@
                                         <TextBlock Text="المرتجعات" Style="{StaticResource Text.Body}" FontWeight="Bold" Foreground="{StaticResource Brush.ExpenseText}"/>
                                     </StackPanel>
                                 </DockPanel>
-                                <DataGrid ItemsSource="{Binding Returns}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                <DataGrid CanUserSortColumns="False" ItemsSource="{Binding Returns}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                                           materialDesign:DataGridAssist.CellPadding="6,6" materialDesign:DataGridAssist.ColumnHeaderPadding="6,8">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Width="Auto">
@@ -673,7 +673,7 @@
                                         <TextBlock Text="الطلبات المجانية" Style="{StaticResource Text.Body}" FontWeight="Bold" Foreground="{StaticResource Brush.Pending}"/>
                                     </StackPanel>
                                 </DockPanel>
-                                <DataGrid ItemsSource="{Binding FreeOrders}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                                <DataGrid CanUserSortColumns="False" ItemsSource="{Binding FreeOrders}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                                           materialDesign:DataGridAssist.CellPadding="6,6" materialDesign:DataGridAssist.ColumnHeaderPadding="6,8">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Width="Auto">
@@ -770,7 +770,7 @@
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding ExpectedCash, StringFormat=N2}" FontFamily="{StaticResource Font.Money}" FontWeight="Bold" FontSize="21"
                                            Foreground="{StaticResource Brush.Accent}" FlowDirection="LeftToRight" VerticalAlignment="Center"/>
-                                <TextBlock Text="النقد المتوقع في الدرج" FontSize="14" Foreground="#C5CAE9" VerticalAlignment="Center"/>
+                                <TextBlock Text="النقد المتوقع في الدرج" FontSize="14" Foreground="{StaticResource Brush.SidebarText}" VerticalAlignment="Center"/>
                             </DockPanel>
                         </Border>
 

@@ -46,7 +46,7 @@ public partial class ChangePasswordDialog : Window
             var service = AppServiceProvider.Resolve<IUserManagementService>();
             await service.ChangeOwnPasswordAsync(TxtCurrent.Password, TxtNew.Password);
 
-            MessageBox.Show("تم تغيير كلمة المرور بنجاح.", "تم", MessageBoxButton.OK, MessageBoxImage.Information,
+            Dialogs.Show("تم تغيير كلمة المرور بنجاح.", "تم", MessageBoxButton.OK, MessageBoxImage.Information,
                 MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
             DialogResult = true;
         }

@@ -38,7 +38,7 @@
 
 
 
-             Background="#f8fafc"
+             Background="{StaticResource Brush.SurfaceAlt}"
 
 
 
@@ -86,7 +86,7 @@
 
 
 
-                <Setter Property="BorderBrush" Value="#cbd5e1"/>
+                <Setter Property="BorderBrush" Value="{StaticResource Brush.BorderStrong}"/>
 
 
 
@@ -210,11 +210,11 @@
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="Background" Value="#3F51B5"/>
+                                    <Setter TargetName="BoxBorder" Property="Background" Value="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3F51B5"/>
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -230,7 +230,7 @@
 
 
 
-                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="#3F51B5"/>
+                                    <Setter TargetName="BoxBorder" Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -286,7 +286,7 @@
 
 
 
-                <Setter Property="Foreground" Value="#64748b"/>
+                <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
 
 
 
@@ -426,11 +426,11 @@
 
 
 
-                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="#1E293B"/>
+                <TextBlock Text="المبيعات والإيرادات اليومية" FontSize="24" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
 
 
 
-                <TextBlock Text="متابعة الحركات المالية، المصاريف اليومية، وإقفال الورديات والشهور" FontSize="13" Foreground="#64748b" Margin="0,4,0,0"/>
+                <TextBlock Text="متابعة الحركات المالية، المصاريف اليومية، وإقفال الورديات والشهور" FontSize="13" Foreground="{StaticResource Brush.TextMuted}" Margin="0,4,0,0"/>
 
 
 
@@ -446,7 +446,7 @@
 
 
 
-            <Border Grid.Column="1" Background="#e2e8f0" CornerRadius="22" Padding="4" VerticalAlignment="Center">
+            <Border Grid.Column="1" Background="{StaticResource Brush.Border}" CornerRadius="22" Padding="4" VerticalAlignment="Center">
 
 
 
@@ -486,7 +486,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#1E293B"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
 
 
 
@@ -498,7 +498,7 @@
 
 
 
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="{StaticResource Color.BorderStrong}" Opacity="0.5"/>
 
 
 
@@ -598,7 +598,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#1E293B"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
 
 
 
@@ -610,7 +610,7 @@
 
 
 
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="{StaticResource Color.BorderStrong}" Opacity="0.5"/>
 
 
 
@@ -710,7 +710,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#1E293B"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
 
 
 
@@ -722,7 +722,7 @@
 
 
 
-                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="{StaticResource Color.BorderStrong}" Opacity="0.5"/>
 
 
 
@@ -934,7 +934,7 @@
 
 
 
-            <Border Grid.Column="0" Background="#f8fafc" CornerRadius="16" Padding="20" BorderBrush="#e2e8f0" BorderThickness="1">
+            <Border Grid.Column="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16" Padding="20" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
 
 
 
@@ -946,11 +946,11 @@
 
 
 
-                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Finance" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,8,0"/>
 
 
 
-                        <TextBlock Text="إجمالي المبيعات بالفترة" FontSize="15" Foreground="#64748b" VerticalAlignment="Center" FontWeight="Medium"/>
+                        <TextBlock Text="إجمالي المبيعات بالفترة" FontSize="15" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center" FontWeight="Medium"/>
 
 
 
@@ -958,7 +958,7 @@
 
 
 
-                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#1E293B"/>
+                    <TextBlock Text="{Binding TotalSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
 
 
 
@@ -978,7 +978,7 @@
 
 
 
-            <Border Grid.Column="2" Background="#DCFCE7" CornerRadius="16" Padding="20" BorderBrush="#dcfce7" BorderThickness="1">
+            <Border Grid.Column="2" Background="{StaticResource Brush.IncomeSoft}" CornerRadius="16" Padding="20" BorderBrush="{StaticResource Brush.IncomeSoft}" BorderThickness="1">
 
 
 
@@ -990,11 +990,11 @@
 
 
 
-                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="#16A34A" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="CashMultiple" Width="24" Height="24" Foreground="{StaticResource Brush.Income}" Margin="0,0,8,0"/>
 
 
 
-                        <TextBlock Text="إجمالي المبيعات النقدية" FontSize="15" Foreground="#15803d" VerticalAlignment="Center" FontWeight="Medium"/>
+                        <TextBlock Text="إجمالي المبيعات النقدية" FontSize="15" Foreground="{StaticResource Brush.IncomeText}" VerticalAlignment="Center" FontWeight="Medium"/>
 
 
 
@@ -1002,7 +1002,7 @@
 
 
 
-                    <TextBlock Text="{Binding TotalCashSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#14532d"/>
+                    <TextBlock Text="{Binding TotalCashSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
 
 
 
@@ -1022,7 +1022,7 @@
 
 
 
-            <Border Grid.Column="4" Background="#EEF2FF" CornerRadius="16" Padding="20" BorderBrush="#f3e8ff" BorderThickness="1">
+            <Border Grid.Column="4" Background="{StaticResource Brush.PrimarySoft}" CornerRadius="16" Padding="20" BorderBrush="{StaticResource Brush.PrimarySoft}" BorderThickness="1">
 
 
 
@@ -1034,11 +1034,11 @@
 
 
 
-                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="CreditCardCheckOutline" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,8,0"/>
 
 
 
-                        <TextBlock Text="إجمالي الخدمات المصرفية" FontSize="15" Foreground="#7e22ce" VerticalAlignment="Center" FontWeight="Medium"/>
+                        <TextBlock Text="إجمالي الخدمات المصرفية" FontSize="15" Foreground="{StaticResource Brush.PrimaryInteractive}" VerticalAlignment="Center" FontWeight="Medium"/>
 
 
 
@@ -1046,7 +1046,7 @@
 
 
 
-                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="#1A237E"/>
+                    <TextBlock Text="{Binding TotalBankingSalesPeriod, StringFormat=\{0:N2\} د.ل}" FontSize="26" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryDark}"/>
 
 
 
@@ -1082,11 +1082,11 @@
 
 
 
-                        <Setter Property="Background" Value="#DCFCE7"/>
+                        <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
 
 
 
-                        <Setter Property="BorderBrush" Value="#dcfce7"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource Brush.IncomeSoft}"/>
 
 
 
@@ -1102,11 +1102,11 @@
 
 
 
-                                <Setter Property="Background" Value="#FEE2E2"/>
+                                <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
 
 
 
-                                <Setter Property="BorderBrush" Value="#fee2e2"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.ExpenseSoft}"/>
 
 
 
@@ -1122,11 +1122,11 @@
 
 
 
-                                <Setter Property="Background" Value="#EEF2FF"/>
+                                <Setter Property="Background" Value="{StaticResource Brush.PrimarySoft}"/>
 
 
 
-                                <Setter Property="BorderBrush" Value="#EEF2FF"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource Brush.PrimarySoft}"/>
 
 
 
@@ -1174,7 +1174,7 @@
 
 
 
-                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
 
 
 
@@ -1194,7 +1194,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
 
 
 
@@ -1214,7 +1214,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#3F51B5"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -1254,7 +1254,7 @@
 
 
 
-                                    <Setter Property="Foreground" Value="#15803d"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
 
 
 
@@ -1270,7 +1270,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#b91c1c"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
 
 
 
@@ -1286,7 +1286,7 @@
 
 
 
-                                            <Setter Property="Foreground" Value="#3F51B5"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -1330,7 +1330,7 @@
 
 
 
-                                <Setter Property="Foreground" Value="#14532d"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
 
 
 
@@ -1346,7 +1346,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#7f1d1d"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
 
 
 
@@ -1362,7 +1362,7 @@
 
 
 
-                                        <Setter Property="Foreground" Value="#283593"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Primary}"/>
 
 
 
@@ -1466,7 +1466,7 @@
 
 
 
-                <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
 
 
 
@@ -1502,7 +1502,7 @@
 
 
 
-                        <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+                        <Border Grid.Row="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
 
 
 
@@ -1558,11 +1558,11 @@
 
 
 
-                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="#3F51B5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="20" Height="20" Foreground="{StaticResource Brush.PrimaryInteractive}" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
 
 
-                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                        <TextBlock Text="الورديات اليومية المفتوحة حالياً" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
 
 
@@ -1686,11 +1686,11 @@
 
 
 
-                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="#16A34A" BorderBrush="#16A34A" Height="45" Width="100" Margin="0,0,8,0"/>
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تطبيق الفلتر" Style="{StaticResource MaterialDesignRaisedButton}" Background="{StaticResource Brush.Income}" BorderBrush="{StaticResource Brush.Income}" Height="45" Width="100" Margin="0,0,8,0"/>
 
 
 
-                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#DC2626" BorderBrush="#DC2626" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
+                                        <Button Command="{Binding ClearFiltersCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}" Height="45" Width="45" Padding="0" Margin="0,0,8,0">
 
 
 
@@ -1702,7 +1702,7 @@
 
 
 
-                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="#3F51B5" BorderBrush="#3F51B5" Height="45" Cursor="Hand">
+                                        <Button Command="{Binding PostPeriodCommand}" ToolTip="ترحيل وإقفال جميع اليوميات المفتوحة في هذه الفترة المحددة" Style="{StaticResource MaterialDesignRaisedButton}" Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Height="45" Cursor="Hand">
 
 
 
@@ -2034,7 +2034,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3F51B5"/>
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -2066,7 +2066,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#16A34A"/>
+                                                        <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="{StaticResource Brush.Income}"/>
 
 
 
@@ -2098,7 +2098,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="#DC2626"/>
+                                                        <materialDesign:PackIcon Kind="LockOutline" Width="18" Height="18" Foreground="{StaticResource Brush.Expense}"/>
 
 
 
@@ -2146,7 +2146,7 @@
 
 
 
-                                    Background="#fcfdfd" BorderBrush="#cbd5e1" BorderThickness="1.5"
+                                    Background="{StaticResource Brush.Surface}" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5"
 
 
 
@@ -2162,7 +2162,7 @@
 
 
 
-                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="#1E293B" Opacity="0.18"/>
+                                    <DropShadowEffect BlurRadius="20" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.18"/>
 
 
 
@@ -2226,11 +2226,11 @@
 
 
 
-                                        <Border Background="#EEF2FF" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="#3F51B5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CheckboxMultipleMarkedOutline" Width="20" Height="20" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2242,11 +2242,11 @@
 
 
 
-                                            <TextBlock Text="الورديات المحددة" FontSize="11" Foreground="#64748b" FontWeight="Medium"/>
+                                            <TextBlock Text="الورديات المحددة" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium"/>
 
 
 
-                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="#1E293B"/>
+                                            <TextBlock Text="{Binding RunningSelectedCount, StringFormat=\{0\} ورديات}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
 
 
 
@@ -2270,11 +2270,11 @@
 
 
 
-                                        <Border Background="#DCFCE7" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="#16A34A" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CurrencyUsd" Width="20" Height="20" Foreground="{StaticResource Brush.Income}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2286,11 +2286,11 @@
 
 
 
-                                            <TextBlock Text="إجمالي مبيعات التحديد" FontSize="11" Foreground="#15803d" FontWeight="Medium"/>
+                                            <TextBlock Text="إجمالي مبيعات التحديد" FontSize="11" Foreground="{StaticResource Brush.IncomeText}" FontWeight="Medium"/>
 
 
 
-                                            <TextBlock Text="{Binding RunningSelectedSalesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#14532d"/>
+                                            <TextBlock Text="{Binding RunningSelectedSalesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
 
 
 
@@ -2314,11 +2314,11 @@
 
 
 
-                                        <Border Background="#EEF2FF" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
+                                        <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="12" Width="36" Height="36" Margin="0,0,10,0" VerticalAlignment="Center">
 
 
 
-                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="#3F51B5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="CashMinus" Width="20" Height="20" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2330,11 +2330,11 @@
 
 
 
-                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="#283593" FontWeight="Medium"/>
+                                            <TextBlock Text="إجمالي مصروفات التحديد" FontSize="11" Foreground="{StaticResource Brush.Primary}" FontWeight="Medium"/>
 
 
 
-                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#1A237E"/>
+                                            <TextBlock Text="{Binding RunningSelectedExpensesTotal, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryDark}"/>
 
 
 
@@ -2366,7 +2366,7 @@
 
 
 
-                                            Background="#1E293B" BorderBrush="#1E293B" Foreground="White"
+                                            Background="{StaticResource Brush.TextPrimary}" BorderBrush="{StaticResource Brush.TextPrimary}" Foreground="White"
 
 
 
@@ -2446,7 +2446,7 @@
 
 
 
-                        <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
+                        <Border Grid.Row="2" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
 
 
 
@@ -2470,7 +2470,7 @@
 
 
 
-                                        BorderBrush="#DC2626" Foreground="#DC2626" Height="38" Padding="16,0">
+                                        BorderBrush="{StaticResource Brush.Expense}" Foreground="{StaticResource Brush.Expense}" Height="38" Padding="16,0">
 
 
 
@@ -2632,7 +2632,7 @@
 
                             <!-- Title Bar -->
 
-                            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
+                            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
 
                                 <Grid>
 
@@ -2650,9 +2650,9 @@
 
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
 
-                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#3F51B5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
-                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                        <TextBlock Text="أرشيف الترحيل الشهري" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
                                     </StackPanel>
 
@@ -2664,9 +2664,9 @@
 
                                         <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ..." Style="{StaticResource MaterialDesignOutlinedDatePicker}" Height="40" Width="140" Padding="10,5" FontSize="13" VerticalContentAlignment="Center" Margin="0,0,12,0"/>
 
-                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تصفية" Style="{StaticResource MaterialDesignRaisedButton}" Background="#16A34A" BorderBrush="#16A34A" Height="36" Width="80" Margin="0,0,6,0"/>
+                                        <Button Command="{Binding ApplyFiltersCommand}" Content="تصفية" Style="{StaticResource MaterialDesignRaisedButton}" Background="{StaticResource Brush.Income}" BorderBrush="{StaticResource Brush.Income}" Height="36" Width="80" Margin="0,0,6,0"/>
 
-                                        <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="#DC2626" BorderBrush="#DC2626" Height="36" Width="36" Padding="0">
+                                        <Button Command="{Binding ClearFiltersCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Foreground="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}" Height="36" Width="36" Padding="0">
 
                                             <materialDesign:PackIcon Kind="FilterRemove" Width="18" Height="18"/>
 
@@ -2730,7 +2730,7 @@
 
 
 
-                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
+                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="{StaticResource Color.BorderStrong}" Opacity="0.4"/>
 
 
 
@@ -2818,11 +2818,11 @@
 
 
 
-                                                    <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                    <Border Background="{StaticResource Brush.LockedSoft}" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
 
 
 
-                                                        <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
 
 
@@ -2830,11 +2830,11 @@
 
 
 
-                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#3F51B5" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,8,0" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                    <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
 
 
@@ -2866,11 +2866,11 @@
 
 
 
-                                                    <TextBlock Text="المبيعات: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="المبيعات: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center"/>
 
 
 
@@ -2890,11 +2890,11 @@
 
 
 
-                                                    <TextBlock Text="المصاريف: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="المصاريف: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}" VerticalAlignment="Center"/>
 
 
 
@@ -2914,11 +2914,11 @@
 
 
 
-                                                    <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
 
 
@@ -2938,11 +2938,11 @@
 
 
 
-                                                    <TextBlock Text="الأيام: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="الأيام: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
 
 
 
-                                                    <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="#64748b" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Bold" VerticalAlignment="Center"/>
 
 
 
@@ -2982,7 +2982,7 @@
 
 
 
-                                                            Background="#3F51B5" BorderBrush="#3F51B5" Height="36" Cursor="Hand" Margin="0,0,10,0">
+                                                            Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Height="36" Cursor="Hand" Margin="0,0,10,0">
 
 
 
@@ -3042,7 +3042,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="#3F51B5"/>
+                                                        <materialDesign:PackIcon Kind="LockOpenOutline" Width="18" Height="18" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -3078,7 +3078,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="#16A34A"/>
+                                                        <materialDesign:PackIcon Kind="Lock" Width="18" Height="18" Foreground="{StaticResource Brush.Income}"/>
 
 
 
@@ -3178,7 +3178,7 @@
 
 
 
-                    <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                    <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
 
 
 
@@ -3214,7 +3214,7 @@
 
 
 
-                            <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+                            <Border Grid.Row="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
 
 
 
@@ -3254,7 +3254,7 @@
 
 
 
-                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3F51B5" Height="36" Padding="8,0">
+                                    <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{StaticResource Brush.PrimaryInteractive}" Height="36" Padding="8,0">
 
 
 
@@ -3282,7 +3282,7 @@
 
 
 
-                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف حركات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
 
 
@@ -3518,7 +3518,7 @@
 
 
 
-                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="#3F51B5"/>
+                                                        <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
 
 
 
@@ -3598,7 +3598,7 @@
 
 
 
-                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="#16A34A"/>
+                                                         <materialDesign:PackIcon Kind="Pencil" Width="18" Height="18" Foreground="{StaticResource Brush.Income}"/>
 
 
 
@@ -3646,7 +3646,7 @@
 
 
 
-                            <Border Grid.Row="2" Background="#f8fafc" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="0,1,0,0">
+                            <Border Grid.Row="2" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="0,0,16,16" Padding="20,12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
 
 
 
@@ -3670,7 +3670,7 @@
 
 
 
-                                            BorderBrush="#DC2626" Foreground="#DC2626" Height="38" Padding="16,0">
+                                            BorderBrush="{StaticResource Brush.Expense}" Foreground="{StaticResource Brush.Expense}" Height="38" Padding="16,0">
 
 
 
@@ -3774,7 +3774,7 @@
 
 
 
-            <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1">
+            <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
 
 
 
@@ -3806,7 +3806,7 @@
 
 
 
-                    <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="0,0,0,1">
+                    <Border Grid.Row="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16,16,0,0" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,0,1">
 
 
 
@@ -3842,7 +3842,7 @@
 
 
 
-                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="#16A34A" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
 
 
@@ -3850,11 +3850,11 @@
 
 
 
-                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="#64748b" FontWeight="Medium"/>
+                                    <TextBlock Text="الرصيد النقدي المتوفر (الكاش الحالي)" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium"/>
 
 
 
-                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="#14532d"/>
+                                    <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
 
 
 
@@ -3886,7 +3886,7 @@
 
 
 
-                                         Background="#dc2626" BorderBrush="#dc2626"
+                                         Background="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}"
 
 
 
@@ -3934,7 +3934,7 @@
 
 
 
-                                        BorderBrush="#D97706" Foreground="#d97706"
+                                        BorderBrush="{StaticResource Brush.Pending}" Foreground="{StaticResource Brush.Pending}"
 
 
 
@@ -3954,7 +3954,7 @@
 
 
 
-                                         Background="#3F51B5" BorderBrush="#3F51B5"
+                                         Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}"
 
 
 
@@ -3994,7 +3994,7 @@
 
 
 
-                                         BorderBrush="#64748b" Foreground="#64748b"
+                                         BorderBrush="{StaticResource Brush.TextMuted}" Foreground="{StaticResource Brush.TextMuted}"
 
 
 
@@ -4038,7 +4038,7 @@
 
 
 
-                                        Background="#16A34A" BorderBrush="#16A34A"
+                                        Background="{StaticResource Brush.Income}" BorderBrush="{StaticResource Brush.Income}"
 
 
 
@@ -4070,7 +4070,7 @@
 
 
 
-                        <DataGrid Margin="0" 
+                        <DataGrid CanUserSortColumns="False" Margin="0" 
 
 
 
@@ -4170,7 +4170,7 @@
 
 
 
-                                                           FontWeight="Bold" Foreground="#3F51B5" 
+                                                           FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}" 
 
 
 
@@ -4234,11 +4234,11 @@
 
           Visibility="{Binding IsSettleOwnerCashDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-        <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="#cbd5e1" BorderThickness="1">
+        <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1">
 
             <Border.Effect>
 
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#1E293B" Opacity="0.25"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.25"/>
 
             </Border.Effect>
 
@@ -4272,9 +4272,9 @@
 
                 <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
 
-                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="ScaleBalance" Width="26" Height="26" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
-                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <TextBlock Text="تسوية كاش المالك وإغلاق الفترة" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
                 </StackPanel>
 
@@ -4282,7 +4282,7 @@
 
                 <!-- Current Balance Info Box -->
 
-                <Border Grid.Row="2" Background="#f8fafc" CornerRadius="12" Padding="16" BorderBrush="#e2e8f0" BorderThickness="1">
+                <Border Grid.Row="2" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="12" Padding="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
 
                     <Grid>
 
@@ -4296,13 +4296,13 @@
 
                         <StackPanel Grid.Column="0">
 
-                            <TextBlock Text="الرصيد النقدي الحالي بالصندوق" FontSize="12" Foreground="#64748b" Margin="0,0,0,4"/>
+                            <TextBlock Text="الرصيد النقدي الحالي بالصندوق" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,0,4"/>
 
-                            <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="22" FontWeight="Bold" Foreground="#1e293b"/>
+                            <TextBlock Text="{Binding CurrentCashBalance, StringFormat=\{0:N2\} د.ل}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
 
                         </StackPanel>
 
-                        <materialDesign:PackIcon Grid.Column="1" Kind="Safe" Width="38" Height="38" Foreground="#94a3b8" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Grid.Column="1" Kind="Safe" Width="38" Height="38" Foreground="{StaticResource Brush.TextFaint}" VerticalAlignment="Center"/>
 
                     </Grid>
 
@@ -4316,13 +4316,13 @@
 
                     <!-- Payout Input -->
 
-                    <TextBlock Text="المبلغ المراد تسليمه للمالك كاش (د.ل)" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBlock Text="المبلغ المراد تسليمه للمالك كاش (د.ل)" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
 
                     <TextBox Text="{Binding SettlePayoutInput, UpdateSourceTrigger=PropertyChanged}" 
 
                              FontSize="16" FontWeight="Bold" Padding="12,10" Margin="0,0,0,16"
 
-                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
+                             Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5"
 
                              materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
 
@@ -4334,7 +4334,7 @@
 
                     <!-- Keep Amount (ReadOnly Calculation) -->
 
-                    <Border Background="#DCFCE7" BorderBrush="#bbf7d0" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
+                    <Border Background="{StaticResource Brush.IncomeSoft}" BorderBrush="{StaticResource Brush.IncomeSoft}" BorderThickness="1" CornerRadius="8" Padding="12,10" Margin="0,0,0,16">
 
                         <Grid>
 
@@ -4348,13 +4348,13 @@
 
                             <StackPanel Grid.Column="0">
 
-                                <TextBlock Text="السيولة التشغيلية المتبقية بالصندوق" FontSize="11" Foreground="#166534" Margin="0,0,0,2"/>
+                                <TextBlock Text="السيولة التشغيلية المتبقية بالصندوق" FontSize="11" Foreground="{StaticResource Brush.IncomeText}" Margin="0,0,0,2"/>
 
-                                <TextBlock Text="{Binding SettleKeepCalculation, StringFormat=\{0:N2\} د.ل}" FontSize="16" FontWeight="Bold" Foreground="#15803d"/>
+                                <TextBlock Text="{Binding SettleKeepCalculation, StringFormat=\{0:N2\} د.ل}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
 
                             </StackPanel>
 
-                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingUp" Width="24" Height="24" Foreground="#15803d" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Grid.Column="1" Kind="TrendingUp" Width="24" Height="24" Foreground="{StaticResource Brush.IncomeText}" VerticalAlignment="Center"/>
 
                         </Grid>
 
@@ -4364,13 +4364,13 @@
 
                     <!-- Notes Input -->
 
-                    <TextBlock Text="ملاحظات والتفاصيل" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBlock Text="ملاحظات والتفاصيل" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
 
                     <TextBox Text="{Binding SettleNotesInput, UpdateSourceTrigger=PropertyChanged}" 
 
                              FontSize="14" Padding="12,10" Height="70" TextWrapping="Wrap" AcceptsReturn="True"
 
-                             Background="#f8fafc" BorderBrush="#cbd5e1" BorderThickness="1.5"
+                             Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5"
 
                              materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
 
@@ -4384,7 +4384,7 @@
 
                 <!-- Warning Alert -->
 
-                <Border Grid.Row="6" Background="#FEF3C7" BorderBrush="#fef3c7" BorderThickness="1" CornerRadius="8" Padding="12">
+                <Border Grid.Row="6" Background="{StaticResource Brush.PendingSoft}" BorderBrush="{StaticResource Brush.PendingSoft}" BorderThickness="1" CornerRadius="8" Padding="12">
 
                     <Grid>
 
@@ -4396,11 +4396,11 @@
 
                         </Grid.ColumnDefinitions>
 
-                        <materialDesign:PackIcon Grid.Column="0" Kind="AlertCircle" Width="20" Height="20" Foreground="#d97706" Margin="0,0,10,0" VerticalAlignment="Top"/>
+                        <materialDesign:PackIcon Grid.Column="0" Kind="AlertCircle" Width="20" Height="20" Foreground="{StaticResource Brush.Pending}" Margin="0,0,10,0" VerticalAlignment="Top"/>
 
                         <TextBlock Grid.Column="1" Text="تنبيه: سيتم ترحيل وتأكيد كافة اليوميات والمصاريف اليومية وتجميدها نهائياً لمنع أي تعديل لاحق." 
 
-                                   FontSize="11.5" Foreground="#b45309" TextWrapping="Wrap" LineHeight="16"/>
+                                   FontSize="11.5" Foreground="{StaticResource Brush.PendingText}" TextWrapping="Wrap" LineHeight="16"/>
 
                     </Grid>
 
@@ -4424,11 +4424,11 @@
 
                     <Button Grid.Column="0" Content="تأكيد وإقفال" Command="{Binding ConfirmSettleOwnerCashCommand}" 
 
-                            Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
+                            Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White" Height="42" Cursor="Hand" FontWeight="Bold"/>
 
                     <Button Grid.Column="2" Content="إلغاء" Command="{Binding CloseSettleOwnerCashDialogCommand}" 
 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="42" Cursor="Hand" FontWeight="Bold"/>
+                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="{StaticResource Brush.TextFaint}" Foreground="{StaticResource Brush.TextMuted}" Height="42" Cursor="Hand" FontWeight="Bold"/>
 
                 </Grid>
 
@@ -4446,11 +4446,11 @@
 
           Visibility="{Binding IsSettlementArchiveDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-        <Border Background="White" CornerRadius="16" Width="1150" MaxHeight="650" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24" BorderBrush="#cbd5e1" BorderThickness="1">
+        <Border Background="White" CornerRadius="16" Width="1150" MaxHeight="650" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1">
 
             <Border.Effect>
 
-                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="#1E293B" Opacity="0.25"/>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.25"/>
 
             </Border.Effect>
 
@@ -4492,15 +4492,15 @@
 
                     <StackPanel Orientation="Horizontal" Grid.Column="0">
 
-                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <materialDesign:PackIcon Kind="History" Width="26" Height="26" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
 
-                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                        <TextBlock Text="أرشيف تسويات كاش المالك السابقة" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
 
                     </StackPanel>
 
                     <Button Grid.Column="1" Command="{Binding CloseSettlementArchiveCommand}" Style="{StaticResource MaterialDesignToolButton}" Width="36" Height="36" Padding="0" Cursor="Hand" ToolTip="إغلاق">
 
-                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="#64748b"/>
+                        <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="{StaticResource Brush.TextMuted}"/>
 
                     </Button>
 
@@ -4567,7 +4567,7 @@
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
                                                     ToolTip="تنزيل وعرض إيصال PDF">
-                                                <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="#DC2626"/>
+                                                <materialDesign:PackIcon Kind="FilePdfBox" Width="22" Height="22" Foreground="{StaticResource Brush.Expense}"/>
                                             </Button>
                                             <!-- Unlock Period -->
                                             <Button Command="{Binding DataContext.UnlockPeriodCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -4575,7 +4575,7 @@
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
                                                     ToolTip="إلغاء قفل الفترة للمراجعة">
-                                                <materialDesign:PackIcon Kind="LockOpenOutline" Width="22" Height="22" Foreground="#f97316"/>
+                                                <materialDesign:PackIcon Kind="LockOpenOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Pending}"/>
                                             </Button>
                                             <!-- Unpost Period -->
                                             <Button Command="{Binding DataContext.UnpostPeriodCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
@@ -4583,7 +4583,7 @@
                                                     Style="{StaticResource MaterialDesignToolButton}"
                                                     Height="36" Width="36" Padding="0" Cursor="Hand"
                                                     ToolTip="فك ترحيل الفترة بالكامل وعكس الحركات النقدية">
-                                                <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="22" Height="22" Foreground="#dc2626"/>
+                                                <materialDesign:PackIcon Kind="LockOpenVariantOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Expense}"/>
                                             </Button>
                                         </StackPanel>
                                     </DataTemplate>
@@ -4604,7 +4604,7 @@
 
                     <Button HorizontalAlignment="Right" Content="إغلاق الأرشيف" Command="{Binding CloseSettlementArchiveCommand}" 
 
-                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#94a3b8" Foreground="#64748b" Height="40" Padding="20,0" Cursor="Hand" FontWeight="Bold"/>
+                            Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="{StaticResource Brush.TextFaint}" Foreground="{StaticResource Brush.TextMuted}" Height="40" Padding="20,0" Cursor="Hand" FontWeight="Bold"/>
 
                 </Grid>
 

@@ -34,7 +34,7 @@ public partial class DailyJournalView : UserControl
             if (DataContext is DailyJournalViewModel vm && vm.ClearFormCommand.CanExecute(null))
             {
                 e.Handled = true;
-                var answer = MessageBox.Show(
+                var answer = Dialogs.Show(
                     "سيتم مسح جميع البيانات المدخلة في اليومية الحالية دون حفظ. هل تريد المتابعة؟",
                     "تأكيد المسح",
                     MessageBoxButton.YesNo,

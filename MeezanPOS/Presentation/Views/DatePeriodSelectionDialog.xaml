@@ -15,9 +15,9 @@
         FlowDirection="RightToLeft"
         MouseLeftButtonDown="DragWindow">
 
-    <Border Background="White" CornerRadius="20" BorderBrush="#cbd5e1" BorderThickness="1.5">
+    <Border Background="White" CornerRadius="20" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="#1E293B" Opacity="0.2"/>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.2"/>
         </Border.Effect>
 
         <Grid Margin="24">
@@ -36,22 +36,22 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="ترحيل وإقفال فترة زمنية" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="ترحيل وإقفال فترة زمنية" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Close Button -->
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Click="Cancel_Click" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
             <!-- Divider -->
-            <Separator Grid.Row="1" Margin="0,16" Background="#f1f5f9"/>
+            <Separator Grid.Row="1" Margin="0,16" Background="{StaticResource Brush.LockedSoft}"/>
 
             <!-- 2. Form Inputs (Dates) -->
             <StackPanel Grid.Row="2" VerticalAlignment="Center">
-                <TextBlock Text="يرجى تحديد تاريخ البدء والانتهاء للفترة المراد قفلها محاسبياً:" FontSize="13" Foreground="#64748b" Margin="0,0,0,16" TextWrapping="Wrap"/>
+                <TextBlock Text="يرجى تحديد تاريخ البدء والانتهاء للفترة المراد قفلها محاسبياً:" FontSize="13" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,0,16" TextWrapping="Wrap"/>
                 
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -62,7 +62,7 @@
 
                     <!-- Start Date Picker -->
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="من تاريخ" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="من تاريخ" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <DatePicker x:Name="DpStartDate" 
                                     materialDesign:HintAssist.Hint="من تاريخ..." 
                                     Style="{StaticResource MaterialDesignOutlinedDatePicker}" 
@@ -73,7 +73,7 @@
 
                     <!-- End Date Picker -->
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="إلى تاريخ" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="إلى تاريخ" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <DatePicker x:Name="DpEndDate" 
                                     materialDesign:HintAssist.Hint="إلى تاريخ..." 
                                     Style="{StaticResource MaterialDesignOutlinedDatePicker}" 
@@ -96,7 +96,7 @@
                 <Button Grid.Column="0" 
                         Click="Confirm_Click"
                         Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White"
+                        Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White"
                         Height="45" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -113,7 +113,7 @@
                 <Button Grid.Column="2" 
                         Click="Cancel_Click"
                         Style="{StaticResource MaterialDesignOutlinedButton}" 
-                        Foreground="#64748b" BorderBrush="#cbd5e1"
+                        Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}"
                         Height="45" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">

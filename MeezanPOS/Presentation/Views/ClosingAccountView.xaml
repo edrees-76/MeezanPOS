@@ -8,7 +8,7 @@
              xmlns:local="clr-namespace:MeezanPOS.Presentation.Views"
              mc:Ignorable="d" 
              FlowDirection="RightToLeft"
-             Background="#F5F7FA"
+             Background="{StaticResource Brush.Canvas}"
              d:DesignHeight="700" d:DesignWidth="1000">
 
     <UserControl.Resources>
@@ -29,12 +29,12 @@
 
                             <!-- Beautiful Floating Header Container (RTL Right-Aligned Segmented Control) -->
                             <Border Grid.Row="0" 
-                                    Background="#F1F5F9" 
+                                    Background="{StaticResource Brush.LockedSoft}" 
                                     CornerRadius="14" 
                                     Padding="5" 
                                     HorizontalAlignment="Right" 
                                     Margin="0,0,0,24"
-                                    BorderBrush="#E2E8F0"
+                                    BorderBrush="{StaticResource Brush.Border}"
                                     BorderThickness="1">
                                 <TabPanel x:Name="HeaderPanel" 
                                           IsItemsHost="True" 
@@ -67,7 +67,7 @@
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -93,17 +93,17 @@
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="IsSelected" Value="False"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Border" Property="Background" Value="#E2E8F0"/>
-                                <Setter Property="Foreground" Value="#1E293B"/>
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Border}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
                             </MultiTrigger>
                             
                             <!-- Selected State (Floating Card with DropShadow) -->
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#FFFFFF"/>
-                                <Setter Property="Foreground" Value="#3F51B5"/>
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Surface}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
                                 <Setter TargetName="Border" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="10" ShadowDepth="1.5" Color="#64748B" Opacity="0.18"/>
+                                        <DropShadowEffect BlurRadius="10" ShadowDepth="1.5" Color="{StaticResource Color.TextMuted}" Opacity="0.18"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -123,7 +123,7 @@
             </Grid.RowDefinitions>
 
             <!-- 1. Header / Date Filter Bar -->
-            <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20,16" Margin="0,0,0,16" BorderBrush="#EEF2FF" BorderThickness="1">
+            <Border Grid.Row="0" Background="White" CornerRadius="12" Padding="20,16" Margin="0,0,0,16" BorderBrush="{StaticResource Brush.PrimarySoft}" BorderThickness="1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -131,7 +131,7 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="الفترة المالية:" FontSize="15" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <TextBlock Text="الفترة المالية:" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                         <ComboBox x:Name="comboPeriod" SelectedValue="{Binding SelectedPeriod}" SelectedValuePath="Tag" Width="150" Margin="0,0,16,0"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}">
                             <ComboBoxItem Content="اليوم" Tag="{x:Static ent:DashboardPeriod.Today}"/>
@@ -160,22 +160,22 @@
 
                         <!-- PDF Export Button with Dropdown ContextMenu -->
                         <Button x:Name="btnExportPdf" AutomationProperties.AutomationId="menuExportPdf" Click="btnExportPdf_Click"
-                                Background="#1E293B" BorderThickness="0" Padding="16,8" Height="40" 
+                                Background="{StaticResource Brush.TextPrimary}" BorderThickness="0" Padding="16,8" Height="40" 
                                 materialDesign:ButtonAssist.CornerRadius="8" Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="FilePdfBox" Foreground="White" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="تصدير تقرير PDF" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
                             </StackPanel>
                             <Button.ContextMenu>
-                                <ContextMenu Background="White" BorderBrush="#E2E8F0" BorderThickness="1">
-                                    <MenuItem AutomationProperties.AutomationId="btnExportSummary" Header="تقرير مختصر (إجماليات)" Command="{Binding ExportPdfCommand}" CommandParameter="Summary" Foreground="#1E293B">
+                                <ContextMenu Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                                    <MenuItem AutomationProperties.AutomationId="btnExportSummary" Header="تقرير مختصر (إجماليات)" Command="{Binding ExportPdfCommand}" CommandParameter="Summary" Foreground="{StaticResource Brush.TextPrimary}">
                                         <MenuItem.Icon>
-                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="16" Height="16" Foreground="#1E293B"/>
+                                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="16" Height="16" Foreground="{StaticResource Brush.TextPrimary}"/>
                                         </MenuItem.Icon>
                                     </MenuItem>
-                                    <MenuItem AutomationProperties.AutomationId="btnExportComprehensive" Header="تقرير شامل (كافة التفاصيل)" Command="{Binding ExportPdfCommand}" CommandParameter="Comprehensive" Foreground="#1E293B">
+                                    <MenuItem AutomationProperties.AutomationId="btnExportComprehensive" Header="تقرير شامل (كافة التفاصيل)" Command="{Binding ExportPdfCommand}" CommandParameter="Comprehensive" Foreground="{StaticResource Brush.TextPrimary}">
                                         <MenuItem.Icon>
-                                            <materialDesign:PackIcon Kind="FileDocument" Width="16" Height="16" Foreground="#1E293B"/>
+                                            <materialDesign:PackIcon Kind="FileDocument" Width="16" Height="16" Foreground="{StaticResource Brush.TextPrimary}"/>
                                         </MenuItem.Icon>
                                     </MenuItem>
                                 </ContextMenu>
@@ -183,7 +183,7 @@
                         </Button>
 
                         <!-- Lock and Settle Period Button -->
-                        <Button AutomationProperties.AutomationId="btnOpenSettleDialog" Command="{Binding OpenSettleDialogCommand}" Background="#16A34A" BorderThickness="0" Padding="16,8" Height="40" materialDesign:ButtonAssist.CornerRadius="8" Margin="8,0,0,0">
+                        <Button AutomationProperties.AutomationId="btnOpenSettleDialog" Command="{Binding OpenSettleDialogCommand}" Background="{StaticResource Brush.Income}" BorderThickness="0" Padding="16,8" Height="40" materialDesign:ButtonAssist.CornerRadius="8" Margin="8,0,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="LockOutline" Foreground="White" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="إجراء تسوية وإقفال للفترة" Foreground="White" FontWeight="Bold" VerticalAlignment="Center"/>
@@ -193,8 +193,8 @@
 
                     <!-- Loading Indicator -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="20" Height="20" Margin="0,0,8,0" Foreground="#1E293B"/>
-                        <TextBlock Text="جاري تحميل البيانات الحقيقية..." FontSize="13" Foreground="#475569" VerticalAlignment="Center"/>
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="20" Height="20" Margin="0,0,8,0" Foreground="{StaticResource Brush.TextPrimary}"/>
+                        <TextBlock Text="جاري تحميل البيانات الحقيقية..." FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -220,37 +220,37 @@
 
                             <!-- Income Statement Cards -->
                             <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,24">
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="إجمالي الإيرادات (المبيعات)" FontSize="13" Foreground="#475569" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Summary.IncomeStatement.TotalSales, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#1E293B" Margin="0,8,0,0"/>
+                                        <TextBlock Text="إجمالي الإيرادات (المبيعات)" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Summary.IncomeStatement.TotalSales, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,8,0,0"/>
                                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                            <TextBlock Text="نقدي:" FontSize="11" Foreground="#64748B"/>
-                                            <TextBlock Text="{Binding Summary.IncomeStatement.CashSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
-                                            <TextBlock Text=" | بطاقة:" FontSize="11" Foreground="#64748B" Margin="8,0,0,0"/>
-                                            <TextBlock Text="{Binding Summary.IncomeStatement.CardSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="#1E293B"/>
+                                            <TextBlock Text="نقدي:" FontSize="11" Foreground="{StaticResource Brush.TextMuted}"/>
+                                            <TextBlock Text="{Binding Summary.IncomeStatement.CashSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                            <TextBlock Text=" | بطاقة:" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" Margin="8,0,0,0"/>
+                                            <TextBlock Text="{Binding Summary.IncomeStatement.CardSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}"/>
                                         </StackPanel>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="المصروفات النثرية اليومية" FontSize="13" Foreground="#475569" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Summary.IncomeStatement.DailyExpenses, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#475569" Margin="0,8,0,0"/>
+                                        <TextBlock Text="المصروفات النثرية اليومية" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Summary.IncomeStatement.DailyExpenses, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="المصروفات العامة والتشغيلية" FontSize="13" Foreground="#475569" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Summary.IncomeStatement.GeneralExpenses, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#475569" Margin="0,8,0,0"/>
+                                        <TextBlock Text="المصروفات العامة والتشغيلية" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Summary.IncomeStatement.GeneralExpenses, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border BorderThickness="1" CornerRadius="12" Padding="16" Margin="6" Background="#DCFCE7" BorderBrush="#DCFCE7">
+                                <Border BorderThickness="1" CornerRadius="12" Padding="16" Margin="6" Background="{StaticResource Brush.IncomeSoft}" BorderBrush="{StaticResource Brush.IncomeSoft}">
                                     <StackPanel>
-                                        <TextBlock Text="صافي الأرباح التشغيلية" FontSize="13" Foreground="#15803D" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Summary.IncomeStatement.NetProfit, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#15803D" Margin="0,8,0,0"/>
+                                        <TextBlock Text="صافي الأرباح التشغيلية" FontSize="13" Foreground="{StaticResource Brush.IncomeText}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Summary.IncomeStatement.NetProfit, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>
@@ -262,20 +262,20 @@
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Text="تحليل المصروفات حسب الفئة والتصنيف:" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="6,0,0,10"/>
+                                <TextBlock Grid.Row="0" Text="تحليل المصروفات حسب الفئة والتصنيف:" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="6,0,0,10"/>
                                 
-                                <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                                <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
                                     <DataGrid ItemsSource="{Binding Summary.ExpensesByCategory}" AutoGenerateColumns="False" IsReadOnly="True" 
                                               Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
                                               RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
                                         <DataGrid.Resources>
                                             <Style TargetType="DataGridColumnHeader">
-                                                <Setter Property="Background" Value="#F8FAFC" />
-                                                <Setter Property="Foreground" Value="#475569" />
+                                                <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
                                                 <Setter Property="FontWeight" Value="Bold" />
                                                 <Setter Property="FontSize" Value="13" />
                                                 <Setter Property="Padding" Value="10,0" />
-                                                <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
                                                 <Setter Property="BorderThickness" Value="0,0,0,1" />
                                                 <Setter Property="HorizontalContentAlignment" Value="Center" />
                                             </Style>
@@ -288,7 +288,7 @@
                                                         <Setter Property="VerticalAlignment" Value="Center" />
                                                         <Setter Property="FontWeight" Value="SemiBold" />
                                                         <Setter Property="FontSize" Value="13" />
-                                                        <Setter Property="Foreground" Value="#64748B" />
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
@@ -325,8 +325,8 @@
                                                                 <ColumnDefinition Width="*" />
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
-                                                            <ProgressBar Grid.Column="0" Value="{Binding Percentage, Mode=OneWay}" Height="12" Foreground="#D97706" Background="#FEF3C7" VerticalAlignment="Center"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" FontSize="12" FontWeight="SemiBold" Foreground="#D97706" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                                            <ProgressBar Grid.Column="0" Value="{Binding Percentage, Mode=OneWay}" Height="12" Foreground="{StaticResource Brush.Pending}" Background="{StaticResource Brush.PendingSoft}" VerticalAlignment="Center"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Brush.Pending}" VerticalAlignment="Center" Margin="10,0,0,0"/>
                                                         </Grid>
                                                     </DataTemplate>
                                                 </DataGridTemplateColumn.CellTemplate>
@@ -338,7 +338,7 @@
                                                         <Setter Property="TextAlignment" Value="Center" />
                                                         <Setter Property="VerticalAlignment" Value="Center" />
                                                         <Setter Property="FontSize" Value="12" />
-                                                        <Setter Property="Foreground" Value="#64748B" />
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                             </DataGridTextColumn>
@@ -365,20 +365,20 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Text="ملخص حركات وأرصدة الموردين خلال الفترة:" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="6,0,0,10"/>
+                            <TextBlock Grid.Row="0" Text="ملخص حركات وأرصدة الموردين خلال الفترة:" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="6,0,0,10"/>
 
-                            <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                            <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
                                 <DataGrid ItemsSource="{Binding Summary.Suppliers}" AutoGenerateColumns="False" IsReadOnly="True" 
                                           Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
                                           RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
                                     <DataGrid.Resources>
                                         <Style TargetType="DataGridColumnHeader">
-                                            <Setter Property="Background" Value="#F8FAFC" />
-                                            <Setter Property="Foreground" Value="#475569" />
+                                            <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
                                             <Setter Property="FontWeight" Value="Bold" />
                                             <Setter Property="FontSize" Value="13" />
                                             <Setter Property="Padding" Value="10,0" />
-                                            <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                            <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
                                             <Setter Property="BorderThickness" Value="0,0,0,1" />
                                             <Setter Property="HorizontalContentAlignment" Value="Center" />
                                         </Style>
@@ -391,7 +391,7 @@
                                                     <Setter Property="VerticalAlignment" Value="Center" />
                                                     <Setter Property="FontWeight" Value="SemiBold" />
                                                     <Setter Property="FontSize" Value="13" />
-                                                    <Setter Property="Foreground" Value="#64748B" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
@@ -426,7 +426,7 @@
                                                     <Setter Property="VerticalAlignment" Value="Center" />
                                                     <Setter Property="Margin" Value="10,0" />
                                                     <Setter Property="FontSize" Value="13" />
-                                                    <Setter Property="Foreground" Value="#B45309" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.PendingText}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
@@ -438,7 +438,7 @@
                                                     <Setter Property="VerticalAlignment" Value="Center" />
                                                     <Setter Property="Margin" Value="10,0" />
                                                     <Setter Property="FontSize" Value="13" />
-                                                    <Setter Property="Foreground" Value="#15803D" />
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}" />
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
@@ -477,43 +477,43 @@
                             </Grid.RowDefinitions>
 
                             <UniformGrid Grid.Row="0" Columns="4" Margin="0,0,0,20">
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="رصيد أول المدة نقداً" FontSize="13" Foreground="#475569" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding Summary.CashLedger.OpeningBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#1E293B" Margin="0,8,0,0"/>
+                                        <TextBlock Text="رصيد أول المدة نقداً" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding Summary.CashLedger.OpeningBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Background="#DCFCE7" BorderBrush="#DCFCE7" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.IncomeSoft}" BorderBrush="{StaticResource Brush.IncomeSoft}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="إجمالي المقبوضات (الوارد النقدي)" FontSize="13" Foreground="#15803D" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Summary.CashLedger.TotalCashIn, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#15803D" Margin="0,8,0,0"/>
+                                        <TextBlock Text="إجمالي المقبوضات (الوارد النقدي)" FontSize="13" Foreground="{StaticResource Brush.IncomeText}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Summary.CashLedger.TotalCashIn, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Background="#FEE2E2" BorderBrush="#FEE2E2" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.ExpenseSoft}" BorderBrush="{StaticResource Brush.ExpenseSoft}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="إجمالي المدفوعات (الصادر النقدي)" FontSize="13" Foreground="#B91C1C" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Summary.CashLedger.TotalCashOut, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#B91C1C" Margin="0,8,0,0"/>
+                                        <TextBlock Text="إجمالي المدفوعات (الصادر النقدي)" FontSize="13" Foreground="{StaticResource Brush.ExpenseText}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Summary.CashLedger.TotalCashOut, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.ExpenseText}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
 
-                                <Border Background="#EEF2FF" BorderBrush="#EEF2FF" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
+                                <Border Background="{StaticResource Brush.PrimarySoft}" BorderBrush="{StaticResource Brush.PrimarySoft}" BorderThickness="1" CornerRadius="12" Padding="16" Margin="6">
                                     <StackPanel>
-                                        <TextBlock Text="الرصيد النقدي الختامي" FontSize="13" Foreground="#3F51B5" FontWeight="Bold"/>
-                                        <TextBlock Text="{Binding Summary.CashLedger.ClosingBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="#3F51B5" Margin="0,8,0,0"/>
+                                        <TextBlock Text="الرصيد النقدي الختامي" FontSize="13" Foreground="{StaticResource Brush.PrimaryInteractive}" FontWeight="Bold"/>
+                                        <TextBlock Text="{Binding Summary.CashLedger.ClosingBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>
 
-                            <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="12" Padding="20">
+                            <Border Grid.Row="1" Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="20">
                                 <StackPanel>
-                                    <materialDesign:PackIcon Kind="CashMultiple" Width="40" Height="40" Foreground="#64748B" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="مطابقة الصندوق والحركة النقدية" FontSize="16" FontWeight="Bold" Foreground="#1E293B" Margin="0,12,0,4" HorizontalAlignment="Center"/>
-                                    <TextBlock Text="توضح الخلاصة أعلاه حركة النقدية الفعلية المسجلة بداخل دفتر الخزينة الرئيسي (CashLedger) خلال الفترة المحددة." FontSize="13" Foreground="#475569" Margin="0,0,0,16" HorizontalAlignment="Center"/>
-                                    <Separator Background="#E2E8F0" Margin="0,0,0,16"/>
-                                    <TextBlock Text="صيغة الاحتساب المحاسبية:" FontSize="13" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,6"/>
-                                    <TextBlock Text="الرصيد الختامي للخزينة = رصيد أول المدة + مجموع الواردات النقدية (مبيعات، إيداعات مالية) - مجموع المدفوعات النقدية (مصروفات، دفعات موردين، مسحوبات المالك)." FontSize="12.5" Foreground="#475569"/>
+                                    <materialDesign:PackIcon Kind="CashMultiple" Width="40" Height="40" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="مطابقة الصندوق والحركة النقدية" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,12,0,4" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="توضح الخلاصة أعلاه حركة النقدية الفعلية المسجلة بداخل دفتر الخزينة الرئيسي (CashLedger) خلال الفترة المحددة." FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,16" HorizontalAlignment="Center"/>
+                                    <Separator Background="{StaticResource Brush.Border}" Margin="0,0,0,16"/>
+                                    <TextBlock Text="صيغة الاحتساب المحاسبية:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,0,0,6"/>
+                                    <TextBlock Text="الرصيد الختامي للخزينة = رصيد أول المدة + مجموع الواردات النقدية (مبيعات، إيداعات مالية) - مجموع المدفوعات النقدية (مصروفات، دفعات موردين، مسحوبات المالك)." FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
@@ -535,89 +535,89 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <TextBlock Grid.Row="0" Text="انقر على أي كارت لعرض القوائم التفصيلية بأسماء أطراف التعامل:" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="6,0,0,16"/>
+                            <TextBlock Grid.Row="0" Text="انقر على أي كارت لعرض القوائم التفصيلية بأسماء أطراف التعامل:" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="6,0,0,16"/>
 
                             <UniformGrid Grid.Row="1" Columns="3" VerticalAlignment="Top">
                                 <!-- Card 1: Supplier Debt -->
-                                <Button AutomationProperties.AutomationId="btnSuppliersCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Suppliers" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnSuppliersCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Suppliers" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="AccountTie" Width="24" Height="24" Foreground="#475569" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="ديون الموردين للغير" FontSize="13" Foreground="#475569" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Summary.Liabilities.TotalSupplierDebt, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                            <materialDesign:PackIcon Kind="AccountTie" Width="24" Height="24" Foreground="{StaticResource Brush.TextSecondary}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="ديون الموردين للغير" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Summary.Liabilities.TotalSupplierDebt, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
                                         </StackPanel>
                                     </Border>
                                 </Button>
 
                                 <!-- Card 2: Worker Advances -->
-                                <Button AutomationProperties.AutomationId="btnAdvancesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Advances" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnAdvancesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Advances" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Button.ToolTip>
                                         <ToolTip Content="صافي المبالغ التي دفعها المطعم للعمال مقدماً كذمة مالية عليهم."/>
                                     </Button.ToolTip>
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="AccountArrowRight" Width="24" Height="24" Foreground="#D97706" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="سُلف العمال غير المسددة" FontSize="13" Foreground="#B45309" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Summary.Liabilities.TotalWorkerAdvancesOutstanding, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#B45309" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="صافي ما يدين به العمال للمطعم" FontSize="10" Foreground="#92400E" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <materialDesign:PackIcon Kind="AccountArrowRight" Width="24" Height="24" Foreground="{StaticResource Brush.Pending}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="سُلف العمال غير المسددة" FontSize="13" Foreground="{StaticResource Brush.PendingText}" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Summary.Liabilities.TotalWorkerAdvancesOutstanding, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.PendingText}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="صافي ما يدين به العمال للمطعم" FontSize="10" Foreground="{StaticResource Brush.PendingText}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </Button>
 
                                 <!-- Card 3: Unpaid Wages -->
-                                <Button AutomationProperties.AutomationId="btnUnpaidWagesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="UnpaidWages" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnUnpaidWagesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="UnpaidWages" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Button.ToolTip>
                                         <ToolTip Content="مستحقات العمال المتراكمة لقاء أيام العمل ولم تُصرف لهم نقداً بعد."/>
                                     </Button.ToolTip>
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="AccountArrowLeft" Width="24" Height="24" Foreground="#3F51B5" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="أجور مستحقة غير مصروفة" FontSize="13" Foreground="#283593" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Summary.Liabilities.TotalWorkerWagesUnpaid, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#283593" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="أجور مستحقة للعمال لم تُدفع بعد" FontSize="10" Foreground="#283593" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <materialDesign:PackIcon Kind="AccountArrowLeft" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="أجور مستحقة غير مصروفة" FontSize="13" Foreground="{StaticResource Brush.Primary}" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Summary.Liabilities.TotalWorkerWagesUnpaid, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="أجور مستحقة للعمال لم تُدفع بعد" FontSize="10" Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </Button>
 
                                 <!-- Card 4: Owner Receivables -->
-                                <Button AutomationProperties.AutomationId="btnReceivablesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Receivables" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnReceivablesCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Receivables" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="Handshake" Width="24" Height="24" Foreground="#15803D" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="مستحقات المالك والشركاء" FontSize="13" Foreground="#15803D" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Summary.Liabilities.TotalOwnerReceivables, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#15803D" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="ما لهم طرف المطعم" FontSize="10" Foreground="#166534" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <materialDesign:PackIcon Kind="Handshake" Width="24" Height="24" Foreground="{StaticResource Brush.IncomeText}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="مستحقات المالك والشركاء" FontSize="13" Foreground="{StaticResource Brush.IncomeText}" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Summary.Liabilities.TotalOwnerReceivables, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="ما لهم طرف المطعم" FontSize="10" Foreground="{StaticResource Brush.IncomeText}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </Button>
 
                                 <!-- Card 5: Owner Obligations -->
-                                <Button AutomationProperties.AutomationId="btnObligationsCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Obligations" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
+                                <Button AutomationProperties.AutomationId="btnObligationsCard" Command="{Binding OpenDetailsCommand}" CommandParameter="Obligations" Style="{StaticResource MaterialDesignFlatButton}" Margin="6" Padding="0" Height="125" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" Background="White" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" materialDesign:ButtonAssist.CornerRadius="12">
                                     <Border Padding="16">
                                         <StackPanel VerticalAlignment="Center">
-                                            <materialDesign:PackIcon Kind="HandshakeOutline" Width="24" Height="24" Foreground="#B91C1C" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="التزامات المالك والشركاء" FontSize="13" Foreground="#B91C1C" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding Summary.Liabilities.TotalOwnerObligations, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="#B91C1C" Margin="0,4,0,0" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="ما عليهم لصالح المطعم" FontSize="10" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                            <materialDesign:PackIcon Kind="HandshakeOutline" Width="24" Height="24" Foreground="{StaticResource Brush.ExpenseText}" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="التزامات المالك والشركاء" FontSize="13" Foreground="{StaticResource Brush.ExpenseText}" FontWeight="SemiBold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Summary.Liabilities.TotalOwnerObligations, StringFormat='{}{0:N2} د.ل'}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.ExpenseText}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                                            <TextBlock Text="ما عليهم لصالح المطعم" FontSize="10" Foreground="{StaticResource Brush.ExpenseText}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                         </StackPanel>
                                     </Border>
                                 </Button>
 
                                 <!-- Card 6: Total Summary -->
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1.5" CornerRadius="12" Margin="6" Padding="16" Height="125">
+                                <Border Background="{StaticResource Brush.SurfaceAlt}" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1.5" CornerRadius="12" Margin="6" Padding="16" Height="125">
                                     <StackPanel VerticalAlignment="Center">
-                                        <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="#1E293B" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="إجمالي الالتزامات والمستحقات" FontSize="13" Foreground="#1E293B" FontWeight="Bold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="ScaleBalance" Width="24" Height="24" Foreground="{StaticResource Brush.TextPrimary}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="إجمالي الالتزامات والمستحقات" FontSize="13" Foreground="{StaticResource Brush.TextPrimary}" FontWeight="Bold" Margin="0,6,0,0" HorizontalAlignment="Center"/>
                                         <!-- Calculate total liabilities: supplier debt + unpaid wages + owner receivables -->
                                         <!-- Subtract assets due from others: worker advances + owner obligations -->
-                                        <TextBlock FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,4,0,0" HorizontalAlignment="Center">
+                                        <TextBlock FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,4,0,0" HorizontalAlignment="Center">
                                             <TextBlock.Text>
                                                 <MultiBinding StringFormat="{}{0:N2} د.ل">
                                                     <Binding Path="Summary.Liabilities.TotalSupplierDebt" />
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>
-                                        <TextBlock Text="إجمالي التزامات المطعم الخارجية والداخلية" FontSize="9" Foreground="#475569" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                        <TextBlock Text="إجمالي التزامات المطعم الخارجية والداخلية" FontSize="9" Foreground="{StaticResource Brush.TextSecondary}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>
@@ -640,20 +640,20 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="ملخص أرصدة وحسابات المصارف خلال الفترة:" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="6,0,0,10"/>
+                        <TextBlock Grid.Row="0" Text="ملخص أرصدة وحسابات المصارف خلال الفترة:" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="6,0,0,10"/>
 
-                        <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                        <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
                             <DataGrid ItemsSource="{Binding Summary.BankAccounts}" AutoGenerateColumns="False" IsReadOnly="True" 
                                       Background="Transparent" BorderThickness="0" RowHeaderWidth="0"
                                       RowHeight="40" ColumnHeaderHeight="38" AlternationCount="9999">
                                 <DataGrid.Resources>
                                     <Style TargetType="DataGridColumnHeader">
-                                        <Setter Property="Background" Value="#F8FAFC" />
-                                        <Setter Property="Foreground" Value="#475569" />
+                                        <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}" />
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}" />
                                         <Setter Property="FontWeight" Value="Bold" />
                                         <Setter Property="FontSize" Value="13" />
                                         <Setter Property="Padding" Value="10,0" />
-                                        <Setter Property="BorderBrush" Value="#E2E8F0" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Border}" />
                                         <Setter Property="BorderThickness" Value="0,0,0,1" />
                                         <Setter Property="HorizontalContentAlignment" Value="Center" />
                                     </Style>
@@ -666,7 +666,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center" />
                                                 <Setter Property="FontWeight" Value="SemiBold" />
                                                 <Setter Property="FontSize" Value="13" />
-                                                <Setter Property="Foreground" Value="#64748B" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -723,7 +723,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center" />
                                                 <Setter Property="Margin" Value="10,0" />
                                                 <Setter Property="FontSize" Value="13" />
-                                                <Setter Property="Foreground" Value="#15803D" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -735,7 +735,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center" />
                                                 <Setter Property="Margin" Value="10,0" />
                                                 <Setter Property="FontSize" Value="13" />
-                                                <Setter Property="Foreground" Value="#B91C1C" />
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}" />
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -761,45 +761,45 @@
 
         <!-- 3. Lock & Settle Period Overlay Dialog -->
         <Grid Background="#66000000" Visibility="{Binding IsSettleDialogOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Border Background="White" CornerRadius="16" Width="480" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="28" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="إجراء التسوية المالية وإقفال الفترة" FontSize="18" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center"/>
-                    <TextBlock Text="سيقوم النظام بترحيل وتثبيت جميع الحركات وتجميدها نهائياً لتلك الفترة." FontSize="13" Foreground="#475569" Margin="0,6,0,16" HorizontalAlignment="Center"/>
+                    <TextBlock Text="إجراء التسوية المالية وإقفال الفترة" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="سيقوم النظام بترحيل وتثبيت جميع الحركات وتجميدها نهائياً لتلك الفترة." FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,6,0,16" HorizontalAlignment="Center"/>
 
-                    <Separator Background="#F1F5F9" Height="1" Margin="0,0,0,16"/>
+                    <Separator Background="{StaticResource Brush.LockedSoft}" Height="1" Margin="0,0,0,16"/>
 
                     <!-- Settle Info -->
-                    <Border Background="#F8FAFC" CornerRadius="8" Padding="12" Margin="0,0,0,16">
+                    <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="8" Padding="12" Margin="0,0,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="السيولة النقدية المتوفرة بالخزينة:" FontSize="13" Foreground="#475569" VerticalAlignment="Center"/>
-                            <TextBlock Grid.Column="1" Text="{Binding SettleCashBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="السيولة النقدية المتوفرة بالخزينة:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="{Binding SettleCashBalance, StringFormat='{}{0:N2} د.ل'}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
 
                     <!-- Payout Input -->
-                    <TextBlock Text="المبلغ المسحوب والمسلم للمالك (Payout):" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,6"/>
+                    <TextBlock Text="المبلغ المسحوب والمسلم للمالك (Payout):" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,0,0,6"/>
                     <TextBox Text="{Binding SettlePayoutAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16" Padding="12,10" FontSize="14" FontWeight="SemiBold"/>
 
                     <!-- Keep Input -->
-                    <TextBlock Text="المبلغ المتبقي بالخزينة (Keep):" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,6"/>
+                    <TextBlock Text="المبلغ المتبقي بالخزينة (Keep):" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,0,0,6"/>
                     <TextBox Text="{Binding SettleKeepAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,16" Padding="12,10" FontSize="14" FontWeight="SemiBold"/>
 
                     <!-- Notes Input -->
-                    <TextBlock Text="بيان وملاحظات التسوية والإقفال:" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,6"/>
+                    <TextBlock Text="بيان وملاحظات التسوية والإقفال:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" Margin="0,0,0,6"/>
                     <TextBox Text="{Binding SettleNotes, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" MinHeight="60" Margin="0,0,0,16" Padding="12,10" FontSize="13"/>
 
                     <!-- Password Box for verification -->
-                    <TextBlock Text="كلمة مرور المدير لتأكيد الإقفال والتسوية:" FontSize="13" FontWeight="Bold" Foreground="#B91C1C" Margin="0,0,0,6"/>
+                    <TextBlock Text="كلمة مرور المدير لتأكيد الإقفال والتسوية:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.ExpenseText}" Margin="0,0,0,6"/>
                     <PasswordBox x:Name="SettlePasswordBox" AutomationProperties.AutomationId="txtSettlePassword" Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,0,0,20" Padding="12,10"/>
 
                     <!-- Processing indicator -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16" Visibility="{Binding SettleIsProcessing, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="20" Height="20" Margin="0,0,8,0" Foreground="#16A34A"/>
-                        <TextBlock Text="جاري إقفال الحركات المالية وتجميد الفترة..." FontSize="12.5" Foreground="#16A34A" VerticalAlignment="Center"/>
+                        <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Value="0" IsIndeterminate="True" Width="20" Height="20" Margin="0,0,8,0" Foreground="{StaticResource Brush.Income}"/>
+                        <TextBlock Text="جاري إقفال الحركات المالية وتجميد الفترة..." FontSize="12.5" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- Actions -->
@@ -809,9 +809,9 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="إلغاء" Command="{Binding CloseSettleDialogCommand}" 
-                                Style="{StaticResource MaterialDesignFlatButton}" Background="#F1F5F9" Foreground="#475569" Height="42" Margin="0,0,8,0" materialDesign:ButtonAssist.CornerRadius="8"/>
+                                Style="{StaticResource MaterialDesignFlatButton}" Background="{StaticResource Brush.LockedSoft}" Foreground="{StaticResource Brush.TextSecondary}" Height="42" Margin="0,0,8,0" materialDesign:ButtonAssist.CornerRadius="8"/>
                         <Button Grid.Column="1" AutomationProperties.AutomationId="btnConfirmSettle" Content="تأكيد التسوية والإقفال" Command="{Binding ConfirmSettleCommand}" CommandParameter="{Binding ElementName=SettlePasswordBox}"
-                                Background="#16A34A" BorderThickness="0" Foreground="White" Height="42" Margin="8,0,0,0" materialDesign:ButtonAssist.CornerRadius="8"/>
+                                Background="{StaticResource Brush.Income}" BorderThickness="0" Foreground="White" Height="42" Margin="8,0,0,0" materialDesign:ButtonAssist.CornerRadius="8"/>
                     </Grid>
                 </StackPanel>
             </Border>

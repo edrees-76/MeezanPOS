@@ -121,7 +121,7 @@
         <Style x:Key="WindowControlButton" TargetType="Button">
             <Setter Property="Width" Value="34"/>
             <Setter Property="Height" Value="30"/>
-            <Setter Property="Foreground" Value="#C5CAE9"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.SidebarText}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -267,8 +267,8 @@
                 <Border Grid.Column="1" CornerRadius="0,16,16,0" ClipToBounds="True">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#283593" Offset="0"/>
-                            <GradientStop Color="#1A237E" Offset="1"/>
+                            <GradientStop Color="{StaticResource Color.Primary}" Offset="0"/>
+                            <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -291,28 +291,28 @@
                             </Border>
                             <TextBlock Text="ميزان — محاسبة مطعمك بدقة" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="28" Foreground="White" TextWrapping="Wrap"/>
                             <TextBlock Text="نظام متكامل يربط الكاشير بالخزينة والموردين وأجور العمال، مع إقفال ورديات يومي وتقارير ختامية بضغطة زر."
-                                       FontSize="14" Foreground="#C5CAE9" TextWrapping="Wrap" LineHeight="22" Margin="0,10,0,28"/>
+                                       FontSize="14" Foreground="{StaticResource Brush.SidebarText}" TextWrapping="Wrap" LineHeight="22" Margin="0,10,0,28"/>
 
                             <UniformGrid Columns="3">
                                 <Border Style="{StaticResource FeatureTile}">
                                     <StackPanel>
                                         <materialDesign:PackIcon Kind="CashMultiple" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
                                         <TextBlock Text="الخزينة النقدية" FontWeight="Bold" FontSize="13" Foreground="White"/>
-                                        <TextBlock Text="مطابقة الدرج والورديات" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock Text="مطابقة الدرج والورديات" FontSize="11.5" Foreground="{StaticResource Brush.SidebarText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource FeatureTile}">
                                     <StackPanel>
                                         <materialDesign:PackIcon Kind="TruckOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
                                         <TextBlock Text="الموردون" FontWeight="Bold" FontSize="13" Foreground="White"/>
-                                        <TextBlock Text="فواتير ودفعات وكشوف" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock Text="فواتير ودفعات وكشوف" FontSize="11.5" Foreground="{StaticResource Brush.SidebarText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Border>
                                 <Border Style="{StaticResource FeatureTile}" Margin="0">
                                     <StackPanel>
                                         <materialDesign:PackIcon Kind="AccountGroupOutline" Width="22" Height="22" Foreground="{StaticResource Brush.Accent}" Margin="0,0,0,8"/>
                                         <TextBlock Text="أجور العمال" FontWeight="Bold" FontSize="13" Foreground="White"/>
-                                        <TextBlock Text="حضور وسلف ومستحقات" FontSize="11.5" Foreground="#C5CAE9" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                        <TextBlock Text="حضور وسلف ومستحقات" FontSize="11.5" Foreground="{StaticResource Brush.SidebarText}" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                     </StackPanel>
                                 </Border>
                             </UniformGrid>

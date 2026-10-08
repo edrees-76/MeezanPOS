@@ -15,9 +15,9 @@
         FlowDirection="RightToLeft"
         MouseLeftButtonDown="DragWindow">
 
-    <Border Background="White" CornerRadius="20" BorderBrush="#cbd5e1" BorderThickness="1.5">
+    <Border Background="White" CornerRadius="20" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="#1E293B" Opacity="0.2"/>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.2"/>
         </Border.Effect>
 
         <Grid Margin="24">
@@ -36,30 +36,30 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#EEF2FF" CornerRadius="6" Padding="6" Margin="0,0,10,0">
-                        <materialDesign:PackIcon Kind="AccountEdit" Foreground="#3F51B5" Width="20" Height="20"/>
+                    <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="6" Padding="6" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="AccountEdit" Foreground="{StaticResource Brush.PrimaryInteractive}" Width="20" Height="20"/>
                     </Border>
-                    <TextBlock x:Name="TxtTitle" Text="بيانات الموظف" FontSize="16" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtTitle" Text="بيانات الموظف" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Click="Cancel_Click" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
             <!-- Divider -->
-            <Separator Grid.Row="1" Margin="0,14" Background="#f1f5f9"/>
+            <Separator Grid.Row="1" Margin="0,14" Background="{StaticResource Brush.LockedSoft}"/>
 
             <!-- Form Inputs -->
             <StackPanel Grid.Row="2" VerticalAlignment="Top">
                 <!-- اسم العامل -->
-                <TextBlock Text="اسم العامل بالكامل:" FontSize="12.5" Foreground="#475569" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                <TextBlock Text="اسم العامل بالكامل:" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,6" FontWeight="SemiBold"/>
                 <TextBox x:Name="TxtName" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="مثال: أحمد علي"
                          Margin="0,0,0,14" Padding="12,10" FontSize="13"/>
 
                 <!-- اليومية الثابتة -->
-                <TextBlock Text="الأجر اليومي الثابت (د.ل):" FontSize="12.5" Foreground="#475569" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                <TextBlock Text="الأجر اليومي الثابت (د.ل):" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,6" FontWeight="SemiBold"/>
                 <TextBox x:Name="TxtDailyWage" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="0.00"
                          Margin="0,0,0,14" Padding="12,10" FontSize="13" FontWeight="Bold"/>
@@ -67,11 +67,11 @@
                 <!-- حالة النشاط -->
                 <StackPanel Margin="0,4,0,14" Orientation="Horizontal">
                     <CheckBox x:Name="ChkActive" Style="{StaticResource MaterialDesignActionCheckBox}" Margin="0,0,8,0"/>
-                    <TextBlock Text="الموظف نشط (يظهر في كشف الحضور واليومية)" FontSize="13" Foreground="#334155" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBlock Text="الموظف نشط (يظهر في كشف الحضور واليومية)" FontSize="13" Foreground="{StaticResource Brush.TextStrong}" VerticalAlignment="Center" FontWeight="SemiBold"/>
                 </StackPanel>
 
                 <!-- ملاحظات -->
-                <TextBlock Text="ملاحظات عامة:" FontSize="12.5" Foreground="#475569" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                <TextBlock Text="ملاحظات عامة:" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,6" FontWeight="SemiBold"/>
                 <TextBox x:Name="TxtNotes" Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          materialDesign:HintAssist.Hint="ملاحظات أو المهام الموكلة للموظف..."
                          AcceptsReturn="True" Height="70" TextWrapping="Wrap"
@@ -89,7 +89,7 @@
                 <!-- Save Button -->
                 <Button Grid.Column="0" Click="Save_Click"
                         Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White"
+                        Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White"
                         Height="40" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -105,7 +105,7 @@
                 <!-- Cancel Button -->
                 <Button Grid.Column="2" Click="Cancel_Click"
                         Style="{StaticResource MaterialDesignOutlinedButton}" 
-                        Foreground="#64748b" BorderBrush="#cbd5e1"
+                        Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}"
                         Height="40" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">

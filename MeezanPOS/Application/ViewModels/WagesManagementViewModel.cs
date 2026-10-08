@@ -193,7 +193,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تحميل البيانات في إدارة الأجور");
-            MessageBox.Show("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى أو الاتصال بالدعم الفني.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى أو الاتصال بالدعم الفني.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -260,7 +260,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تحميل كشف الحضور لليوم المحدد");
-            MessageBox.Show("تعذر تحميل كشف الحضور لليوم المحدد.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("تعذر تحميل كشف الحضور لليوم المحدد.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -276,12 +276,12 @@ public partial class WagesManagementViewModel : ObservableObject
             // تحديث الأرصدة والملخصات
             await LoadAllDataAsync();
 
-            MessageBox.Show("تم حفظ واعتماد حضور العمال وترحيل المستحقات المالية للأستاذ المساعد بنجاح.", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حفظ واعتماد حضور العمال وترحيل المستحقات المالية للأستاذ المساعد بنجاح.", "تم الحفظ", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء حفظ كشف حضور العمال وتثبيت الأجور");
-            MessageBox.Show("حدث خطأ أثناء حفظ كشف الحضور.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء حفظ كشف الحضور.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -293,13 +293,13 @@ public partial class WagesManagementViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(NewWorkerName))
         {
-            MessageBox.Show("يرجى إدخال اسم العامل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال اسم العامل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (NewWorkerDailyWage <= 0)
         {
-            MessageBox.Show("يرجى تحديد أجر يومي صحيح أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى تحديد أجر يومي صحيح أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -316,12 +316,12 @@ public partial class WagesManagementViewModel : ObservableObject
             ClearWorkerForm();
             await LoadAllDataAsync();
 
-            MessageBox.Show("تم حفظ ملف العامل بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حفظ ملف العامل بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء حفظ ملف العامل");
-            MessageBox.Show("حدث خطأ أثناء حفظ ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء حفظ ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -348,7 +348,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تعديل حالة نشاط العامل");
-            MessageBox.Show("حدث خطأ أثناء تعديل حالة النشاط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تعديل حالة النشاط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -357,7 +357,7 @@ public partial class WagesManagementViewModel : ObservableObject
     {
         if (worker == null) return;
 
-        var result = MessageBox.Show($"هل أنت متأكد من حذف الموظف '{worker.WorkerName}' نهائياً؟ ستظل سجلاته وحركاته المالية القديمة محفوظة.", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        var result = Dialogs.Show($"هل أنت متأكد من حذف الموظف '{worker.WorkerName}' نهائياً؟ ستظل سجلاته وحركاته المالية القديمة محفوظة.", "تأكيد الحذف", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (result != MessageBoxResult.Yes) return;
 
         try
@@ -369,7 +369,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء حذف ملف العامل");
-            MessageBox.Show("حدث خطأ أثناء حذف ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء حذف ملف العامل.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -486,7 +486,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تحميل كشف حساب العامل");
-            MessageBox.Show("حدث خطأ أثناء تحميل كشف حساب الموظف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تحميل كشف حساب الموظف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -495,13 +495,13 @@ public partial class WagesManagementViewModel : ObservableObject
     {
         if (SelectedWorkerSummary == null)
         {
-            MessageBox.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (InputPaymentAmount <= 0)
         {
-            MessageBox.Show("يرجى إدخال مبلغ صحيح أكبر من الصفر للصرف.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال مبلغ صحيح أكبر من الصفر للصرف.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -514,7 +514,7 @@ public partial class WagesManagementViewModel : ObservableObject
             var paymentDay = InputPaymentDate.Date;
             if (await PeriodLock.IsDateLockedAsync(db, paymentDay))
             {
-                MessageBox.Show(PeriodLock.LockedMessage, "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show(PeriodLock.LockedMessage, "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -531,7 +531,7 @@ public partial class WagesManagementViewModel : ObservableObject
 
                 if (openJournal == null)
                 {
-                    MessageBox.Show($"لا توجد يومية مسودة بتاريخ {paymentDay:yyyy/MM/dd} لتسجيل الصرف عليها. أنشئ يومية هذا اليوم أولاً أو اصرف كـ (مصروف عام).", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show($"لا توجد يومية مسودة بتاريخ {paymentDay:yyyy/MM/dd} لتسجيل الصرف عليها. أنشئ يومية هذا اليوم أولاً أو اصرف كـ (مصروف عام).", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -598,12 +598,12 @@ public partial class WagesManagementViewModel : ObservableObject
 
             SelectedWorkerSummary = _allSummaries.FirstOrDefault(s => s.WorkerId == currentWorkerId);
 
-            MessageBox.Show("تم تسجيل عملية صرف المبالغ بنجاح وتحديث درج النقدية المخصص تلقائياً.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم تسجيل عملية صرف المبالغ بنجاح وتحديث درج النقدية المخصص تلقائياً.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تسجيل صرف مستحقات العامل");
-            MessageBox.Show("حدث خطأ أثناء تسجيل عملية الصرف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تسجيل عملية الصرف.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -613,13 +613,13 @@ public partial class WagesManagementViewModel : ObservableObject
         // سلفة غير مرتبطة بصندوق فوري (سلفة ذمة مسجلة في كشف حساب الموظف مباشرة)
         if (SelectedWorkerSummary == null)
         {
-            MessageBox.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (InputPaymentAmount <= 0)
         {
-            MessageBox.Show("يرجى إدخال قيمة السلفة أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال قيمة السلفة أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -645,12 +645,12 @@ public partial class WagesManagementViewModel : ObservableObject
             await LoadAllDataAsync();
             SelectedWorkerSummary = _allSummaries.FirstOrDefault(s => s.WorkerId == currentWorkerId);
 
-            MessageBox.Show("تم تسجيل السلفة في حساب العامل بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم تسجيل السلفة في حساب العامل بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تسجيل سلفة العامل");
-            MessageBox.Show("حدث خطأ أثناء تسجيل السلفة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تسجيل السلفة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -660,13 +660,13 @@ public partial class WagesManagementViewModel : ObservableObject
         // تسوية رصيد يدوية (إما تسوية موجبة Credit أو سالبة Debit)
         if (SelectedWorkerSummary == null)
         {
-            MessageBox.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى اختيار موظف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (InputPaymentAmount == 0)
         {
-            MessageBox.Show("قيمة التسوية لا يمكن أن تكون صفراً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("قيمة التسوية لا يمكن أن تكون صفراً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -695,12 +695,12 @@ public partial class WagesManagementViewModel : ObservableObject
             await LoadAllDataAsync();
             SelectedWorkerSummary = _allSummaries.FirstOrDefault(s => s.WorkerId == currentWorkerId);
 
-            MessageBox.Show("تم حفظ تسوية الحساب يدوياً بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حفظ تسوية الحساب يدوياً بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء حفظ التسوية اليدوية لحساب العامل");
-            MessageBox.Show("حدث خطأ أثناء حفظ التسوية اليدوية.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء حفظ التسوية اليدوية.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -721,7 +721,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تحديث أرصدة وملخصات العمال");
-            MessageBox.Show("حدث خطأ أثناء تحديث الأرصدة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء تحديث الأرصدة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -732,7 +732,7 @@ public partial class WagesManagementViewModel : ObservableObject
 
         if (!entry.CanDelete)
         {
-            MessageBox.Show("الحركات المالية الناتجة عن الحضور والغياب أو الكاشير أو المصاريف العامة لا يمكن حذفها يدوياً من هنا لضمان تطابق الصناديق واليوميات الحسابية. يرجى حذفها أو تسويتها من شاشاتها المخصصة.", "تنبيه (منع الحذف)", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الحركات المالية الناتجة عن الحضور والغياب أو الكاشير أو المصاريف العامة لا يمكن حذفها يدوياً من هنا لضمان تطابق الصناديق واليوميات الحسابية. يرجى حذفها أو تسويتها من شاشاتها المخصصة.", "تنبيه (منع الحذف)", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -758,12 +758,12 @@ public partial class WagesManagementViewModel : ObservableObject
                 SelectedWorkerSummary = _allSummaries.FirstOrDefault(s => s.WorkerId == currentWorkerId);
             }
 
-            MessageBox.Show("تم حذف المعاملة المالية وتوثيق العملية في سجل التدقيق بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حذف المعاملة المالية وتوثيق العملية في سجل التدقيق بنجاح.", "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء حذف المعاملة المالية للعامل");
-            MessageBox.Show("حدث خطأ أثناء حذف المعاملة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء حذف المعاملة.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -794,7 +794,7 @@ public partial class WagesManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "خطأ أثناء تصدير أو فتح كشف الحساب كـ PDF");
-            MessageBox.Show("حدث خطأ أثناء توليد أو فتح تقرير الـ PDF.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء توليد أو فتح تقرير الـ PDF.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

@@ -65,7 +65,7 @@ public partial class BankStatementReportWindow : Window
         catch (System.Exception ex)
         {
             Serilog.Log.Error(ex, "Error opening bank statement transaction details");
-            MessageBox.Show("تعذر فتح تفاصيل الحركة: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
+            Dialogs.Show("تعذر فتح تفاصيل الحركة: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
                 MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
         }
     }

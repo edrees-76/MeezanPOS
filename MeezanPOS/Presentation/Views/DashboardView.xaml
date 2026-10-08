@@ -88,8 +88,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
                     
                     <StackPanel>
-                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="TrendingUp" Foreground="#16A34A" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="TrendingUp" Foreground="{StaticResource Brush.Income}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="إجمالي المبيعات" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding TotalSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -100,8 +100,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
                     
                     <StackPanel>
-                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="CashMultiple" Foreground="#16A34A" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="CashMultiple" Foreground="{StaticResource Brush.Income}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="مبيعات نقدي" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding CashSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -112,8 +112,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
                     
                     <StackPanel>
-                        <Border Background="#eef2ff" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="CreditCard" Foreground="#3F51B5" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="CreditCard" Foreground="{StaticResource Brush.PrimaryInteractive}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="مبيعات خدمات مصرفية" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding CardSales, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -124,8 +124,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
                     
                     <StackPanel>
-                        <Border Background="#fee2e2" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="ReceiptText" Foreground="#DC2626" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.ExpenseSoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="ReceiptText" Foreground="{StaticResource Brush.Expense}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="إجمالي المصروفات" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding TotalExpenses, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -136,8 +136,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16" Margin="0,0,12,0">
                     
                     <StackPanel>
-                        <Border Background="#FEF3C7" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="Wallet" Foreground="#D97706" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.PendingSoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="Wallet" Foreground="{StaticResource Brush.Pending}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="صافي الربح" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding NetProfit, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -148,8 +148,8 @@
                 <Border Style="{StaticResource Card}" Padding="18,16">
                     
                     <StackPanel>
-                        <Border Background="#ffedd5" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
-                            <materialDesign:PackIcon Kind="ScaleBalance" Foreground="#f97316" Width="20" Height="20"/>
+                        <Border Background="{StaticResource Brush.PendingSoft}" CornerRadius="8" Padding="6" HorizontalAlignment="Right" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="ScaleBalance" Foreground="{StaticResource Brush.Pending}" Width="20" Height="20"/>
                         </Border>
                         <TextBlock Text="رصيد الخزينة" Style="{StaticResource Text.Label}"/>
                         <TextBlock Text="{Binding CashBalance, StringFormat={}{0:N2}}" Style="{StaticResource Text.MoneyLarge}" FontSize="22" HorizontalAlignment="Left" Margin="0,6,0,0"/>
@@ -193,13 +193,13 @@
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                 <!-- Sales Legend -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,16,0" VerticalAlignment="Center">
-                                    <Border Width="12" Height="12" Background="#3F51B5" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock Text="المبيعات" FontSize="12" Foreground="#3F51B5" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Border Width="12" Height="12" Background="{StaticResource Brush.PrimaryInteractive}" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="المبيعات" FontSize="12" Foreground="{StaticResource Brush.PrimaryInteractive}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <!-- Expenses Legend -->
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Rectangle Width="12" Height="12" Stroke="#DC2626" StrokeThickness="2" StrokeDashArray="2 1.5" RadiusX="2" RadiusY="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                    <TextBlock Text="المصروفات (متقطع)" FontSize="12" Foreground="#DC2626" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <Rectangle Width="12" Height="12" Stroke="{StaticResource Brush.Expense}" StrokeThickness="2" StrokeDashArray="2 1.5" RadiusX="2" RadiusY="2" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="المصروفات (متقطع)" FontSize="12" Foreground="{StaticResource Brush.Expense}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
                         </Grid>
@@ -232,7 +232,7 @@
             </Grid>
 
             <!-- Alerts Section -->
-            <Border Margin="0,0,0,24" BorderBrush="#EEF2FF" BorderThickness="0">
+            <Border Margin="0,0,0,24" BorderBrush="{StaticResource Brush.PrimarySoft}" BorderThickness="0">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Visible"/>
@@ -264,7 +264,7 @@
                                     
                                     <!-- Message -->
                                     <TextBlock Grid.Column="1" Text="{Binding Message}" FontSize="14" FontWeight="SemiBold"
-                                               Foreground="#1E293B" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                               Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                     
                                     <!-- Close Button -->
                                     <Button Grid.Column="2" Click="DismissAlert_Click" 
@@ -280,7 +280,7 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Button.Style>
-                                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#64748B"/>
+                                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="{StaticResource Brush.TextMuted}"/>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -353,13 +353,13 @@
                                                 <materialDesign:PackIcon Grid.Column="0" Kind="{Binding Icon, Converter={StaticResource StringToPackIconKindConverter}}" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
                                                     <materialDesign:PackIcon.Style>
                                                         <Style TargetType="materialDesign:PackIcon">
-                                                            <Setter Property="Foreground" Value="#64748b"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -383,10 +383,10 @@
                                                     <Style TargetType="TextBlock">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsIncoming}" Value="True">
-                                                                <Setter Property="Foreground" Value="#16A34A"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsIncoming}" Value="False">
-                                                                <Setter Property="Foreground" Value="#DC2626"/>
+                                                                <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -405,7 +405,7 @@
                         </DataGrid>
 
                         <!-- Empty state message visible if Count = 0 -->
-                        <TextBlock Text="لا توجد عمليات حديثة في هذه الفترة" FontSize="16" Foreground="#64748B"
+                        <TextBlock Text="لا توجد عمليات حديثة في هذه الفترة" FontSize="16" Foreground="{StaticResource Brush.TextMuted}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">

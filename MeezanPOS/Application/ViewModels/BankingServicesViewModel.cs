@@ -289,7 +289,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل البيانات المصرفية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل البيانات المصرفية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -309,7 +309,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -330,7 +330,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل ديون المالك:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل ديون المالك:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -374,7 +374,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null)
         {
-            MessageBox.Show("الرجاء اختيار الحساب المطلوب تعديله أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء اختيار الحساب المطلوب تعديله أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -404,7 +404,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(EditingAccount.FriendlyName))
         {
-            MessageBox.Show("يجب إدخال اسم المصرف والفرع.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب إدخال اسم المصرف والفرع.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -414,12 +414,12 @@ public partial class BankingServicesViewModel : ObservableObject
             if (IsEditMode)
             {
                 await _bankService.UpdateAccountAsync(EditingAccount);
-                MessageBox.Show("تم تعديل الحساب البنكي بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم تعديل الحساب البنكي بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
                 await _bankService.CreateAccountAsync(EditingAccount);
-                MessageBox.Show("تم إنشاء الحساب البنكي الجديد بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم إنشاء الحساب البنكي الجديد بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             IsAccountFormOpen = false;
@@ -427,7 +427,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حفظ الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء حفظ الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -440,11 +440,11 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null)
         {
-            MessageBox.Show("الرجاء اختيار الحساب المطلوب حذفه أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء اختيار الحساب المطلوب حذفه أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من حذف الحساب البنكي '{SelectedAccount.FriendlyName}'؟\nسيتم إخفاؤه من القوائم دون التأثير على الحركات التاريخية الموثقة برمجياً.",
             "تأكيد الحذف",
             MessageBoxButton.YesNo,
@@ -457,13 +457,13 @@ public partial class BankingServicesViewModel : ObservableObject
         try
         {
             await _bankService.DeleteAccountAsync(SelectedAccount.Id);
-            MessageBox.Show("تم حذف الحساب البنكي بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حذف الحساب البنكي بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             SelectedAccount = null;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حذف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء حذف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -478,7 +478,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null)
         {
-            MessageBox.Show("الرجاء تحديد الحساب البنكي المستهدف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء تحديد الحساب البنكي المستهدف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -500,7 +500,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null || ManualTxAmount <= 0)
         {
-            MessageBox.Show("الرجاء إدخال قيمة صحيحة للإيداع.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء إدخال قيمة صحيحة للإيداع.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -514,13 +514,13 @@ public partial class BankingServicesViewModel : ObservableObject
                 ManualTxNotes,
                 ManualTxDate);
 
-            MessageBox.Show("تم تسجيل عملية الإيداع بنجاح في كشف حساب المصرف.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم تسجيل عملية الإيداع بنجاح في كشف حساب المصرف.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsDepositFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تسجيل الإيداع:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تسجيل الإيداع:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -533,7 +533,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null)
         {
-            MessageBox.Show("الرجاء تحديد الحساب البنكي المستهدف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء تحديد الحساب البنكي المستهدف أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -555,7 +555,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null || ManualTxAmount <= 0)
         {
-            MessageBox.Show("الرجاء إدخال قيمة صحيحة للسحب.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء إدخال قيمة صحيحة للسحب.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -569,13 +569,13 @@ public partial class BankingServicesViewModel : ObservableObject
                 ManualTxNotes,
                 ManualTxDate);
 
-            MessageBox.Show("تم تسجيل عملية السحب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم تسجيل عملية السحب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsWithdrawalFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تسجيل السحب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تسجيل السحب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -588,7 +588,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null)
         {
-            MessageBox.Show("الرجاء تحديد الحساب المصدر أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء تحديد الحساب المصدر أولاً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -597,7 +597,7 @@ public partial class BankingServicesViewModel : ObservableObject
 
         if (!TransferDestinationAccounts.Any())
         {
-            MessageBox.Show("لا يوجد حسابات بنكية نشطة أخرى لتحويل الأموال إليها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("لا يوجد حسابات بنكية نشطة أخرى لتحويل الأموال إليها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -619,7 +619,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedAccount == null || TransferDestinationAccount == null || ManualTxAmount <= 0)
         {
-            MessageBox.Show("الرجاء التأكد من صحة الحساب المستلم والمبلغ.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء التأكد من صحة الحساب المستلم والمبلغ.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -633,13 +633,13 @@ public partial class BankingServicesViewModel : ObservableObject
                 ManualTxNotes,
                 ManualTxDate);
 
-            MessageBox.Show("تم إجراء التحويل الداخلي وتحديث الحسابين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم إجراء التحويل الداخلي وتحديث الحسابين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsTransferFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء معالجة التحويل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء معالجة التحويل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -671,7 +671,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedPendingCardPayment == null || ClearingBankAccount == null)
         {
-            MessageBox.Show("يجب تحديد الحساب البنكي لتأكيد استلام المبلغ.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب تحديد الحساب البنكي لتأكيد استلام المبلغ.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -683,13 +683,13 @@ public partial class BankingServicesViewModel : ObservableObject
                 ClearingBankAccount.Id,
                 ClearCardDate);
 
-            MessageBox.Show("تم تأكيد تحصيل العملية وإيداع المبلغ في الحساب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم تأكيد تحصيل العملية وإيداع المبلغ في الحساب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsClearCardFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء مطابقة البطاقة الكروت:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء مطابقة البطاقة الكروت:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -737,7 +737,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(DebtPartnerName) || DebtAmount <= 0)
         {
-            MessageBox.Show("يرجى إدخال اسم الشريك والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال اسم الشريك والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -745,7 +745,7 @@ public partial class BankingServicesViewModel : ObservableObject
 
         if (isBankDestination && DebtBankAccount == null)
         {
-            MessageBox.Show("يجب تحديد الحساب البنكي المستلم للتمويل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب تحديد الحساب البنكي المستلم للتمويل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -772,7 +772,7 @@ public partial class BankingServicesViewModel : ObservableObject
                 // التحقق من إدخال أخر 4 أرقام عند التحويل المصرفي
                 if (isBankTransfer && string.IsNullOrWhiteSpace(DebtTransferReference))
                 {
-                    MessageBox.Show("يرجى إدخال أخر 4 أرقام من عملية التحويل المصرفي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show("يرجى إدخال أخر 4 أرقام من عملية التحويل المصرفي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -798,13 +798,13 @@ public partial class BankingServicesViewModel : ObservableObject
                     DebtDate);
             }
 
-            MessageBox.Show("تم حفظ بيانات تمويل الشريك بنجاح.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حفظ بيانات تمويل الشريك بنجاح.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
             IsDebtFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تسجيل التمويل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تسجيل التمويل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -823,7 +823,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(SettlementPartnerName) || SettlementAmount <= 0)
         {
-            MessageBox.Show("يرجى إدخال اسم الشريك والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال اسم الشريك والمبلغ بشكل صحيح.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -836,7 +836,7 @@ public partial class BankingServicesViewModel : ObservableObject
 
         if (source == OwnerDebtSettlementSource.Bank && SettlementBankAccount == null)
         {
-            MessageBox.Show("يجب تحديد الحساب البنكي عند اختيار التسوية المصرفية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب تحديد الحساب البنكي عند اختيار التسوية المصرفية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -852,13 +852,13 @@ public partial class BankingServicesViewModel : ObservableObject
                 SettlementNotes,
                 SettlementDate);
 
-            MessageBox.Show("تم حفظ وإتمام تسوية الشريك بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حفظ وإتمام تسوية الشريك بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsSettlementFormOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء إجراء التسوية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء إجراء التسوية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -871,7 +871,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (debt == null) return;
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من حذف الدين المسجل للشريك '{debt.PartnerName}' بقيمة {debt.Amount:N2} د.ل؟",
             "تأكيد الحذف",
             MessageBoxButton.YesNo,
@@ -893,12 +893,12 @@ public partial class BankingServicesViewModel : ObservableObject
             }
 
             await _ownerDebtService.DeleteDebtAsync(debt.Id);
-            MessageBox.Show("تم حذف قيد الدين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حذف قيد الدين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حذف الدين:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء حذف الدين:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -911,7 +911,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (settlement == null) return;
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من حذف حركة التسوية المسجلة للشريك '{settlement.PartnerName}' بقيمة {settlement.Amount:N2} د.ل؟\nسيؤدي ذلك إلى إعادة الدين للحالة 'غير مسدد' وإلغاء الحركة البنكية المرتبطة به تلقائياً في حال كانت الدفعة مصرفية.",
             "تأكيد الحذف والالغاء",
             MessageBoxButton.YesNo,
@@ -924,12 +924,12 @@ public partial class BankingServicesViewModel : ObservableObject
         try
         {
             await _ownerDebtService.DeleteSettlementAsync(settlement.Id);
-            MessageBox.Show("تم حذف حركة التسوية وإلغاء آثارها بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم حذف حركة التسوية وإلغاء آثارها بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء إلغاء التسوية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء إلغاء التسوية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -1065,7 +1065,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -1078,7 +1078,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (StatementAccount == null || !StatementTransactions.Any())
         {
-            MessageBox.Show("يرجى اختيار حساب وتحميل كشف الحساب أولاً قبل التصدير.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى اختيار حساب وتحميل كشف الحساب أولاً قبل التصدير.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -1108,7 +1108,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تصدير التقرير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تصدير التقرير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1254,7 +1254,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل تفاصيل الوردية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل تفاصيل الوردية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -1282,7 +1282,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحديث حالة المطابقة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحديث حالة المطابقة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1291,7 +1291,7 @@ public partial class BankingServicesViewModel : ObservableObject
     {
         if (SelectedTransactionDetails == null || !SelectedTransactionDetails.Any())
         {
-            MessageBox.Show("لا توجد حركات لطباعتها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("لا توجد حركات لطباعتها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -1322,7 +1322,7 @@ public partial class BankingServicesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء طباعة تقرير التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء طباعة تقرير التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

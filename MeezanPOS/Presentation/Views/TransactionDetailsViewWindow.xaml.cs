@@ -418,7 +418,7 @@ namespace MeezanPOS.Presentation.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"حدث خطأ أثناء تحميل تفاصيل العملية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"حدث خطأ أثناء تحميل تفاصيل العملية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -569,7 +569,7 @@ namespace MeezanPOS.Presentation.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"حدث خطأ أثناء طباعة الإيصال:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"حدث خطأ أثناء طباعة الإيصال:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -602,7 +602,7 @@ namespace MeezanPOS.Presentation.Views
                     }
                     else
                     {
-                        MessageBox.Show("تعذر العثور على اليومية المرتبطة بالدوران المالي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        Dialogs.Show("تعذر العثور على اليومية المرتبطة بالدوران المالي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
                 else if (_sourceType == "GeneralExpense")

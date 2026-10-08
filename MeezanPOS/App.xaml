@@ -115,7 +115,8 @@
             
             <!-- ===== الجداول: كثيفة، مخططة بالتناوب، رأس ثابت (هوية ميزان) ===== -->
             <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
-                <Setter Property="CanUserSortColumns" Value="False"/>
+                <!-- الترتيب بالنقر على العنوان مفعّل؛ يُعطَّل فقط في جداول الإدخال وكشوف الرصيد التراكمي -->
+                <Setter Property="CanUserSortColumns" Value="True"/>
                 <!-- الأعمدة تتسع لعنوانها ومحتواها كاملين دون الحاجة لتوسيعها يدوياً -->
                 <Setter Property="ColumnWidth" Value="Auto"/>
                 <!-- تحرير الخلية بنقرة واحدة بدل نقرتين -->

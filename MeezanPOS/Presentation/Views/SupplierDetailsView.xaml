@@ -42,10 +42,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0">
                     <materialDesign:PackIcon Kind="ClipboardTextClock" Width="32" Height="32" Foreground="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center"/>
                     <TextBlock Text="{Binding SupplierName, StringFormat='كشف حساب: {0}'}" FontSize="24" FontWeight="Bold" Margin="16,0,0,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding TotalTransactionsCount, StringFormat='(إجمالي {0} حركة)'}" FontSize="16" Foreground="#64748b" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding TotalTransactionsCount, StringFormat='(إجمالي {0} حركة)'}" FontSize="16" Foreground="{StaticResource Brush.TextMuted}" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
                 </StackPanel>
 
-                <materialDesign:Card Grid.Column="2" Padding="16,8" UniformCornerRadius="8" Background="#f5f5f5">
+                <materialDesign:Card Grid.Column="2" Padding="16,8" UniformCornerRadius="8" Background="{StaticResource Brush.LockedSoft}">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="الرصيد الحالي (الدين): " FontSize="16" VerticalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentBalance, StringFormat=N2}" 
@@ -64,7 +64,7 @@
                 <DatePicker SelectedDate="{Binding FilterEndDate}" materialDesign:HintAssist.Hint="إلى تاريخ" Style="{StaticResource MaterialDesignFloatingHintDatePicker}" Margin="0,0,16,0" Width="120" VerticalAlignment="Bottom"/>
                 
                 <Button Command="{Binding FilterStatementCommand}" Content="تصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,8,0" VerticalAlignment="Bottom"/>
-                <Button Command="{Binding ClearFilterCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,32,0" Foreground="#DC2626" BorderBrush="#DC2626" VerticalAlignment="Bottom">
+                <Button Command="{Binding ClearFilterCommand}" ToolTip="إلغاء التصفية" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,32,0" Foreground="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}" VerticalAlignment="Bottom">
                     <materialDesign:PackIcon Kind="FilterRemove" />
                 </Button>
 
@@ -104,14 +104,14 @@
             </StackPanel>
 
             <!-- جدول كشف الحساب الموحد -->
-            <DataGrid Grid.Row="3" Margin="0"
+            <DataGrid CanUserSortColumns="False" Grid.Row="3" Margin="0"
                       ItemsSource="{Binding UnifiedLedger}" 
                       AutoGenerateColumns="False" 
                       CanUserAddRows="False" 
                       IsReadOnly="True"
                       CanUserResizeColumns="False"
                       HeadersVisibility="Column"
-                      GridLinesVisibility="All" BorderThickness="1" BorderBrush="#E2E8F0"
+                      GridLinesVisibility="All" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"
                       HorizontalGridLinesBrush="#E2E8F0" VerticalGridLinesBrush="#E2E8F0"
                       materialDesign:DataGridAssist.CellPadding="8"
                       materialDesign:DataGridAssist.ColumnHeaderPadding="8">
@@ -125,7 +125,7 @@
                                 <Button Command="{Binding DataContext.EditInvoiceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                        Foreground="#eab308"
+                                        Foreground="{StaticResource Brush.Accent}"
                                         Padding="4,2" Height="Auto" Margin="0"
                                         ToolTip="تعديل الفاتورة"
                                         Visibility="{Binding HasInvoice, Converter={StaticResource BoolToVis}}"
@@ -144,7 +144,7 @@
                                 <Button Command="{Binding DataContext.EditPaymentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                         CommandParameter="{Binding}"
                                         Style="{StaticResource MaterialDesignFlatButton}"
-                                        Foreground="#16A34A"
+                                        Foreground="{StaticResource Brush.Income}"
                                         Padding="4,2" Height="Auto" Margin="0"
                                         ToolTip="تعديل الدفعة"
                                         Visibility="{Binding HasPayment, Converter={StaticResource BoolToVis}}"
@@ -163,7 +163,7 @@
                                     <Button Command="{Binding DataContext.ShowShiftDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource MaterialDesignFlatButton}"
-                                            Foreground="#3F51B5"
+                                            Foreground="{StaticResource Brush.PrimaryInteractive}"
                                             Padding="4,2" Height="Auto" Margin="0"
                                             ToolTip="عرض تفاصيل الوردية والكاشير"
                                             Visibility="{Binding IsDailyJournalPayment, Converter={StaticResource BoolToVis}}">
@@ -177,7 +177,7 @@
                                     <Button Command="{Binding DataContext.ShowTransferDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}"
                                             Style="{StaticResource MaterialDesignFlatButton}"
-                                            Foreground="#283593"
+                                            Foreground="{StaticResource Brush.Primary}"
                                             Padding="4,2" Height="Auto" Margin="0"
                                             ToolTip="عرض تفاصيل التحويل المصرفي"
                                             Visibility="{Binding IsTransferPayment, Converter={StaticResource BoolToVis}}">
@@ -230,30 +230,30 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
-                <materialDesign:Card Grid.Column="0" Margin="4" Padding="12" Background="#f8fafc">
+                <materialDesign:Card Grid.Column="0" Margin="4" Padding="12" Background="{StaticResource Brush.SurfaceAlt}">
                     <StackPanel>
-                        <TextBlock Text="رصيد أول" FontSize="12" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="رصيد أول" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding TotalOpeningBalance, StringFormat=N2}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
                 
-                <materialDesign:Card Grid.Column="1" Margin="4" Padding="12" Background="#f8fafc">
+                <materialDesign:Card Grid.Column="1" Margin="4" Padding="12" Background="{StaticResource Brush.SurfaceAlt}">
                     <StackPanel>
-                        <TextBlock Text="قيمة الفواتير" FontSize="12" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalInvoicesSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#eab308" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock Text="قيمة الفواتير" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalInvoicesSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Accent}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
                 
-                <materialDesign:Card Grid.Column="2" Margin="4" Padding="12" Background="#f8fafc">
+                <materialDesign:Card Grid.Column="2" Margin="4" Padding="12" Background="{StaticResource Brush.SurfaceAlt}">
                     <StackPanel>
-                        <TextBlock Text="المبالغ المستلمة" FontSize="12" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalPaymentsSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock Text="المبالغ المستلمة" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalPaymentsSum, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Income}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
                 
-                <materialDesign:Card Grid.Column="3" Margin="4" Padding="12" Background="#f8fafc">
+                <materialDesign:Card Grid.Column="3" Margin="4" Padding="12" Background="{StaticResource Brush.SurfaceAlt}">
                     <StackPanel>
-                        <TextBlock Text="المتبقي" FontSize="12" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="المتبقي" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
                         <TextBlock Text="{Binding CurrentBalance, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{Binding CurrentBalance, Converter={StaticResource BalanceToColorConverter}}" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </materialDesign:Card>
@@ -287,7 +287,7 @@
                             <TextBox Grid.Column="0" materialDesign:HintAssist.Hint="إجمالي الفاتورة *" Text="{Binding NewInvoice.TotalAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveInvoiceCommand}" Margin="0,0,8,0"/>
                             <Button Grid.Column="1" Command="{Binding OpenInvoiceDetailsCommand}" 
                                     Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                    Foreground="#3F51B5" BorderBrush="#3F51B5"
+                                    Foreground="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}"
                                     Padding="12,8" VerticalAlignment="Stretch"
                                     ToolTip="إضافة تفاصيل الأصناف للتحقق من إجمالي الفاتورة">
                                 <StackPanel Orientation="Horizontal">
@@ -302,10 +302,10 @@
                                    Visibility="{Binding IsInvoiceDetailsOpen, Converter={StaticResource BoolToVis}}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#eab308"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsTotalMatching}" Value="True">
-                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -354,7 +354,7 @@
                     </Grid>
 
                     <!-- جدول الأصناف -->
-                    <DataGrid Grid.Row="2" 
+                    <DataGrid CanUserSortColumns="False" Grid.Row="2" 
                               ItemsSource="{Binding InvoiceItems}" 
                               AutoGenerateColumns="False" 
                               CanUserAddRows="False" 
@@ -362,7 +362,7 @@
                               CanUserResizeColumns="False"
                               HeadersVisibility="Column"
                               GridLinesVisibility="All" 
-                              BorderThickness="1" BorderBrush="#E2E8F0"
+                              BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"
                               HorizontalGridLinesBrush="#E2E8F0" VerticalGridLinesBrush="#E2E8F0"
                               materialDesign:DataGridAssist.CellPadding="6"
                               materialDesign:DataGridAssist.ColumnHeaderPadding="6"
@@ -379,7 +379,7 @@
                                         <Button Command="{Binding DataContext.RemoveInvoiceItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                 CommandParameter="{Binding}"
                                                 Style="{StaticResource MaterialDesignIconButton}"
-                                                Foreground="#DC2626" Width="28" Height="28" Padding="0"
+                                                Foreground="{StaticResource Brush.Expense}" Width="28" Height="28" Padding="0"
                                                 ToolTip="حذف الصنف">
                                             <materialDesign:PackIcon Kind="Delete" Width="16" Height="16"/>
                                         </Button>
@@ -390,7 +390,7 @@
                     </DataGrid>
 
                     <!-- ملخص الإجمالي والمطابقة -->
-                    <Border Grid.Row="3" Background="#f8fafc" CornerRadius="6" Padding="16,12" Margin="0,12,0,0">
+                    <Border Grid.Row="3" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="6" Padding="16,12" Margin="0,12,0,0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -398,15 +398,15 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" Orientation="Horizontal">
                                 <TextBlock Text="إجمالي الأصناف: " FontSize="16" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding InvoiceItemsTotal, StringFormat=N2}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Foreground="#1e293b"/>
+                                <TextBlock Text="{Binding InvoiceItemsTotal, StringFormat=N2}" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" Foreground="{StaticResource Brush.TextPrimary}"/>
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="{Binding MatchingStatusText}" FontSize="15" FontWeight="Bold" VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Foreground" Value="#eab308"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Accent}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsTotalMatching}" Value="True">
-                                                <Setter Property="Foreground" Value="#16A34A"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -472,7 +472,7 @@
                                         <TextBlock>
                                             <Run Text="{Binding FriendlyName, Mode=OneWay}" FontWeight="SemiBold"/>
                                             <Run Text=" - "/>
-                                            <Run Text="{Binding BankName, Mode=OneWay}" FontSize="12" Foreground="#64748b"/>
+                                            <Run Text="{Binding BankName, Mode=OneWay}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}"/>
                                             <Run Text=" (رصيد: "/>
                                             <Run Text="{Binding CurrentBalance, StringFormat=N2, Mode=OneWay}"/>
                                             <Run Text=")"/>
@@ -528,11 +528,11 @@
                     <!-- عنوان النافذة -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center">
                         <materialDesign:PackIcon Kind="PrinterEye" Width="28" Height="28" Foreground="{DynamicResource PrimaryHueMidBrush}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBlock Text="خيارات طباعة كشف الحساب" FontSize="20" FontWeight="Bold" Foreground="#1e293b" VerticalAlignment="Center"/>
+                        <TextBlock Text="خيارات طباعة كشف الحساب" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                     </StackPanel>
 
                     <!-- رسالة توضيحية -->
-                    <TextBlock Grid.Row="2" Text="يرجى اختيار نوع كشف الحساب الذي ترغب في طباعته وتصديره كملف PDF:" FontSize="13" Foreground="#64748b" HorizontalAlignment="Center" TextAlignment="Center"/>
+                    <TextBlock Grid.Row="2" Text="يرجى اختيار نوع كشف الحساب الذي ترغب في طباعته وتصديره كملف PDF:" FontSize="13" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center" TextAlignment="Center"/>
 
                     <!-- خيارات البطاقات -->
                     <Grid Grid.Row="4">
@@ -548,23 +548,23 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- بطاقة كشف حساب عادي -->
-                        <materialDesign:Card Grid.Row="0" Grid.Column="0" UniformCornerRadius="12" Padding="0" Background="#f8fafc" BorderThickness="1" BorderBrush="#e2e8f0">
+                        <materialDesign:Card Grid.Row="0" Grid.Column="0" UniformCornerRadius="12" Padding="0" Background="{StaticResource Brush.SurfaceAlt}" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}">
                             <Button Command="{Binding PrintStandardStatementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Height="150" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <StackPanel Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="48" Height="48" Foreground="#0284c7" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                                    <TextBlock Text="كشف حساب عادي" FontSize="16" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="الحركات المالية العامة فقط" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="48" Height="48" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                    <TextBlock Text="كشف حساب عادي" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="الحركات المالية العامة فقط" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Button>
                         </materialDesign:Card>
 
                         <!-- بطاقة كشف حساب مفصل -->
-                        <materialDesign:Card Grid.Row="0" Grid.Column="2" UniformCornerRadius="12" Padding="0" Background="#f8fafc" BorderThickness="1" BorderBrush="#e2e8f0">
+                        <materialDesign:Card Grid.Row="0" Grid.Column="2" UniformCornerRadius="12" Padding="0" Background="{StaticResource Brush.SurfaceAlt}" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}">
                             <Button Command="{Binding PrintDetailedStatementCommand}" Style="{StaticResource MaterialDesignFlatButton}" Height="150" Padding="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
                                 <StackPanel Margin="16" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="48" Height="48" Foreground="#3F51B5" HorizontalAlignment="Center" Margin="0,0,0,12"/>
-                                    <TextBlock Text="كشف حساب مفصل" FontSize="16" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                    <TextBlock Text="كشف الحساب + تفاصيل جميع الفواتير" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                                    <materialDesign:PackIcon Kind="FileDocumentEditOutline" Width="48" Height="48" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+                                    <TextBlock Text="كشف حساب مفصل" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
+                                    <TextBlock Text="كشف الحساب + تفاصيل جميع الفواتير" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Button>
                         </materialDesign:Card>
@@ -574,7 +574,7 @@
                                 Command="{Binding ClosePrintSelectionCommand}" 
                                 Content="إلغاء" 
                                 Style="{StaticResource MaterialDesignOutlinedButton}" 
-                                Foreground="#DC2626" BorderBrush="#DC2626" 
+                                Foreground="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}" 
                                 HorizontalAlignment="Stretch" Padding="0,8" Height="40"/>
                     </Grid>
                 </Grid>

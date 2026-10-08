@@ -45,13 +45,13 @@ namespace MeezanPOS.Presentation.Views
             string name = TxtName.Text.Trim();
             if (string.IsNullOrWhiteSpace(name))
             {
-                MessageBox.Show("يرجى إدخال اسم العامل بالكامل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("يرجى إدخال اسم العامل بالكامل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             if (!decimal.TryParse(TxtDailyWage.Text, out decimal dailyWage) || dailyWage <= 0)
             {
-                MessageBox.Show("يرجى تحديد أجر يومي صحيح أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("يرجى تحديد أجر يومي صحيح أكبر من الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -72,7 +72,7 @@ namespace MeezanPOS.Presentation.Views
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"خطأ أثناء حفظ ملف العامل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"خطأ أثناء حفظ ملف العامل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
                 if (sender is UIElement saveButton2) saveButton2.IsEnabled = true;
             }
         }

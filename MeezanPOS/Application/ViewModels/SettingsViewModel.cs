@@ -219,11 +219,11 @@ public partial class SettingsViewModel : ObservableObject
             bool success = await ExecuteBackupAsync(targetFilePath);
             if (success)
             {
-                MessageBox.Show($"تم إنشاء النسخة الاحتياطية بنجاح في المسار:\n{targetFilePath}", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show($"تم إنشاء النسخة الاحتياطية بنجاح في المسار:\n{targetFilePath}", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
-                MessageBox.Show("فشلت عملية النسخ الاحتياطي لقاعدة البيانات. تفاصيل الخطأ متوفرة في سجل السيريلوج.", "خطأ في النسخ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("فشلت عملية النسخ الاحتياطي لقاعدة البيانات. تفاصيل الخطأ متوفرة في سجل السيريلوج.", "خطأ في النسخ", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }
@@ -233,7 +233,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (!_sessionService.HasPermission(Permissions.RestoreBackup))
         {
-            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -245,7 +245,7 @@ public partial class SettingsViewModel : ObservableObject
                 var hasActiveShifts = await context.DailyJournals.AnyAsync(j => j.FinancialStatus == FinancialStatus.Draft);
                 if (hasActiveShifts)
                 {
-                    MessageBox.Show("يوجد ورديات مفتوحة (مسودة) غير مرحلة حالياً. يرجى ترحيلها أو حذفها من قائمة المبيعات اليومية أولاً قبل استعادة نسخة قديمة لتجنب فقدان البيانات.", "تنبيه هام", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show("يوجد ورديات مفتوحة (مسودة) غير مرحلة حالياً. يرجى ترحيلها أو حذفها من قائمة المبيعات اليومية أولاً قبل استعادة نسخة قديمة لتجنب فقدان البيانات.", "تنبيه هام", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
             }
@@ -261,7 +261,7 @@ public partial class SettingsViewModel : ObservableObject
             {
                 var selectedFile = dialog.FileName;
 
-                var result = MessageBox.Show(
+                var result = Dialogs.Show(
                     "تحذير: استعادة قاعدة البيانات ستؤدي إلى استبدال كافة البيانات الحالية بالبيانات الموجودة في الملف المحدد بشكل نهائي ولا يمكن التراجع عن ذلك.\n\nهل أنت متأكد من رغبتك في الاستمرار؟",
                     "تأكيد استعادة البيانات",
                     MessageBoxButton.YesNo,
@@ -277,7 +277,7 @@ public partial class SettingsViewModel : ObservableObject
                     }
                     catch (InvalidDataException invalid)
                     {
-                        MessageBox.Show(invalid.Message, "ملف غير صالح", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Dialogs.Show(invalid.Message, "ملف غير صالح", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -288,7 +288,7 @@ public partial class SettingsViewModel : ObservableObject
                         $"Meezan_before_restore_{DateTime.Now:yyyyMMdd_HHmmss}.db");
                     if (!await ExecuteBackupAsync(safetyBackup))
                     {
-                        MessageBox.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت الاستعادة.", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Dialogs.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت الاستعادة.", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -296,7 +296,7 @@ public partial class SettingsViewModel : ObservableObject
                     await Task.Run(() => DatabaseBackupHelper.ReplaceDatabase(selectedFile, dbPath));
                     Log.Warning("Database restored from {Source}; previous data saved to {Safety}", selectedFile, safetyBackup);
 
-                    MessageBox.Show($"تم استعادة قاعدة البيانات بنجاح!\n\nتم حفظ نسخة من البيانات السابقة في:\n{safetyBackup}\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً لتطبيق البيانات المسترجعة.", "نجاح الاستعادة", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Dialogs.Show($"تم استعادة قاعدة البيانات بنجاح!\n\nتم حفظ نسخة من البيانات السابقة في:\n{safetyBackup}\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً لتطبيق البيانات المسترجعة.", "نجاح الاستعادة", MessageBoxButton.OK, MessageBoxImage.Information);
                     System.Windows.Application.Current.Shutdown();
                 }
             }
@@ -304,7 +304,7 @@ public partial class SettingsViewModel : ObservableObject
         catch (Exception ex)
         {
             Log.Error(ex, "Error restoring database");
-            MessageBox.Show($"فشلت عملية استعادة قاعدة البيانات:\n{ex.Message}", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"فشلت عملية استعادة قاعدة البيانات:\n{ex.Message}", "خطأ في الاستعادة", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -313,11 +313,11 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (!_sessionService.HasPermission(Permissions.SystemReset))
         {
-            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             "تحذير حرج للغاية: إعادة ضبط المنظومة ستؤدي إلى حذف جميع البيانات والعمليات المالية والتقارير والنسخ الاحتياطي نهائياً، ولا يمكن التراجع عن ذلك.\n\nسيتم الإبقاء فقط على حسابات المستخدمين.\n\nهل أنت متأكد من رغبتك في الاستمرار؟",
             "تأكيد إعادة الضبط النهائي",
             MessageBoxButton.YesNo,
@@ -341,7 +341,7 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (!_sessionService.HasPermission(Permissions.SystemReset))
         {
-            MessageBox.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show(Permissions.DeniedMessage, "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -350,7 +350,7 @@ public partial class SettingsViewModel : ObservableObject
             string password = passwordBox.Password;
             if (string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show("الرجاء إدخال كلمة مرور الحساب الحالي لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("الرجاء إدخال كلمة مرور الحساب الحالي لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -361,7 +361,7 @@ public partial class SettingsViewModel : ObservableObject
             var authenticatedUser = await authService.AuthenticateAsync(currentUsername, password);
             if (authenticatedUser == null)
             {
-                MessageBox.Show("كلمة المرور غير صحيحة. يرجى إدخال كلمة المرور الصحيحة لحسابك.", "خطأ في المصادقة", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("كلمة المرور غير صحيحة. يرجى إدخال كلمة المرور الصحيحة لحسابك.", "خطأ في المصادقة", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -377,7 +377,7 @@ public partial class SettingsViewModel : ObservableObject
                     $"Meezan_before_reset_{DateTime.Now:yyyyMMdd_HHmmss}.db");
                 if (!await ExecuteBackupAsync(safetyBackup))
                 {
-                    MessageBox.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت إعادة الضبط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Dialogs.Show("تعذر أخذ نسخة أمان من البيانات الحالية، لذا أُلغيت إعادة الضبط.", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 Log.Warning("System reset requested by {User}; data saved to {Safety}", currentUsername, safetyBackup);
@@ -491,18 +491,18 @@ public partial class SettingsViewModel : ObservableObject
                 await using var restoreContext = await _dbContextFactory.CreateDbContextAsync();
                 await restoreContext.Database.MigrateAsync();
 
-                MessageBox.Show("تم إعادة ضبط المنظومة وحذف جميع البيانات بنجاح!\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً للبدء بقاعدة بيانات نظيفة.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم إعادة ضبط المنظومة وحذف جميع البيانات بنجاح!\n\nسيتم إغلاق التطبيق الآن، يرجى إعادة تشغيله يدوياً للبدء بقاعدة بيانات نظيفة.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
                 System.Windows.Application.Current.Shutdown();
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "Error resetting database in SettingsViewModel");
-                MessageBox.Show($"فشلت عملية إعادة ضبط قاعدة البيانات:\n{ex.Message}", "خطأ في إعادة الضبط", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية إعادة ضبط قاعدة البيانات:\n{ex.Message}", "خطأ في إعادة الضبط", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         else
         {
-            MessageBox.Show("الرجاء إدخال كلمة المرور لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء إدخال كلمة المرور لتأكيد إعادة الضبط.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

@@ -249,7 +249,7 @@ namespace MeezanPOS.Application.ViewModels
             if (unselectedWorkers.Any())
             {
                 var names = string.Join("، ", unselectedWorkers.Select(w => w.WorkerName));
-                MessageBox.Show($"يرجى تحديد حالة الحضور أو الغياب للعمال التاليين أولاً:\n{names}", 
+                Dialogs.Show($"يرجى تحديد حالة الحضور أو الغياب للعمال التاليين أولاً:\n{names}", 
                                 "تنبيه التحقق من الحضور", 
                                 MessageBoxButton.OK, 
                                 MessageBoxImage.Warning);

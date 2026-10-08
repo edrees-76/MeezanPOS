@@ -248,7 +248,7 @@ public partial class DashboardViewModel : ObservableObject
             Serilog.Log.Error(ex, "Error exporting dashboard to PDF");
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                System.Windows.MessageBox.Show(
+                Dialogs.Show(
                     "حدث خطأ أثناء تصدير تقرير الـ PDF: " + ex.Message,
                     "خطأ التصدير",
                     System.Windows.MessageBoxButton.OK,

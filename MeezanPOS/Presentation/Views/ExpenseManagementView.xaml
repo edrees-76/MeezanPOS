@@ -32,7 +32,7 @@
             <Setter Property="Padding" Value="24,0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#64748b"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -59,12 +59,12 @@
 
                             <!-- Beautiful Floating Header Container (RTL Right-Aligned Segmented Control) -->
                             <Border Grid.Row="0" 
-                                    Background="#F1F5F9" 
+                                    Background="{StaticResource Brush.LockedSoft}" 
                                     CornerRadius="14" 
                                     Padding="5" 
                                     HorizontalAlignment="Right" 
                                     Margin="0,0,0,24"
-                                    BorderBrush="#E2E8F0"
+                                    BorderBrush="{StaticResource Brush.Border}"
                                     BorderThickness="1">
                                 <TabPanel x:Name="HeaderPanel" 
                                           IsItemsHost="True" 
@@ -97,7 +97,7 @@
                     </DataTemplate>
                 </Setter.Value>
             </Setter>
-            <Setter Property="Foreground" Value="#64748B"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -123,17 +123,17 @@
                                     <Condition Property="IsMouseOver" Value="True"/>
                                     <Condition Property="IsSelected" Value="False"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Border" Property="Background" Value="#E2E8F0"/>
-                                <Setter Property="Foreground" Value="#1E293B"/>
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Border}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
                             </MultiTrigger>
                             
                             <!-- Selected State (Floating Card with DropShadow) -->
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="#FFFFFF"/>
-                                <Setter Property="Foreground" Value="#3F51B5"/>
+                                <Setter TargetName="Border" Property="Background" Value="{StaticResource Brush.Surface}"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
                                 <Setter TargetName="Border" Property="Effect">
                                     <Setter.Value>
-                                        <DropShadowEffect BlurRadius="10" ShadowDepth="1.5" Color="#64748B" Opacity="0.18"/>
+                                        <DropShadowEffect BlurRadius="10" ShadowDepth="1.5" Color="{StaticResource Color.TextMuted}" Opacity="0.18"/>
                                     </Setter.Value>
                                 </Setter>
                             </Trigger>
@@ -168,8 +168,8 @@
         <Border Grid.Row="0" Margin="0,0,0,24" CornerRadius="12" Padding="20,16">
             <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#EEF2FF" Offset="0"/>
-                    <GradientStop Color="#FFFFFF" Offset="1"/>
+                    <GradientStop Color="{StaticResource Color.PrimarySoft}" Offset="0"/>
+                    <GradientStop Color="{StaticResource Color.Surface}" Offset="1"/>
                 </LinearGradientBrush>
             </Border.Background>
             <Grid>
@@ -180,14 +180,14 @@
                 </Grid.ColumnDefinitions>
                 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <Border Background="#3F51B5" CornerRadius="12" Padding="10" Margin="0,0,16,0">
+                    <Border Background="{StaticResource Brush.PrimaryInteractive}" CornerRadius="12" Padding="10" Margin="0,0,16,0">
                         <materialDesign:PackIcon Kind="CashMultiple" Width="28" Height="28" Foreground="White" VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="إدارة المصروفات اليومية" FontSize="28" FontWeight="ExtraBold" Foreground="#1A237E" VerticalAlignment="Center"/>
+                    <TextBlock Text="إدارة المصروفات اليومية" FontSize="28" FontWeight="ExtraBold" Foreground="{StaticResource Brush.PrimaryDark}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Gorgeous Segmented Control for switching modes -->
-                <Border Grid.Column="1" Background="#E2E8F0" CornerRadius="22" Padding="4" VerticalAlignment="Center" Margin="0,0,16,0">
+                <Border Grid.Column="1" Background="{StaticResource Brush.Border}" CornerRadius="22" Padding="4" VerticalAlignment="Center" Margin="0,0,16,0">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -206,10 +206,10 @@
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ShowPostedArchive}" Value="False">
                                             <Setter Property="Background" Value="White"/>
-                                            <Setter Property="Foreground" Value="#1A237E"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryDark}"/>
                                             <Setter Property="Effect">
                                                 <Setter.Value>
-                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="{StaticResource Color.BorderStrong}" Opacity="0.5"/>
                                                 </Setter.Value>
                                             </Setter>
                                         </DataTrigger>
@@ -234,10 +234,10 @@
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ShowPostedArchive}" Value="True">
                                             <Setter Property="Background" Value="White"/>
-                                            <Setter Property="Foreground" Value="#1A237E"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryDark}"/>
                                             <Setter Property="Effect">
                                                 <Setter.Value>
-                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="#cbd5e1" Opacity="0.5"/>
+                                                    <DropShadowEffect BlurRadius="6" ShadowDepth="1" Color="{StaticResource Color.BorderStrong}" Opacity="0.5"/>
                                                 </Setter.Value>
                                             </Setter>
                                         </DataTrigger>
@@ -259,7 +259,7 @@
 
                 <!-- زر الرجوع (يظهر فقط في شاشة التفاصيل) -->
                 <Button Grid.Column="2" Command="{Binding GoBackCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"
-                        Foreground="#1A237E" BorderBrush="#1A237E" Padding="16,8" Height="40"
+                        Foreground="{StaticResource Brush.PrimaryDark}" BorderBrush="{StaticResource Brush.PrimaryDark}" Padding="16,8" Height="40"
                         materialDesign:ButtonAssist.CornerRadius="10"
                         Visibility="{Binding IsViewingDetails, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal">
@@ -296,23 +296,23 @@
                                      Background="White" materialDesign:ElevationAssist.Elevation="Dp2">
                     <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" ItemHeight="50">
                         <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                            <TextBlock Text="من تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <TextBlock Text="من تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Brush.TextMuted}"/>
                             <DatePicker SelectedDate="{Binding DateFrom}" Width="130" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                            <TextBlock Text="إلى تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <TextBlock Text="إلى تاريخ:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Brush.TextMuted}"/>
                             <DatePicker SelectedDate="{Binding DateTo}" Width="130" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                            <TextBlock Text="الوردية:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <TextBlock Text="الوردية:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Brush.TextMuted}"/>
                             <ComboBox ItemsSource="{Binding Shifts}" SelectedValuePath="Value" DisplayMemberPath="Name" 
                                       SelectedValue="{Binding SelectedShiftType}" Width="130" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,24,0" VerticalAlignment="Center">
-                            <TextBlock Text="الكاشير:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="#64748B"/>
+                            <TextBlock Text="الكاشير:" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource Brush.TextMuted}"/>
                             <ComboBox ItemsSource="{Binding Cashiers}" SelectedItem="{Binding SelectedCashierName}" 
                                       Width="140" FontSize="14" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -320,7 +320,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Command="{Binding LoadExpensesCommand}" 
                                     Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White" Padding="20,8"
+                                    Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White" Padding="20,8"
                                     materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0" Height="40">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Filter" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -329,7 +329,7 @@
                             </Button>
                             <Button Command="{Binding ResetFiltersCommand}" 
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Foreground="#64748B" BorderBrush="#CBD5E1" Padding="16,8" Height="40"
+                                    Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}" Padding="16,8" Height="40"
                                     materialDesign:ButtonAssist.CornerRadius="10" Margin="0,0,12,0">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Refresh" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -338,7 +338,7 @@
                             </Button>
                             <Button Command="{Binding PrintDailySummariesCommand}" 
                                     Style="{StaticResource MaterialDesignOutlinedButton}"
-                                    Foreground="#E11D48" BorderBrush="#FDA4AF" Padding="16,8" Height="40"
+                                    Foreground="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.ExpenseSoft}" Padding="16,8" Height="40"
                                     materialDesign:ButtonAssist.CornerRadius="10" ToolTip="طباعة التقرير (PDF)">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="Printer" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -351,7 +351,7 @@
 
                 <!-- الجدول الرئيسي -->
                 <Border Grid.Row="1" CornerRadius="16" Background="White" Padding="0" Margin="0,0,0,0"
-                        BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
                     <DataGrid ItemsSource="{Binding DailySummaries}" AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
                               CanUserSortColumns="False"
@@ -364,7 +364,7 @@
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
                                 <Setter Property="FontSize" Value="15"/>
                             </Style>
                         </DataGrid.Resources>
@@ -374,7 +374,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="Foreground" Value="#1A237E"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryDark}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -382,7 +382,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="ExtraBold"/>
-                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Pending}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -392,7 +392,7 @@
                                         <Button Command="{Binding DataContext.ViewDayDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding Date}"
                                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                Foreground="#3F51B5" BorderBrush="#3F51B5"
+                                                Foreground="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}"
                                                 materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -410,8 +410,8 @@
                 <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,24,0,0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#1A237E" Offset="0"/> 
-                            <GradientStop Color="#1A237E" Offset="1"/>
+                            <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="0"/> 
+                            <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -421,9 +421,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="إجمالي المصروفات المعروضة:" FontSize="20" FontWeight="SemiBold" 
-                                   Foreground="#EEF2FF" VerticalAlignment="Center"/>
+                                   Foreground="{StaticResource Brush.PrimarySoft}" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{Binding TotalFilteredExpensesAmount, StringFormat='{}{0:N2} د.ل'}" 
-                                   FontSize="32" FontWeight="ExtraBold" Foreground="#FBBF24" VerticalAlignment="Center"/>
+                                   FontSize="32" FontWeight="ExtraBold" Foreground="{StaticResource Brush.Accent}" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -448,15 +448,15 @@
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
                         <!-- Title Bar -->
-                        <Border Background="White" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
+                        <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="20,16" Margin="0,0,0,16">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="#3F51B5" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBlock Text="أرشيف الترحيل الشهري للمصروفات" FontSize="18" FontWeight="SemiBold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                    <materialDesign:PackIcon Kind="FolderZipOutline" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBlock Text="أرشيف الترحيل الشهري للمصروفات" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignOutlinedButton}" Content="تحديث الأرشيف" Command="{Binding LoadArchivedMonthsCommand}" Height="32"/>
                             </Grid>
@@ -473,7 +473,7 @@
                                 <DataTemplate>
                                     <Border Background="{Binding CardBackground}" BorderBrush="{Binding CardBorderBrush}" BorderThickness="1" CornerRadius="16" Padding="20,12" Margin="0,0,0,12">
                                         <Border.Effect>
-                                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#cbd5e1" Opacity="0.4"/>
+                                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="{StaticResource Color.BorderStrong}" Opacity="0.4"/>
                                         </Border.Effect>
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -495,11 +495,11 @@
 
                                             <!-- Month Name + Badge -->
                                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <Border Background="#f1f5f9" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="#64748b" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Border Background="{StaticResource Brush.LockedSoft}" CornerRadius="13" Width="26" Height="26" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Sequence}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                                 </Border>
-                                                <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="#3F51B5" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                                <materialDesign:PackIcon Kind="CalendarMonthOutline" Width="22" Height="22" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding MonthName}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                                 <Border Background="{Binding StatusColor}" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="10" FontWeight="Bold"/>
                                                 </Border>
@@ -507,26 +507,26 @@
 
                                             <!-- Sales -->
                                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="المبيعات: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#16A34A" VerticalAlignment="Center"/>
+                                                <TextBlock Text="المبيعات: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TotalSales, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <!-- Expenses -->
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="المصاريف: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="#DC2626" VerticalAlignment="Center"/>
+                                                <TextBlock Text="المصاريف: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding TotalExpenses, StringFormat=\{0:N2\} د.ل}" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <!-- Profit -->
                                             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                                                <TextBlock Text="صافي الأرباح: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding NetProfit, StringFormat=\{0:N2\} د.ل}" FontSize="14" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <!-- Days Count -->
                                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="الأيام: " FontSize="12" Foreground="#64748b" FontWeight="Medium" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="#64748b" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                <TextBlock Text="الأيام: " FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Medium" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding DaysCount, StringFormat=\{0\} أيام عمل}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="Bold" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <!-- Action Button -->
@@ -535,7 +535,7 @@
                                                         Command="{Binding DataContext.SelectMonthCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignRaisedButton}" 
-                                                        Background="#3F51B5" BorderBrush="#3F51B5" Height="36" Cursor="Hand" Margin="0,0,10,0">
+                                                        Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Height="36" Cursor="Hand" Margin="0,0,10,0">
                                                     <Button.Resources>
                                                         <Style TargetType="Border">
                                                             <Setter Property="CornerRadius" Value="8"/>
@@ -544,8 +544,8 @@
                                                 </Button>
 
                                                 <!-- Padlock/Lock icon as status -->
-                                                <Border Width="36" Height="36" Background="#EEF2FF" CornerRadius="18" Padding="6" ToolTip="حالة ترحيل الشهر">
-                                                    <materialDesign:PackIcon Kind="Lock" Width="20" Height="20" Foreground="#16A34A" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                                <Border Width="36" Height="36" Background="{StaticResource Brush.PrimarySoft}" CornerRadius="18" Padding="6" ToolTip="حالة ترحيل الشهر">
+                                                    <materialDesign:PackIcon Kind="Lock" Width="20" Height="20" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                                 </Border>
                                             </StackPanel>
                                         </Grid>
@@ -580,7 +580,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- Header with back button & month name -->
-                <Border Grid.Row="0" Background="#f8fafc" CornerRadius="16" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20,12" Margin="0,0,0,16">
+                <Border Grid.Row="0" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="20,12" Margin="0,0,0,16">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
@@ -589,20 +589,20 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Go Back Button -->
-                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#3F51B5" Height="36" Padding="8,0">
+                        <Button Grid.Column="0" Command="{Binding GoBackToMonthsCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{StaticResource Brush.PrimaryInteractive}" Height="36" Padding="8,0">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="ArrowRight" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="العودة لقائمة الأشهر" VerticalAlignment="Center" FontWeight="Bold"/>
                             </StackPanel>
                         </Button>
 
-                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف مصروفات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="{Binding SelectedArchivedMonth.MonthName, StringFormat=أرشيف مصروفات شهر: \{0\}}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
 
                 <!-- Days DataGrid -->
                 <Border Grid.Row="1" CornerRadius="16" Background="White" Padding="0" Margin="0"
-                        BorderBrush="#E2E8F0" BorderThickness="1" ClipToBounds="True">
+                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" ClipToBounds="True">
                     <DataGrid ItemsSource="{Binding DailySummaries}" AutoGenerateColumns="False"
                               CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"
                               CanUserSortColumns="False"
@@ -615,7 +615,7 @@
                         <DataGrid.Resources>
                             <Style TargetType="DataGridColumnHeader">
                                 <Setter Property="FontWeight" Value="Bold"/>
-                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
                                 <Setter Property="FontSize" Value="15"/>
                             </Style>
                         </DataGrid.Resources>
@@ -625,7 +625,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="Bold"/>
-                                        <Setter Property="Foreground" Value="#1A237E"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryDark}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -633,7 +633,7 @@
                                 <DataGridTextColumn.ElementStyle>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="FontWeight" Value="ExtraBold"/>
-                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Pending}"/>
                                     </Style>
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
@@ -643,7 +643,7 @@
                                         <Button Command="{Binding DataContext.ViewDayDetailsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding Date}"
                                                 Style="{StaticResource MaterialDesignOutlinedButton}"
-                                                Foreground="#3F51B5" BorderBrush="#3F51B5"
+                                                Foreground="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}"
                                                 materialDesign:ButtonAssist.CornerRadius="8" Padding="12,4" Height="32">
                                             <StackPanel Orientation="Horizontal">
                                                 <materialDesign:PackIcon Kind="Eye" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -661,8 +661,8 @@
                 <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,16,0,0">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                            <GradientStop Color="#1A237E" Offset="0"/> 
-                            <GradientStop Color="#1A237E" Offset="1"/>
+                            <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="0"/> 
+                            <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="1"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <Grid>
@@ -672,9 +672,9 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0" Text="إجمالي مصروفات الشهر المرحّلة:" FontSize="20" FontWeight="SemiBold" 
-                                   Foreground="#EEF2FF" VerticalAlignment="Center"/>
+                                   Foreground="{StaticResource Brush.PrimarySoft}" VerticalAlignment="Center"/>
                         <TextBlock Grid.Column="1" Text="{Binding TotalFilteredExpensesAmount, StringFormat='{}{0:N2} د.ل'}" 
-                                   FontSize="32" FontWeight="ExtraBold" Foreground="#FBBF24" VerticalAlignment="Center"/>
+                                   FontSize="32" FontWeight="ExtraBold" Foreground="{StaticResource Brush.Accent}" VerticalAlignment="Center"/>
                     </Grid>
                 </Border>
             </Grid>
@@ -689,19 +689,19 @@
             </Grid.RowDefinitions>
 
             <!-- عنوان التقرير وأزرار التقرير -->
-            <materialDesign:Card Grid.Row="0" UniformCornerRadius="12" Padding="20,16" Margin="0,0,0,16" Background="#F8FAFC">
+            <materialDesign:Card Grid.Row="0" UniformCornerRadius="12" Padding="20,16" Margin="0,0,0,16" Background="{StaticResource Brush.SurfaceAlt}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" FontSize="20" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center">
+                    <TextBlock Grid.Column="0" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextStrong}" VerticalAlignment="Center">
                         <Run Text="{Binding SelectedDateDetailsTitle, Mode=OneWay}"/>
-                        <Run Text="{Binding SelectedDateDetailsDisplay, Mode=OneWay}" Foreground="#3F51B5"/>
+                        <Run Text="{Binding SelectedDateDetailsDisplay, Mode=OneWay}" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                     </TextBlock>
                     <Button Grid.Column="1" Command="{Binding PrintDayExpensesCommand}"
                             Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="#15803D" BorderBrush="#15803D" Foreground="White" Padding="16,6"
+                            Background="{StaticResource Brush.IncomeText}" BorderBrush="{StaticResource Brush.IncomeText}" Foreground="White" Padding="16,6"
                             materialDesign:ButtonAssist.CornerRadius="8">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Printer" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -725,7 +725,7 @@
                                     </Grid.RowDefinitions>
 
                                     <!-- هيدر الوردية -->
-                                    <Border Grid.Row="0" Background="#EEF2FF" Padding="20,16" CornerRadius="16,16,0,0">
+                                    <Border Grid.Row="0" Background="{StaticResource Brush.PrimarySoft}" Padding="20,16" CornerRadius="16,16,0,0">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
@@ -736,16 +736,16 @@
 
                                             <!-- اسم الوردية والكاشير -->
                                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <materialDesign:PackIcon Kind="ClockOutline" Width="24" Height="24" Foreground="#3F51B5" Margin="0,0,8,0"/>
-                                                <TextBlock Text="{Binding ShiftName}" FontSize="18" FontWeight="Bold" Foreground="#1A237E" Margin="0,0,16,0"/>
-                                                <materialDesign:PackIcon Kind="Account" Width="24" Height="24" Foreground="#64748B" Margin="0,0,8,0"/>
-                                                <TextBlock Text="{Binding CashierName}" FontSize="16" FontWeight="SemiBold" Foreground="#475569"/>
+                                                <materialDesign:PackIcon Kind="ClockOutline" Width="24" Height="24" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding ShiftName}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryDark}" Margin="0,0,16,0"/>
+                                                <materialDesign:PackIcon Kind="Account" Width="24" Height="24" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding CashierName}" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}"/>
                                             </StackPanel>
 
                                             <!-- إجمالي الوردية -->
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,24,0">
-                                                <TextBlock Text="إجمالي الوردية:" FontSize="16" Foreground="#64748B" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                                                <TextBlock Text="{Binding ShiftTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="ExtraBold" Foreground="#EA580C" VerticalAlignment="Center"/>
+                                                <TextBlock Text="إجمالي الوردية:" FontSize="16" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding ShiftTotal, StringFormat='{}{0:N2} د.ل'}" FontSize="20" FontWeight="ExtraBold" Foreground="{StaticResource Brush.Pending}" VerticalAlignment="Center"/>
                                             </StackPanel>
 
                                             <!-- زر التعديل / العرض -->
@@ -755,8 +755,8 @@
                                                 <Button.Style>
                                                     <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                                                         <!-- الافتراضي: تعديل الوردية (الوضع المفتوح) -->
-                                                        <Setter Property="Background" Value="#D97706"/>
-                                                        <Setter Property="BorderBrush" Value="#D97706"/>
+                                                        <Setter Property="Background" Value="{StaticResource Brush.Pending}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Pending}"/>
                                                         <Setter Property="Foreground" Value="White"/>
                                                         <Setter Property="Content">
                                                             <Setter.Value>
@@ -769,8 +769,8 @@
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding DataContext.ShowPostedArchive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
                                                                 <!-- عند تشغيل وضع الأرشيف المرحل: عرض الوردية -->
-                                                                <Setter Property="Background" Value="#3F51B5"/>
-                                                                <Setter Property="BorderBrush" Value="#3F51B5"/>
+                                                                <Setter Property="Background" Value="{StaticResource Brush.PrimaryInteractive}"/>
+                                                                <Setter Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
                                                                 <Setter Property="Content">
                                                                     <Setter.Value>
                                                                         <StackPanel Orientation="Horizontal">
@@ -799,7 +799,7 @@
                                         <DataGrid.Resources>
                                             <Style TargetType="DataGridColumnHeader">
                                                 <Setter Property="FontWeight" Value="Bold"/>
-                                                <Setter Property="Foreground" Value="#94A3B8"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextFaint}"/>
                                             </Style>
                                         </DataGrid.Resources>
                                         <DataGrid.Columns>
@@ -807,7 +807,7 @@
                                             <DataGridTextColumn Header="نوع المصروف" Binding="{Binding ExpenseType}" Width="Auto" MinWidth="150">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
-                                                        <Setter Property="Foreground" Value="#334155"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.TextStrong}"/>
                                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                                     </Style>
                                                 </DataGridTextColumn.ElementStyle>
@@ -835,8 +835,8 @@
             <Border Grid.Row="2" CornerRadius="16" Padding="24,18" Margin="0,16,0,0">
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#065F46" Offset="0"/> 
-                        <GradientStop Color="#15803D" Offset="1"/>
+                        <GradientStop Color="{StaticResource Color.IncomeText}" Offset="0"/> 
+                        <GradientStop Color="{StaticResource Color.IncomeText}" Offset="1"/>
                     </LinearGradientBrush>
                 </Border.Background>
                 <Grid>
@@ -846,7 +846,7 @@
                     </Grid.ColumnDefinitions>
                     
                     <TextBlock Grid.Column="0" Text="الإجمالي العام لمصاريف اليوم:" FontSize="20" FontWeight="SemiBold" 
-                               Foreground="#D1FAE5" VerticalAlignment="Center"/>
+                               Foreground="{StaticResource Brush.IncomeSoft}" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="1" Text="{Binding DayGrandTotal, StringFormat='{}{0:N2} د.ل'}" 
                                FontSize="32" FontWeight="ExtraBold" Foreground="White" VerticalAlignment="Center"/>
                 </Grid>

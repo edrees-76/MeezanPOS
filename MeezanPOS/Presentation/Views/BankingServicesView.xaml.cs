@@ -43,7 +43,7 @@ public partial class BankingServicesView : UserControl
             catch (System.Exception ex)
             {
                 Serilog.Log.Error(ex, "Error loading bank statement");
-                MessageBox.Show($"تعذر تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
+                Dialogs.Show($"تعذر تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
                     MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
             }
         }

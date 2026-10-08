@@ -36,7 +36,7 @@ public partial class DatePeriodSelectionDialog : Window
     {
         if (!DpStartDate.SelectedDate.HasValue || !DpEndDate.SelectedDate.HasValue)
         {
-            MessageBox.Show("يرجى تحديد تاريخ البدء وتاريخ الانتهاء أولاً للتمكن من قفل الفترة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى تحديد تاريخ البدء وتاريخ الانتهاء أولاً للتمكن من قفل الفترة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -45,7 +45,7 @@ public partial class DatePeriodSelectionDialog : Window
 
         if (start > end)
         {
-            MessageBox.Show("تاريخ البدء لا يمكن أن يكون بعد تاريخ الانتهاء.", "خطأ في التحديد", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("تاريخ البدء لا يمكن أن يكون بعد تاريخ الانتهاء.", "خطأ في التحديد", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 

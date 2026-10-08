@@ -56,7 +56,7 @@ namespace MeezanPOS.Presentation.Views
 
             if (SelectedDetailReason.Length < 20)
             {
-                MessageBox.Show("الشرح التفصيلي يجب أن لا يقل عن 20 حرفاً لتأكيد العملية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("الشرح التفصيلي يجب أن لا يقل عن 20 حرفاً لتأكيد العملية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

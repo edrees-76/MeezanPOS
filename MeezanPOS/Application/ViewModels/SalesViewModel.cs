@@ -530,7 +530,7 @@ public partial class SalesViewModel : ObservableObject
         if (selectableJournal == null) return;
         var journal = selectableJournal.Journal;
 
-        var result = System.Windows.MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من ترحيل الوردية تاريخ {journal.JournalDate:dd-MM-yyyy}؟\nبعد الترحيل لن تتمكن من تعديل أو حذف هذه الوردية والمصاريف الملحقة بها.",
             "تأكيد الترحيل المالي",
             System.Windows.MessageBoxButton.YesNo,
@@ -545,12 +545,12 @@ public partial class SalesViewModel : ObservableObject
             var postingService = _postingService;
             await postingService.PostEntityAsync<DailyJournal>(journal.Id, CurrentUserId);
 
-            System.Windows.MessageBox.Show("تم ترحيل الوردية وإقفالها مالياً بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            Dialogs.Show("تم ترحيل الوردية وإقفالها مالياً بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             await LoadDataAsync();
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"حدث خطأ أثناء الترحيل: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء الترحيل: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -563,7 +563,7 @@ public partial class SalesViewModel : ObservableObject
     {
         if (month == null) return;
 
-        var result = System.Windows.MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من ترحيل شهر {month.MonthName} بالكامل؟\nسيتم قفل جميع ورديات هذا الشهر ومصاريفها اليومية ولن تتمكن من تعديلها.",
             "تأكيد ترحيل الشهر بالكامل",
             System.Windows.MessageBoxButton.YesNo,
@@ -586,7 +586,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (!draftJournals.Any())
             {
-                System.Windows.MessageBox.Show("لا توجد ورديات مفتوحة لترحيلها في هذا الشهر.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                Dialogs.Show("لا توجد ورديات مفتوحة لترحيلها في هذا الشهر.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -596,7 +596,7 @@ public partial class SalesViewModel : ObservableObject
                 await postingService.PostEntityAsync<DailyJournal>(j.Id, CurrentUserId);
             }
 
-            System.Windows.MessageBox.Show($"تم ترحيل شهر {month.MonthName} بالكامل وإقفاله بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            Dialogs.Show($"تم ترحيل شهر {month.MonthName} بالكامل وإقفاله بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             await LoadDataAsync();
 
             if (SelectedArchivedMonth != null && SelectedArchivedMonth.Year == month.Year && SelectedArchivedMonth.Month == month.Month)
@@ -607,7 +607,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ أثناء ترحيل الشهر: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء ترحيل الشهر: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -622,7 +622,7 @@ public partial class SalesViewModel : ObservableObject
 
         if (!_sessionService.HasPermission("UnpostFinancial"))
         {
-            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
         }
 
@@ -642,7 +642,7 @@ public partial class SalesViewModel : ObservableObject
             
             if (hasSettled)
             {
-                System.Windows.MessageBox.Show(
+                Dialogs.Show(
                     "عذراً، هذا الشهر يحتوي على ورديات تابعة لفترة تم تسويتها وإقفالها مسبقاً.\nيجب إلغاء قفل فترة التسوية المعنية أولاً من شاشة (الكاش الحالي -> أرشيف التسويات).",
                     "فترة مغلقة ومسواة",
                     System.Windows.MessageBoxButton.OK,
@@ -674,7 +674,7 @@ public partial class SalesViewModel : ObservableObject
 
         var reason = $"{selectedReason} - {detailReason}";
 
-        var result = System.Windows.MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من فك ترحيل شهر {month.MonthName} بالكامل؟\nسيتم فتح جميع ورديات هذا الشهر للتعديل مجدداً، وسيتم تسجيل هذا الإجراء في سجل التدقيق.",
             "تأكيد فك الترحيل",
             System.Windows.MessageBoxButton.YesNo,
@@ -697,7 +697,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (!postedJournals.Any())
             {
-                System.Windows.MessageBox.Show("لا توجد ورديات مرحلة لفكها في هذا الشهر.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                Dialogs.Show("لا توجد ورديات مرحلة لفكها في هذا الشهر.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 
@@ -707,7 +707,7 @@ public partial class SalesViewModel : ObservableObject
                 await postingService.UnpostEntityAsync<DailyJournal>(j.Id, reason, CurrentUserId);
             }
 
-            System.Windows.MessageBox.Show($"تم فك ترحيل شهر {month.MonthName} بنجاح، وأصبحت الوردية قابلة للتعديل مجدداً.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            Dialogs.Show($"تم فك ترحيل شهر {month.MonthName} بنجاح، وأصبحت الوردية قابلة للتعديل مجدداً.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             await LoadDataAsync();
 
             if (SelectedArchivedMonth != null && SelectedArchivedMonth.Year == month.Year && SelectedArchivedMonth.Month == month.Month)
@@ -718,7 +718,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ أثناء فك الترحيل: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء فك الترحيل: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -756,7 +756,7 @@ public partial class SalesViewModel : ObservableObject
         // منع التعديل إذا كانت الوردية مرحلة
         if (journal.FinancialStatus == FinancialStatus.Posted || journal.FinancialStatus == FinancialStatus.Archived)
         {
-            System.Windows.MessageBox.Show("لا يمكن تعديل حركة مرحّلة مالياً. يرجى فك الترحيل أولاً.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            Dialogs.Show("لا يمكن تعديل حركة مرحّلة مالياً. يرجى فك الترحيل أولاً.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
         
@@ -817,7 +817,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"حدث خطأ أثناء تصدير ملف PDF: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تصدير ملف PDF: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
 
@@ -1088,11 +1088,11 @@ public partial class SalesViewModel : ObservableObject
         var selectedIds = Journals.Where(j => j.IsSelected).Select(j => j.Journal.Id).ToList();
         if (!selectedIds.Any())
         {
-            System.Windows.MessageBox.Show("يرجى تحديد وردية واحدة على الأقل للترحيل.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            Dialogs.Show("يرجى تحديد وردية واحدة على الأقل للترحيل.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
 
-        var confirmResult = System.Windows.MessageBox.Show(
+        var confirmResult = Dialogs.Show(
             $"هل أنت متأكد من ترحيل وإقفال عدد ({selectedIds.Count}) يوميات عمل محددة مالياً؟\n" +
             $"إجمالي المبيعات المحددة: {RunningSelectedSalesTotal:N2} د.ل\n" +
             $"إجمالي المصاريف المحددة: {RunningSelectedExpensesTotal:N2} د.ل\n" +
@@ -1112,7 +1112,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (batchResult.Success)
             {
-                System.Windows.MessageBox.Show(
+                Dialogs.Show(
                     $"تمت عملية الترحيل الجماعي للمؤسسات بنجاح!\n\n" +
                     $"🔹 عدد اليوميات المرحلة: {batchResult.PostedCount}\n" +
                     $"🔹 إجمالي المبيعات المرحلة: {batchResult.TotalSales:N2} د.ل\n" +
@@ -1129,12 +1129,12 @@ public partial class SalesViewModel : ObservableObject
             else
             {
                 var errors = string.Join("\n", batchResult.Errors);
-                System.Windows.MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1180,7 +1180,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (!journalsInPeriod.Any())
             {
-                System.Windows.MessageBox.Show(
+                Dialogs.Show(
                     $"لا توجد أي يوميات عمل مفتوحة (غير مرحلة) في الفترة المحددة:\nمن: {startDate:dd-MM-yyyy} إلى: {endDate:dd-MM-yyyy}",
                     "لا توجد بيانات للترحيل",
                     System.Windows.MessageBoxButton.OK,
@@ -1188,7 +1188,7 @@ public partial class SalesViewModel : ObservableObject
                 return;
             }
 
-            var confirmResult = System.Windows.MessageBox.Show(
+            var confirmResult = Dialogs.Show(
                 $"هل أنت متأكد من ترحيل وإقفال جميع يوميات العمل المفتوحة في الفترة المحددة؟\n\n" +
                 $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
                 $"📦 عدد اليوميات المفتوحة المكتشفة: {journalsInPeriod.Count} يومية عمل\n\n" +
@@ -1204,7 +1204,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (batchResult.Success)
             {
-                System.Windows.MessageBox.Show(
+                Dialogs.Show(
                     $"تمت عملية الترحيل الجماعي للفترة بنجاح!\n\n" +
                     $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
                     $"🔹 عدد اليوميات المرحلة: {batchResult.PostedCount}\n" +
@@ -1222,12 +1222,12 @@ public partial class SalesViewModel : ObservableObject
             else
             {
                 var errors = string.Join("\n", batchResult.Errors);
-                System.Windows.MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي للفترة: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي للفترة: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1264,7 +1264,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ في تحميل حركات النقدية: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في تحميل حركات النقدية: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1275,7 +1275,7 @@ public partial class SalesViewModel : ObservableObject
     [RelayCommand]
     public async Task RebuildCashLedgerAsync()
     {
-        var result = System.Windows.MessageBox.Show(
+        var result = Dialogs.Show(
             "هل أنت متأكد من إعادة بناء دفتر النقدية؟\nسيقوم هذا الإجراء بإعادة حساب الأرصدة التراكمية بناءً على الترتيب التاريخي للحركات.",
             "تأكيد إعادة البناء",
             System.Windows.MessageBoxButton.YesNo,
@@ -1290,11 +1290,11 @@ public partial class SalesViewModel : ObservableObject
             var cashLedgerService = _cashLedgerService;
             await cashLedgerService.RebuildLedgerAsync();
             await LoadCashMovementsAsync();
-            System.Windows.MessageBox.Show("تم إعادة بناء دفتر النقدية بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            Dialogs.Show("تم إعادة بناء دفتر النقدية بنجاح!", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ أثناء إعادة بناء الدفتر: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء إعادة بناء الدفتر: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1330,7 +1330,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ في تحديث رصيد الخزينة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في تحديث رصيد الخزينة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1353,17 +1353,17 @@ public partial class SalesViewModel : ObservableObject
     {
         if (SettlePayoutInput < 0)
         {
-            System.Windows.MessageBox.Show("يجب إدخال مبلغ صحيح وموجب للتسوية.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            Dialogs.Show("يجب إدخال مبلغ صحيح وموجب للتسوية.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
 
         if (SettlePayoutInput > CurrentCashBalance)
         {
-            System.Windows.MessageBox.Show("المبلغ المطلوب أكبر من الرصيد المتاح في الخزينة.", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            Dialogs.Show("المبلغ المطلوب أكبر من الرصيد المتاح في الخزينة.", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
 
-        var confirm = System.Windows.MessageBox.Show(
+        var confirm = Dialogs.Show(
             $"هل أنت متأكد من تأكيد تسوية الخزينة وسحب مبلغ للمالك؟\n\n" +
             $"💰 السيولة النقدية المتوفرة: {CurrentCashBalance:N2} د.ل\n" +
             $"💸 المبلغ المسحوب للمالك: {SettlePayoutInput:N2} د.ل\n" +
@@ -1402,7 +1402,7 @@ public partial class SalesViewModel : ObservableObject
                                  $"🔹 عدد اليوميات والمصاريف المقفلة: {batchResult.PostedCount}\n" +
                                  $"🔹 معرف الجلسة: {batchResult.SessionGuid.ToString().Substring(0,8).ToUpper()}";
 
-                System.Windows.MessageBox.Show(successMsg, "نجاح تسوية الخزينة", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                Dialogs.Show(successMsg, "نجاح تسوية الخزينة", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
 
                 // فتح ملف الـ PDF تلقائياً للمستند المولد
                 if (!string.IsNullOrEmpty(batchResult.PdfPath) && System.IO.File.Exists(batchResult.PdfPath))
@@ -1417,12 +1417,12 @@ public partial class SalesViewModel : ObservableObject
             else
             {
                 var errors = string.Join("\n", batchResult.Errors);
-                System.Windows.MessageBox.Show($"فشلت عملية تسوية الخزينة:\n{errors}", "خطأ في التسوية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية تسوية الخزينة:\n{errors}", "خطأ في التسوية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             }
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"حدث خطأ غير متوقع أثناء تسوية الخزينة: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ غير متوقع أثناء تسوية الخزينة: {ex.Message}", "خطأ قاتل", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1448,7 +1448,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"فشل تحميل أرشيف التسويات: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"فشل تحميل أرشيف التسويات: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1468,7 +1468,7 @@ public partial class SalesViewModel : ObservableObject
         if (item == null) return;
         if (!_sessionService.HasPermission("UnpostFinancial"))
         {
-            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
         }
 
@@ -1500,7 +1500,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (success)
             {
-                System.Windows.MessageBox.Show("تم إلغاء قفل الفترة بنجاح للمراجعة والتدقيق.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                Dialogs.Show("تم إلغاء قفل الفترة بنجاح للمراجعة والتدقيق.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 
                 // تحديث قائمة أرشيف التسويات
                 var history = await postingService.GetSettlementHistoryAsync();
@@ -1514,7 +1514,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"فشل إلغاء قفل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"فشل إلغاء قفل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1528,13 +1528,13 @@ public partial class SalesViewModel : ObservableObject
         if (item == null) return;
         if (!_sessionService.HasPermission("UnpostFinancial"))
         {
-            System.Windows.MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
         }
 
         if (item.Status != PostingSessionStatus.Unlocked)
         {
-            System.Windows.MessageBox.Show("يجب إلغاء قفل الفترة أولاً قبل البدء بفك الترحيل المجمع.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+            Dialogs.Show("يجب إلغاء قفل الفترة أولاً قبل البدء بفك الترحيل المجمع.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
             return;
         }
 
@@ -1563,7 +1563,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"خطأ في جلب بيانات الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في جلب بيانات الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
             return;
         }
 
@@ -1579,7 +1579,7 @@ public partial class SalesViewModel : ObservableObject
                          $"📉 الرصيد المتوقع بعد العكس: {expectedBalance:N2} د.ل\n\n" +
                          $"هل تريد فك ترحيل الفترة وعكس حركات النقدية آلياً؟";
 
-        var confirmResult = System.Windows.MessageBox.Show(confirmMsg, "تأكيد العمليات العكسية وفك ترحيل الفترة", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+        var confirmResult = Dialogs.Show(confirmMsg, "تأكيد العمليات العكسية وفك ترحيل الفترة", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
         if (confirmResult != System.Windows.MessageBoxResult.Yes) return;
 
         IsLoading = true;
@@ -1591,7 +1591,7 @@ public partial class SalesViewModel : ObservableObject
 
             if (success)
             {
-                System.Windows.MessageBox.Show("تم فك ترحيل الفترة بالكامل وإلغاء وعكس حركات النقدية بنجاح.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                Dialogs.Show("تم فك ترحيل الفترة بالكامل وإلغاء وعكس حركات النقدية بنجاح.", "نجاح", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
                 
                 // تحديث قائمة أرشيف التسويات
                 var history = await postingService.GetSettlementHistoryAsync();
@@ -1606,7 +1606,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"فشل فك ترحيل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"فشل فك ترحيل الفترة: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {
@@ -1636,7 +1636,7 @@ public partial class SalesViewModel : ObservableObject
         }
         catch (System.Exception ex)
         {
-            System.Windows.MessageBox.Show($"فشل إعادة توليد ملف PDF: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            Dialogs.Show($"فشل إعادة توليد ملف PDF: {ex.Message}", "خطأ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
         finally
         {

@@ -115,7 +115,7 @@ public partial class MainViewModel : ObservableObject
     {
         if (!IsAllowed(viewName))
         {
-            MessageBox.Show(MeezanPOS.Application.Services.Permissions.DeniedMessage, "صلاحية غير كافية",
+            Dialogs.Show(MeezanPOS.Application.Services.Permissions.DeniedMessage, "صلاحية غير كافية",
                 MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.OK,
                 MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
             return;
@@ -124,7 +124,7 @@ public partial class MainViewModel : ObservableObject
         // تنبيه قبل مغادرة يومية فيها بيانات غير محفوظة
         if (CurrentViewModel is DailyJournalViewModel journalVm && journalVm.HasUnsavedChanges)
         {
-            var answer = MessageBox.Show(
+            var answer = Dialogs.Show(
                 "توجد بيانات في اليومية الحالية لم تُحفظ بعد وستضيع عند المغادرة.\n\nهل تريد المغادرة دون حفظ؟",
                 "بيانات غير محفوظة", MessageBoxButton.YesNo, MessageBoxImage.Warning, MessageBoxResult.No,
                 MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
@@ -243,7 +243,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Logout()
     {
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             "هل أنت متأكد من تسجيل الخروج؟\nيرجى التأكد من حفظ كافة البيانات قبل الخروج.",
             "تأكيد تسجيل الخروج",
             MessageBoxButton.YesNo,

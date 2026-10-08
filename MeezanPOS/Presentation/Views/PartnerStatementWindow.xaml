@@ -16,9 +16,9 @@
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Border Background="White" CornerRadius="16" BorderBrush="#cbd5e1" BorderThickness="1.5">
+    <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="24" ShadowDepth="4" Color="#1E293B" Opacity="0.15"/>
+            <DropShadowEffect BlurRadius="24" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.15"/>
         </Border.Effect>
 
         <Grid Margin="24">
@@ -40,15 +40,15 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="FileDocumentOutline" Width="26" Height="26" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center">
                         <Run Text="كشف حساب الشريك: "/>
-                        <Run Text="{Binding PartnerName}" Foreground="#3F51B5"/>
+                        <Run Text="{Binding PartnerName}" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                     </TextBlock>
                 </StackPanel>
 
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Click="Close_Click" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
@@ -57,34 +57,34 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <UniformGrid Grid.Row="1" Columns="4" Margin="0,0,0,16">
                 <!-- إجمالي التمويل -->
-                <Border Background="#FEE2E2" CornerRadius="12" Padding="16,12" Margin="0,0,8,0">
+                <Border Background="{StaticResource Brush.ExpenseSoft}" CornerRadius="12" Padding="16,12" Margin="0,0,8,0">
                     <StackPanel>
-                        <TextBlock Text="إجمالي تمويل الشريك" FontSize="11.5" Foreground="#991b1b" Margin="0,0,0,4"/>
-                        <TextBlock Text="{Binding TotalDebts, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#dc2626"/>
+                        <TextBlock Text="إجمالي تمويل الشريك" FontSize="11.5" Foreground="{StaticResource Brush.ExpenseText}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding TotalDebts, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}"/>
                     </StackPanel>
                 </Border>
                 <!-- إجمالي التسويات -->
-                <Border Background="#DCFCE7" CornerRadius="12" Padding="16,12" Margin="4,0">
+                <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="12" Padding="16,12" Margin="4,0">
                     <StackPanel>
-                        <TextBlock Text="إجمالي التسويات" FontSize="11.5" Foreground="#166534" Margin="0,0,0,4"/>
-                        <TextBlock Text="{Binding TotalSettlements, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#16a34a"/>
+                        <TextBlock Text="إجمالي التسويات" FontSize="11.5" Foreground="{StaticResource Brush.IncomeText}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding TotalSettlements, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Income}"/>
                     </StackPanel>
                 </Border>
                 <!-- الرصيد الحالي -->
-                <Border Background="#EEF2FF" CornerRadius="12" Padding="16,12" Margin="4,0">
+                <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="12" Padding="16,12" Margin="4,0">
                     <StackPanel>
-                        <TextBlock Text="الرصيد الحالي" FontSize="11.5" Foreground="#283593" Margin="0,0,0,4"/>
+                        <TextBlock Text="الرصيد الحالي" FontSize="11.5" Foreground="{StaticResource Brush.Primary}" Margin="0,0,0,4"/>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding CurrentBalance, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="#3F51B5"/>
-                            <TextBlock Text="{Binding BalanceDirectionText}" FontSize="10.5" Foreground="#64748b" VerticalAlignment="Bottom" Margin="8,0,0,2"/>
+                            <TextBlock Text="{Binding CurrentBalance, StringFormat=N2}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
+                            <TextBlock Text="{Binding BalanceDirectionText}" FontSize="10.5" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Bottom" Margin="8,0,0,2"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
                 <!-- عدد العمليات -->
-                <Border Background="#EEF2FF" CornerRadius="12" Padding="16,12" Margin="8,0,0,0">
+                <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="12" Padding="16,12" Margin="8,0,0,0">
                     <StackPanel>
-                        <TextBlock Text="عدد العمليات" FontSize="11.5" Foreground="#6b21a8" Margin="0,0,0,4"/>
-                        <TextBlock Text="{Binding TransactionCount}" FontSize="18" FontWeight="Bold" Foreground="#3F51B5"/>
+                        <TextBlock Text="عدد العمليات" FontSize="11.5" Foreground="{StaticResource Brush.PrimaryDark}" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding TransactionCount}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -92,12 +92,12 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <!-- 3. شريط الفلاتر -->
             <!-- ═══════════════════════════════════════════════════════ -->
-            <Border Grid.Row="2" Background="#f8fafc" CornerRadius="10" Padding="14,10" Margin="0,0,0,12" BorderBrush="#e2e8f0" BorderThickness="1">
+            <Border Grid.Row="2" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="10" Padding="14,10" Margin="0,0,0,12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="من:" FontSize="12.5" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="من:" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <DatePicker SelectedDate="{Binding FilterDateFrom}" Width="140" FontSize="12.5" materialDesign:HintAssist.Hint="تاريخ البداية" Margin="0,0,16,0"/>
 
-                    <TextBlock Text="إلى:" FontSize="12.5" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="إلى:" FontSize="12.5" Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Center" Margin="0,0,6,0"/>
                     <DatePicker SelectedDate="{Binding FilterDateTo}" Width="140" FontSize="12.5" materialDesign:HintAssist.Hint="تاريخ النهاية" Margin="0,0,16,0"/>
 
                     <ComboBox Width="150" FontSize="12.5" SelectedItem="{Binding FilterTransactionType}"
@@ -121,8 +121,8 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <!-- 4. جدول كشف الحساب (Banking Statement DataGrid) -->
             <!-- ═══════════════════════════════════════════════════════ -->
-            <Border Grid.Row="3" CornerRadius="10" BorderBrush="#e2e8f0" BorderThickness="1" Padding="0">
-                <DataGrid ItemsSource="{Binding StatementEntries}"
+            <Border Grid.Row="3" CornerRadius="10" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="0">
+                <DataGrid CanUserSortColumns="False" ItemsSource="{Binding StatementEntries}"
                           AutoGenerateColumns="False"
                           CanUserAddRows="False"
                           IsReadOnly="True"
@@ -146,7 +146,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="#94a3b8"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextFaint}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -168,10 +168,10 @@
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsSettlement}" Value="True">
-                                            <Setter Property="Foreground" Value="#16a34a"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IsSettlement}" Value="False">
-                                            <Setter Property="Foreground" Value="#dc2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -182,7 +182,7 @@
                         <DataGridTextColumn Header="البيان" Binding="{Binding Description}" Width="*">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="#334155"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextStrong}"/>
                                     <Setter Property="TextWrapping" Value="NoWrap"/>
                                     <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                                 </Style>
@@ -194,7 +194,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="#64748b"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -204,7 +204,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="#1E293B"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
@@ -219,10 +219,10 @@
                                     <Setter Property="FontSize" Value="13.5"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsSettlement}" Value="True">
-                                            <Setter Property="Foreground" Value="#16a34a"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding IsSettlement}" Value="False">
-                                            <Setter Property="Foreground" Value="#dc2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -236,7 +236,7 @@
                                     <Setter Property="TextAlignment" Value="Center"/>
                                     <Setter Property="FontWeight" Value="Bold"/>
                                     <Setter Property="FontSize" Value="14"/>
-                                    <Setter Property="Foreground" Value="#1e293b"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -250,10 +250,10 @@
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                            <Setter Property="Foreground" Value="#dc2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                            <Setter Property="Foreground" Value="#16a34a"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -268,7 +268,7 @@
             <!-- ═══════════════════════════════════════════════════════ -->
             <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,16,0,0">
                 <Button Command="{Binding ExportToPdfCommand}" Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                        Background="#EEF2FF" Foreground="#3F51B5" Height="38" Padding="20,0"
+                        Background="{StaticResource Brush.PrimarySoft}" Foreground="{StaticResource Brush.PrimaryInteractive}" Height="38" Padding="20,0"
                         materialDesign:ButtonAssist.CornerRadius="8" Margin="0,0,8,0">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="FilePdfBox" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -276,7 +276,7 @@
                     </StackPanel>
                 </Button>
                 <Button Click="Close_Click" Style="{StaticResource MaterialDesignFlatButton}"
-                        Background="#f1f5f9" Foreground="#334155" Height="38" Padding="20,0"
+                        Background="{StaticResource Brush.LockedSoft}" Foreground="{StaticResource Brush.TextStrong}" Height="38" Padding="20,0"
                         materialDesign:ButtonAssist.CornerRadius="8">
                     <StackPanel Orientation="Horizontal">
                         <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>

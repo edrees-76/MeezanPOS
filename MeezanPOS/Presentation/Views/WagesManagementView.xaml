@@ -11,7 +11,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="800" d:DesignWidth="1200"
              FlowDirection="RightToLeft"
-             Background="#F5F7FA"
+             Background="{StaticResource Brush.Canvas}"
              Padding="32,24"
              Loaded="UserControl_Loaded">
     
@@ -40,22 +40,22 @@
             </Grid.ColumnDefinitions>
             
             <StackPanel Grid.Column="0">
-                <TextBlock Text="إدارة أجور وعمال المطعم" FontSize="26" FontWeight="Bold" Foreground="#1E293B"/>
-                <TextBlock Text="النظام المالي المتكامل لتسجيل حضور العمال، السلف، الأجور، وتدقيق كشوف الحسابات." FontSize="14" Foreground="#64748b" Margin="0,4,0,0"/>
+                <TextBlock Text="إدارة أجور وعمال المطعم" FontSize="26" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                <TextBlock Text="النظام المالي المتكامل لتسجيل حضور العمال، السلف، الأجور، وتدقيق كشوف الحسابات." FontSize="14" Foreground="{StaticResource Brush.TextMuted}" Margin="0,4,0,0"/>
             </StackPanel>
 
             <!-- إجمالي المستحقات العامة -->
-            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20,12" BorderBrush="#e2e8f0" BorderThickness="1">
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="20,12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.04"/>
                 </Border.Effect>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#fee2e2" CornerRadius="8" Padding="10" Margin="0,0,16,0">
-                        <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#DC2626" Width="26" Height="26"/>
+                    <Border Background="{StaticResource Brush.ExpenseSoft}" CornerRadius="8" Padding="10" Margin="0,0,16,0">
+                        <materialDesign:PackIcon Kind="AccountMultiple" Foreground="{StaticResource Brush.Expense}" Width="26" Height="26"/>
                     </Border>
                     <StackPanel>
-                        <TextBlock Text="إجمالي مستحقات العمال المتأخرة (عليهم/لهم)" FontSize="12" Foreground="#64748b" FontWeight="SemiBold"/>
-                        <TextBlock Text="{Binding TotalOutstandingBalance, StringFormat={}{0:N2} د.ل}" FontSize="20" FontWeight="Bold" Foreground="#DC2626" Margin="0,2,0,0"/>
+                        <TextBlock Text="إجمالي مستحقات العمال المتأخرة (عليهم/لهم)" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding TotalOutstandingBalance, StringFormat={}{0:N2} د.ل}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}" Margin="0,2,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -73,7 +73,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- شريط إعدادات وتصفية الحضور -->
-                    <Border Grid.Row="0" Background="White" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="16" Margin="0,0,0,16">
+                    <Border Grid.Row="0" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="16" Margin="0,0,0,16">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
@@ -85,7 +85,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0" Text="تاريخ الحضور والوردية:" FontSize="13" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="تاريخ الحضور والوردية:" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Brush.TextStrong}" VerticalAlignment="Center"/>
 
                             <!-- اختيار التاريخ -->
                             <DatePicker Grid.Column="2" SelectedDate="{Binding SelectedAttendanceDate}"
@@ -103,13 +103,13 @@
                             <Button Grid.Column="6" Content="حفظ واعتماد الحضور اليومي ✓" 
                                     Command="{Binding SaveAttendanceBatchCommand}" 
                                     Style="{StaticResource MaterialDesignFlatButton}" 
-                                    Background="#3F51B5" Foreground="White" Height="40" Padding="20,0"/>
+                                    Background="{StaticResource Brush.PrimaryInteractive}" Foreground="White" Height="40" Padding="20,0"/>
                         </Grid>
                     </Border>
 
                     <!-- جدول إدخال الحضور -->
-                    <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="12">
-                        <DataGrid ItemsSource="{Binding AttendanceList}"
+                    <Border Grid.Row="1" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="12">
+                        <DataGrid CanUserSortColumns="False" ItemsSource="{Binding AttendanceList}"
                                   AutoGenerateColumns="False"
                                   CanUserAddRows="False"
                                   HeadersVisibility="Column"
@@ -134,7 +134,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
-                                                       VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#64748b"/>
+                                                       VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextMuted}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -143,7 +143,7 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Foreground" Value="#1e293b"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.TextPrimary}"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
                                             <Setter Property="TextAlignment" Value="Center"/>
@@ -170,19 +170,19 @@
                                                                      <Style.Triggers>
                                                                          <DataTrigger Binding="{Binding}" Value="Present">
                                                                              <Setter Property="Text" Value="حاضر (يوم كامل)"/>
-                                                                             <Setter Property="Foreground" Value="#15803D"/>
+                                                                             <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
                                                                          </DataTrigger>
                                                                          <DataTrigger Binding="{Binding}" Value="Absent">
                                                                              <Setter Property="Text" Value="غائب"/>
-                                                                             <Setter Property="Foreground" Value="#b91c1c"/>
+                                                                             <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
                                                                          </DataTrigger>
                                                                          <DataTrigger Binding="{Binding}" Value="HalfDay">
                                                                              <Setter Property="Text" Value="نصف يوم عمل"/>
-                                                                             <Setter Property="Foreground" Value="#b45309"/>
+                                                                             <Setter Property="Foreground" Value="{StaticResource Brush.PendingText}"/>
                                                                          </DataTrigger>
                                                                          <DataTrigger Binding="{Binding}" Value="Leave">
                                                                              <Setter Property="Text" Value="إجازة"/>
-                                                                             <Setter Property="Foreground" Value="#3F51B5"/>
+                                                                             <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
                                                                          </DataTrigger>
                                                                      </Style.Triggers>
                                                                  </Style>
@@ -220,7 +220,7 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -229,7 +229,7 @@
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -242,7 +242,7 @@
                                     <DataGridTextColumn.ElementStyle>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#b45309"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PendingText}"/>
                                             <Setter Property="FontWeight" Value="SemiBold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -251,7 +251,7 @@
                                     <DataGridTextColumn.EditingElementStyle>
                                         <Style TargetType="TextBox">
                                             <Setter Property="TextAlignment" Value="Center"/>
-                                            <Setter Property="Foreground" Value="#b45309"/>
+                                            <Setter Property="Foreground" Value="{StaticResource Brush.PendingText}"/>
                                             <Setter Property="FontWeight" Value="Bold"/>
                                             <Setter Property="VerticalAlignment" Value="Center"/>
                                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -297,49 +297,49 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- كرت إجمالي العمال -->
-                        <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="1">
+                        <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#EEF2FF" CornerRadius="8" Padding="12" Margin="0,0,16,0">
-                                    <materialDesign:PackIcon Kind="AccountMultiple" Foreground="#3F51B5" Width="24" Height="24"/>
+                                <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                    <materialDesign:PackIcon Kind="AccountMultiple" Foreground="{StaticResource Brush.PrimaryInteractive}" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="إجمالي عدد الموظفين" FontSize="12.5" Foreground="#64748b" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding TotalWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#3F51B5" Margin="0,4,0,0"/>
+                                    <TextBlock Text="إجمالي عدد الموظفين" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding TotalWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- كرت العمال النشطون -->
-                        <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="1">
+                        <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#DCFCE7" CornerRadius="8" Padding="12" Margin="0,0,16,0">
-                                    <materialDesign:PackIcon Kind="AccountCheck" Foreground="#16A34A" Width="24" Height="24"/>
+                                <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                    <materialDesign:PackIcon Kind="AccountCheck" Foreground="{StaticResource Brush.Income}" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="الموظفون النشطون" FontSize="12.5" Foreground="#64748b" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding ActiveWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="#16A34A" Margin="0,4,0,0"/>
+                                    <TextBlock Text="الموظفون النشطون" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding ActiveWorkersCount}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Income}" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
                         <!-- كرت إجمالي تكلفة الأجور -->
-                        <Border Grid.Column="4" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="#e2e8f0" BorderThickness="1">
+                        <Border Grid.Column="4" Background="White" CornerRadius="12" Padding="20,16" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
                             <Border.Effect>
                                 <DropShadowEffect BlurRadius="8" ShadowDepth="1" Opacity="0.03"/>
                             </Border.Effect>
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="#FEF3C7" CornerRadius="8" Padding="12" Margin="0,0,16,0">
-                                    <materialDesign:PackIcon Kind="CashMultiple" Foreground="#d97706" Width="24" Height="24"/>
+                                <Border Background="{StaticResource Brush.PendingSoft}" CornerRadius="8" Padding="12" Margin="0,0,16,0">
+                                    <materialDesign:PackIcon Kind="CashMultiple" Foreground="{StaticResource Brush.Pending}" Width="24" Height="24"/>
                                 </Border>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="إجمالي تكلفة اليومية الثابتة" FontSize="12.5" Foreground="#64748b" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding TotalDailyWagesCost, StringFormat={}{0:N2} د.ل}" FontSize="18" FontWeight="Bold" Foreground="#d97706" Margin="0,4,0,0"/>
+                                    <TextBlock Text="إجمالي تكلفة اليومية الثابتة" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding TotalDailyWagesCost, StringFormat={}{0:N2} د.ل}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.Pending}" Margin="0,4,0,0"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -360,7 +360,7 @@
                                      materialDesign:TextFieldAssist.HasClearButton="True"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                      Padding="10,8" FontSize="13"/>
-                            <materialDesign:PackIcon Kind="Search" Width="18" Height="18" Foreground="#94a3b8" 
+                            <materialDesign:PackIcon Kind="Search" Width="18" Height="18" Foreground="{StaticResource Brush.TextFaint}" 
                                                      HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0"/>
                         </Grid>
 
@@ -368,7 +368,7 @@
                         <Button Grid.Column="2" 
                                 Command="{Binding OpenAddWorkerDialogCommand}"
                                 Style="{StaticResource MaterialDesignFlatButton}"
-                                Background="#3F51B5" Foreground="White" Height="36" Padding="16,0"
+                                Background="{StaticResource Brush.PrimaryInteractive}" Foreground="White" Height="36" Padding="16,0"
                                 materialDesign:ButtonAssist.CornerRadius="8">
                             <StackPanel Orientation="Horizontal">
                                 <materialDesign:PackIcon Kind="Plus" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -378,7 +378,7 @@
                     </Grid>
 
                     <!-- 3. جدول البيانات ملء الشاشة -->
-                    <Border Grid.Row="4" Background="White" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="12">
+                    <Border Grid.Row="4" Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="12">
                         <DataGrid ItemsSource="{Binding WorkersList}"
                                   SelectedItem="{Binding SelectedWorkerProfile}"
                                   AutoGenerateColumns="False"
@@ -406,7 +406,7 @@
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
-                                                       VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#64748b"/>
+                                                       VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextMuted}"/>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>
                                 </DataGridTemplateColumn>
@@ -444,10 +444,10 @@
                                                     <Style TargetType="Border">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="True">
-                                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                                <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
                                                             </DataTrigger>
                                                             <DataTrigger Binding="{Binding IsActive}" Value="False">
-                                                                <Setter Property="Background" Value="#FEE2E2"/>
+                                                                <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -458,11 +458,11 @@
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                                                     <Setter Property="Text" Value="نشط"/>
-                                                                    <Setter Property="Foreground" Value="#15803D"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsActive}" Value="False">
                                                                     <Setter Property="Text" Value="موقوف مؤقتاً"/>
-                                                                    <Setter Property="Foreground" Value="#b91c1c"/>
+                                                                    <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -494,7 +494,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="تعديل">
-                                                    <materialDesign:PackIcon Kind="EditOutline" Width="16" Height="16" Foreground="#3F51B5"/>
+                                                    <materialDesign:PackIcon Kind="EditOutline" Width="16" Height="16" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                                                 </Button>
 
                                                 <!-- زر إيقاف / تشغيل -->
@@ -502,7 +502,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" Margin="0,0,4,0" ToolTip="تغيير حالة النشاط">
-                                                    <materialDesign:PackIcon Kind="AccountSwitchOutline" Width="16" Height="16" Foreground="#D97706"/>
+                                                    <materialDesign:PackIcon Kind="AccountSwitchOutline" Width="16" Height="16" Foreground="{StaticResource Brush.Pending}"/>
                                                 </Button>
 
                                                 <!-- زر حذف نهائي -->
@@ -510,7 +510,7 @@
                                                         CommandParameter="{Binding}"
                                                         Style="{StaticResource MaterialDesignToolButton}"
                                                         Width="26" Height="26" Padding="0" ToolTip="حذف نهائي">
-                                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" Foreground="#DC2626"/>
+                                                    <materialDesign:PackIcon Kind="DeleteOutline" Width="16" Height="16" Foreground="{StaticResource Brush.Expense}"/>
                                                 </Button>
                                             </StackPanel>
                                         </DataTemplate>
@@ -526,7 +526,7 @@
             <TabItem Header="كشف الحساب والمدفوعات">
                 <Grid Margin="0,16,0,0">
                     <!-- قائمة اختيار العمال الرئيسية -->
-                    <Border Background="White" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="20" MaxWidth="800" HorizontalAlignment="Center">
+                    <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="20" MaxWidth="800" HorizontalAlignment="Center">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -540,14 +540,14 @@
                                          materialDesign:TextFieldAssist.HasClearButton="True"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                                          Padding="10,8" FontSize="13"
-                                         Background="#f8fafc">
+                                         Background="{StaticResource Brush.SurfaceAlt}">
                                 </TextBox>
-                                <materialDesign:PackIcon Kind="Search" Width="18" Height="18" Foreground="#94a3b8" 
+                                <materialDesign:PackIcon Kind="Search" Width="18" Height="18" Foreground="{StaticResource Brush.TextFaint}" 
                                                          HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0"/>
                             </Grid>
 
                             <!-- جدول أرصدة العمال -->
-                            <DataGrid Grid.Row="1" 
+                            <DataGrid CanUserSortColumns="False" Grid.Row="1" 
                                       ItemsSource="{Binding WorkerSummaries}" 
                                       SelectedItem="{Binding SelectedWorkerSummary}"
                                       AutoGenerateColumns="False"
@@ -582,7 +582,7 @@
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=AlternationIndex, Converter={StaticResource IncrementConverter}}" 
-                                                           VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="#64748b"/>
+                                                           VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextMuted}"/>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -595,7 +595,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 <Setter Property="TextAlignment" Value="Center"/>
-                                                <Setter Property="Foreground" Value="#3F51B5"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.PrimaryInteractive}"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -607,7 +607,7 @@
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 <Setter Property="TextAlignment" Value="Center"/>
-                                                <Setter Property="Foreground" Value="#94a3b8"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextFaint}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding LastActivity}" Value="{x:Null}">
                                                         <Setter Property="Text" Value="-"/>
@@ -625,10 +625,10 @@
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="HorizontalAlignment" Value="Center"/>
                                                 <Setter Property="TextAlignment" Value="Center"/>
-                                                <Setter Property="Foreground" Value="#DC2626"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Balance}" Value="0">
-                                                        <Setter Property="Foreground" Value="#16A34A"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

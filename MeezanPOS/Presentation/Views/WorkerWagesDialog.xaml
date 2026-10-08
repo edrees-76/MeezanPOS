@@ -12,9 +12,9 @@
         FlowDirection="RightToLeft"
         MouseLeftButtonDown="DragWindow">
 
-    <Border Background="White" CornerRadius="16" BorderBrush="#cbd5e1" BorderThickness="1.5">
+    <Border Background="White" CornerRadius="16" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="20" ShadowDepth="3" Color="#1E293B" Opacity="0.15"/>
+            <DropShadowEffect BlurRadius="20" ShadowDepth="3" Color="{StaticResource Color.TextPrimary}" Opacity="0.15"/>
         </Border.Effect>
 
         <Grid Margin="20">
@@ -34,21 +34,21 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="AccountMultipleOutline" Width="26" Height="26" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="تسجيل حضور وأجور العمال التفصيلي" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="AccountMultipleOutline" Width="26" Height="26" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="تسجيل حضور وأجور العمال التفصيلي" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
             <!-- Divider -->
-            <Separator Grid.Row="1" Margin="0,12" Background="#f1f5f9"/>
+            <Separator Grid.Row="1" Margin="0,12" Background="{StaticResource Brush.LockedSoft}"/>
 
             <!-- 2. Main DataGrid -->
-            <DataGrid Grid.Row="2" ItemsSource="{Binding WorkersList}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
-                      HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1" BorderBrush="#e2e8f0"
+            <DataGrid CanUserSortColumns="False" Grid.Row="2" ItemsSource="{Binding WorkersList}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      HeadersVisibility="Column" GridLinesVisibility="All" BorderThickness="1" BorderBrush="{StaticResource Brush.Border}"
                       HorizontalGridLinesBrush="#e2e8f0" VerticalGridLinesBrush="#e2e8f0" Background="White" RowBackground="White" AlternatingRowBackground="#f8fafc"
                       materialDesign:DataGridAssist.CellPadding="6" materialDesign:DataGridAssist.ColumnHeaderPadding="8">
                 <DataGrid.Columns>
@@ -60,7 +60,7 @@
                                 <CheckBox IsChecked="{Binding IsAttended, UpdateSourceTrigger=PropertyChanged}" 
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Style="{StaticResource MaterialDesignCheckBox}"
-                                          Content="حاضر" FontSize="11" Foreground="#16a34a" FontWeight="SemiBold"/>
+                                          Content="حاضر" FontSize="11" Foreground="{StaticResource Brush.Income}" FontWeight="SemiBold"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -72,7 +72,7 @@
                                 <CheckBox IsChecked="{Binding IsAbsent, UpdateSourceTrigger=PropertyChanged}" 
                                           HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Style="{StaticResource MaterialDesignCheckBox}"
-                                          Content="غائب" FontSize="11" Foreground="#dc2626" FontWeight="SemiBold"/>
+                                          Content="غائب" FontSize="11" Foreground="{StaticResource Brush.Expense}" FontWeight="SemiBold"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -101,7 +101,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Advance, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
-                                         BorderThickness="0" Background="Transparent" Foreground="#ea580c" Padding="4" FontSize="13"
+                                         BorderThickness="0" Background="Transparent" Foreground="{StaticResource Brush.Pending}" Padding="4" FontSize="13"
                                          IsEnabled="{Binding IsAttended}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -112,7 +112,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding Deduction, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
-                                         BorderThickness="0" Background="Transparent" Foreground="#DC2626" Padding="4" FontSize="13"
+                                         BorderThickness="0" Background="Transparent" Foreground="{StaticResource Brush.Expense}" Padding="4" FontSize="13"
                                          IsEnabled="{Binding IsAttended}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -123,7 +123,7 @@
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBox Text="{Binding AmountPaid, UpdateSourceTrigger=LostFocus, TargetNullValue='0.00'}" 
-                                         BorderThickness="0" Background="Transparent" Foreground="#16A34A" Padding="4" FontSize="13" FontWeight="Bold"
+                                         BorderThickness="0" Background="Transparent" Foreground="{StaticResource Brush.Income}" Padding="4" FontSize="13" FontWeight="Bold"
                                          IsEnabled="{Binding IsAttended}"/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -142,7 +142,7 @@
             </DataGrid>
 
             <!-- 3. Totals and Summary Indicators -->
-            <Border Grid.Row="3" Background="#f8fafc" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1" Padding="14,10" Margin="0,12">
+            <Border Grid.Row="3" Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" Padding="14,10" Margin="0,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -155,33 +155,33 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                        <TextBlock Text="إجمالي العمال النشطين" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalActiveWorkers}" FontSize="15" FontWeight="Bold" Foreground="#1E293B" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="إجمالي العمال النشطين" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalActiveWorkers}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <Separator Grid.Column="1" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+                    <Separator Grid.Column="1" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="{StaticResource Brush.BorderStrong}" Width="1" Height="30"/>
 
                     <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                        <TextBlock Text="حضور / غياب" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
+                        <TextBlock Text="حضور / غياب" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,0">
-                            <TextBlock Text="{Binding TotalAttended}" FontSize="15" FontWeight="Bold" Foreground="#16a34a"/>
-                            <TextBlock Text=" / " FontSize="15" Foreground="#64748b"/>
-                            <TextBlock Text="{Binding TotalAbsent}" FontSize="15" FontWeight="Bold" Foreground="#dc2626"/>
+                            <TextBlock Text="{Binding TotalAttended}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.Income}"/>
+                            <TextBlock Text=" / " FontSize="15" Foreground="{StaticResource Brush.TextMuted}"/>
+                            <TextBlock Text="{Binding TotalAbsent}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}"/>
                         </StackPanel>
                     </StackPanel>
 
-                    <Separator Grid.Column="3" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+                    <Separator Grid.Column="3" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="{StaticResource Brush.BorderStrong}" Width="1" Height="30"/>
 
                     <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-                        <TextBlock Text="إجمالي أجور الحاضرين" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalActualWages, StringFormat=N2}" FontSize="15" FontWeight="Bold" Foreground="#3F51B5" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="إجمالي أجور الحاضرين" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalActualWages, StringFormat=N2}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
 
-                    <Separator Grid.Column="5" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="#cbd5e1" Width="1" Height="30"/>
+                    <Separator Grid.Column="5" Style="{StaticResource {x:Static MenuItem.SeparatorStyleKey}}" Margin="8,0" Background="{StaticResource Brush.BorderStrong}" Width="1" Height="30"/>
 
                     <StackPanel Grid.Column="6" HorizontalAlignment="Center">
-                        <TextBlock Text="إجمالي المدفوع للعمال" FontSize="11" Foreground="#64748b" HorizontalAlignment="Center"/>
-                        <TextBlock Text="{Binding TotalAmountPaid, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="#16A34A" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                        <TextBlock Text="إجمالي المدفوع للعمال" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding TotalAmountPaid, StringFormat=N2}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.Income}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -197,7 +197,7 @@
                 <!-- Confirm Button -->
                 <Button Grid.Column="0" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                         Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White"
+                        Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White"
                         Height="42" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -213,7 +213,7 @@
                 <!-- Cancel Button -->
                 <Button Grid.Column="2" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
                         Style="{StaticResource MaterialDesignOutlinedButton}" 
-                        Foreground="#64748b" BorderBrush="#cbd5e1"
+                        Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}"
                         Height="42" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">

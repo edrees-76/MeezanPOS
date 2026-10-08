@@ -15,9 +15,9 @@
         FlowDirection="RightToLeft"
         MouseLeftButtonDown="DragWindow">
 
-    <Border Background="White" CornerRadius="20" BorderBrush="#cbd5e1" BorderThickness="1.5">
+    <Border Background="White" CornerRadius="20" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1.5">
         <Border.Effect>
-            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="#1E293B" Opacity="0.2"/>
+            <DropShadowEffect BlurRadius="25" ShadowDepth="4" Color="{StaticResource Color.TextPrimary}" Opacity="0.2"/>
         </Border.Effect>
 
         <Grid Margin="24">
@@ -36,22 +36,22 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="DeleteAlertOutline" Width="24" Height="24" Foreground="#DC2626" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="تأكيد حذف حركة مالية" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="DeleteAlertOutline" Width="24" Height="24" Foreground="{StaticResource Brush.Expense}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="تأكيد حذف حركة مالية" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="32" Height="32" Padding="0" Click="Cancel_Click" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="20" Height="20" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
             <!-- Divider -->
-            <Separator Grid.Row="1" Margin="0,16" Background="#f1f5f9"/>
+            <Separator Grid.Row="1" Margin="0,16" Background="{StaticResource Brush.LockedSoft}"/>
 
             <!-- Form Inputs -->
             <StackPanel Grid.Row="2" VerticalAlignment="Top">
                 <!-- Standard Reason -->
-                <TextBlock Text="السبب العام للحذف:" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                <TextBlock Text="السبب العام للحذف:" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                 <ComboBox x:Name="CbReason" Height="45" FontSize="13" Padding="10,6" VerticalContentAlignment="Center" 
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
                           Margin="0,0,0,16" Cursor="Hand">
@@ -68,8 +68,8 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0" Text="الشرح التفصيلي لسبب الحذف (5 حروف كحد أدنى):" FontSize="13" FontWeight="SemiBold" Foreground="#475569"/>
-                    <TextBlock Grid.Column="1" x:Name="TxtCharCount" Text="0 / 5" FontSize="12" Foreground="#64748b" VerticalAlignment="Bottom"/>
+                    <TextBlock Grid.Column="0" Text="الشرح التفصيلي لسبب الحذف (5 حروف كحد أدنى):" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextSecondary}"/>
+                    <TextBlock Grid.Column="1" x:Name="TxtCharCount" Text="0 / 5" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Bottom"/>
                 </Grid>
 
                 <TextBox x:Name="TxtDetailReason" Height="80" TextWrapping="Wrap" AcceptsReturn="True"
@@ -90,7 +90,7 @@
                 <Button Grid.Column="0" x:Name="BtnConfirm"
                         Click="Confirm_Click"
                         Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#DC2626" BorderBrush="#DC2626" Foreground="White"
+                        Background="{StaticResource Brush.Expense}" BorderBrush="{StaticResource Brush.Expense}" Foreground="White"
                         Height="45" Cursor="Hand" IsEnabled="False">
                     <Button.Resources>
                         <Style TargetType="Border">
@@ -107,7 +107,7 @@
                 <Button Grid.Column="2" 
                         Click="Cancel_Click"
                         Style="{StaticResource MaterialDesignOutlinedButton}" 
-                        Foreground="#64748b" BorderBrush="#cbd5e1"
+                        Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}"
                         Height="45" Cursor="Hand">
                     <Button.Resources>
                         <Style TargetType="Border">

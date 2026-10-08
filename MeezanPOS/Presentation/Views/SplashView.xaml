@@ -40,8 +40,8 @@
             Effect="{StaticResource Shadow.Dialog}">
         <Border.Background>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#283593" Offset="0"/>
-                <GradientStop Color="#1A237E" Offset="1"/>
+                <GradientStop Color="{StaticResource Color.Primary}" Offset="0"/>
+                <GradientStop Color="{StaticResource Color.PrimaryDark}" Offset="1"/>
             </LinearGradientBrush>
         </Border.Background>
         <Grid>
@@ -77,7 +77,7 @@
 
                 <!-- Loading status -->
                 <TextBlock Text="جاري تجهيز قاعدة البيانات..."
-                           Foreground="#C5CAE9"
+                           Foreground="{StaticResource Brush.SidebarText}"
                            FontSize="15"
                            FontWeight="Medium"
                            FontFamily="{StaticResource Font.Body}"

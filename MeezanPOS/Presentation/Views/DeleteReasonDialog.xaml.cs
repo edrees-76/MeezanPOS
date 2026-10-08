@@ -56,7 +56,7 @@ namespace MeezanPOS.Presentation.Views
 
             if (SelectedDetailReason.Length < 5)
             {
-                MessageBox.Show("الشرح التفصيلي يجب أن لا يقل عن 5 حروف لتأكيد عملية الحذف.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("الشرح التفصيلي يجب أن لا يقل عن 5 حروف لتأكيد عملية الحذف.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

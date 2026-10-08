@@ -154,7 +154,7 @@ public partial class ClosingAccountViewModel : ObservableObject
             Serilog.Log.Error(ex, "Error loading closing account summary");
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show("حدث خطأ أثناء تحميل التقرير المالي: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("حدث خطأ أثناء تحميل التقرير المالي: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             });
         }
         finally
@@ -209,7 +209,7 @@ public partial class ClosingAccountViewModel : ObservableObject
             Serilog.Log.Error(ex, "Error exporting closing account PDF");
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                MessageBox.Show("حدث خطأ أثناء تصدير تقرير الـ PDF: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("حدث خطأ أثناء تصدير تقرير الـ PDF: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
             });
         }
         finally
@@ -247,7 +247,7 @@ public partial class ClosingAccountViewModel : ObservableObject
             string password = passwordBox.Password;
             if (string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show("الرجاء إدخال كلمة مرور المدير لتأكيد الإقفال والتسوية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("الرجاء إدخال كلمة مرور المدير لتأكيد الإقفال والتسوية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -257,7 +257,7 @@ public partial class ClosingAccountViewModel : ObservableObject
 
             if (authenticatedUser == null)
             {
-                MessageBox.Show("كلمة المرور غير صحيحة. يرجى إدخال كلمة مرور المدير الصحيحة.", "خطأ في المصادقة", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("كلمة المرور غير صحيحة. يرجى إدخال كلمة مرور المدير الصحيحة.", "خطأ في المصادقة", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
@@ -265,19 +265,19 @@ public partial class ClosingAccountViewModel : ObservableObject
         }
         else
         {
-            MessageBox.Show("الرجاء إدخال كلمة مرور المدير لتأكيد الإقفال والتسوية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("الرجاء إدخال كلمة مرور المدير لتأكيد الإقفال والتسوية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (SettlePayoutAmount < 0 || SettleKeepAmount < 0)
         {
-            MessageBox.Show("المبالغ المدخلة يجب أن تكون أكبر من أو تساوي الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("المبالغ المدخلة يجب أن تكون أكبر من أو تساوي الصفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (SettlePayoutAmount > SettleCashBalance)
         {
-            MessageBox.Show("المبلغ المطلوب تسليمه للمالك يتجاوز الرصيد النقدي المتوفر حالياً بالخزينة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("المبلغ المطلوب تسليمه للمالك يتجاوز الرصيد النقدي المتوفر حالياً بالخزينة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -297,7 +297,7 @@ public partial class ClosingAccountViewModel : ObservableObject
                 IsSettleDialogOpen = false;
                 await LoadReportAsync();
                 
-                MessageBox.Show($"تمت التسوية المالية وإقفال الفترة بنجاح وتجميد الحركات.\nتم توليد ملف PDF وحفظه في:\n{result.PdfPath}", 
+                Dialogs.Show($"تمت التسوية المالية وإقفال الفترة بنجاح وتجميد الحركات.\nتم توليد ملف PDF وحفظه في:\n{result.PdfPath}", 
                     "تم بنجاح", MessageBoxButton.OK, MessageBoxImage.Information);
 
                 if (!string.IsNullOrEmpty(result.PdfPath) && File.Exists(result.PdfPath))
@@ -308,13 +308,13 @@ public partial class ClosingAccountViewModel : ObservableObject
             else
             {
                 string errors = string.Join("\n", result.Errors);
-                MessageBox.Show("تعذر إكمال عملية الإقفال والتسوية المالي:\n" + errors, "فشل الإقفال", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show("تعذر إكمال عملية الإقفال والتسوية المالي:\n" + errors, "فشل الإقفال", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error executing Settle and Lock");
-            MessageBox.Show("حدث خطأ أثناء إجراء عملية الإقفال: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("حدث خطأ أثناء إجراء عملية الإقفال: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {

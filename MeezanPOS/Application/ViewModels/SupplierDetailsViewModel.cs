@@ -262,7 +262,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل البيانات:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل البيانات:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -464,7 +464,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         if (NewInvoice.TotalAmount <= 0)
         {
-            MessageBox.Show("يجب إدخال قيمة صحيحة للفاتورة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب إدخال قيمة صحيحة للفاتورة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -475,7 +475,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             if (!IsTotalMatching)
             {
                 var diff = NewInvoice.TotalAmount - InvoiceItemsTotal;
-                var result = MessageBox.Show(
+                var result = Dialogs.Show(
                     $"إجمالي الأصناف ({InvoiceItemsTotal:N2}) لا يتطابق مع إجمالي الفاتورة ({NewInvoice.TotalAmount:N2}).\n" +
                     $"الفرق: {diff:N2}\n\n" +
                     "هل تريد الحفظ على أي حال؟",
@@ -503,7 +503,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                 }).ToList();
 
                 await ledgerService.UpdateInvoiceAsync(NewInvoice, listItems);
-                MessageBox.Show("تم تعديل الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم تعديل الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
@@ -527,7 +527,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     }
                     await context.SaveChangesAsync();
                 }
-                MessageBox.Show("تم حفظ الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم حفظ الفاتورة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             _editingInvoiceId = null;
@@ -537,7 +537,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حفظ الفاتورة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء حفظ الفاتورة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -570,7 +570,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         if (PaymentAmount <= 0)
         {
-            MessageBox.Show("يجب إدخال قيمة صحيحة للدفعة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يجب إدخال قيمة صحيحة للدفعة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -584,12 +584,12 @@ public partial class SupplierDetailsViewModel : ObservableObject
             {
                 if (SelectedBankAccountForPayment == null)
                 {
-                    MessageBox.Show("يرجى تحديد الحساب البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show("يرجى تحديد الحساب البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (string.IsNullOrWhiteSpace(TransferLast4))
                 {
-                    MessageBox.Show("يرجى إدخال رقم العملية أو آخر 4 أرقام من التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show("يرجى إدخال رقم العملية أو آخر 4 أرقام من التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 bankAccountId = SelectedBankAccountForPayment.Id;
@@ -598,7 +598,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
             {
                 if (string.IsNullOrWhiteSpace(PartnerNameForPayment))
                 {
-                    MessageBox.Show("يرجى إدخال أو تحديد اسم الشريك الممول للدفعة الشخصية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show("يرجى إدخال أو تحديد اسم الشريك الممول للدفعة الشخصية.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 partnerName = PartnerNameForPayment;
@@ -632,7 +632,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     partnerName: partnerName,
                     bankReferenceNumber: TransferLast4
                 );
-                MessageBox.Show("تم تعديل الدفعة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم تعديل الدفعة بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else
             {
@@ -653,7 +653,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
                     bankReferenceNumber: TransferLast4
                 );
 
-                MessageBox.Show("تم تسجيل الدفعة بنجاح في كشف حساب المورد.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم تسجيل الدفعة بنجاح في كشف حساب المورد.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             
             _editingPaymentTransactionId = null;
@@ -662,7 +662,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء حفظ الدفعة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء حفظ الدفعة:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -681,7 +681,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
             if (invoice == null)
             {
-                MessageBox.Show("لم يتم العثور على الفاتورة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("لم يتم العثور على الفاتورة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -716,7 +716,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل الفاتورة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل الفاتورة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -738,7 +738,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
             if (trans == null)
             {
-                MessageBox.Show("لم يتم العثور على الدفعة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("لم يتم العثور على الدفعة في قاعدة البيانات.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -803,7 +803,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل الدفعة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل الدفعة للتعديل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -815,7 +815,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         if (UnifiedLedger == null || UnifiedLedger.Count == 0)
         {
-            MessageBox.Show("لا توجد حركات لطباعتها في كشف الحساب.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("لا توجد حركات لطباعتها في كشف الحساب.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -858,7 +858,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء إنشاء التقرير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء إنشاء التقرير:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -915,7 +915,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء إنشاء التقرير التفصيلي:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء إنشاء التقرير التفصيلي:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -938,7 +938,7 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
             if (expenseItem == null || expenseItem.DailyJournal == null)
             {
-                MessageBox.Show("لم يتم العثور على تفاصيل الوردية الخاصة بهذه الحركة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("لم يتم العثور على تفاصيل الوردية الخاصة بهذه الحركة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -955,11 +955,11 @@ public partial class SupplierDetailsViewModel : ObservableObject
                                  $"📅 تاريخ الوردية الأساسي: {journal.JournalDate:yyyy/MM/dd}\n" +
                                  $"✍️ ملاحظات الوردية: {journal.Notes ?? "لا يوجد"}";
 
-            MessageBox.Show(shiftDetails, "بيانات وردية الدفع", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show(shiftDetails, "بيانات وردية الدفع", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء تحميل تفاصيل الوردية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل تفاصيل الوردية:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1014,6 +1014,6 @@ public partial class SupplierDetailsViewModel : ObservableObject
                          $"🔢 رقم التحويل اخر 4 ارقام: {last4}\n" +
                          $"🧾 رقم الإيصال: {(string.IsNullOrEmpty(row.ReceiptNumber) ? "لا يوجد" : row.ReceiptNumber)}";
 
-        MessageBox.Show(details, "تفاصيل التحويل المصرفي", MessageBoxButton.OK, MessageBoxImage.Information);
+        Dialogs.Show(details, "تفاصيل التحويل المصرفي", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 }

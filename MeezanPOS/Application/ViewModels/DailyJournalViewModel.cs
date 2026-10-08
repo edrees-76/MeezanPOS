@@ -814,7 +814,7 @@ public partial class DailyJournalViewModel : ObservableObject
             if (exp.IsWorkerWage && exp.IsDetailedWage && (exp.SelectedWorkerWagesDetails == null || !exp.SelectedWorkerWagesDetails.Any()))
             {
                 StatusMessage = $"يرجى تحديد تفاصيل أجور حضور العمال للمصروف رقم {exp.SequenceNumber}.";
-                System.Windows.MessageBox.Show($"يرجى تحديد تفاصيل أجور حضور العمال للمصروف رقم {exp.SequenceNumber}.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                Dialogs.Show($"يرجى تحديد تفاصيل أجور حضور العمال للمصروف رقم {exp.SequenceNumber}.", "تنبيه", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
         }

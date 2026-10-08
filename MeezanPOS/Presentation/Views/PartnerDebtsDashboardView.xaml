@@ -22,15 +22,15 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <materialDesign:PackIcon Kind="AccountGroupOutline" Width="28" Height="28" Foreground="#3F51B5" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                <TextBlock Text="لوحة متابعة ذمم الشركاء" FontSize="20" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
+                <materialDesign:PackIcon Kind="AccountGroupOutline" Width="28" Height="28" Foreground="{StaticResource Brush.PrimaryInteractive}" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                <TextBlock Text="لوحة متابعة ذمم الشركاء" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
             </StackPanel>
 
             <!-- أزرار الإضافة السريعة الدائرية -->
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <Button Command="{Binding RecordSettlementCommand}" 
                         Style="{StaticResource MaterialDesignPaperButton}"
-                        Background="#dc2626" Foreground="White"
+                        Background="{StaticResource Brush.Expense}" Foreground="White"
                         Width="40" Height="40" Padding="0" 
                         materialDesign:ButtonAssist.CornerRadius="20"
                         ToolTip="(خروج سيولة): 📤 سحب / دفعة للشريك"
@@ -40,7 +40,7 @@
 
                 <Button Command="{Binding RecordDebtCommand}" 
                         Style="{StaticResource MaterialDesignPaperButton}"
-                        Background="#16a34a" Foreground="White"
+                        Background="{StaticResource Brush.Income}" Foreground="White"
                         Width="40" Height="40" Padding="0" 
                         materialDesign:ButtonAssist.CornerRadius="20"
                         ToolTip="(دخول سيولة): 📥 إيداع / تمويل جديد">
@@ -54,7 +54,7 @@
                           Width="190" Height="42" FontSize="12.5" Margin="0,0,10,0"
                           materialDesign:HintAssist.Hint="الحالة المالية"
                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Background="#f1f5f9" BorderThickness="0"
+                          Background="{StaticResource Brush.LockedSoft}" BorderThickness="0"
                           Padding="10,0,10,0"
                           VerticalAlignment="Center">
                     <ComboBoxItem Content="الكل"/>
@@ -63,13 +63,13 @@
                     <ComboBoxItem Content="تمت التسوية"/>
                 </ComboBox>
 
-                <Border Background="#f1f5f9" CornerRadius="10" Padding="12,0" Height="42" Width="220">
+                <Border Background="{StaticResource Brush.LockedSoft}" CornerRadius="10" Padding="12,0" Height="42" Width="220">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20" Foreground="#94a3b8" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <materialDesign:PackIcon Kind="Magnify" Width="20" Height="20" Foreground="{StaticResource Brush.TextFaint}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Grid.Column="1" 
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                                  materialDesign:HintAssist.Hint="ابحث باسم الشريك..."
@@ -85,50 +85,50 @@
         <!-- ═══════════════════════════════════════════════════════ -->
         <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,20">
             <!-- كرت إجمالي الديون -->
-            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="0,0,10,0" BorderBrush="#fecaca" BorderThickness="1.5">
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="0,0,10,0" BorderBrush="{StaticResource Brush.ExpenseSoft}" BorderThickness="1.5">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#FEE2E2" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="TrendingUp" Width="20" Height="20" Foreground="#DC2626"/>
+                        <Border Background="{StaticResource Brush.ExpenseSoft}" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingUp" Width="20" Height="20" Foreground="{StaticResource Brush.Expense}"/>
                         </Border>
-                        <TextBlock Text="إجمالي تمويل الشركاء" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                        <TextBlock Text="إجمالي تمويل الشركاء" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding TotalDebtsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#dc2626"/>
+                    <TextBlock Text="{Binding TotalDebtsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.Expense}"/>
                 </StackPanel>
             </Border>
 
             <!-- كرت إجمالي التسويات -->
-            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="5,0" BorderBrush="#bbf7d0" BorderThickness="1.5">
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="5,0" BorderBrush="{StaticResource Brush.IncomeSoft}" BorderThickness="1.5">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#DCFCE7" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="TrendingDown" Width="20" Height="20" Foreground="#16A34A"/>
+                        <Border Background="{StaticResource Brush.IncomeSoft}" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="TrendingDown" Width="20" Height="20" Foreground="{StaticResource Brush.Income}"/>
                         </Border>
-                        <TextBlock Text="إجمالي التسويات" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                        <TextBlock Text="إجمالي التسويات" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding TotalSettlementsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#16a34a"/>
+                    <TextBlock Text="{Binding TotalSettlementsAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.Income}"/>
                 </StackPanel>
             </Border>
 
             <!-- كرت الصافي -->
-            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="10,0,0,0" BorderBrush="#C5CAE9" BorderThickness="1.5">
+            <Border Background="White" CornerRadius="14" Padding="20,16" Margin="10,0,0,0" BorderBrush="{StaticResource Brush.SidebarText}" BorderThickness="1.5">
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.06"/>
                 </Border.Effect>
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Border Background="#EEF2FF" CornerRadius="8" Padding="6" Margin="0,0,8,0">
-                            <materialDesign:PackIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="#3F51B5"/>
+                        <Border Background="{StaticResource Brush.PrimarySoft}" CornerRadius="8" Padding="6" Margin="0,0,8,0">
+                            <materialDesign:PackIcon Kind="ScaleBalance" Width="20" Height="20" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                         </Border>
-                        <TextBlock Text="صافي الذمم المستحقة" FontSize="12.5" Foreground="#64748b" VerticalAlignment="Center"/>
+                        <TextBlock Text="صافي الذمم المستحقة" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding NetBalanceAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="#3F51B5"/>
+                    <TextBlock Text="{Binding NetBalanceAllPartners, StringFormat=N2}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.PrimaryInteractive}"/>
                 </StackPanel>
             </Border>
         </UniformGrid>
@@ -137,7 +137,7 @@
         <!-- 3. كروت الشركاء (Cards Grid) -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- 3. جدول الشركاء التفصيلي (DataGrid) -->
-        <Border Grid.Row="2" CornerRadius="12" BorderBrush="#e2e8f0" BorderThickness="1.5" Padding="0" Background="White">
+        <Border Grid.Row="2" CornerRadius="12" BorderBrush="{StaticResource Brush.Border}" BorderThickness="1.5" Padding="0" Background="White">
             <Border.Effect>
                 <DropShadowEffect BlurRadius="12" ShadowDepth="2" Color="#000" Opacity="0.05"/>
             </Border.Effect>
@@ -163,7 +163,7 @@
                             <Style TargetType="TextBlock">
                                 <Setter Property="TextAlignment" Value="Center"/>
                                 <Setter Property="VerticalAlignment" Value="Center"/>
-                                <Setter Property="Foreground" Value="#94a3b8"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextFaint}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -176,13 +176,13 @@
                                     <Border CornerRadius="18" Width="30" Height="30" Margin="0,0,8,0">
                                         <Border.Style>
                                             <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#f1f5f9"/>
+                                                <Setter Property="Background" Value="{StaticResource Brush.LockedSoft}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                        <Setter Property="Background" Value="#FEE2E2"/>
+                                                        <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                        <Setter Property="Background" Value="#DCFCE7"/>
+                                                        <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -190,20 +190,20 @@
                                         <materialDesign:PackIcon Kind="AccountOutline" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <materialDesign:PackIcon.Style>
                                                 <Style TargetType="materialDesign:PackIcon">
-                                                    <Setter Property="Foreground" Value="#64748b"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                                            <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </materialDesign:PackIcon.Style>
                                         </materialDesign:PackIcon>
                                     </Border>
-                                    <TextBlock Text="{Binding PartnerName}" FontWeight="Bold" Foreground="#1e293b" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding PartnerName}" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -216,7 +216,7 @@
                                 <Setter Property="TextAlignment" Value="Center"/>
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -228,7 +228,7 @@
                                 <Setter Property="TextAlignment" Value="Center"/>
                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
-                                <Setter Property="Foreground" Value="#475569"/>
+                                <Setter Property="Foreground" Value="{StaticResource Brush.TextSecondary}"/>
                             </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
@@ -242,13 +242,13 @@
                                 <Setter Property="FontWeight" Value="Bold"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                        <Setter Property="Foreground" Value="#dc2626"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                        <Setter Property="Foreground" Value="#16a34a"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="PartnerOwesRestaurant">
-                                        <Setter Property="Foreground" Value="#d97706"/>
+                                        <Setter Property="Foreground" Value="{StaticResource Brush.Pending}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
@@ -262,13 +262,13 @@
                                 <Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Border.Style>
                                         <Style TargetType="Border">
-                                            <Setter Property="Background" Value="#f1f5f9"/>
+                                            <Setter Property="Background" Value="{StaticResource Brush.LockedSoft}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                    <Setter Property="Background" Value="#FEE2E2"/>
+                                                    <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                    <Setter Property="Background" Value="#DCFCE7"/>
+                                                    <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -276,13 +276,13 @@
                                     <TextBlock Text="{Binding BalanceDirectionText}" FontSize="11" FontWeight="SemiBold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="#64748b"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="RestaurantOwesPartner">
-                                                        <Setter Property="Foreground" Value="#dc2626"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Expense}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding BalanceDirection}" Value="Settled">
-                                                        <Setter Property="Foreground" Value="#16a34a"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Brush.Income}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>

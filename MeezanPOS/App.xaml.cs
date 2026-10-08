@@ -62,14 +62,14 @@ public partial class App : System.Windows.Application
 
             if (isFatal)
             {
-                MessageBox.Show($"خطأ غير متوقع:\n{fullError}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                Dialogs.Show($"خطأ غير متوقع:\n{fullError}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
                     "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error,
                     MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
                 System.Windows.Application.Current.Shutdown(1);
                 return;
             }
 
-            MessageBox.Show($"حدث خطأ غير متوقع ولم تكتمل العملية الأخيرة:\n{fullError}\n\nيمكنك متابعة العمل. تم تسجيل التفاصيل في سجل الأخطاء.",
+            Dialogs.Show($"حدث خطأ غير متوقع ولم تكتمل العملية الأخيرة:\n{fullError}\n\nيمكنك متابعة العمل. تم تسجيل التفاصيل في سجل الأخطاء.",
                 "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
                 MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
         };
@@ -100,7 +100,7 @@ public partial class App : System.Windows.Application
 
         if (!createdNew)
         {
-            MessageBox.Show("المنظومة مفتوحة بالفعل وهي قيد التشغيل حالياً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("المنظومة مفتوحة بالفعل وهي قيد التشغيل حالياً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             _appMutex.Dispose();
             _appMutex = null;
             System.Windows.Application.Current.Shutdown();
@@ -176,7 +176,7 @@ public partial class App : System.Windows.Application
 
                         Dispatcher.Invoke(() =>
                         {
-                            MessageBox.Show(
+                            Dialogs.Show(
                                 $"خطأ فادح أثناء ترقية قاعدة البيانات:\n{ex.Message}{restoreMessage}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
                                 "خطأ ترقية قاعدة البيانات",
                                 MessageBoxButton.OK,
@@ -246,7 +246,7 @@ public partial class App : System.Windows.Application
                 Dispatcher.Invoke(() =>
                 {
                     try { splash.Close(); } catch { }
-                    MessageBox.Show(
+                    Dialogs.Show(
                         $"حدث خطأ غير متوقع أثناء بدء تشغيل التطبيق:\n{ex.Message}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
                         "خطأ بدء التشغيل",
                         MessageBoxButton.OK,

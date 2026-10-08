@@ -449,7 +449,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في تحميل المصاريف العامة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في تحميل المصاريف العامة: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -499,37 +499,37 @@ public partial class GeneralExpensesViewModel : ObservableObject
         // --- Validation ---
         if (!InputAmount.HasValue || InputAmount.Value <= 0)
         {
-            MessageBox.Show("يرجى إدخال مبلغ صحيح أكبر من صفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال مبلغ صحيح أكبر من صفر.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (InputPaymentDate > DateTime.Today)
         {
-            MessageBox.Show("تاريخ الدفع لا يمكن أن يكون في المستقبل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("تاريخ الدفع لا يمكن أن يكون في المستقبل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && (SelectedWorkerWagesDetails == null || !SelectedWorkerWagesDetails.Any()))
         {
-            MessageBox.Show("يرجى تحديد تفاصيل أجور حضور العمال.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى تحديد تفاصيل أجور حضور العمال.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         
         if (SelectedExpenseType == GeneralExpenseType.Other && string.IsNullOrWhiteSpace(InputCustomExpenseType))
         {
-            MessageBox.Show("يرجى كتابة نوع المصروف اليدوي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى كتابة نوع المصروف اليدوي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense == null)
         {
-            MessageBox.Show("يرجى اختيار الحساب البنكي للدفع عن طريق التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى اختيار الحساب البنكي للدفع عن طريق التحويل البنكي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
         if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && string.IsNullOrWhiteSpace(InputPartnerName))
         {
-            MessageBox.Show("يرجى إدخال أو تحديد اسم الشريك الممول للمصروف الشخصي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى إدخال أو تحديد اسم الشريك الممول للمصروف الشخصي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -541,7 +541,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (await PeriodLock.IsDateLockedAsync(db, InputPaymentDate))
             {
-                MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -553,13 +553,13 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 {
                     if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
                     {
-                        MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
                     if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
                     {
-                        MessageBox.Show("لا يمكن تعديل مصروف مرحّل مالياً.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Dialogs.Show("لا يمكن تعديل مصروف مرحّل مالياً.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -727,7 +727,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                         );
                     }
 
-                    MessageBox.Show("تم تعديل المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                    Dialogs.Show("تم تعديل المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
             else
@@ -865,7 +865,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                     );
                 }
 
-                MessageBox.Show("تم إضافة المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("تم إضافة المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             }
 
             ClearForm();
@@ -879,7 +879,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في حفظ المصروف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في حفظ المصروف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -889,7 +889,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         if (item == null) return;
         if (item.ExpenseType == GeneralExpenseType.SupplierPayment)
         {
-            MessageBox.Show("لا يمكن تعديل مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("لا يمكن تعديل مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
         IsEditing = true;
@@ -1132,11 +1132,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             details += $"\n📝 الوصف: {(string.IsNullOrEmpty(item.Description) ? "لا يوجد" : item.Description)}";
 
-            MessageBox.Show(details, "تفاصيل المصروف العام", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show(details, "تفاصيل المصروف العام", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء جلب التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء جلب التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1168,11 +1168,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         if (item.ExpenseType == GeneralExpenseType.SupplierPayment)
         {
-            MessageBox.Show("لا يمكن حذف مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("لا يمكن حذف مصروف تسديد الموردين من هنا. يرجى إدارته من شاشة كشف حساب المورد المحدد.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل تريد حذف مصروف ({item.ExpenseTypeName}) بمبلغ {item.Amount:N2}؟",
             "تأكيد الحذف",
             MessageBoxButton.YesNo,
@@ -1188,13 +1188,13 @@ public partial class GeneralExpensesViewModel : ObservableObject
             {
                 if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
                 {
-                    MessageBox.Show("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Dialogs.Show("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
 
                 if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
                 {
-                    MessageBox.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -1226,7 +1226,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في حذف المصروف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في حذف المصروف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1235,7 +1235,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         if (item == null || item.IsPosted) return;
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من ترحيل المصروف بقيمة {item.Amount:N2}؟\nلن تتمكن من تعديله أو حذفه بعد الترحيل.",
             "تأكيد الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             
@@ -1247,12 +1247,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var currentUserId = _sessionService.CurrentUserId;
             await postingService.PostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, currentUserId);
             
-            MessageBox.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم ترحيل المصروف بنجاح. أصبحت الحركة مغلقة مالياً.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1264,7 +1264,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         var sessionService = _sessionService;
         if (!sessionService.HasPermission("UnpostFinancial"))
         {
-            MessageBox.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show("عذراً، هذا الإجراء متاح فقط للمدير العام.", "صلاحية غير كافية", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
 
@@ -1278,7 +1278,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 if (parentSession != null && 
                     (parentSession.Status == PostingSessionStatus.Settled || parentSession.Status == PostingSessionStatus.ReSettled))
                 {
-                    MessageBox.Show(
+                    Dialogs.Show(
                         "هذا المصروف يقع ضمن فترة مقفلة ومسواة مالياً مسبقاً.\nيجب إلغاء قفل الفترة أولاً من شاشة المبيعات (الكاش الحالي -> أرشيف التسويات) قبل التمكن من فك الترحيل.",
                         "فترة مغلقة ومسواة",
                         MessageBoxButton.OK,
@@ -1311,7 +1311,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         var reason = $"{selectedReason} - {detailReason}";
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             $"هل أنت متأكد من فك ترحيل المصروف؟\nهذا الإجراء سيتم تسجيله في سجل التدقيق (Audit Log) باسمك.",
             "تأكيد فك الترحيل", MessageBoxButton.YesNo, MessageBoxImage.Warning);
             
@@ -1323,12 +1323,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             var currentUserId = sessionService.CurrentUserId;
             await postingService.UnpostEntityAsync<Domain.Entities.GeneralExpense>(item.Id, reason, currentUserId);
             
-            MessageBox.Show("تم فك الترحيل بنجاح وتم تسجيل العملية في سجل التدقيق.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
+            Dialogs.Show("تم فك الترحيل بنجاح وتم تسجيل العملية في سجل التدقيق.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             LoadExpenses();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في فك الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في فك الترحيل: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1339,7 +1339,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             if (!Expenses.Any())
             {
-                MessageBox.Show("لا توجد بيانات للطباعة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Dialogs.Show("لا توجد بيانات للطباعة.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1359,7 +1359,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في إنشاء التقرير: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في إنشاء التقرير: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1483,11 +1483,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
         var selectedIds = Expenses.Where(e => e.IsSelected && e.IsDraft).Select(e => e.Id).ToList();
         if (!selectedIds.Any())
         {
-            MessageBox.Show("يرجى تحديد مصروف واحد على الأقل للترحيل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("يرجى تحديد مصروف واحد على الأقل للترحيل.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
-        var confirmResult = MessageBox.Show(
+        var confirmResult = Dialogs.Show(
             $"هل أنت متأكد من ترحيل وإقفال عدد ({selectedIds.Count}) مصاريف محددة مالياً؟\n" +
             $"إجمالي المصاريف المحددة: {RunningSelectedExpensesTotal:N2} د.ل\n" +
             $"بعد الترحيل، سيتم قفل هذه العمليات نهائياً ولن تتمكن من تعديلها أو حذفها.",
@@ -1505,7 +1505,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (batchResult.Success)
             {
-                MessageBox.Show(
+                Dialogs.Show(
                     $"تمت عملية الترحيل الجماعي للمصاريف بنجاح!\n\n" +
                     $"🔹 عدد المصاريف المرحلة: {batchResult.PostedCount}\n" +
                     $"🔹 إجمالي المصاريف المرحلة: {batchResult.TotalExpenses:N2} د.ل\n" +
@@ -1521,12 +1521,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             else
             {
                 var errors = string.Join("\n", batchResult.Errors);
-                MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1567,7 +1567,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (!expensesInPeriod.Any())
             {
-                MessageBox.Show(
+                Dialogs.Show(
                     $"لا توجد أي مصاريف مفتوحة (غير مرحلة) في الفترة المحددة:\nمن: {startDate:dd-MM-yyyy} إلى: {endDate:dd-MM-yyyy}",
                     "لا توجد بيانات للترحيل",
                     MessageBoxButton.OK,
@@ -1575,7 +1575,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
                 return;
             }
 
-            var confirmResult = MessageBox.Show(
+            var confirmResult = Dialogs.Show(
                 $"هل أنت متأكد من ترحيل وإقفال جميع المصاريف المفتوحة في الفترة المحددة؟\n\n" +
                 $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
                 $"📦 عدد المصاريف المفتوحة المكتشفة: {expensesInPeriod.Count} مصروف\n\n" +
@@ -1592,7 +1592,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
             if (batchResult.Success)
             {
-                MessageBox.Show(
+                Dialogs.Show(
                     $"تمت عملية الترحيل الجماعي للمصاريف بنجاح!\n\n" +
                     $"الفترة: من {startDate:dd-MM-yyyy} إلى {endDate:dd-MM-yyyy}\n" +
                     $"🔹 عدد المصاريف المرحلة: {batchResult.PostedCount}\n" +
@@ -1609,12 +1609,12 @@ public partial class GeneralExpensesViewModel : ObservableObject
             else
             {
                 var errors = string.Join("\n", batchResult.Errors);
-                MessageBox.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
+                Dialogs.Show($"فشلت عملية الترحيل الجماعي:\n{errors}", "خطأ في الترحيل", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي للفترة: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ غير متوقع أثناء الترحيل الجماعي للفترة: {ex.Message}", "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -1668,7 +1668,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في تحميل كروت أشهر الأرشيف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ في تحميل كروت أشهر الأرشيف: {ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

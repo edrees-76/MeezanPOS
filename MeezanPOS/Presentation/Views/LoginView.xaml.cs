@@ -45,7 +45,7 @@ namespace MeezanPOS.Presentation.Views
 
             if (string.IsNullOrWhiteSpace(username))
             {
-                MessageBox.Show(
+                Dialogs.Show(
                     "يرجى إدخال اسم المستخدم",
                     "تنبيه",
                     MessageBoxButton.OK,
@@ -59,7 +59,7 @@ namespace MeezanPOS.Presentation.Views
 
             if (string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show(
+                Dialogs.Show(
                     "يرجى إدخال كلمة المرور",
                     "تنبيه",
                     MessageBoxButton.OK,
@@ -94,7 +94,7 @@ namespace MeezanPOS.Presentation.Views
                     // Show error if authentication fails
                     if (vm.HasError)
                     {
-                        MessageBox.Show(
+                        Dialogs.Show(
                             vm.ErrorMessage,
                             "خطأ في الدخول",
                             MessageBoxButton.OK,

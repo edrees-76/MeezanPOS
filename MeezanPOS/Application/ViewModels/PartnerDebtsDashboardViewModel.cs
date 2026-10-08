@@ -58,7 +58,7 @@ public partial class PartnerDebtsDashboardViewModel : ObservableObject, IRecipie
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تحميل بيانات الشركاء:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء تحميل بيانات الشركاء:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {

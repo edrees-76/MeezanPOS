@@ -10,7 +10,7 @@
         FlowDirection="RightToLeft"
         MouseLeftButtonDown="DragWindow">
 
-    <Border Background="White" CornerRadius="12" BorderBrush="#cbd5e1" BorderThickness="1">
+    <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Brush.BorderStrong}" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="15" ShadowDepth="2" Opacity="0.15"/>
         </Border.Effect>
@@ -31,17 +31,17 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24" Foreground="#16A34A" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding DialogTitle}" FontSize="18" FontWeight="SemiBold" Foreground="#1e293b" VerticalAlignment="Center"/>
+                    <materialDesign:PackIcon Kind="CashPlus" Width="24" Height="24" Foreground="{StaticResource Brush.Income}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DialogTitle}" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Close Button -->
                 <Button Grid.Column="1" Style="{StaticResource MaterialDesignToolButton}" Width="30" Height="30" Padding="0" Click="Close_Click" Cursor="Hand">
-                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#64748b"/>
+                    <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="{StaticResource Brush.TextMuted}"/>
                 </Button>
             </Grid>
 
-            <Separator Grid.Row="1" Margin="0,12,0,16" Background="#e2e8f0"/>
+            <Separator Grid.Row="1" Margin="0,12,0,16" Background="{StaticResource Brush.Border}"/>
 
             <!-- 2. Form Inputs -->
             <StackPanel Grid.Row="2">
@@ -64,12 +64,12 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="النوع:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="النوع:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <ComboBox ItemsSource="{Binding ExpenseTypes}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedExpenseType}" Style="{StaticResource MaterialDesignOutlinedComboBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="المبلغ:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="المبلغ:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <TextBox Text="{Binding InputAmount, UpdateSourceTrigger=LostFocus, TargetNullValue=''}" materialDesign:HintAssist.Hint="0.00" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.MoveFocusOnEnter="True" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                     </StackPanel>
                 </Grid>
@@ -86,7 +86,7 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <TextBlock Text="نوع المصروف اليدوي:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBlock Text="نوع المصروف اليدوي:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                     <TextBox Text="{Binding InputCustomExpenseType, UpdateSourceTrigger=PropertyChanged}" 
                              materialDesign:HintAssist.Hint="مثلاً: صيانة آلات، قرطاسية ..." 
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" 
@@ -116,7 +116,7 @@
 
                         <!-- Toggle switch for Detailed Wage -->
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="تفصيلي (👤):" FontSize="13" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock Text="تفصيلي (👤):" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                             <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
                                           IsChecked="{Binding IsDetailedWage}" 
                                           ToolTip="تفعيل النمط التفصيلي لإدخال اسم العامل وتسجيل مستحقاته"
@@ -135,10 +135,10 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="تفاصيل الأجور والحضور:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <TextBlock Text="تفاصيل الأجور والحضور:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                             <Button Command="{Binding OpenWorkerWagesDialogCommand}" 
                                     Style="{StaticResource MaterialDesignRaisedButton}"
-                                    Background="#3F51B5" BorderBrush="#3F51B5" Foreground="White"
+                                    Background="{StaticResource Brush.PrimaryInteractive}" BorderBrush="{StaticResource Brush.PrimaryInteractive}" Foreground="White"
                                     Height="40" Padding="8,4" ToolTip="فتح نافذة تسجيل حضور وأجور جميع العمال">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="AccountEdit" Width="18" Height="18" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -157,12 +157,12 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="التاريخ:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="التاريخ:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <DatePicker SelectedDate="{Binding InputPaymentDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="طريقة الدفع:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                        <TextBlock Text="طريقة الدفع:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                         <ComboBox ItemsSource="{Binding PaymentMethods}" DisplayMemberPath="Name" SelectedValuePath="Value" SelectedValue="{Binding SelectedPaymentMethod}" Style="{StaticResource MaterialDesignOutlinedComboBox}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                     </StackPanel>
                 </Grid>
@@ -188,7 +188,7 @@
                         </Grid.ColumnDefinitions>
                         
                         <StackPanel Grid.Column="0">
-                            <TextBlock Text="الحساب البنكي:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <TextBlock Text="الحساب البنكي:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                             <ComboBox ItemsSource="{Binding BankAccounts}" 
                                       SelectedItem="{Binding SelectedBankAccountForExpense}" 
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}" 
@@ -199,7 +199,7 @@
                                         <TextBlock>
                                             <Run Text="{Binding FriendlyName, Mode=OneWay}" FontWeight="SemiBold"/>
                                             <Run Text=" - "/>
-                                            <Run Text="{Binding BankName, Mode=OneWay}" FontSize="12" Foreground="#64748b"/>
+                                            <Run Text="{Binding BankName, Mode=OneWay}" FontSize="12" Foreground="{StaticResource Brush.TextMuted}"/>
                                             <Run Text=" (رصيد: "/>
                                             <Run Text="{Binding CurrentBalance, StringFormat=N2, Mode=OneWay}"/>
                                             <Run Text=")"/>
@@ -210,7 +210,7 @@
                         </StackPanel>
                         
                         <StackPanel Grid.Column="2">
-                            <TextBlock Text="رقم التحويل (اخر 4 أرقام):" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                            <TextBlock Text="رقم التحويل (اخر 4 أرقام):" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                             <TextBox Text="{Binding InputReferenceNumber, UpdateSourceTrigger=PropertyChanged}" 
                                      materialDesign:HintAssist.Hint="----" 
                                      MaxLength="20"
@@ -234,7 +234,7 @@
                         </Style>
                     </StackPanel.Style>
                     
-                    <TextBlock Text="اسم الشريك ممول المصروف:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBlock Text="اسم الشريك ممول المصروف:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                     <ComboBox ItemsSource="{Binding PartnerNames}" 
                               Text="{Binding InputPartnerName, UpdateSourceTrigger=PropertyChanged}" 
                               IsEditable="True"
@@ -244,7 +244,7 @@
                 </StackPanel>
 
                 <StackPanel Margin="0,0,0,24">
-                    <TextBlock Text="الوصف:" FontSize="13" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBlock Text="الوصف:" FontSize="13" Foreground="{StaticResource Brush.TextSecondary}" Margin="0,0,0,8"/>
                     <TextBox Text="{Binding InputDescription, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="ملاحظات اختيارية" Style="{StaticResource MaterialDesignOutlinedTextBox}" behaviors:EnterKeyBehavior.EnterCommand="{Binding SaveExpenseCommand}" behaviors:EnterKeyBehavior.EnterCommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" FontSize="14" VerticalContentAlignment="Center" Padding="12,14"/>
                 </StackPanel>
 
@@ -258,7 +258,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0" Command="{Binding SaveExpenseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Foreground="White" Background="#16A34A" BorderBrush="#16A34A" Height="45" FontSize="15" FontWeight="SemiBold">
+                <Button Grid.Column="0" Command="{Binding SaveExpenseCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Foreground="White" Background="{StaticResource Brush.Income}" BorderBrush="{StaticResource Brush.Income}" Height="45" FontSize="15" FontWeight="SemiBold">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
                             <Setter Property="Visibility" Value="Visible"/>
@@ -275,7 +275,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="2" Click="Close_Click" Foreground="#64748b" BorderBrush="#cbd5e1" Height="45" FontSize="15" FontWeight="SemiBold">
+                <Button Grid.Column="2" Click="Close_Click" Foreground="{StaticResource Brush.TextMuted}" BorderBrush="{StaticResource Brush.BorderStrong}" Height="45" FontSize="15" FontWeight="SemiBold">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignOutlinedButton}">
                             <Setter Property="Content" Value="إلغاء"/>

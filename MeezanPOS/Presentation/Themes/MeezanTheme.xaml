@@ -8,7 +8,7 @@
     -->
 
     <!-- ===== الخطوط ===== -->
-    <!-- العناوين: Cairo بوزن عريض (FontWeight=Bold في الأنماط) -->
+    <!-- العناوين: Cairo. الوزن العريض (Bold) يُعرض بخط Cairo-ExtraBold الحقيقي المضمّن بدل التعريض المصطنع -->
     <FontFamily x:Key="Font.Heading">pack://application:,,,/Assets/Fonts/#Cairo</FontFamily>
     <FontFamily x:Key="Font.Title">pack://application:,,,/Assets/Fonts/#Cairo</FontFamily>
     <FontFamily x:Key="Font.Body">pack://application:,,,/Assets/Fonts/#Tajawal</FontFamily>
@@ -44,6 +44,12 @@
     <Color x:Key="Color.PendingSoft">#FEF3C7</Color>
     <Color x:Key="Color.Locked">#475569</Color>
     <Color x:Key="Color.LockedSoft">#F1F5F9</Color>
+    <!-- نص قوي (عناوين الجداول والتسميات) -->
+    <Color x:Key="Color.TextStrong">#334155</Color>
+    <!-- نص باهت (تلميحات وأيقونات ثانوية) -->
+    <Color x:Key="Color.TextFaint">#94A3B8</Color>
+    <!-- نص التنبيه/المعلّق -->
+    <Color x:Key="Color.PendingText">#B45309</Color>
 
     <!-- ===== الفُرَش ===== -->
     <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}"/>
@@ -69,6 +75,9 @@
     <SolidColorBrush x:Key="Brush.PendingSoft" Color="{StaticResource Color.PendingSoft}"/>
     <SolidColorBrush x:Key="Brush.Locked" Color="{StaticResource Color.Locked}"/>
     <SolidColorBrush x:Key="Brush.LockedSoft" Color="{StaticResource Color.LockedSoft}"/>
+    <SolidColorBrush x:Key="Brush.TextStrong" Color="{StaticResource Color.TextStrong}"/>
+    <SolidColorBrush x:Key="Brush.TextFaint" Color="{StaticResource Color.TextFaint}"/>
+    <SolidColorBrush x:Key="Brush.PendingText" Color="{StaticResource Color.PendingText}"/>
 
     <LinearGradientBrush x:Key="Brush.Sidebar" StartPoint="0.5,0" EndPoint="0.5,1">
         <GradientStop Color="#1A237E" Offset="0"/>

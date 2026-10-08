@@ -26,6 +26,7 @@ public static class MessageBoxMock
     public static void Initialize()
     {
         EnsureDatabaseCreated();
+        MeezanPOS.Presentation.Services.Dialogs.Current = new FakeDialogService();
         if (_harmony != null) return;
         _harmony = new Harmony("com.meezanpos.tests.messageboxmock");
 
@@ -168,4 +169,15 @@ public static class MessageBoxMock
     }
 }
 
-
+/// <summary>
+/// بديل خدمة الرسائل في الاختبارات: يسجل آخر رسالة ويعيد النتيجة المضبوطة في MessageBoxMock.
+/// </summary>
+internal sealed class FakeDialogService : MeezanPOS.Presentation.Services.IDialogService
+{
+    public MessageBoxResult Show(string message, string title, MessageBoxButton buttons, MessageBoxImage image, MessageBoxResult defaultResult)
+    {
+        MessageBoxMock.LastMessage = message;
+        MessageBoxMock.CallCount++;
+        return MessageBoxMock.ResultToReturn;
+    }
+}

@@ -18,7 +18,7 @@ public partial class MainView : Window
             return;
         }
 
-        var result = MessageBox.Show(
+        var result = Dialogs.Show(
             "هل أنت متأكد من الخروج من المنظومة؟\nيرجى التأكد من حفظ كافة البيانات قبل الخروج.",
             "تأكيد الخروج",
             MessageBoxButton.YesNo,

@@ -79,7 +79,7 @@ public partial class PartnerStatementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تحميل كشف حساب الشريك:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء تحميل كشف حساب الشريك:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
         {
@@ -107,7 +107,7 @@ public partial class PartnerStatementViewModel : ObservableObject
     {
         if (StatementEntries == null || !StatementEntries.Any())
         {
-            MessageBox.Show("لا توجد حركات للتصدير.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Dialogs.Show("لا توجد حركات للتصدير.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -133,7 +133,7 @@ public partial class PartnerStatementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ أثناء تصدير وفتح كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"خطأ أثناء تصدير وفتح كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

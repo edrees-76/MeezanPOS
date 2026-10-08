@@ -270,7 +270,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"خطأ في تحميل المصروفات: {ex.Message}");
-            MessageBox.Show($"حدث خطأ أثناء تحميل المصروفات:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء تحميل المصروفات:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -369,7 +369,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"حدث خطأ أثناء عرض التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
+            Dialogs.Show($"حدث خطأ أثناء عرض التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -498,7 +498,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         {
             if (DailySummaries == null || !DailySummaries.Any())
             {
-                MessageBox.Show("لا يوجد بيانات لطباعتها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
+                Dialogs.Show("لا يوجد بيانات لطباعتها.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -540,7 +540,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في طباعة التقرير: {ex.Message}");
+            Dialogs.Show($"خطأ في طباعة التقرير: {ex.Message}");
         }
     }
 
@@ -637,7 +637,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"خطأ في طباعة التقرير: {ex.Message}");
+            Dialogs.Show($"خطأ في طباعة التقرير: {ex.Message}");
         }
     }
 
