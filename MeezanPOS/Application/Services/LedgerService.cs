@@ -89,6 +89,9 @@ public class LedgerService : ILedgerService
     /// </remarks>
     public async Task PostPaymentAsync(int supplierId, decimal amount, TransactionSourceType source, int sourceId, DateTime paymentDate, int? targetInvoiceId = null, string? receiptNumber = null, string? notes = null, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر.");
+
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -101,6 +104,10 @@ public class LedgerService : ILedgerService
                 var invoice = await _context.SupplierInvoices.FindAsync(targetInvoiceId.Value);
                 if (invoice != null)
                 {
+                    var remaining = invoice.TotalAmount - invoice.PaidAmount;
+                    if (amount > remaining)
+                        throw new InvalidOperationException($"مبلغ الدفعة ({amount:N2}) أكبر من المتبقي على الفاتورة ({remaining:N2}).");
+
                     invoice.PaidAmount += amount;
                     if (invoice.PaidAmount >= invoice.TotalAmount)
                         invoice.Status = InvoiceStatus.Paid;
@@ -351,6 +358,9 @@ public class LedgerService : ILedgerService
 
     public async Task UpdatePaymentAsync(int transactionId, decimal amount, DateTime paymentDate, string? receiptNumber, string? notes, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر.");
+
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -360,24 +370,22 @@ public class LedgerService : ILedgerService
 
             if (ledgerTx == null) throw new Exception("الحركة المحاسبية غير موجودة.");
 
-            // التحقق من حالة الوردية المرتبطة بالدفعة إن وجدت
+            // دفعات اليومية مصدرها بند في الوردية (SourceId = معرف البند): تعديلها من هنا كان يقطع الربط
+            // ويعامل معرف البند كأنه معرف مصروف عام. تُعدَّل من اليومية نفسها فقط.
             if (ledgerTx.SourceType == TransactionSourceType.DailyJournalPayment)
-            {
-                var expenseItem = await _context.DailyExpenseItems
-                    .Include(e => e.DailyJournal)
-                    .FirstOrDefaultAsync(e => e.Id == ledgerTx.SourceId);
-                if (expenseItem?.DailyJournal != null && 
-                    (expenseItem.DailyJournal.FinancialStatus == FinancialStatus.Posted || 
-                     expenseItem.DailyJournal.FinancialStatus == FinancialStatus.Archived))
-                {
-                    throw new Exception("لا يمكن تعديل حركة السداد لأن الوردية المرتبطة بها قد تم ترحيلها مالياً بالفعل.");
-                }
-            }
+                throw new InvalidOperationException("هذه الدفعة مسجلة من اليومية. عدّلها من شاشة اليومية نفسها.");
 
             var supplier = await _context.Suppliers.FindAsync(ledgerTx.SupplierId);
             if (supplier == null) throw new Exception("المورد غير موجود.");
 
             int? oldInvoiceId = ledgerTx.SupplierInvoiceId;
+            if (ledgerTx.SupplierInvoice != null)
+            {
+                // المتبقي على الفاتورة بعد استبعاد هذه الدفعة نفسها
+                var remaining = ledgerTx.SupplierInvoice.TotalAmount - (ledgerTx.SupplierInvoice.PaidAmount - ledgerTx.Amount);
+                if (amount > remaining)
+                    throw new InvalidOperationException($"مبلغ الدفعة ({amount:N2}) أكبر من المتبقي على الفاتورة ({remaining:N2}).");
+            }
 
             // تحديث قيم الحركة المحاسبية للدفعة
             ledgerTx.Amount = amount;
@@ -395,13 +403,18 @@ public class LedgerService : ILedgerService
             var oldOwnerDebt = await _context.OwnerDebts
                 .FirstOrDefaultAsync(d => d.SourceType == "SupplierTransaction" && d.SourceId == ledgerTx.Id && !d.IsDeleted);
 
+            // SourceId يشير إلى مصروف عام فقط إذا كانت الدفعة بنكية أو نقدية خارجية. في السداد الشخصي يحمل
+            // معرف دين الشريك، وفي دفعات الفواتير قد يحمل معرف الفاتورة؛ البحث عنه كمصروف كان يلتقط مصروفاً
+            // آخر لا علاقة له بالدفعة فيعدّله أو يحذفه.
             GeneralExpense? oldExpense = null;
-            if (ledgerTx.SourceId > 0)
+            bool sourceIsExpense = oldOwnerDebt == null
+                && (oldBankTx != null || ledgerTx.SourceType == TransactionSourceType.ExternalPayment);
+            if (sourceIsExpense && ledgerTx.SourceId > 0)
             {
                 oldExpense = await _context.GeneralExpenses
-                    .FirstOrDefaultAsync(e => e.Id == ledgerTx.SourceId && 
-                                             (e.ExpenseType == GeneralExpenseType.SupplierPayment || 
-                                              e.ExpenseType == GeneralExpenseType.Other) && 
+                    .FirstOrDefaultAsync(e => e.Id == ledgerTx.SourceId &&
+                                             (e.ExpenseType == GeneralExpenseType.SupplierPayment ||
+                                              e.ExpenseType == GeneralExpenseType.Other) &&
                                              !e.IsDeleted);
             }
 

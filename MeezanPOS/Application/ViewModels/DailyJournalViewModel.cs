@@ -11,6 +11,7 @@ using QuestPDF.Fluent;
 using Microsoft.EntityFrameworkCore;
 using MeezanPOS.Application.Services;
 using MeezanPOS.Application.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MeezanPOS.Application.ViewModels;
 
@@ -161,19 +162,26 @@ public partial class DailyJournalViewModel : ObservableObject
     private readonly IWagesService _wagesService;
     private readonly IBankService _bankService;
     private readonly ILedgerService _ledgerService;
+    private readonly IServiceScopeFactory? _scopeFactory;
 
     public DailyJournalViewModel() : this(
         AppServiceProvider.Resolve<IWagesService>(),
         AppServiceProvider.Resolve<IBankService>(),
-        AppServiceProvider.Resolve<ILedgerService>())
+        AppServiceProvider.Resolve<ILedgerService>(),
+        AppServiceProvider.Provider.GetRequiredService<IServiceScopeFactory>())
     {
     }
 
+    /// <param name="scopeFactory">
+    /// يُنشئ نطاقاً لكل حفظ تتشارك فيه الخدمات سياقاً ومعاملة واحدة. بدونه (في الاختبارات) تُستخدم الخدمات الممررة.
+    /// </param>
     public DailyJournalViewModel(
         IWagesService wagesService,
         IBankService bankService,
-        ILedgerService ledgerService)
+        ILedgerService ledgerService,
+        IServiceScopeFactory? scopeFactory = null)
     {
+        _scopeFactory = scopeFactory;
         _wagesService = wagesService ?? throw new ArgumentNullException(nameof(wagesService));
         _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         _ledgerService = ledgerService ?? throw new ArgumentNullException(nameof(ledgerService));
@@ -813,9 +821,16 @@ public partial class DailyJournalViewModel : ObservableObject
 
         try
         {
-            using var context = new MeezanPOS.Infrastructure.Data.AppDbContext();
-            var bankService = _bankService;
-            
+            // نطاق واحد: السياق والخدمات تتشارك AppDbContext واحداً، فتدخل كل الكتابات في معاملة واحدة.
+            // أي فشل في المنتصف (حركة بنكية، دفتر مورد...) يتراجع عن الحفظ كله بدلاً من ترك يومية نصف محفوظة.
+            using var scope = _scopeFactory?.CreateScope();
+            using var ownedContext = scope == null ? new AppDbContext() : null;
+            var context = scope?.ServiceProvider.GetRequiredService<AppDbContext>() ?? ownedContext!;
+            var bankService = scope?.ServiceProvider.GetRequiredService<IBankService>() ?? _bankService;
+            var ledgerService = scope?.ServiceProvider.GetRequiredService<ILedgerService>() ?? _ledgerService;
+            await using var saveTx = await context.Database.BeginOrJoinTransactionAsync();
+            var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
+
             // Check for duplicate shifts on the same day
             var targetDate = JournalDate.Date;
             var selectedShift = SelectedShiftType;
@@ -900,9 +915,14 @@ public partial class DailyJournalViewModel : ObservableObject
 
                 // إزالة حركات الدفتر المرتبطة بالمصروفات المحذوفة
                 oldExpenseIds = journal.ExpenseItems.Select(e => e.Id).ToList();
+                // الموردون السابقون يُعاد بناء أرصدتهم أيضاً (وإلا يبقى رصيد المورد القديم محسوباً بالدفعة المحذوفة عند تغيير المورد)
+                foreach (var oldSupplierId in journal.ExpenseItems.Where(e => e.SupplierId.HasValue).Select(e => e.SupplierId!.Value))
+                    affectedSuppliers.Add(oldSupplierId);
                 if (oldExpenseIds.Any())
                 {
                     var linkedTxs = context.SupplierTransactions.Where(t => oldExpenseIds.Contains(t.SourceId) && t.SourceType == TransactionSourceType.DailyJournalPayment).ToList();
+                    foreach (var linked in linkedTxs)
+                        affectedSuppliers.Add(linked.SupplierId);
                     context.SupplierTransactions.RemoveRange(linkedTxs);
 
                     // إزالة حركات العمال المرتبطة بالمصروفات المحذوفة
@@ -1206,9 +1226,6 @@ public partial class DailyJournalViewModel : ObservableObject
             }
 
             // ترحيل المصروفات المرتبطة بالموردين للدفتر المالي
-            var ledgerService = _ledgerService;
-            var affectedSuppliers = new System.Collections.Generic.HashSet<int>();
-
             foreach (var newExp in journal.ExpenseItems.Where(e => e.SupplierId != null))
             {
                 if (newExp.SupplierId.HasValue)
@@ -1221,25 +1238,19 @@ public partial class DailyJournalViewModel : ObservableObject
                             newExp.SupplierId.Value, 
                             newExp.Amount, 
                             TransactionSourceType.DailyJournalPayment, 
-                            newExp.Id, 
-                            newExp.CreatedAt);
+                            newExp.Id,
+                            journal.JournalDate.Date); // تاريخ اليومية لا لحظة الحفظ، ليظهر في يومه الصحيح بكشف المورد
                     }
                 }
             }
 
-            // إعادة بناء أرصدة الموردين المتأثرين (سواء تم حذف مصروف أو إضافته)
-            // نجمع الموردين المتأثرين من عمليات الحذف السابقة والإضافات الحالية
-            if (oldExpenseIds != null && oldExpenseIds.Any())
-            {
-                // To properly rebuild, we need all suppliers who had a transaction modified.
-                // It's safer to rebuild all active suppliers or just those we know about.
-                // We'll rebuild all suppliers we processed.
-            }
-            
+            // إعادة بناء أرصدة الموردين المتأثرين: الحاليون والسابقون قبل التعديل
             foreach (var supId in affectedSuppliers)
             {
                 await ledgerService.RebuildSupplierLedgerAsync(supId);
             }
+
+            await saveTx.CommitAsync();
 
             StatusMessage = "تم حفظ الحركة اليومية بنجاح ✓";
             IsSaved = true;

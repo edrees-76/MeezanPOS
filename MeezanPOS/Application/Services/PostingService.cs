@@ -132,8 +132,8 @@ namespace MeezanPOS.Application.Services
                 var auditSession = new PostingSession
                 {
                     CreatedBy = unpostedByUserId,
-                    PeriodStartDate = DateTime.UtcNow,
-                    PeriodEndDate = DateTime.UtcNow,
+                    PeriodStartDate = DateTime.Now,
+                    PeriodEndDate = DateTime.Now,
                     TotalAffectedRows = 1,
                     SessionType = PostingSessionType.Unposting,
                     Status = PostingSessionStatus.Unlocked,
@@ -507,20 +507,13 @@ namespace MeezanPOS.Application.Services
                 var totalSalesVal = draftJournals.Sum(j => j.TotalSales);
                 var totalExpensesVal = draftExpenses.Sum(e => e.Amount) + draftJournals.Sum(j => j.TotalExpenses);
 
-                DateTime minDate = DateTime.UtcNow;
-                DateTime maxDate = DateTime.UtcNow;
-                if (draftJournals.Any())
-                {
-                    minDate = draftJournals.Min(j => j.JournalDate);
-                    maxDate = draftJournals.Max(j => j.JournalDate);
-                }
-                if (draftExpenses.Any())
-                {
-                    var expMin = draftExpenses.Min(e => e.PaymentDate);
-                    var expMax = draftExpenses.Max(e => e.PaymentDate);
-                    if (expMin < minDate) minDate = expMin;
-                    if (expMax > maxDate) maxDate = expMax;
-                }
+                // حدود الفترة من تواريخ السجلات فقط: البدء بالوقت الحالي كان يمد الفترة المقفلة حتى اليوم
+                // (فيُقفل اليوم الجاري) إذا لم توجد إلا مصروفات قديمة
+                var periodDates = draftJournals.Select(j => j.JournalDate)
+                    .Concat(draftExpenses.Select(e => e.PaymentDate))
+                    .ToList();
+                DateTime minDate = periodDates.Count > 0 ? periodDates.Min() : DateTime.Today;
+                DateTime maxDate = periodDates.Count > 0 ? periodDates.Max() : DateTime.Today;
 
                 // 2. إنشاء الجلسة والإقفال للتسوية
                 var session = new PostingSession
@@ -817,7 +810,7 @@ namespace MeezanPOS.Application.Services
                     PostingSessionId = sessionId,
                     UnlockSequence = nextSeq,
                     UnlockedBy = unlockedByUserId,
-                    UnlockDate = DateTime.UtcNow,
+                    UnlockDate = DateTime.Now,
                     PreviousStatus = prevStatus,
                     Reason = reason,
                     DetailReason = detailReason,

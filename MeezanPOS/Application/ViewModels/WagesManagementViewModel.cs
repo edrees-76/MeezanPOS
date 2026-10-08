@@ -6,6 +6,7 @@ using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
 using MeezanPOS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -506,21 +507,37 @@ public partial class WagesManagementViewModel : ObservableObject
 
         try
         {
-            using var db = new AppDbContext();
+            using var scope = AppServiceProvider.Provider.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            await using var payTx = await db.Database.BeginOrJoinTransactionAsync();
+
+            var paymentDay = InputPaymentDate.Date;
+            if (await PeriodLock.IsDateLockedAsync(db, paymentDay))
+            {
+                MessageBox.Show(PeriodLock.LockedMessage, "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             if (SelectedPaymentSource == "Cashier")
             {
-                // صرف من صندوق الكاشير للوردية المفتوحة حالياً
+                // صرف من صندوق الكاشير: على يومية مسودة بتاريخ الصرف نفسه (آخر وردية في ذلك اليوم).
+                // سابقاً كانت تُضاف لآخر مسودة أياً كان تاريخها، فتظهر في يوم قديم.
+                var nextDay = paymentDay.AddDays(1);
                 var openJournal = await db.DailyJournals
-                    .Where(j => j.FinancialStatus == FinancialStatus.Draft)
-                    .OrderByDescending(j => j.Id)
+                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= paymentDay && j.JournalDate < nextDay)
+                    .OrderByDescending(j => j.ShiftType)
+                    .ThenByDescending(j => j.Id)
                     .FirstOrDefaultAsync();
 
                 if (openJournal == null)
                 {
-                    MessageBox.Show("لا توجد وردية مفتوحة حالياً في الكاشير لتسجيل المصروف عليها. يرجى فتح وردية أولاً أو الصرف كـ (مصروف عام).", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"لا توجد يومية مسودة بتاريخ {paymentDay:yyyy/MM/dd} لتسجيل الصرف عليها. أنشئ يومية هذا اليوم أولاً أو اصرف كـ (مصروف عام).", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
+
+                // المصروف يُنقص النقد المتوقع لليومية، فيجب أن يدخل في إجمالي مصروفاتها
+                openJournal.TotalExpenses += InputPaymentAmount;
+                openJournal.UpdatedAt = DateTime.UtcNow;
 
                 var expenseItem = new DailyExpenseItem
                 {
@@ -554,9 +571,21 @@ public partial class WagesManagementViewModel : ObservableObject
                 };
 
                 db.GeneralExpenses.Add(generalExpense);
+                await db.SaveChangesAsync();
+
+                // الصرف من نقدية المطعم يُخرج نقداً فعلياً (مثل بقية المصروفات العامة النقدية)
+                var cashLedger = scope.ServiceProvider.GetRequiredService<ICashLedgerService>();
+                await cashLedger.RecordMovementAsync(
+                    CashMovementType.CashOut,
+                    InputPaymentAmount,
+                    SourceTypes.GeneralExpense,
+                    generalExpense.Id,
+                    $"مصروف عام: رواتب | {generalExpense.Description}",
+                    paymentDay);
             }
 
             await db.SaveChangesAsync();
+            await payTx.CommitAsync();
 
             // حفظ الاسم لإعادة التحديد بعد التحديث
             int currentWorkerId = SelectedWorkerSummary.WorkerId;

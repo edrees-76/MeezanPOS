@@ -145,11 +145,15 @@ public class FinancialReportingService : IFinancialReportingService
         foreach (var supplier in suppliers)
         {
             // Opening balance before start date
-            var opBalTx = priorTxBySupplierId.TryGetValue(supplier.Id, out var priorList)
-                ? priorList.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id).FirstOrDefault()
-                : null;
+            // يُحسب من المجاميع لا من BalanceAfter لآخر حركة: يشمل الرصيد الافتتاحي للمورد حتى لو لم تكن له
+            // حركات سابقة، ولا يتأثر بترتيب الحركات المتزامنة في نفس اليوم
+            var priorTx = priorTxBySupplierId.TryGetValue(supplier.Id, out var priorList)
+                ? priorList
+                : new List<SupplierTransaction>();
 
-            decimal openingBalance = opBalTx?.BalanceAfter ?? 0m;
+            decimal openingBalance = supplier.OpeningBalance
+                + priorTx.Where(t => t.Type == SupplierTransactionType.IncreaseDebt).Sum(t => t.Amount)
+                - priorTx.Where(t => t.Type == SupplierTransactionType.DecreaseDebt).Sum(t => t.Amount);
 
             // Activity during period
             var periodTx = periodTxBySupplierId.TryGetValue(supplier.Id, out var periodList)
@@ -160,8 +164,7 @@ public class FinancialReportingService : IFinancialReportingService
             decimal payments = periodTx.Where(t => t.Type == SupplierTransactionType.DecreaseDebt).Sum(t => t.Amount);
 
             // Closing balance
-            var clBalTx = periodTx.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Id).FirstOrDefault();
-            decimal closingBalance = clBalTx != null ? clBalTx.BalanceAfter : openingBalance;
+            decimal closingBalance = openingBalance + purchases - payments;
 
             supplierReportList.Add(new SupplierReportItem
             {

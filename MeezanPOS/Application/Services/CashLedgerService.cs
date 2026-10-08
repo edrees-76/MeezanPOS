@@ -43,7 +43,7 @@ public class CashLedgerService : ICashLedgerService
         var transaction = !hasActiveTransaction ? await _context.Database.BeginTransactionAsync() : null;
         try
         {
-            var txDate = date ?? DateTime.UtcNow;
+            var txDate = date ?? DateTime.Now;
             
             // جلب رصيد آخر حركة مسجلة — الترتيب بـ Id فقط (AUTOINCREMENT متسلسل)
             var lastMovement = await _context.CashMovements
@@ -137,7 +137,7 @@ public class CashLedgerService : ICashLedgerService
 
             var reversal = new CashMovement
             {
-                TransactionDate = DateTime.UtcNow,
+                TransactionDate = DateTime.Now,
                 Type = reversedType,
                 Amount = original.Amount,
                 BalanceAfter = newBalance,

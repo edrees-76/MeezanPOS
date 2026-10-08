@@ -129,6 +129,8 @@ public class WagesService : IWagesService
     {
         if (attendances == null || !attendances.Any()) return;
 
+        // الحضور وحركاته المالية تُحفظ معاً أو لا تُحفظ
+        await using var batchTx = await _context.Database.BeginOrJoinTransactionAsync();
         var targetDate = attendances.First().WorkDate.Date;
 
         foreach (var att in attendances)
@@ -292,6 +294,7 @@ public class WagesService : IWagesService
         }
 
         await _context.SaveChangesAsync();
+        await batchTx.CommitAsync();
     }
 
     // --- العمليات المالية والأستاذ المساعد ---
@@ -439,18 +442,21 @@ public class WagesService : IWagesService
     {
         var workers = await _context.Workers.AsNoTracking().Where(w => !w.IsDeleted).ToListAsync();
         
-        var balances = await _context.WorkerTransactions
+        // الجمع في الذاكرة بالنوع decimal: SQLite لا يجمع decimal، والتحويل إلى double كان يُدخل أخطاء تقريب في الأرصدة
+        var balances = (await _context.WorkerTransactions
             .AsNoTracking()
             .Where(t => !t.IsDeleted)
+            .Select(t => new { t.WorkerId, t.CreditAmount, t.DebitAmount, t.TransactionDate })
+            .ToListAsync())
             .GroupBy(t => t.WorkerId)
             .Select(g => new
             {
                 WorkerId = g.Key,
-                TotalAccrued = (decimal)g.Sum(t => (double)t.CreditAmount),
-                TotalPaid = (decimal)g.Sum(t => (double)t.DebitAmount),
+                TotalAccrued = g.Sum(t => t.CreditAmount),
+                TotalPaid = g.Sum(t => t.DebitAmount),
                 LastActivity = g.Max(t => (DateTime?)t.TransactionDate)
             })
-            .ToDictionaryAsync(b => b.WorkerId);
+            .ToDictionary(b => b.WorkerId);
 
         var summaries = new List<WorkerWageSummary>();
 

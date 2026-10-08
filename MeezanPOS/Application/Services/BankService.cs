@@ -86,11 +86,14 @@ public class BankService : IBankService
 
     public async Task<BankTransaction> RecordTransactionAsync(int bankAccountId, BankTransactionType type, decimal amount, string? referenceNumber, string? notes, string? sourceType = null, int? sourceId = null, DateTime? transactionDate = null)
     {
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ الحركة البنكية يجب أن يكون أكبر من صفر.");
+
         var account = await _context.BankAccounts.FindAsync(bankAccountId);
         if (account == null || account.IsDeleted)
             throw new Exception("الحساب البنكي غير موجود.");
 
-        var date = transactionDate ?? DateTime.UtcNow;
+        var date = transactionDate ?? DateTime.Now;
         decimal change = CalculateBalanceChange(type, amount);
 
         account.CurrentBalance += change;
@@ -116,6 +119,11 @@ public class BankService : IBankService
 
     public async Task RecordInternalTransferAsync(int fromAccountId, int toAccountId, decimal amount, string? notes, DateTime date)
     {
+        if (fromAccountId == toAccountId)
+            throw new ArgumentException("لا يمكن التحويل من الحساب إلى نفسه.");
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ التحويل يجب أن يكون أكبر من صفر.");
+
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {

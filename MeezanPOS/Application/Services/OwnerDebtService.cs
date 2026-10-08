@@ -17,13 +17,28 @@ public class OwnerDebtService : IOwnerDebtService
     private readonly IBankService _bankService;
     private readonly ISessionService _session;
     private readonly AuditService _auditService;
+    private readonly ICashLedgerService _cashLedgerService;
 
-    public OwnerDebtService(AppDbContext context, ISessionService session, IBankService bankService, AuditService auditService)
+    public OwnerDebtService(AppDbContext context, ISessionService session, IBankService bankService, AuditService auditService, ICashLedgerService? cashLedgerService = null)
     {
         _context = context;
         _bankService = bankService;
         _session = session;
         _auditService = auditService;
+        _cashLedgerService = cashLedgerService ?? new CashLedgerService(context, session);
+    }
+
+    /// <summary>
+    /// حالة الدين من مجموع تسوياته: "مسدد" فقط عند تغطية المبلغ كاملاً.
+    /// </summary>
+    private async Task RefreshDebtStatusAsync(OwnerDebt debt)
+    {
+        var settled = (await _context.OwnerDebtSettlements
+            .Where(s => s.OwnerDebtId == debt.Id && !s.IsDeleted)
+            .Select(s => s.Amount)
+            .ToListAsync()).Sum();
+        debt.Status = settled >= debt.Amount ? OwnerDebtStatus.Paid : OwnerDebtStatus.Unpaid;
+        debt.UpdatedAt = DateTime.UtcNow;
     }
 
     public async Task<List<OwnerDebt>> GetDebtsAsync(string? partnerName = null, OwnerDebtStatus? status = null)
@@ -48,6 +63,11 @@ public class OwnerDebtService : IOwnerDebtService
 
     public async Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null, int? bankAccountId = null)
     {
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ الدين يجب أن يكون أكبر من صفر.");
+        if (string.IsNullOrWhiteSpace(partnerName))
+            throw new ArgumentException("يجب تحديد اسم الشريك.");
+
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -146,6 +166,9 @@ public class OwnerDebtService : IOwnerDebtService
 
     public async Task<OwnerDebtSettlement> RecordSettlementAsync(int? debtId, string partnerName, decimal amount, OwnerDebtSettlementSource source, int? bankAccountId, string? notes, DateTime date)
     {
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ التسوية يجب أن يكون أكبر من صفر.");
+
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -156,8 +179,13 @@ public class OwnerDebtService : IOwnerDebtService
                 if (debt == null || debt.IsDeleted)
                     throw new Exception("الدين المحدد غير موجود.");
 
-                debt.Status = OwnerDebtStatus.Paid;
-                debt.UpdatedAt = DateTime.UtcNow;
+                var alreadySettled = (await _context.OwnerDebtSettlements
+                    .Where(s => s.OwnerDebtId == debt.Id && !s.IsDeleted)
+                    .Select(s => s.Amount)
+                    .ToListAsync()).Sum();
+                var remaining = debt.Amount - alreadySettled;
+                if (amount > remaining)
+                    throw new InvalidOperationException($"مبلغ التسوية ({amount:N2}) أكبر من المتبقي على الدين ({remaining:N2}).");
             }
 
             var settlement = new OwnerDebtSettlement
@@ -173,6 +201,23 @@ public class OwnerDebtService : IOwnerDebtService
 
             _context.OwnerDebtSettlements.Add(settlement);
             await _context.SaveChangesAsync();
+
+            // الدين يصبح "مسدداً" فقط إذا غطت التسويات كامل مبلغه (السداد الجزئي يبقيه مفتوحاً)
+            if (debt != null)
+                await RefreshDebtStatusAsync(debt);
+
+            // التسوية من الخزينة تُخرج نقداً فعلياً من رصيد النقدية.
+            // (التسوية من صندوق الكاشير لا تُسجل هنا: النقص يظهر في النقد الفعلي لليومية التي صُرفت منها)
+            if (source == OwnerDebtSettlementSource.PettyCash)
+            {
+                await _cashLedgerService.RecordMovementAsync(
+                    CashMovementType.CashOut,
+                    amount,
+                    SourceTypes.OwnerDebtSettlement,
+                    settlement.Id,
+                    $"تسوية مستحقات الشريك {partnerName}" + (string.IsNullOrEmpty(notes) ? "" : $" - {notes}"),
+                    date);
+            }
 
             // إذا كان التمويل من الحساب البنكي، نقوم بتسجيل حركة بنكية
             if (source == OwnerDebtSettlementSource.Bank)
@@ -217,26 +262,28 @@ public class OwnerDebtService : IOwnerDebtService
             if (settlement == null || settlement.IsDeleted)
                 throw new Exception("التسوية غير موجودة.");
 
-            // 1. إذا كانت التسوية مرتبطة بدين معين، نعيد الدين إلى الحالة "غير مسدد"
+            // 1. حذف التسوية أولاً ثم إعادة حساب حالة الدين من التسويات المتبقية
+            settlement.IsDeleted = true;
+            settlement.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
             if (settlement.OwnerDebtId.HasValue)
             {
                 var debt = await _context.OwnerDebts.FindAsync(settlement.OwnerDebtId.Value);
                 if (debt != null && !debt.IsDeleted)
-                {
-                    debt.Status = OwnerDebtStatus.Unpaid;
-                    debt.UpdatedAt = DateTime.UtcNow;
-                }
+                    await RefreshDebtStatusAsync(debt);
             }
+
+            // عكس الحركة النقدية لتسوية الخزينة
+            var liveCash = await _context.CashMovements.FindLiveForSourceAsync(SourceTypes.OwnerDebtSettlement, settlement.Id);
+            if (liveCash != null)
+                await _cashLedgerService.ReverseMovementAsync(liveCash.Id, "حذف تسوية مستحقات شريك");
 
             // 2. إذا كانت التسوية من البنك، نقوم بحذف الحركة البنكية المرتبطة بها
             if (settlement.SettlementSource == OwnerDebtSettlementSource.Bank)
             {
                 await _bankService.DeleteTransactionBySourceAsync("OwnerDebtSettlement", settlement.Id);
             }
-
-            // 3. حذف التسوية
-            settlement.IsDeleted = true;
-            settlement.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

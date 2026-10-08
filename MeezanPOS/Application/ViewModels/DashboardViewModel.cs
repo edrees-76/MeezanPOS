@@ -380,12 +380,14 @@ public partial class DashboardViewModel : ObservableObject
                 var prevProfitVal = prevSalesVal - prevExpVal;
 
                 // Cash balance trend comparison
-                var prevCashBalance = await context.CashMovements
-                    .Where(m => !m.IsDeleted && !m.IsReversed && m.TransactionDate <= prevEnd)
-                    .OrderByDescending(m => m.TransactionDate)
-                    .ThenByDescending(m => m.Id)
-                    .Select(m => m.BalanceAfter)
-                    .FirstOrDefaultAsync();
+                // من مجموع الحركات السارية حتى نهاية الفترة السابقة: BalanceAfter لآخر حركة بالتاريخ
+                // يتأثر بترتيب الإدخال (حركة بتاريخ قديم أُدخلت لاحقاً تحمل رصيداً لاحقاً)
+                var prevMovements = await context.CashMovements
+                    .Where(m => !m.IsDeleted && m.TransactionDate <= prevEnd)
+                    .WhereLive()
+                    .Select(m => new { m.Type, m.Amount })
+                    .ToListAsync();
+                var prevCashBalance = prevMovements.Sum(m => m.Type == CashMovementType.CashIn ? m.Amount : -m.Amount);
 
                 // Trends
                 var (salesTrendVal, salesTrendDir) = CalculateTrend(salesVal, prevSalesVal);
