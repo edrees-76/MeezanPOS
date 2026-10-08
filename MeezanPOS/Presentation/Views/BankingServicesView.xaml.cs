@@ -23,18 +23,28 @@ public partial class BankingServicesView : UserControl
     {
         if (DataContext is BankingServicesViewModel vm)
         {
-            // تحميل البيانات مباشرة (الـ Command سيعمل أيضاً لكن لن يسبب مشكلة)
-            await vm.LoadStatementAsync();
-
-            // التحقق من وجود حركات محملة
-            if (vm.StatementTransactions != null && vm.StatementTransactions.Count > 0)
+            // معالج async void: أي استثناء غير ملتقط هنا يغلق المنظومة بالكامل
+            try
             {
-                var reportWindow = new BankStatementReportWindow
+                // تحميل البيانات مباشرة (الـ Command سيعمل أيضاً لكن لن يسبب مشكلة)
+                await vm.LoadStatementAsync();
+
+                // التحقق من وجود حركات محملة
+                if (vm.StatementTransactions != null && vm.StatementTransactions.Count > 0)
                 {
-                    DataContext = vm,
-                    Owner = Window.GetWindow(this)
-                };
-                reportWindow.ShowDialog();
+                    var reportWindow = new BankStatementReportWindow
+                    {
+                        DataContext = vm,
+                        Owner = Window.GetWindow(this)
+                    };
+                    reportWindow.ShowDialog();
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Serilog.Log.Error(ex, "Error loading bank statement");
+                MessageBox.Show($"تعذر تحميل كشف الحساب:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
+                    MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
             }
         }
     }

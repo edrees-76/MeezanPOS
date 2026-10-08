@@ -39,7 +39,7 @@ public partial class App : System.Windows.Application
                 inner = inner.InnerException;
             }
 
-            Log.Fatal(e.Exception, "FATAL: {Error}", fullError);
+            Log.Error(e.Exception, "Unhandled UI exception: {Error}", fullError);
             try
             {
                 var logPath = System.IO.Path.Combine(
@@ -51,11 +51,27 @@ public partial class App : System.Windows.Application
             }
             catch { }
 
-            MessageBox.Show($"خطأ غير متوقع:\n{fullError}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
-                "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error);
-
             e.Handled = true;
-            System.Windows.Application.Current.Shutdown(1);
+
+            // الأخطاء التي تعني أن حالة التطبيق أو قاعدة البيانات لم تعد موثوقة: إغلاق.
+            // غير ذلك (خطأ في شاشة أو أمر واحد): عمليات الحفظ تتم داخل معاملات فيُلغى ما لم يكتمل،
+            // لذا يكفي إبلاغ المستخدم والاستمرار بدلاً من إغلاق المنظومة وضياع ما في الشاشات الأخرى.
+            bool isFatal = e.Exception is OutOfMemoryException or InvalidProgramException or AccessViolationException
+                || (e.Exception.GetBaseException() is Microsoft.Data.Sqlite.SqliteException sqlEx
+                    && (sqlEx.SqliteErrorCode == 11 /* SQLITE_CORRUPT */ || sqlEx.SqliteErrorCode == 26 /* SQLITE_NOTADB */));
+
+            if (isFatal)
+            {
+                MessageBox.Show($"خطأ غير متوقع:\n{fullError}\n\nسيتم إغلاق المنظومة لحماية البيانات.",
+                    "خطأ قاتل", MessageBoxButton.OK, MessageBoxImage.Error,
+                    MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
+                System.Windows.Application.Current.Shutdown(1);
+                return;
+            }
+
+            MessageBox.Show($"حدث خطأ غير متوقع ولم تكتمل العملية الأخيرة:\n{fullError}\n\nيمكنك متابعة العمل. تم تسجيل التفاصيل في سجل الأخطاء.",
+                "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
+                MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
         };
     }
 

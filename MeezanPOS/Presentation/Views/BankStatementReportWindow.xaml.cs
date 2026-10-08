@@ -33,30 +33,40 @@ public partial class BankStatementReportWindow : Window
         if (sender is not DataGrid dataGrid) return;
         if (dataGrid.SelectedItem is not BankTransaction transaction) return;
 
-        if (transaction.Type == BankTransactionType.CardSalesDeposit)
+        // معالج async void: أي استثناء غير ملتقط هنا يغلق المنظومة بالكامل
+        try
         {
-            if (DataContext is BankingServicesViewModel vm)
+            if (transaction.Type == BankTransactionType.CardSalesDeposit)
             {
-                // تحميل التفاصيل من الحركة اليومية
-                await vm.LoadTransactionDetailsAsync(transaction);
-
-                // فتح نافذة التفاصيل المنبثقة للوردية
-                var detailsDialog = new BankStatementDetailsDialog
+                if (DataContext is BankingServicesViewModel vm)
                 {
-                    DataContext = vm,
+                    // تحميل التفاصيل من الحركة اليومية
+                    await vm.LoadTransactionDetailsAsync(transaction);
+
+                    // فتح نافذة التفاصيل المنبثقة للوردية
+                    var detailsDialog = new BankStatementDetailsDialog
+                    {
+                        DataContext = vm,
+                        Owner = this
+                    };
+                    detailsDialog.ShowDialog();
+                }
+            }
+            else if (!string.IsNullOrEmpty(transaction.SourceType) && transaction.SourceId.HasValue)
+            {
+                // فتح نافذة تفاصيل العملية المالية المخصصة
+                var detailsDialog = new TransactionDetailsViewWindow(transaction.SourceType, transaction.SourceId.Value)
+                {
                     Owner = this
                 };
                 detailsDialog.ShowDialog();
             }
         }
-        else if (!string.IsNullOrEmpty(transaction.SourceType) && transaction.SourceId.HasValue)
+        catch (System.Exception ex)
         {
-            // فتح نافذة تفاصيل العملية المالية المخصصة
-            var detailsDialog = new TransactionDetailsViewWindow(transaction.SourceType, transaction.SourceId.Value)
-            {
-                Owner = this
-            };
-            detailsDialog.ShowDialog();
+            Serilog.Log.Error(ex, "Error opening bank statement transaction details");
+            MessageBox.Show("تعذر فتح تفاصيل الحركة: " + ex.Message, "خطأ", MessageBoxButton.OK, MessageBoxImage.Error,
+                MessageBoxResult.OK, MessageBoxOptions.RightAlign | MessageBoxOptions.RtlReading);
         }
     }
 }
