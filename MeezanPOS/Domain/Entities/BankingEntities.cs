@@ -187,6 +187,10 @@ public class OwnerDebtSettlement : BaseEntity
     public int? BankAccountId { get; set; }
     public BankAccount? BankAccount { get; set; }
 
+    /// <summary>اليومية التي صُرفت التسوية من درجها (للتسوية من صندوق الكاشير فقط).</summary>
+    public int? DailyJournalId { get; set; }
+    public DailyJournal? DailyJournal { get; set; }
+
     [MaxLength(500)]
     public string? Notes { get; set; }
 }

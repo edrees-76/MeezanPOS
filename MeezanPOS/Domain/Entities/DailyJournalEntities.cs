@@ -35,9 +35,13 @@ public class DailyJournal : BaseEntity, IPostableEntity
     // المصروفات
     public decimal TotalExpenses { get; set; }         // إجمالي المصروفات النثرية
 
+    // مبالغ صُرفت من درج الكاشير وليست مصروفاً (تسوية مستحقات شريك): تُنقص النقد المتوقع
+    // فلا تظهر عجزاً، ولا تدخل في إجمالي المصروفات. تُحدّث من خدمة ذمم الشركاء فقط.
+    public decimal DrawerPayouts { get; set; }
+
     // المطابقة النهائية
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
-    public decimal ExpectedCash => CashFloat + CashSales - TotalExpenses - ReturnsTotal - FreeOrdersTotal;  // النقد المتوقع
+    public decimal ExpectedCash => CashFloat + CashSales - TotalExpenses - DrawerPayouts - ReturnsTotal - FreeOrdersTotal;  // النقد المتوقع
     public decimal ActualCash { get; set; }            // النقد الفعلي المستلم
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal Difference => ActualCash - ExpectedCash;  // الفرق (عجز أو زيادة)

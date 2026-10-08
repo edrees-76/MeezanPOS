@@ -310,6 +310,8 @@ public class DailyJournalPdfReport : IDocument
                         AddRow("منها خدمات مصرفية", $"{_vm.EffectiveBankingTotal:N2}", false, false);
                         AddRow("(-) المصروفات النثرية", $"{_vm.TotalExpenses:N2}", false, false);
                         AddRow("(+) مبلغ الصرف (الفكة)", $"{_vm.CashFloat ?? 0:N2}", false, false);
+                        if (_vm.HasDrawerPayouts)
+                            AddRow("(-) مدفوعات من الدرج (تسويات شركاء)", $"{_vm.DrawerPayouts:N2}", false, false);
 
                         table.Cell().BorderTop(1).BorderColor(Colors.Black).Background("#e2e8f0").Padding(8).Text("النقد المتوقع في الدرج").SemiBold().FontSize(14);
                         table.Cell().BorderTop(1).BorderColor(Colors.Black).Background("#e2e8f0").Padding(8).AlignRight().Text($"{_vm.ExpectedCash:N2}").SemiBold().FontSize(14);

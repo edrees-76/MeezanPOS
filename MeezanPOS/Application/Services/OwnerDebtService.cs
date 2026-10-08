@@ -188,6 +188,28 @@ public class OwnerDebtService : IOwnerDebtService
                     throw new InvalidOperationException($"مبلغ التسوية ({amount:N2}) أكبر من المتبقي على الدين ({remaining:N2}).");
             }
 
+            // الصرف من درج الكاشير يُسجل على يومية ذلك اليوم المسودة (آخر وردية فيه)، فيُنقص نقدها
+            // المتوقع ويظهر في اليومية بدل أن يظهر عجزاً غير مفسر في نقدها الفعلي
+            DailyJournal? drawerJournal = null;
+            if (source == OwnerDebtSettlementSource.CashRegister)
+            {
+                var day = date.Date;
+                var nextDay = day.AddDays(1);
+                drawerJournal = await _context.DailyJournals
+                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= day && j.JournalDate < nextDay)
+                    .OrderByDescending(j => j.ShiftType)
+                    .ThenByDescending(j => j.Id)
+                    .FirstOrDefaultAsync();
+
+                if (drawerJournal == null)
+                    throw new InvalidOperationException(
+                        $"لا توجد يومية مسودة بتاريخ {day:yyyy/MM/dd} لتسجيل الصرف من درج الكاشير عليها. " +
+                        "أنشئ يومية هذا اليوم أولاً، أو سجّل التسوية من الخزينة أو المصرف.");
+
+                drawerJournal.DrawerPayouts += amount;
+                drawerJournal.UpdatedAt = DateTime.UtcNow;
+            }
+
             var settlement = new OwnerDebtSettlement
             {
                 OwnerDebtId = debtId,
@@ -195,6 +217,7 @@ public class OwnerDebtService : IOwnerDebtService
                 Amount = amount,
                 SettlementSource = source,
                 BankAccountId = bankAccountId,
+                DailyJournalId = drawerJournal?.Id,
                 Notes = notes,
                 SettlementDate = date
             };
@@ -207,7 +230,7 @@ public class OwnerDebtService : IOwnerDebtService
                 await RefreshDebtStatusAsync(debt);
 
             // التسوية من الخزينة تُخرج نقداً فعلياً من رصيد النقدية.
-            // (التسوية من صندوق الكاشير لا تُسجل هنا: النقص يظهر في النقد الفعلي لليومية التي صُرفت منها)
+            // (التسوية من صندوق الكاشير لا تُسجل هنا: سُجلت أعلاه على اليومية، ونقدها يدخل الخزينة عند ترحيلها ناقصاً بقيمتها)
             if (source == OwnerDebtSettlementSource.PettyCash)
             {
                 await _cashLedgerService.RecordMovementAsync(
@@ -261,6 +284,20 @@ public class OwnerDebtService : IOwnerDebtService
             var settlement = await _context.OwnerDebtSettlements.FindAsync(settlementId);
             if (settlement == null || settlement.IsDeleted)
                 throw new Exception("التسوية غير موجودة.");
+
+            // التسوية من درج الكاشير تُرفع من يوميتها، ما دامت اليومية مفتوحة
+            if (settlement.DailyJournalId.HasValue)
+            {
+                var journal = await _context.DailyJournals.FindAsync(settlement.DailyJournalId.Value);
+                if (journal != null)
+                {
+                    if (journal.FinancialStatus != FinancialStatus.Draft)
+                        throw new InvalidOperationException(
+                            $"لا يمكن حذف هذه التسوية: صُرفت من درج يومية {journal.JournalDate:yyyy/MM/dd} وقد رُحّلت. ألغِ ترحيل اليومية أولاً.");
+                    journal.DrawerPayouts = Math.Max(0m, journal.DrawerPayouts - settlement.Amount);
+                    journal.UpdatedAt = DateTime.UtcNow;
+                }
+            }
 
             // 1. حذف التسوية أولاً ثم إعادة حساب حالة الدين من التسويات المتبقية
             settlement.IsDeleted = true;

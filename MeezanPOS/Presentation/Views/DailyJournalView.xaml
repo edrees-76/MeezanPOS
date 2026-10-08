@@ -738,6 +738,7 @@
                                 <RowDefinition/><RowDefinition/><RowDefinition/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -763,6 +764,12 @@
                             <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding TotalExpenses, StringFormat=N2}" Style="{StaticResource SummaryValue}" Foreground="{StaticResource Brush.ExpenseText}"/>
                             <TextBlock Grid.Row="8" Text="(+) مبلغ الصرف" Style="{StaticResource SummaryLabel}"/>
                             <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding CashFloat, StringFormat=N2, TargetNullValue=0.00}" Style="{StaticResource SummaryValue}"/>
+                            <!-- تسويات شركاء صُرفت من الدرج: تُسجل من شاشة الخدمات المصرفية -->
+                            <TextBlock Grid.Row="9" Text="(−) مدفوعات من الدرج (تسويات شركاء)" Style="{StaticResource SummaryLabel}" Foreground="{StaticResource Brush.ExpenseText}"
+                                       Visibility="{Binding HasDrawerPayouts, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                       ToolTip="مبالغ صُرفت من درج هذه اليومية لتسوية مستحقات الشركاء. ليست مصروفاً، لكنها تُنقص النقد المتوقع."/>
+                            <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding DrawerPayouts, StringFormat=N2}" Style="{StaticResource SummaryValue}" Foreground="{StaticResource Brush.ExpenseText}"
+                                       Visibility="{Binding HasDrawerPayouts, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         </Grid>
 
                         <!-- النقد المتوقع -->

@@ -151,7 +151,14 @@ public partial class DailyJournalViewModel : ObservableObject
     public bool HasTransport => TransportTotal > 0;
     public bool HasPettyCash => PettyCashTotal > 0;
 
-    public decimal ExpectedCash => (CashFloat ?? 0) + (CashSalesInput ?? 0) - TotalExpenses - ReturnsAmount - FreeOrdersAmount;
+    /// <summary>تسويات شركاء صُرفت من درج هذه اليومية (تُسجل من شاشة الخدمات المصرفية، وتُعرض هنا فقط).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ExpectedCash), nameof(Difference), nameof(DifferenceStatus), nameof(DifferenceColor), nameof(HasDrawerPayouts))]
+    private decimal drawerPayouts;
+
+    public bool HasDrawerPayouts => DrawerPayouts > 0;
+
+    public decimal ExpectedCash => (CashFloat ?? 0) + (CashSalesInput ?? 0) - TotalExpenses - DrawerPayouts - ReturnsAmount - FreeOrdersAmount;
     public decimal Difference => (ActualCash ?? 0) - ExpectedCash;
 
     public string BankingDifferenceStatus
@@ -965,6 +972,7 @@ public partial class DailyJournalViewModel : ObservableObject
         EmployeeName = journal.EmployeeName;
         Notes = journal.Notes ?? "";
         CashFloat = journal.CashFloat;
+        DrawerPayouts = journal.DrawerPayouts;
 
         CashSalesInput = journal.TotalSales - journal.BankingTotal;
         BankingSalesInput = journal.BankingTotal;

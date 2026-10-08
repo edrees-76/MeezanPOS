@@ -105,34 +105,23 @@ public class DatabaseUpgradeTests
             using (var old = new AppDbContext())
             {
                 old.GetService<IMigrator>().Migrate("20261008163212_MoveManualSqlToMigrations");
-                var supplier = new MeezanPOS.Domain.Entities.Supplier { Name = "مورد", IsActive = true };
-                var journal = new MeezanPOS.Domain.Entities.DailyJournal
-                {
-                    JournalDate = journalDate,
-                    EmployeeName = "كاشير",
-                    FinancialStatus = MeezanPOS.Domain.Enums.FinancialStatus.Posted,
-                };
-                var item = new MeezanPOS.Domain.Entities.DailyExpenseItem { SequenceNumber = 1, Amount = 40m, Category = "دفعة مورد" };
-                journal.ExpenseItems.Add(item);
-                old.AddRange(supplier, journal);
-                old.SaveChanges();
-
-                var wrong = new MeezanPOS.Domain.Entities.SupplierTransaction
-                {
-                    SupplierId = supplier.Id, Amount = 40m,
-                    SourceType = MeezanPOS.Domain.Enums.TransactionSourceType.DailyJournalPayment, SourceId = item.Id,
-                    TransactionDate = journalDate.AddDays(3).AddHours(14),
-                };
-                var right = new MeezanPOS.Domain.Entities.SupplierTransaction
-                {
-                    SupplierId = supplier.Id, Amount = 10m,
-                    SourceType = MeezanPOS.Domain.Enums.TransactionSourceType.ExternalPayment, SourceId = 999,
-                    TransactionDate = journalDate.AddDays(5),
-                };
-                old.AddRange(wrong, right);
-                old.SaveChanges();
-                wrongId = wrong.Id;
-                rightId = right.Id;
+                // SQL خام: نموذج EF الحالي فيه أعمدة أحدث من مخطط هذا الترحيل
+                old.Database.ExecuteSqlRaw(
+                    "INSERT INTO Suppliers (Id, Name, OpeningBalance, CreditLimit, CurrentBalance, IsActive, CreatedAt, IsDeleted) " +
+                    "VALUES (1, 'مورد', '0', '0', '0', 1, '2026-06-10 09:00:00', 0)");
+                old.Database.ExecuteSqlRaw(
+                    "INSERT INTO DailyJournals (Id, JournalDate, ShiftType, EmployeeName, CashFloat, TotalSales, BankingTotal, ReturnsTotal, FreeOrdersTotal, " +
+                    "TotalExpenses, ActualCash, FinancialStatus, RowVersion, CreatedAt, IsDeleted) " +
+                    "VALUES (1, '2026-06-10 00:00:00', 3, 'كاشير', '0', '100', '0', '0', '0', '40', '60', 2, 0, '2026-06-10 09:00:00', 0)");
+                old.Database.ExecuteSqlRaw(
+                    "INSERT INTO DailyExpenseItems (Id, DailyJournalId, SequenceNumber, Description, Amount, Type, CreatedAt, IsDeleted) " +
+                    "VALUES (7, 1, 1, 'دفعة مورد', '40', 2, '2026-06-10 09:00:00', 0)");
+                old.Database.ExecuteSqlRaw(
+                    "INSERT INTO SupplierTransactions (Id, SupplierId, Type, Amount, BalanceAfter, SourceType, SourceId, TransactionDate, CreatedAt, IsDeleted) VALUES " +
+                    "(1, 1, 2, '40', '0', 3, 7, '2026-06-13 14:00:00', '2026-06-13 14:00:00', 0), " +
+                    "(2, 1, 2, '10', '0', 4, 999, '2026-06-15 00:00:00', '2026-06-15 00:00:00', 0)");
+                wrongId = 1;
+                rightId = 2;
             }
 
             // 2) الترقية

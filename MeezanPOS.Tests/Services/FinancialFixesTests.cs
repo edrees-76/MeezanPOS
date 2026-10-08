@@ -61,12 +61,29 @@ public class FinancialFixesTests
         return supplier;
     }
 
+    // التسوية من صندوق الكاشير تُسجل على يومية اليوم المسودة
+    private static async Task<DailyJournal> AddDraftJournalAsync(AppDbContext context, DateTime? date = null)
+    {
+        var journal = new DailyJournal
+        {
+            JournalDate = date ?? DateTime.Today,
+            ShiftType = ShiftType.FullDay,
+            EmployeeName = "كاشير",
+            TotalSales = 2000m,
+            ActualCash = 2000m,
+        };
+        context.DailyJournals.Add(journal);
+        await context.SaveChangesAsync();
+        return journal;
+    }
+
     // ── تسوية ديون الشركاء ──────────────────────────────────────────
 
     [Fact]
     public async Task PartialSettlement_KeepsDebtUnpaid_UntilFullyCovered()
     {
         var s = Create();
+        await AddDraftJournalAsync(s.Context);
         var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 1000m, null, null, DateTime.Today);
 
         await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 400m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today);
@@ -80,6 +97,7 @@ public class FinancialFixesTests
     public async Task Settlement_AboveRemainingDebt_IsRejected()
     {
         var s = Create();
+        await AddDraftJournalAsync(s.Context);
         var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 500m, null, null, DateTime.Today);
         await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 300m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today);
 
@@ -92,6 +110,7 @@ public class FinancialFixesTests
     public async Task DeletingSettlement_RecomputesStatusFromRemainingSettlements()
     {
         var s = Create();
+        await AddDraftJournalAsync(s.Context);
         var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 1000m, null, null, DateTime.Today);
         await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 1000m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today);
         (await s.Context.OwnerDebts.FindAsync(debt.Id))!.Status.Should().Be(OwnerDebtStatus.Paid);
@@ -114,6 +133,57 @@ public class FinancialFixesTests
 
         await s.OwnerDebt.DeleteSettlementAsync(settlement.Id);
         (await s.Cash.GetCurrentBalanceAsync()).Should().Be(2000m);
+    }
+
+    [Fact]
+    public async Task CashRegisterSettlement_IsTrackedOnTheDaysJournal_NotAsShortage()
+    {
+        var s = Create();
+        var journal = await AddDraftJournalAsync(s.Context);
+        var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 700m, null, null, DateTime.Today);
+        // الكاشير صرف 300 من الدرج: النقد الفعلي أقل بـ 300
+        journal.ActualCash = 1700m;
+        await s.Context.SaveChangesAsync();
+
+        var settlement = await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 300m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today.AddHours(15));
+
+        settlement.DailyJournalId.Should().Be(journal.Id);
+        var after = await s.Context.DailyJournals.FindAsync(journal.Id);
+        after!.DrawerPayouts.Should().Be(300m);
+        after.Difference.Should().Be(0m, "the payout explains the missing cash instead of showing a shortage");
+        after.TotalExpenses.Should().Be(0m, "a partner settlement is not an expense");
+        (await s.Cash.GetCurrentBalanceAsync()).Should().Be(0m, "drawer cash reaches the restaurant cash only when the journal is posted");
+
+        await s.OwnerDebt.DeleteSettlementAsync(settlement.Id);
+        (await s.Context.DailyJournals.FindAsync(journal.Id))!.DrawerPayouts.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task CashRegisterSettlement_WithoutDraftJournalThatDay_IsRejected()
+    {
+        var s = Create();
+        await AddDraftJournalAsync(s.Context, DateTime.Today.AddDays(-3));
+        var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 700m, null, null, DateTime.Today);
+
+        var act = () => s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 300m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await s.Context.OwnerDebtSettlements.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task CashRegisterSettlement_OnPostedJournal_CannotBeDeleted()
+    {
+        var s = Create();
+        var journal = await AddDraftJournalAsync(s.Context);
+        var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 700m, null, null, DateTime.Today);
+        var settlement = await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 300m, OwnerDebtSettlementSource.CashRegister, null, null, DateTime.Today);
+        journal.FinancialStatus = FinancialStatus.Posted;
+        await s.Context.SaveChangesAsync();
+
+        var act = () => s.OwnerDebt.DeleteSettlementAsync(settlement.Id);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 
     [Theory]

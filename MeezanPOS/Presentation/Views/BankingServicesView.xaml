@@ -696,7 +696,7 @@
                     <!-- مصدر التمويل -->
                     <TextBlock Text="مصدر الدفع والتمويل من المطعم:" FontSize="12" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,0,6"/>
                     <ComboBox SelectedValue="{Binding SelectedSettlementSource}" SelectedValuePath="Tag" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="10,8" FontSize="14" Margin="0,0,0,12">
-                        <ComboBoxItem Content="النقدية المباشرة (صندوق الكاشير)" Tag="CashRegister"/>
+                        <ComboBoxItem Content="صندوق الكاشير (يُسجل على يومية اليوم)" Tag="CashRegister"/>
                         <ComboBoxItem Content="حساب بنكي للمطعم" Tag="Bank"/>
                         <ComboBoxItem Content="عهدة نقدية / نثرية" Tag="PettyCash"/>
                     </ComboBox>
