@@ -91,7 +91,7 @@ internal sealed class DemoGenerator
         {
             init.Database.Migrate();
         }
-        AppDbContext.MigrateDatabase();
+        AppDbContext.SeedData();
 
         _db = new AppDbContext();
         await SetupUsersAsync();

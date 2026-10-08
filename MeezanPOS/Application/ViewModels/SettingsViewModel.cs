@@ -481,6 +481,9 @@ public partial class SettingsViewModel : ObservableObject
                         throw;
                     }
 
+                    // إعادة مشغّلات حماية السجلات المرحّلة (حُذفت أعلاه لتفريغ البيانات؛ الترحيل لا يُعاد تطبيقه)
+                    MeezanPOS.Infrastructure.Data.PostedRecordTriggers.Recreate(conn);
+
                     // Turn foreign keys back on
                     using (var pragmaCmd = conn.CreateCommand())
                     {

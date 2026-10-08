@@ -137,7 +137,7 @@ public partial class App : System.Windows.Application
                     try
                     {
                         context.Database.Migrate();
-                        MeezanPOS.Infrastructure.Data.AppDbContext.MigrateDatabase();
+                        MeezanPOS.Infrastructure.Data.AppDbContext.SeedData();
                     }
                     catch (System.Exception ex)
                     {

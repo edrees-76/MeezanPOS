@@ -14,7 +14,7 @@ namespace MeezanPOS.Tests.Integration;
 
 /// <summary>
 /// ترقية قاعدة بيانات من إصدار قديم إلى الإصدار الحالي بنفس مسار بدء التشغيل:
-/// Database.Migrate ثم MigrateDatabase (أوامر SQL اليدوية). يتأكد أن البيانات القديمة باقية
+/// Database.Migrate ثم SeedData. يتأكد أن البيانات القديمة باقية
 /// وأن كل جداول النموذج قابلة للقراءة بعد الترقية (أي عمود ناقص يُفشل الاستعلام).
 /// </summary>
 public class DatabaseUpgradeTests
@@ -47,11 +47,24 @@ public class DatabaseUpgradeTests
             {
                 context.Database.Migrate();
             }
-            AppDbContext.MigrateDatabase();
+            AppDbContext.SeedData();
 
             // 3) التحقق
             using var check = new AppDbContext();
             check.Database.GetPendingMigrations().Should().BeEmpty();
+
+            // مشغّلات حماية السجلات المرحّلة يُنشئها ترحيل EF وحده
+            var conn = check.Database.GetDbConnection();
+            conn.Open();
+            using (var cmd = conn.CreateCommand())
+            {
+                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='trigger'";
+                var triggers = new System.Collections.Generic.List<string>();
+                using var reader = cmd.ExecuteReader();
+                while (reader.Read()) triggers.Add(reader.GetString(0));
+                triggers.Should().BeEquivalentTo(PostedRecordTriggers.Names);
+            }
+            check.Users.Should().ContainSingle(u => u.Username == "admin", "SeedData creates the default admin");
 
             var supplier = check.Suppliers.Single(s => s.Name == "مورد قديم");
             supplier.OpeningBalance.Should().Be(150.25m);
