@@ -7,6 +7,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <!-- رقم الإصدار الوحيد للمنظومة؛ سكربت بناء المثبّت يقرأه من هنا -->
+    <Version>1.1.0</Version>
     <ApplicationIcon>..\mizan_3d_icon_final_transparent.ico</ApplicationIcon>
   </PropertyGroup>
 

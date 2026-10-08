@@ -1,13 +1,28 @@
 ; ===================================================
 ; MeezanPOS Inno Setup Script
-; منظومة ميزان للمطاعم - MeezanPOS v1.0
+; منظومة ميزان للمطاعم - MeezanPOS v{#AppVersion}
 ; Designer: م. إدريس فتح الله الهرى
 ; ===================================================
 
+; الإصدار يُمرر من سكربت البناء (build_installer.ps1) ليطابق <Version> في MeezanPOS.csproj
+#ifndef AppVersion
+  #define AppVersion "1.1.0"
+#endif
+; جذر المستودع نسبةً لمكان هذا الملف (بدلاً من مسارات مطلقة لجهاز واحد)
+#define Root SourcePath + "\.."
+
 [Setup]
+; AppId يساوي اسم التطبيق القديم حتى تُحدَّث التثبيتات السابقة (v1.0 بلا AppId) بدلاً من تثبيت نسخة ثانية
+AppId=منظومة ميزان للمطاعم
 AppName=منظومة ميزان للمطاعم
-AppVersion=1.0.0
-AppVerName=منظومة ميزان للمطاعم v1.0
+AppVersion={#AppVersion}
+AppVerName=منظومة ميزان للمطاعم v{#AppVersion}
+VersionInfoVersion={#AppVersion}
+; إغلاق/تنبيه إذا كانت المنظومة تعمل أثناء التحديث (نفس اسم الـ Mutex في App.xaml.cs)
+AppMutex=MeezanPOS_SingleInstance_Mutex
+CloseApplications=yes
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 AppPublisher=م. إدريس فتح الله الهرى
 AppPublisherURL=mailto:EdreesElhery@gmail.com
 AppSupportPhone=0925126355
@@ -15,16 +30,15 @@ AppCopyright=جميع الحقوق محفوظة © 2026 — EDREES .F. ELHERY
 DefaultDirName={autopf}\MeezanPOS
 DefaultGroupName=منظومة ميزان للمطاعم
 AllowNoIcons=yes
-LicenseFile=d:\Meezan sys\Installer\license_ar.txt
-OutputDir=d:\Meezan sys\Installer\Output
-OutputBaseFilename=MeezanPOS_Setup_v1.0
-SetupIconFile=d:\Meezan sys\Installer\meezan_icon.ico
-WizardImageFile=d:\Meezan sys\Installer\meezan_logo.bmp
-WizardSmallImageFile=d:\Meezan sys\Installer\designer_logo.bmp
+LicenseFile={#Root}\Installer\license_ar.txt
+OutputDir={#Root}\Installer\Output
+OutputBaseFilename=MeezanPOS_Setup_v{#AppVersion}
+SetupIconFile={#Root}\Installer\meezan_icon.ico
+WizardImageFile={#Root}\Installer\meezan_logo.bmp
+WizardSmallImageFile={#Root}\Installer\designer_logo.bmp
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-WizardResizable=no
 DisableWelcomePage=no
 ShowLanguageDialog=no
 LanguageDetectionMethod=none
@@ -39,7 +53,7 @@ arabic.BeveledLabel=منظومة ميزان للمطاعم © 2026
 
 [CustomMessages]
 arabic.WelcomeLabel1=مرحباً بك في معالج تثبيت%nمنظومة ميزان للمطاعم
-arabic.WelcomeLabel2=ستقوم هذه الأداة بتثبيت%nمنظومة ميزان للمطاعم - MeezanPOS v1.0%nعلى جهازك بشكل احترافي وآمن.%n%nانقر على التالي للمتابعة.
+arabic.WelcomeLabel2=ستقوم هذه الأداة بتثبيت%nمنظومة ميزان للمطاعم - MeezanPOS v{#AppVersion}%nعلى جهازك بشكل احترافي وآمن.%n%nانقر على التالي للمتابعة.
 arabic.FinishedHeadingLabel=اكتمل تثبيت منظومة ميزان للمطاعم
 arabic.FinishedLabel=تم تثبيت المنظومة بنجاح على جهازك.%nيمكنك الآن البدء في استخدامها.
 arabic.ClickFinish=انقر على إنهاء لإغلاق معالج التثبيت.
@@ -50,17 +64,13 @@ Name: "desktopicon"; \
   GroupDescription: "اختصارات إضافية:"; \
   Flags: checkedonce
 
-Name: "taskbaricon"; \
-  Description: "إضافة إلى شريط المهام"; \
-  GroupDescription: "اختصارات إضافية:"; \
-  Flags: checkedonce
 
 [Files]
-Source: "d:\Meezan sys\Publish\*"; \
+Source: "{#Root}\Publish\*"; \
   DestDir: "{app}"; \
   Flags: ignoreversion recursesubdirs createallsubdirs
 
-Source: "d:\Meezan sys\MeezanPOS\Presentation\Resources\designer_logo.png"; \
+Source: "{#Root}\MeezanPOS\Presentation\Resources\designer_logo.png"; \
   DestDir: "{app}\Resources"; \
   Flags: ignoreversion
 
@@ -75,9 +85,6 @@ Name: "{autodesktop}\منظومة ميزان للمطاعم"; \
   Filename: "{app}\MeezanPOS.exe"; \
   Tasks: desktopicon
 
-Name: "{userprograms}\منظومة ميزان للمطاعم"; \
-  Filename: "{app}\MeezanPOS.exe"; \
-  Tasks: taskbaricon
 
 [Run]
 Filename: "{app}\MeezanPOS.exe"; \
@@ -113,7 +120,7 @@ begin
   AboutMemo.ReadOnly := True;
   AboutMemo.Font.Size := 10;
   AboutMemo.Lines.Text :=
-    'منظومة ميزان للمطاعم — MeezanPOS v1.0' + #13#10 +
+    'منظومة ميزان للمطاعم — MeezanPOS v{#AppVersion}' + #13#10 +
     '================================================' + #13#10 +
     '' + #13#10 +
     'منظومة متكاملة لإدارة المطاعم مصممة خصيصاً' + #13#10 +
@@ -185,7 +192,7 @@ begin
 
   WizardForm.WelcomeLabel2.Caption :=
     'ستقوم هذه الأداة بتثبيت' + #13#10 +
-    'منظومة ميزان للمطاعم - MeezanPOS v1.0' + #13#10 +
+    'منظومة ميزان للمطاعم - MeezanPOS v{#AppVersion}' + #13#10 +
     'على جهازك بشكل احترافي وآمن.' + #13#10 +
     '' + #13#10 +
     'انقر على التالي للمتابعة.';

@@ -47,3 +47,9 @@ Desktop.ini
 # Custom Publish & Installer build outputs
 Publish/
 Installer/Output/
+
+# Test results and coverage reports
+[Tt]est[Rr]esults/
+
+# Local addons (not part of the product)
+MeezanPOS/Addons/
