@@ -27,6 +27,8 @@ public static class MessageBoxMock
     {
         EnsureDatabaseCreated();
         MeezanPOS.Presentation.Services.Dialogs.Current = new FakeDialogService();
+        if (MeezanPOS.Presentation.Services.AppWindows.Current is not FakeWindowService)
+            MeezanPOS.Presentation.Services.AppWindows.Current = new FakeWindowService();
         if (_harmony != null) return;
         _harmony = new Harmony("com.meezanpos.tests.messageboxmock");
 

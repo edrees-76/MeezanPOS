@@ -736,13 +736,12 @@ public partial class WagesManagementViewModel : ObservableObject
             return;
         }
 
-        var dialog = new MeezanPOS.Presentation.Views.DeleteReasonDialog();
-        dialog.Owner = System.Windows.Application.Current.MainWindow;
-        if (dialog.ShowDialog() != true) return;
+        var deleteReason = AppWindows.Current.AskDeleteReason();
+        if (deleteReason == null) return;
 
         try
         {
-            string reason = $"{dialog.SelectedReason} - {dialog.SelectedDetailReason}";
+            string reason = deleteReason.ToString();
             var session = AppServiceProvider.Resolve<ISessionService>();
             string deletedBy = session.CurrentUsername;
             int? deletedByUserId = session.CurrentUser?.Id;
@@ -810,22 +809,14 @@ public partial class WagesManagementViewModel : ObservableObject
     public async Task OpenWorkerStatementAsync(WorkerWageSummary summary)
     {
         if (summary == null) return;
-        var window = new MeezanPOS.Presentation.Views.WorkerStatementWindow(summary)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
-        window.ShowDialog();
+        AppWindows.Current.ShowWorkerStatement(summary);
         await LoadAllDataAsync();
     }
 
     [RelayCommand]
     public async Task OpenAddWorkerDialogAsync()
     {
-        var dialog = new MeezanPOS.Presentation.Views.WorkerEditDialog(null)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
-        if (dialog.ShowDialog() == true)
+        if (AppWindows.Current.EditWorker(null))
         {
             await LoadAllDataAsync();
         }
@@ -835,11 +826,7 @@ public partial class WagesManagementViewModel : ObservableObject
     public async Task OpenEditWorkerDialogAsync(Worker worker)
     {
         if (worker == null) return;
-        var dialog = new MeezanPOS.Presentation.Views.WorkerEditDialog(worker)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
-        if (dialog.ShowDialog() == true)
+        if (AppWindows.Current.EditWorker(worker))
         {
             await LoadAllDataAsync();
         }

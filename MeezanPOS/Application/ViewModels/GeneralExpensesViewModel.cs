@@ -486,11 +486,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         DialogTitle = "إضافة مصروف عام";
         _ = LoadWorkerNamesAsync();
         _ = LoadPartnerNamesAsync();
-        var dialog = new Presentation.Views.AddGeneralExpenseDialog
-        {
-            DataContext = this
-        };
-        dialog.ShowDialog();
+        AppWindows.Current.ShowGeneralExpenseForm(this);
     }
 
     [RelayCommand]
@@ -1000,11 +996,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         _ = LoadWorkerNamesAsync();
         _ = LoadPartnerNamesAsync();
 
-        var dialog = new Presentation.Views.AddGeneralExpenseDialog
-        {
-            DataContext = this
-        };
-        dialog.ShowDialog();
+        AppWindows.Current.ShowGeneralExpenseForm(this);
     }
 
     [RelayCommand]
@@ -1051,11 +1043,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
         _ = LoadWorkerNamesAsync();
         _ = LoadPartnerNamesAsync();
 
-        var dialog = new Presentation.Views.AddGeneralExpenseDialog
-        {
-            DataContext = this
-        };
-        dialog.ShowDialog();
+        AppWindows.Current.ShowGeneralExpenseForm(this);
     }
 
     [RelayCommand]
@@ -1149,15 +1137,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
     [RelayCommand]
     private async System.Threading.Tasks.Task OpenWorkerWagesDialogAsync()
     {
-        var dialog = new Presentation.Views.WorkerWagesDialog();
-        var vm = new WorkerWagesDialogViewModel();
-        await vm.LoadWorkersAsync(SelectedWorkerWagesDetails);
-        dialog.DataContext = vm;
-        dialog.Owner = System.Windows.Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive);
-        if (dialog.ShowDialog() == true)
+        var result = await AppWindows.Current.EditWorkerWagesAsync(SelectedWorkerWagesDetails);
+        if (result != null)
         {
-            SelectedWorkerWagesDetails = vm.ResultDetails;
-            InputAmount = vm.TotalAmountPaid;
+            SelectedWorkerWagesDetails = result.Details;
+            InputAmount = result.TotalPaid;
         }
     }
 
@@ -1289,25 +1273,10 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
 
         // إظهار نافذة إدخال سبب فك الترحيل
-        bool dialogResult = false;
-        string selectedReason = string.Empty;
-        string detailReason = string.Empty;
-
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new Presentation.Views.PeriodUnlockDialog();
-            if (System.Windows.Application.Current.MainWindow != null)
-                dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-            if (dialog.ShowDialog() == true)
-            {
-                selectedReason = dialog.SelectedReason;
-                detailReason = dialog.SelectedDetailReason;
-                dialogResult = true;
-            }
-        });
-
-        if (!dialogResult) return;
+        var unlock = AppWindows.Current.AskPeriodUnlockReason();
+        if (unlock == null) return;
+        string selectedReason = unlock.Reason;
+        string detailReason = unlock.Detail;
 
         var reason = $"{selectedReason} - {detailReason}";
 
@@ -1533,25 +1502,10 @@ public partial class GeneralExpensesViewModel : ObservableObject
     [RelayCommand]
     private async System.Threading.Tasks.Task PostPeriodAsync()
     {
-        DateTime startDate = DateTime.MinValue;
-        DateTime endDate = DateTime.MinValue;
-        bool dateSelected = false;
-
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new Presentation.Views.DatePeriodSelectionDialog(DateFrom, DateTo);
-            if (System.Windows.Application.Current.MainWindow != null)
-                dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-            if (dialog.ShowDialog() == true)
-            {
-                startDate = dialog.SelectedStartDate;
-                endDate = dialog.SelectedEndDate;
-                dateSelected = true;
-            }
-        });
-
-        if (!dateSelected) return;
+        var range = AppWindows.Current.AskDateRange(DateFrom, DateTo);
+        if (range == null) return;
+        DateTime startDate = range.Value.Start;
+        DateTime endDate = range.Value.End;
 
         try
         {

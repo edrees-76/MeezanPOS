@@ -168,14 +168,7 @@ public partial class ClosingAccountViewModel : ObservableObject
     {
         if (Summary == null) return;
 
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new Presentation.Views.ClosingDetailsDialog(category, Summary.Liabilities, Summary.Suppliers)
-            {
-                Owner = System.Windows.Application.Current.MainWindow
-            };
-            dialog.ShowDialog();
-        });
+        AppWindows.Current.ShowClosingDetails(category, Summary.Liabilities, Summary.Suppliers);
     }
 
     [RelayCommand]

@@ -307,4 +307,35 @@ public class DailyJournalViewModelTests
         result.Should().BeTrue();
         mockPosting.Verify(p => p.UnpostEntityAsync<DailyJournal>(456, "Incorrect calculations", "admin"), Times.Once);
     }
+
+    [StaFact]
+    public void WorkerWagesDialog_AcceptedResult_UpdatesExpenseItem_WithoutOpeningWindows()
+    {
+        var vm = CreateViewModel();
+        var fake = (FakeWindowService)MeezanPOS.Presentation.Services.AppWindows.Current;
+        var details = new List<WorkerTransactionDetailDto> { new() { WorkerId = 1, WorkerName = "عامل", IsAttended = true, AmountPaid = 75m } };
+        fake.WorkerWages = new MeezanPOS.Presentation.Services.WorkerWagesResult(details, 75m);
+
+        var item = vm.ExpenseItems[0];
+        vm.OpenWorkerWagesDialogCommand.ExecuteAsync(item).GetAwaiter().GetResult();
+
+        item.Amount.Should().Be(75m);
+        item.SelectedWorkerWagesDetails.Should().BeSameAs(details);
+        fake.WorkerWages = null;
+    }
+
+    [StaFact]
+    public void WorkerWagesDialog_Cancelled_LeavesExpenseItemUnchanged()
+    {
+        var vm = CreateViewModel();
+        var fake = (FakeWindowService)MeezanPOS.Presentation.Services.AppWindows.Current;
+        fake.WorkerWages = null;
+        var item = vm.ExpenseItems[0];
+        item.Amount = 10m;
+
+        vm.OpenWorkerWagesDialogCommand.ExecuteAsync(item).GetAwaiter().GetResult();
+
+        item.Amount.Should().Be(10m);
+        fake.Calls.Should().Contain("EditWorkerWagesAsync");
+    }
 }

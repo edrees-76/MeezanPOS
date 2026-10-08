@@ -74,11 +74,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ChangePassword()
     {
-        var dialog = new Presentation.Views.ChangePasswordDialog(isForced: false)
-        {
-            Owner = System.Windows.Application.Current.MainWindow
-        };
-        dialog.ShowDialog();
+        AppWindows.Current.ChangePassword(forced: false);
     }
 
     // ترتيب عناصر القائمة الجانبية (يطابق MainView.xaml واختصارات Ctrl+1..Ctrl+0)
@@ -258,17 +254,6 @@ public partial class MainViewModel : ObservableObject
 
         _session?.ClearSession();
 
-        var currentWindow = System.Windows.Application.Current.MainWindow;
-        var loginView = new Presentation.Views.LoginView();
-        System.Windows.Application.Current.MainWindow = loginView;
-        loginView.Show();
-        
-        foreach (Window window in System.Windows.Application.Current.Windows)
-        {
-            if (window != loginView)
-            {
-                window.Close();
-            }
-        }
+        AppWindows.Current.ShowLogin();
     }
 }

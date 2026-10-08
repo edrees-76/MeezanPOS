@@ -200,22 +200,15 @@ public partial class SettingsViewModel : ObservableObject
     private void OpenUserManagement()
     {
         if (!CanManageUsers) return;
-        var window = new Presentation.Views.UserManagementWindow { Owner = System.Windows.Application.Current.MainWindow };
-        window.ShowDialog();
+        AppWindows.Current.ShowUserManagement();
     }
 
     [RelayCommand]
     private async Task BackupNowAsync()
     {
-        var dialog = new Microsoft.Win32.OpenFolderDialog
+        var folder = AppWindows.Current.PickFolder("اختر مجلد حفظ النسخ الاحتياطية", string.IsNullOrEmpty(PreferredBackupPath) ? "" : PreferredBackupPath);
+        if (folder != null)
         {
-            Title = "اختر مجلد حفظ النسخ الاحتياطية",
-            InitialDirectory = string.IsNullOrEmpty(PreferredBackupPath) ? "" : PreferredBackupPath
-        };
-
-        if (dialog.ShowDialog() == true)
-        {
-            var folder = dialog.FolderName;
             PreferredBackupPath = folder; // Auto-save
 
             var fileName = $"Meezan_Backup_{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
@@ -255,16 +248,9 @@ public partial class SettingsViewModel : ObservableObject
                 }
             }
 
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var selectedFile = AppWindows.Current.PickFile("اختر ملف قاعدة البيانات لاستعادته", "SQLite Database (*.db)|*.db");
+            if (selectedFile != null)
             {
-                Title = "اختر ملف قاعدة البيانات لاستعادته",
-                Filter = "SQLite Database (*.db)|*.db",
-                DefaultExt = ".db"
-            };
-
-            if (dialog.ShowDialog() == true)
-            {
-                var selectedFile = dialog.FileName;
 
                 var result = Dialogs.Show(
                     "تحذير: استعادة قاعدة البيانات ستؤدي إلى استبدال كافة البيانات الحالية بالبيانات الموجودة في الملف المحدد بشكل نهائي ولا يمكن التراجع عن ذلك.\n\nهل أنت متأكد من رغبتك في الاستمرار؟",

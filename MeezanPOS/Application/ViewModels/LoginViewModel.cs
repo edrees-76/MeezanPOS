@@ -112,18 +112,7 @@ public partial class LoginViewModel : ObservableObject
             // تُفرض أيضاً إذا كانت كلمة المرور الحالية ضعيفة (مثل admin/admin الافتراضية)
             if (user.MustChangePassword || UserManagementService.ValidatePassword(Password, user.Username) != null)
             {
-                // المالك هو نافذة الدخول الظاهرة. لا نستخدم Application.MainWindow هنا: عند غيابه يجعل WPF
-                // أول نافذة تُنشأ (الحوار نفسه) هي MainWindow فيفشل ضبط المالك.
-                var loginWindow = System.Windows.Application.Current.Windows
-                    .OfType<Presentation.Views.LoginView>()
-                    .FirstOrDefault(w => w.IsVisible);
-                if (loginWindow != null)
-                    System.Windows.Application.Current.MainWindow = loginWindow;
-
-                var dialog = new Presentation.Views.ChangePasswordDialog(isForced: true);
-                if (loginWindow != null)
-                    dialog.Owner = loginWindow;
-                if (dialog.ShowDialog() != true)
+                if (!AppWindows.Current.ChangePassword(forced: true))
                 {
                     session.ClearSession();
                     ErrorMessage = "يجب تغيير كلمة المرور للمتابعة.";
@@ -131,21 +120,10 @@ public partial class LoginViewModel : ObservableObject
                 }
             }
 
-            var mainView = new Presentation.Views.MainView();
-            System.Windows.Application.Current.MainWindow = mainView;
-            mainView.Show();
+            AppWindows.Current.ShowMainShell();
 
             // تحقق صامت من وجود إصدار أحدث (مرة يومياً، لا يعطل الدخول)
             _ = UpdateChecker.NotifyIfNewerAsync(manual: false);
-
-            // Close all other windows (like LoginView)
-            foreach (Window window in System.Windows.Application.Current.Windows)
-            {
-                if (window != mainView)
-                {
-                    window.Close();
-                }
-            }
         }
         catch (Exception ex)
         {

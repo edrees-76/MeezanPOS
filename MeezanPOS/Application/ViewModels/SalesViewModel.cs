@@ -652,25 +652,10 @@ public partial class SalesViewModel : ObservableObject
         }
 
         // 2. إظهار نافذة إدخال سبب فك الترحيل
-        bool dialogResult = false;
-        string selectedReason = string.Empty;
-        string detailReason = string.Empty;
-
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new MeezanPOS.Presentation.Views.PeriodUnlockDialog();
-            if (System.Windows.Application.Current.MainWindow != null)
-                dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-            if (dialog.ShowDialog() == true)
-            {
-                selectedReason = dialog.SelectedReason;
-                detailReason = dialog.SelectedDetailReason;
-                dialogResult = true;
-            }
-        });
-
-        if (!dialogResult) return;
+        var unlock = AppWindows.Current.AskPeriodUnlockReason();
+        if (unlock == null) return;
+        string selectedReason = unlock.Reason;
+        string detailReason = unlock.Detail;
 
         var reason = $"{selectedReason} - {detailReason}";
 
@@ -1144,25 +1129,10 @@ public partial class SalesViewModel : ObservableObject
     [RelayCommand]
     public async Task PostPeriodAsync()
     {
-        System.DateTime startDate = System.DateTime.MinValue;
-        System.DateTime endDate = System.DateTime.MinValue;
-        bool dateSelected = false;
-
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new MeezanPOS.Presentation.Views.DatePeriodSelectionDialog(FilterStartDate, FilterEndDate);
-            if (System.Windows.Application.Current.MainWindow != null)
-                dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-            if (dialog.ShowDialog() == true)
-            {
-                startDate = dialog.SelectedStartDate;
-                endDate = dialog.SelectedEndDate;
-                dateSelected = true;
-            }
-        });
-
-        if (!dateSelected) return;
+        var range = AppWindows.Current.AskDateRange(FilterStartDate, FilterEndDate);
+        if (range == null) return;
+        DateTime startDate = range.Value.Start;
+        DateTime endDate = range.Value.End;
 
         try
         {
@@ -1306,15 +1276,7 @@ public partial class SalesViewModel : ObservableObject
     {
         if (movement == null) return;
 
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var window = System.Windows.Application.Current.MainWindow;
-            var detailsDialog = new MeezanPOS.Presentation.Views.TransactionDetailsViewWindow(movement)
-            {
-                Owner = window
-            };
-            detailsDialog.ShowDialog();
-        });
+        AppWindows.Current.ShowTransactionDetails(movement);
     }
 
     [RelayCommand]
@@ -1471,25 +1433,10 @@ public partial class SalesViewModel : ObservableObject
             return;
         }
 
-        bool dialogResult = false;
-        string reason = string.Empty;
-        string detailReason = string.Empty;
-
-        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-        {
-            var dialog = new MeezanPOS.Presentation.Views.PeriodUnlockDialog();
-            if (System.Windows.Application.Current.MainWindow != null)
-                dialog.Owner = System.Windows.Application.Current.MainWindow;
-
-            if (dialog.ShowDialog() == true)
-            {
-                reason = dialog.SelectedReason;
-                detailReason = dialog.SelectedDetailReason;
-                dialogResult = true;
-            }
-        });
-
-        if (!dialogResult) return;
+        var unlock = AppWindows.Current.AskPeriodUnlockReason();
+        if (unlock == null) return;
+        string reason = unlock.Reason;
+        string detailReason = unlock.Detail;
 
         IsLoading = true;
         try

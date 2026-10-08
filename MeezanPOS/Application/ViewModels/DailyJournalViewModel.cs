@@ -640,15 +640,11 @@ public partial class DailyJournalViewModel : ObservableObject
     private async System.Threading.Tasks.Task OpenWorkerWagesDialogAsync(ExpenseItemViewModel item)
     {
         if (item == null) return;
-        var dialog = new Presentation.Views.WorkerWagesDialog();
-        var vm = new WorkerWagesDialogViewModel();
-        await vm.LoadWorkersAsync(item.SelectedWorkerWagesDetails);
-        dialog.DataContext = vm;
-        dialog.Owner = System.Windows.Application.Current.Windows.OfType<System.Windows.Window>().FirstOrDefault(w => w.IsActive);
-        if (dialog.ShowDialog() == true)
+        var result = await AppWindows.Current.EditWorkerWagesAsync(item.SelectedWorkerWagesDetails);
+        if (result != null)
         {
-            item.SelectedWorkerWagesDetails = vm.ResultDetails;
-            item.Amount = vm.TotalAmountPaid;
+            item.SelectedWorkerWagesDetails = result.Details;
+            item.Amount = result.TotalPaid;
             RefreshCalculations();
         }
     }
