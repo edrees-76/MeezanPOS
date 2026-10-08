@@ -12,62 +12,6 @@ using System.Linq;
 using System.Windows;
 
 namespace MeezanPOS.Application.ViewModels;
-
-/// <summary>
-/// عنصر عرض مصروف عام
-/// </summary>
-public partial class GeneralExpenseDisplayItem : ObservableObject
-{
-    [ObservableProperty]
-    private bool isSelected;
-
-    public int Sequence { get; set; }
-    public int Id { get; set; }
-    public GeneralExpenseType ExpenseType { get; set; }
-    public string? CustomExpenseName { get; set; }
-    public string ExpenseTypeName => (ExpenseType == GeneralExpenseType.Other && !string.IsNullOrEmpty(CustomExpenseName)) 
-        ? CustomExpenseName 
-        : GeneralExpensesViewModel.GetExpenseTypeName(ExpenseType);
-    public decimal Amount { get; set; }
-    public DateTime PaymentDate { get; set; }
-    public string PaymentDateDisplay => PaymentDate.ToString("yyyy/MM/dd");
-    public PaymentMethodType PaymentMethod { get; set; }
-    public string PaymentMethodName { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public string? WorkerName { get; set; }
-    public int? WorkerId { get; set; }
-    public int? BankAccountId { get; set; }
-
-    // --- Posting System Properties ---
-    public FinancialStatus FinancialStatus { get; set; }
-    public string FinancialStatusName => FinancialStatus switch
-    {
-        FinancialStatus.Draft => "مفتوح",
-        FinancialStatus.Reviewed => "مراجَع",
-        FinancialStatus.Posted => "مرحّل",
-        FinancialStatus.Archived => "مؤرشف",
-        _ => "غير معروف"
-    };
-    public string FinancialStatusColor => FinancialStatus switch
-    {
-        FinancialStatus.Draft => "#10b981", // Green
-        FinancialStatus.Reviewed => "#f59e0b", // Amber
-        FinancialStatus.Posted => "#6b7280", // Gray
-        FinancialStatus.Archived => "#374151", // Dark Gray
-        _ => "#000000"
-    };
-    public string FinancialStatusIcon => FinancialStatus switch
-    {
-        FinancialStatus.Draft => "LockOpenVariantOutline",
-        FinancialStatus.Reviewed => "EyeCheckOutline",
-        FinancialStatus.Posted => "Lock",
-        FinancialStatus.Archived => "Archive",
-        _ => "HelpCircleOutline"
-    };
-    public bool IsDraft => FinancialStatus == FinancialStatus.Draft;
-    public bool IsPosted => FinancialStatus == FinancialStatus.Posted;
-}
-
 public partial class GeneralExpensesViewModel : ObservableObject
 {
     private readonly IBankService _bankService;
@@ -76,6 +20,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     private readonly ICashLedgerService _cashLedgerService;
     private readonly IPostingService _postingService;
     private readonly ISessionService _sessionService;
+    private readonly IGeneralExpenseService _expenses;
 
     public GeneralExpensesViewModel() : this(
         AppServiceProvider.Resolve<IBankService>(),
@@ -83,7 +28,9 @@ public partial class GeneralExpensesViewModel : ObservableObject
         AppServiceProvider.Resolve<IWagesService>(),
         AppServiceProvider.Resolve<ICashLedgerService>(),
         AppServiceProvider.Resolve<IPostingService>(),
-        AppServiceProvider.Resolve<ISessionService>())
+        AppServiceProvider.Resolve<ISessionService>(),
+        new GeneralExpenseService(DefaultDbContextFactory.Instance,
+            Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>(AppServiceProvider.Provider)))
     {
     }
 
@@ -93,7 +40,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
         IWagesService wagesService,
         ICashLedgerService cashLedgerService,
         IPostingService postingService,
-        ISessionService sessionService)
+        ISessionService sessionService,
+        IGeneralExpenseService? expenseService = null)
     {
         _bankService = bankService ?? throw new ArgumentNullException(nameof(bankService));
         _ownerDebtService = ownerDebtService ?? throw new ArgumentNullException(nameof(ownerDebtService));
@@ -101,6 +49,8 @@ public partial class GeneralExpensesViewModel : ObservableObject
         _cashLedgerService = cashLedgerService ?? throw new ArgumentNullException(nameof(cashLedgerService));
         _postingService = postingService ?? throw new ArgumentNullException(nameof(postingService));
         _sessionService = sessionService ?? throw new ArgumentNullException(nameof(sessionService));
+        // بدون خدمة ممررة (الاختبارات): الكتابة عبر الخدمات الممررة نفسها
+        _expenses = expenseService ?? new GeneralExpenseService(DefaultDbContextFactory.Instance, null, bankService, ownerDebtService, cashLedgerService);
 
         InitializeLists();
         LoadExpenses();
@@ -374,40 +324,14 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            IQueryable<Domain.Entities.GeneralExpense> query;
-
-            if (ShowPostedArchive)
+            var from = DateFrom;
+            var to = DateTo;
+            if (ShowPostedArchive && ArchiveLevel == 1 && SelectedArchivedMonth != null)
             {
-                if (ArchiveLevel == 1 && SelectedArchivedMonth != null)
-                {
-                    var startFilter = new DateTime(SelectedArchivedMonth.Year, SelectedArchivedMonth.Month, 1);
-                    var endFilter = startFilter.AddMonths(1).AddDays(-1);
-                    query = db.GeneralExpenses
-                        .Where(e => !e.IsDeleted && e.PaymentDate.Date >= startFilter && e.PaymentDate.Date <= endFilter &&
-                                   (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived));
-                }
-                else
-                {
-                    query = db.GeneralExpenses
-                        .Where(e => !e.IsDeleted && e.PaymentDate.Date >= DateFrom.Date && e.PaymentDate.Date <= DateTo.Date &&
-                                   (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived));
-                }
+                from = new DateTime(SelectedArchivedMonth.Year, SelectedArchivedMonth.Month, 1);
+                to = from.AddMonths(1).AddDays(-1);
             }
-            else
-            {
-                query = db.GeneralExpenses
-                    .Where(e => !e.IsDeleted && e.PaymentDate.Date >= DateFrom.Date && e.PaymentDate.Date <= DateTo.Date &&
-                               e.FinancialStatus != FinancialStatus.Posted && e.FinancialStatus != FinancialStatus.Archived);
-            }
-
-            if (SelectedFilterType.HasValue)
-                query = query.Where(e => e.ExpenseType == SelectedFilterType.Value);
-
-            if (SelectedFilterPaymentMethod.HasValue)
-                query = query.Where(e => e.PaymentMethod == SelectedFilterPaymentMethod.Value);
-
-            var data = query.OrderByDescending(e => e.PaymentDate).ToList();
+            var data = _expenses.Query(new GeneralExpenseQuery(ShowPostedArchive, from, to, SelectedFilterType, SelectedFilterPaymentMethod));
 
             foreach (var item in Expenses)
             {
@@ -531,338 +455,34 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var db = new AppDbContext();
-            var bankService = _bankService;
-            var ownerDebtService = _ownerDebtService;
-
-            if (await PeriodLock.IsDateLockedAsync(db, InputPaymentDate))
+            var isSalaries = SelectedExpenseType == GeneralExpenseType.Salaries;
+            var result = await _expenses.SaveAsync(new GeneralExpenseSaveRequest
             {
-                Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
+                EditingId = EditingId,
+                ExpenseType = SelectedExpenseType,
+                TypeDisplayName = SelectedExpenseType == GeneralExpenseType.Other ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType),
+                CustomExpenseName = SelectedExpenseType == GeneralExpenseType.Other ? InputCustomExpenseType.Trim() : null,
+                Amount = InputAmount.Value,
+                PaymentDate = InputPaymentDate,
+                PaymentMethod = SelectedPaymentMethod,
+                Description = InputDescription,
+                WorkerName = isSalaries ? (IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(InputWorkerName) ? InputWorkerName : null)) : null,
+                WorkerId = (isSalaries && !IsDetailedWage) ? InputWorkerId : null,
+                BankAccountId = SelectedBankAccountForExpense?.Id,
+                BankReferenceNumber = InputReferenceNumber,
+                PartnerName = InputPartnerName,
+                WorkerTransactions = (isSalaries && IsDetailedWage && SelectedWorkerWagesDetails != null)
+                    ? BuildWorkerTransactions(SelectedWorkerWagesDetails, InputPaymentDate)
+                    : new List<WorkerTransaction>(),
+            });
+
+            if (!result.Success)
+            {
+                Dialogs.Show(result.Error!, result.ErrorTitle ?? "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            if (EditingId.HasValue)
-            {
-                // --- تعديل ---
-                var existing = await db.GeneralExpenses.FindAsync(EditingId.Value);
-                if (existing != null)
-                {
-                    if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
-                    {
-                        Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
-
-                    if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
-                    {
-                        Dialogs.Show("لا يمكن تعديل مصروف مرحّل مالياً.", "منع التعديل", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
-                    }
-
-                    // إدارة الحركة البنكية القديمة (حذفها أولاً وإعادة بنائها إذا تطلب الأمر)
-                    await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
-
-                    // حذف ديون المالك القديمة المرتبطة بهذا المصروف
-                    var oldDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
-                    foreach (var debt in oldDebts)
-                    {
-                        await ownerDebtService.DeleteDebtAsync(debt.Id);
-                    }
-
-                    // عكس الحركة النقدية القديمة إن وجدت
-                    var cashLedgerService = _cashLedgerService;
-                    var oldCashMovement = await db.CashMovements.FindLiveForSourceAsync(SourceTypes.GeneralExpense, existing.Id);
-                    if (oldCashMovement != null)
-                    {
-                        await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "تعديل المصروف العام");
-                    }
-
-                    // حذف كافة حركات العمال القديمة المرتبطة بهذا المصروف
-                    var oldWorkerTxs = await db.WorkerTransactions.Where(t => t.GeneralExpenseId == existing.Id && !t.IsDeleted).ToListAsync();
-                    foreach (var tx in oldWorkerTxs)
-                    {
-                        tx.IsDeleted = true;
-                        tx.UpdatedAt = DateTime.UtcNow;
-                    }
-                    await db.SaveChangesAsync();
-
-                    existing.ExpenseType = SelectedExpenseType;
-                    existing.CustomExpenseName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType.Trim() : null;
-                    existing.Amount = InputAmount.Value;
-                    existing.PaymentDate = InputPaymentDate;
-                    existing.PaymentMethod = SelectedPaymentMethod;
-                    existing.Description = InputDescription;
-                    existing.WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries) ? (IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(InputWorkerName) ? InputWorkerName : null)) : null;
-                    existing.WorkerId = (SelectedExpenseType == GeneralExpenseType.Salaries && !IsDetailedWage) ? InputWorkerId : null;
-                    
-                    if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
-                    {
-                        existing.BankAccountId = SelectedBankAccountForExpense.Id;
-                    }
-                    else
-                    {
-                        existing.BankAccountId = null;
-                    }
-
-                    existing.UpdatedAt = DateTime.UtcNow;
-                    await db.SaveChangesAsync();
-
-                    // إعادة إنشاء حركات العمال التفصيلية الجديدة
-                    if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && SelectedWorkerWagesDetails != null)
-                    {
-                        foreach (var d in SelectedWorkerWagesDetails)
-                        {
-                            if (d.IsAttended)
-                            {
-                                var accrualTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = InputPaymentDate,
-                                    Type = WorkerTransactionType.WageAccrual,
-                                    DebitAmount = 0m,
-                                    CreditAmount = d.ActualWage,
-                                    GeneralExpenseId = existing.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - مصروف عام" : $"استحقاق: {d.Notes}"
-                                };
-                                db.WorkerTransactions.Add(accrualTx);
-
-                                if (d.AmountPaid > 0)
-                                {
-                                    var payTx = new WorkerTransaction
-                                    {
-                                        WorkerId = d.WorkerId,
-                                        WorkerName = d.WorkerName,
-                                        TransactionDate = InputPaymentDate,
-                                        Type = WorkerTransactionType.Payment,
-                                        DebitAmount = d.AmountPaid,
-                                        CreditAmount = 0m,
-                                        GeneralExpenseId = existing.Id,
-                                        Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - مصروف عام" : $"سداد: {d.Notes}"
-                                    };
-                                    db.WorkerTransactions.Add(payTx);
-                                }
-                            }
-
-                            if (d.Advance > 0)
-                            {
-                                var advTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = InputPaymentDate,
-                                    Type = WorkerTransactionType.Advance,
-                                    DebitAmount = d.Advance,
-                                    CreditAmount = 0m,
-                                    GeneralExpenseId = existing.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - مصروف عام" : $"سلفة: {d.Notes}"
-                                };
-                                db.WorkerTransactions.Add(advTx);
-                            }
-
-                            if (d.Deduction > 0)
-                            {
-                                var dedTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = InputPaymentDate,
-                                    Type = WorkerTransactionType.Deduction,
-                                    DebitAmount = d.Deduction,
-                                    CreditAmount = 0m,
-                                    GeneralExpenseId = existing.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - مصروف عام" : $"خصم: {d.Notes}"
-                                };
-                                db.WorkerTransactions.Add(dedTx);
-                            }
-                        }
-                        await db.SaveChangesAsync();
-                    }
-
-                    // تسجيل الحركة البنكية الجديدة
-                    if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
-                    {
-                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                        var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                        await bankService.RecordTransactionAsync(
-                            SelectedBankAccountForExpense.Id,
-                            BankTransactionType.ExpensePayment,
-                            InputAmount.Value,
-                            InputReferenceNumber,
-                            notes,
-                            "GeneralExpense",
-                            existing.Id,
-                            InputPaymentDate
-                        );
-                    }
-                    else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
-                    {
-                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                        var notes = $"مصروف عام شخصي: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                        await ownerDebtService.RecordDebtAsync(
-                            InputPartnerName.Trim(),
-                            InputAmount.Value,
-                            SelectedExpenseType.ToString(),
-                            notes,
-                            InputPaymentDate,
-                            "GeneralExpense",
-                            existing.Id
-                        );
-                    }
-                    else if (SelectedPaymentMethod == PaymentMethodType.Cash)
-                    {
-                        var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                        var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                        await cashLedgerService.RecordMovementAsync(
-                            CashMovementType.CashOut,
-                            InputAmount.Value,
-                            "GeneralExpense",
-                            existing.Id,
-                            notes,
-                            InputPaymentDate
-                        );
-                    }
-
-                    Dialogs.Show("تم تعديل المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-            }
-            else
-            {
-                // --- إضافة ---
-                var expense = new Domain.Entities.GeneralExpense
-                {
-                    ExpenseType = SelectedExpenseType,
-                    CustomExpenseName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType.Trim() : null,
-                    Amount = InputAmount.Value,
-                    PaymentDate = InputPaymentDate,
-                    PaymentMethod = SelectedPaymentMethod,
-                    Description = InputDescription,
-                    WorkerName = (SelectedExpenseType == GeneralExpenseType.Salaries) ? (IsDetailedWage ? "[متعدد]" : (!string.IsNullOrEmpty(InputWorkerName) ? InputWorkerName : null)) : null,
-                    WorkerId = (SelectedExpenseType == GeneralExpenseType.Salaries && !IsDetailedWage) ? InputWorkerId : null,
-                    BankAccountId = (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null) ? SelectedBankAccountForExpense.Id : null
-                };
-                db.GeneralExpenses.Add(expense);
-                await db.SaveChangesAsync();
-
-                // حفظ حركات العمال التفصيلية
-                if (SelectedExpenseType == GeneralExpenseType.Salaries && IsDetailedWage && SelectedWorkerWagesDetails != null)
-                {
-                    foreach (var d in SelectedWorkerWagesDetails)
-                    {
-                        if (d.IsAttended)
-                        {
-                            var accrualTx = new WorkerTransaction
-                            {
-                                WorkerId = d.WorkerId,
-                                WorkerName = d.WorkerName,
-                                TransactionDate = InputPaymentDate,
-                                Type = WorkerTransactionType.WageAccrual,
-                                DebitAmount = 0m,
-                                CreditAmount = d.ActualWage,
-                                GeneralExpenseId = expense.Id,
-                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"استحقاق حضور - مصروف عام" : $"استحقاق: {d.Notes}"
-                            };
-                            db.WorkerTransactions.Add(accrualTx);
-
-                            if (d.AmountPaid > 0)
-                            {
-                                var payTx = new WorkerTransaction
-                                {
-                                    WorkerId = d.WorkerId,
-                                    WorkerName = d.WorkerName,
-                                    TransactionDate = InputPaymentDate,
-                                    Type = WorkerTransactionType.Payment,
-                                    DebitAmount = d.AmountPaid,
-                                    CreditAmount = 0m,
-                                    GeneralExpenseId = expense.Id,
-                                    Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سداد أجر - مصروف عام" : $"سداد: {d.Notes}"
-                                };
-                                db.WorkerTransactions.Add(payTx);
-                            }
-                        }
-
-                        if (d.Advance > 0)
-                        {
-                            var advTx = new WorkerTransaction
-                            {
-                                WorkerId = d.WorkerId,
-                                WorkerName = d.WorkerName,
-                                TransactionDate = InputPaymentDate,
-                                Type = WorkerTransactionType.Advance,
-                                DebitAmount = d.Advance,
-                                CreditAmount = 0m,
-                                GeneralExpenseId = expense.Id,
-                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"سلفة - مصروف عام" : $"سلفة: {d.Notes}"
-                            };
-                            db.WorkerTransactions.Add(advTx);
-                        }
-
-                        if (d.Deduction > 0)
-                        {
-                            var dedTx = new WorkerTransaction
-                            {
-                                WorkerId = d.WorkerId,
-                                WorkerName = d.WorkerName,
-                                TransactionDate = InputPaymentDate,
-                                Type = WorkerTransactionType.Deduction,
-                                DebitAmount = d.Deduction,
-                                CreditAmount = 0m,
-                                GeneralExpenseId = expense.Id,
-                                Notes = string.IsNullOrWhiteSpace(d.Notes) ? $"خصم وغرامة - مصروف عام" : $"خصم: {d.Notes}"
-                            };
-                            db.WorkerTransactions.Add(dedTx);
-                        }
-                    }
-                    await db.SaveChangesAsync();
-                }
-
-                // تسجيل الحركة البنكية
-                if (SelectedPaymentMethod == PaymentMethodType.BankTransfer && SelectedBankAccountForExpense != null)
-                {
-                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                    var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                    await bankService.RecordTransactionAsync(
-                        SelectedBankAccountForExpense.Id,
-                        BankTransactionType.ExpensePayment,
-                        InputAmount.Value,
-                        InputReferenceNumber,
-                        notes,
-                        "GeneralExpense",
-                        expense.Id,
-                        InputPaymentDate
-                    );
-                }
-                else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner && !string.IsNullOrEmpty(InputPartnerName))
-                {
-                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                    var notes = $"مصروف عام شخصي: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                    await ownerDebtService.RecordDebtAsync(
-                        InputPartnerName.Trim(),
-                        InputAmount.Value,
-                        typeName,
-                        notes,
-                        InputPaymentDate,
-                        "GeneralExpense",
-                        expense.Id
-                    );
-                }
-                else if (SelectedPaymentMethod == PaymentMethodType.Cash)
-                {
-                    var cashLedgerService = _cashLedgerService;
-                    var typeName = (SelectedExpenseType == GeneralExpenseType.Other) ? InputCustomExpenseType : GetExpenseTypeName(SelectedExpenseType);
-                    var notes = $"مصروف عام: {typeName}" + (string.IsNullOrEmpty(InputDescription) ? "" : $" | {InputDescription}");
-                    await cashLedgerService.RecordMovementAsync(
-                        CashMovementType.CashOut,
-                        InputAmount.Value,
-                        "GeneralExpense",
-                        expense.Id,
-                        notes,
-                        InputPaymentDate
-                    );
-                }
-
-                Dialogs.Show("تم إضافة المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
+            Dialogs.Show(EditingId.HasValue ? "تم تعديل المصروف بنجاح." : "تم إضافة المصروف بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
 
             ClearForm();
             LoadExpenses();
@@ -905,32 +525,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         if (IsDetailedWage)
         {
-            using var db = new AppDbContext();
-            var txs = await db.WorkerTransactions
-                .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
-                .ToListAsync();
-
-            var grouped = txs.GroupBy(t => t.WorkerId);
-            SelectedWorkerWagesDetails = grouped.Select(g => {
-                var workerId = g.Key;
-                var workerName = g.First().WorkerName;
-                var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
-                var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
-                var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
-                var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
-
-                return new WorkerTransactionDetailDto
-                {
-                    WorkerId = workerId,
-                    WorkerName = workerName,
-                    IsAttended = accrual != null,
-                    ActualWage = accrual?.CreditAmount ?? 0m,
-                    Advance = advance?.DebitAmount ?? 0m,
-                    Deduction = deduction?.DebitAmount ?? 0m,
-                    AmountPaid = payment?.DebitAmount ?? 0m,
-                    Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
-                };
-            }).ToList();
+            SelectedWorkerWagesDetails = ToWageDetails(await _expenses.GetWorkerTransactionsAsync(item.Id));
         }
         else
         {
@@ -939,32 +534,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         if (IsDetailedWage)
         {
-            using var db = new AppDbContext();
-            var txs = await db.WorkerTransactions
-                .Where(t => t.GeneralExpenseId == item.Id && !t.IsDeleted)
-                .ToListAsync();
-
-            var grouped = txs.GroupBy(t => t.WorkerId);
-            SelectedWorkerWagesDetails = grouped.Select(g => {
-                var workerId = g.Key;
-                var workerName = g.First().WorkerName;
-                var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
-                var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
-                var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
-                var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
-
-                return new WorkerTransactionDetailDto
-                {
-                    WorkerId = workerId,
-                    WorkerName = workerName,
-                    IsAttended = accrual != null,
-                    ActualWage = accrual?.CreditAmount ?? 0m,
-                    Advance = advance?.DebitAmount ?? 0m,
-                    Deduction = deduction?.DebitAmount ?? 0m,
-                    AmountPaid = payment?.DebitAmount ?? 0m,
-                    Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
-                };
-            }).ToList();
+            SelectedWorkerWagesDetails = ToWageDetails(await _expenses.GetWorkerTransactionsAsync(item.Id));
         }
         else
         {
@@ -974,23 +544,13 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputReferenceNumber = string.Empty;
         InputPartnerName = string.Empty;
 
-        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer || SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
         {
-            using var db = new AppDbContext();
-            var bankTx = await db.BankTransactions.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-            if (bankTx != null)
-            {
-                InputReferenceNumber = bankTx.ReferenceNumber ?? string.Empty;
-            }
-        }
-        else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
-        {
-            using var db = new AppDbContext();
-            var debt = await db.OwnerDebts.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-            if (debt != null)
-            {
-                InputPartnerName = debt.PartnerName;
-            }
+            var payment = await _expenses.GetPaymentInfoAsync(item.Id, isSupplierPayment: false);
+            if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+                InputReferenceNumber = payment.ReferenceNumber ?? string.Empty;
+            else
+                InputPartnerName = payment.PartnerName ?? string.Empty;
         }
 
         _ = LoadWorkerNamesAsync();
@@ -1021,23 +581,13 @@ public partial class GeneralExpensesViewModel : ObservableObject
         InputReferenceNumber = string.Empty;
         InputPartnerName = string.Empty;
 
-        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+        if (SelectedPaymentMethod == PaymentMethodType.BankTransfer || SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
         {
-            using var db = new AppDbContext();
-            var bankTx = await db.BankTransactions.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-            if (bankTx != null)
-            {
-                InputReferenceNumber = bankTx.ReferenceNumber ?? string.Empty;
-            }
-        }
-        else if (SelectedPaymentMethod == PaymentMethodType.PersonalPartner)
-        {
-            using var db = new AppDbContext();
-            var debt = await db.OwnerDebts.FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-            if (debt != null)
-            {
-                InputPartnerName = debt.PartnerName;
-            }
+            var payment = await _expenses.GetPaymentInfoAsync(item.Id, isSupplierPayment: false);
+            if (SelectedPaymentMethod == PaymentMethodType.BankTransfer)
+                InputReferenceNumber = payment.ReferenceNumber ?? string.Empty;
+            else
+                InputPartnerName = payment.PartnerName ?? string.Empty;
         }
 
         _ = LoadWorkerNamesAsync();
@@ -1057,29 +607,10 @@ public partial class GeneralExpensesViewModel : ObservableObject
             
             if (item.PaymentMethod == PaymentMethodType.BankTransfer)
             {
-                using var db = new AppDbContext();
-                var bankTx = await db.BankTransactions
-                    .Include(t => t.BankAccount)
-                    .FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-
-                if (bankTx == null && item.ExpenseType == GeneralExpenseType.SupplierPayment)
+                var payment = await _expenses.GetPaymentInfoAsync(item.Id, item.ExpenseType == GeneralExpenseType.SupplierPayment);
+                if (payment.BankDisplayName != null)
                 {
-                    var supplierTx = await db.SupplierTransactions
-                        .FirstOrDefaultAsync(t => t.SourceType == TransactionSourceType.ExternalPayment && t.SourceId == item.Id && !t.IsDeleted);
-                    
-                    if (supplierTx != null)
-                    {
-                        bankTx = await db.BankTransactions
-                            .Include(t => t.BankAccount)
-                            .FirstOrDefaultAsync(t => t.SourceType == "SupplierTransaction" && t.SourceId == supplierTx.Id && !t.IsDeleted);
-                    }
-                }
-
-                if (bankTx != null)
-                {
-                    string bankName = bankTx.BankAccount != null ? $"{bankTx.BankAccount.BankName} - {bankTx.BankAccount.FriendlyName}" : "غير محدد";
-                    string last4 = bankTx.ReferenceNumber ?? "----";
-                    bankDetails = $"\n🏦 الحساب البنكي: {bankName}\n🔢 رقم التحويل اخر 4 ارقام: {last4}\n";
+                    bankDetails = $"\n🏦 الحساب البنكي: {payment.BankDisplayName}\n🔢 رقم التحويل اخر 4 ارقام: {payment.ReferenceNumber ?? "----"}\n";
                 }
                 else if (item.BankAccountId.HasValue)
                 {
@@ -1092,12 +623,10 @@ public partial class GeneralExpensesViewModel : ObservableObject
             }
             else if (item.PaymentMethod == PaymentMethodType.PersonalPartner)
             {
-                using var db = new AppDbContext();
-                var debt = await db.OwnerDebts
-                    .FirstOrDefaultAsync(t => t.SourceType == "GeneralExpense" && t.SourceId == item.Id && !t.IsDeleted);
-                if (debt != null)
+                var payment = await _expenses.GetPaymentInfoAsync(item.Id, false);
+                if (payment.PartnerName != null)
                 {
-                    bankDetails = $"\n👤 الشريك الممول: {debt.PartnerName}\n";
+                    bankDetails = $"\n👤 الشريك الممول: {payment.PartnerName}\n";
                 }
             }
 
@@ -1126,6 +655,61 @@ public partial class GeneralExpensesViewModel : ObservableObject
         {
             Dialogs.Show($"حدث خطأ أثناء جلب التفاصيل:\n{ex.Message}", "خطأ", MessageBoxButton.OK, MessageBoxImage.Error);
         }
+    }
+
+    /// <summary>تفاصيل أجور العمال من حركاتهم المحفوظة (لكل عامل: استحقاق، سداد، سلفة، خصم).</summary>
+    private static List<WorkerTransactionDetailDto> ToWageDetails(List<WorkerTransaction> txs)
+        => txs.GroupBy(t => t.WorkerId).Select(g =>
+        {
+            var accrual = g.FirstOrDefault(t => t.Type == WorkerTransactionType.WageAccrual);
+            var payment = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Payment);
+            var advance = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Advance);
+            var deduction = g.FirstOrDefault(t => t.Type == WorkerTransactionType.Deduction);
+            return new WorkerTransactionDetailDto
+            {
+                WorkerId = g.Key,
+                WorkerName = g.First().WorkerName,
+                IsAttended = accrual != null,
+                ActualWage = accrual?.CreditAmount ?? 0m,
+                Advance = advance?.DebitAmount ?? 0m,
+                Deduction = deduction?.DebitAmount ?? 0m,
+                AmountPaid = payment?.DebitAmount ?? 0m,
+                Notes = accrual?.Notes ?? payment?.Notes ?? advance?.Notes ?? deduction?.Notes
+            };
+        }).ToList();
+
+    /// <summary>حركات العمال لمصروف أجور تفصيلي (يُربط معرف المصروف عند الحفظ).</summary>
+    private static List<WorkerTransaction> BuildWorkerTransactions(IEnumerable<WorkerTransactionDetailDto> details, DateTime date)
+    {
+        var list = new List<WorkerTransaction>();
+        WorkerTransaction Tx(WorkerTransactionDetailDto d, WorkerTransactionType type, decimal debit, decimal credit, string notes) => new()
+        {
+            WorkerId = d.WorkerId,
+            WorkerName = d.WorkerName,
+            TransactionDate = date,
+            Type = type,
+            DebitAmount = debit,
+            CreditAmount = credit,
+            Notes = notes
+        };
+        foreach (var d in details)
+        {
+            if (d.IsAttended)
+            {
+                list.Add(Tx(d, WorkerTransactionType.WageAccrual, 0m, d.ActualWage,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "استحقاق حضور - مصروف عام" : $"استحقاق: {d.Notes}"));
+                if (d.AmountPaid > 0)
+                    list.Add(Tx(d, WorkerTransactionType.Payment, d.AmountPaid, 0m,
+                        string.IsNullOrWhiteSpace(d.Notes) ? "سداد أجر - مصروف عام" : $"سداد: {d.Notes}"));
+            }
+            if (d.Advance > 0)
+                list.Add(Tx(d, WorkerTransactionType.Advance, d.Advance, 0m,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "سلفة - مصروف عام" : $"سلفة: {d.Notes}"));
+            if (d.Deduction > 0)
+                list.Add(Tx(d, WorkerTransactionType.Deduction, d.Deduction, 0m,
+                    string.IsNullOrWhiteSpace(d.Notes) ? "خصم وغرامة - مصروف عام" : $"خصم: {d.Notes}"));
+        }
+        return list;
     }
 
     [RelayCommand]
@@ -1166,45 +750,11 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            using var db = new AppDbContext();
-            var existing = await db.GeneralExpenses.FindAsync(item.Id);
-            if (existing != null)
+            var deleted = await _expenses.DeleteAsync(item.Id);
+            if (!deleted.Success)
             {
-                if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
-                {
-                    Dialogs.Show("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
-                {
-                    Dialogs.Show(PeriodLock.LockedMessage, "فترة مقفلة", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // حذف الحركة البنكية المرتبطة
-                var bankService = _bankService;
-                await bankService.DeleteTransactionBySourceAsync("GeneralExpense", existing.Id);
-
-                // حذف ديون المالك المرتبطة
-                var ownerDebtService = _ownerDebtService;
-                var relatedDebts = await db.OwnerDebts.Where(d => d.SourceType == "GeneralExpense" && d.SourceId == existing.Id && !d.IsDeleted).ToListAsync();
-                foreach (var debt in relatedDebts)
-                {
-                    await ownerDebtService.DeleteDebtAsync(debt.Id);
-                }
-
-                // عكس الحركة النقدية المرتبطة إن وجدت
-                var cashLedgerService = _cashLedgerService;
-                var oldCashMovement = await db.CashMovements.FindLiveForSourceAsync(SourceTypes.GeneralExpense, existing.Id);
-                if (oldCashMovement != null)
-                {
-                    await cashLedgerService.ReverseMovementAsync(oldCashMovement.Id, "حذف المصروف العام");
-                }
-
-                existing.IsDeleted = true;
-                existing.UpdatedAt = DateTime.UtcNow;
-                await db.SaveChangesAsync();
+                Dialogs.Show(deleted.Error!, deleted.ErrorTitle ?? "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
             }
             LoadExpenses();
         }
@@ -1253,23 +803,14 @@ public partial class GeneralExpensesViewModel : ObservableObject
         }
 
         // تحقق إذا كان المصروف مرتبط بجلسة مقفلة/مسواة مالياً
-        using (var context = new AppDbContext())
+        if (await _expenses.IsInSettledSessionAsync(item.Id))
         {
-            var exp = await context.GeneralExpenses.FindAsync(item.Id);
-            if (exp != null && exp.PostingSessionId.HasValue)
-            {
-                var parentSession = await context.PostingSessions.FindAsync(exp.PostingSessionId.Value);
-                if (parentSession != null && 
-                    (parentSession.Status == PostingSessionStatus.Settled || parentSession.Status == PostingSessionStatus.ReSettled))
-                {
-                    Dialogs.Show(
-                        "هذا المصروف يقع ضمن فترة مقفلة ومسواة مالياً مسبقاً.\nيجب إلغاء قفل الفترة أولاً من شاشة المبيعات (الكاش الحالي -> أرشيف التسويات) قبل التمكن من فك الترحيل.",
-                        "فترة مغلقة ومسواة",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
-            }
+            Dialogs.Show(
+                "هذا المصروف يقع ضمن فترة مقفلة ومسواة مالياً مسبقاً.\nيجب إلغاء قفل الفترة أولاً من شاشة المبيعات (الكاش الحالي -> أرشيف التسويات) قبل التمكن من فك الترحيل.",
+                "فترة مغلقة ومسواة",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
         }
 
         // إظهار نافذة إدخال سبب فك الترحيل
@@ -1509,15 +1050,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
 
         try
         {
-            List<int> expensesInPeriod;
-            using (var context = new AppDbContext())
-            {
-                // جلب المصاريف المفتوحة فقط في هذه الفترة
-                expensesInPeriod = await context.GeneralExpenses
-                    .Where(e => e.PaymentDate.Date >= startDate && e.PaymentDate.Date <= endDate && e.FinancialStatus == FinancialStatus.Draft)
-                    .Select(e => e.Id)
-                    .ToListAsync();
-            }
+            var expensesInPeriod = await _expenses.GetDraftIdsInRangeAsync(startDate, endDate);
 
             if (!expensesInPeriod.Any())
             {
@@ -1577,14 +1110,7 @@ public partial class GeneralExpensesViewModel : ObservableObject
     {
         try
         {
-            using var db = new AppDbContext();
-            var expenses = db.GeneralExpenses
-                .Where(e => !e.IsDeleted && 
-                           e.PaymentDate.Date >= DateFrom.Date && 
-                           e.PaymentDate.Date <= DateTo.Date &&
-                           (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
-                .OrderBy(e => e.PaymentDate)
-                .ToList();
+            var expenses = _expenses.GetPostedInRange(DateFrom, DateTo);
 
             var grouped = expenses
                 .GroupBy(e => new { e.PaymentDate.Year, e.PaymentDate.Month })
@@ -1641,59 +1167,4 @@ public partial class GeneralExpensesViewModel : ObservableObject
         SelectedArchivedMonth = null;
         LoadArchivedMonths();
     }
-}
-
-// --- Helper Classes ---
-public class ExpenseTypeItem
-{
-    public string Name { get; set; } = string.Empty;
-    public GeneralExpenseType? Value { get; set; }
-}
-
-public class PaymentMethodItem
-{
-    public string Name { get; set; } = string.Empty;
-    public PaymentMethodType? Value { get; set; }
-}
-
-public class TypeSummaryItem
-{
-    public string TypeName { get; set; } = string.Empty;
-    public decimal Total { get; set; }
-    public int Count { get; set; }
-}
-
-public partial class GeneralExpenseMonthCard : ObservableObject
-{
-    [ObservableProperty]
-    private int sequence;
-
-    public int Year { get; set; }
-    public int Month { get; set; }
-    public string MonthName { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    private decimal totalExpenses;
-
-    [ObservableProperty]
-    private int operationsCount;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText))]
-    [NotifyPropertyChangedFor(nameof(StatusColor))]
-    [NotifyPropertyChangedFor(nameof(CardBackground))]
-    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
-    private bool isPosted;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText))]
-    [NotifyPropertyChangedFor(nameof(StatusColor))]
-    [NotifyPropertyChangedFor(nameof(CardBackground))]
-    [NotifyPropertyChangedFor(nameof(CardBorderBrush))]
-    private bool isPartiallyPosted;
-
-    public string StatusText => IsPosted ? "مرحّل بالكامل" : (IsPartiallyPosted ? "مرحّل جزئياً" : "مفتوح");
-    public string StatusColor => IsPosted ? "#10b981" : (IsPartiallyPosted ? "#f59e0b" : "#3b82f6");
-    public string CardBackground => IsPosted ? "#f0fdf4" : (IsPartiallyPosted ? "#fffbeb" : "#f8faff");
-    public string CardBorderBrush => IsPosted ? "#dcfce7" : (IsPartiallyPosted ? "#fef3c7" : "#e5eeff");
 }
