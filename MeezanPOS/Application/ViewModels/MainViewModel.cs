@@ -100,7 +100,18 @@ public partial class MainViewModel : ObservableObject
     /// <summary>عنوان الصفحة المعروض في الشريط العلوي (بدون بادئة اسم المنظومة)</summary>
     public string PageTitle => Title.Replace("ميزان للمالية - ", string.Empty);
 
-    partial void OnTitleChanged(string value) => OnPropertyChanged(nameof(PageTitle));
+    partial void OnTitleChanged(string value)
+    {
+        OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(WindowTitle));
+    }
+
+    /// <summary>اسم المطعم المفتوح (فارغ إن لم يُختر مطعم، كما في الاختبارات).</summary>
+    public string RestaurantName => MeezanPOS.Infrastructure.Data.RestaurantContext.DisplayName;
+    public bool HasRestaurantName => !string.IsNullOrEmpty(RestaurantName);
+
+    /// <summary>عنوان النافذة وشريط المهام: الصفحة ثم اسم المطعم حتى لا يُخلط بين المطاعم.</summary>
+    public string WindowTitle => HasRestaurantName ? $"{Title} | {RestaurantName}" : Title;
 
     public string CurrentUserName { get; } = string.Empty;
     public string CurrentUserRole { get; } = string.Empty;

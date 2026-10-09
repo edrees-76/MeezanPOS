@@ -51,7 +51,7 @@ internal static class ReportStyle
                 t.Span(" من ");
                 t.TotalPages();
             });
-            row.RelativeItem().AlignLeft().Text("منظومة ميزان للمطاعم").FontSize(8).FontColor(Muted);
+            row.RelativeItem().AlignLeft().Text(MeezanPOS.Infrastructure.Data.RestaurantContext.ReportFooter).FontSize(8).FontColor(Muted);
         });
     }
 
@@ -74,6 +74,8 @@ internal static class ReportStyle
                 row.ConstantItem(15);
                 row.RelativeItem().Column(c =>
                 {
+                    if (!string.IsNullOrEmpty(MeezanPOS.Infrastructure.Data.RestaurantContext.DisplayName))
+                        c.Item().PaddingBottom(2).Text(MeezanPOS.Infrastructure.Data.RestaurantContext.DisplayName).FontSize(10).SemiBold().FontColor(Muted);
                     c.Item().Text(title).FontSize(15).Bold();
                     c.Item().PaddingTop(4).Text(subtitle).FontSize(9.5f).FontColor(Muted);
                 });

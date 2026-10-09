@@ -178,6 +178,20 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
+                    <!-- المطعم الذي يُسجَّل الدخول إليه، مع زر تغييره -->
+                    <Border Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{StaticResource Brush.PrimarySoft}"
+                            CornerRadius="10" Padding="8,2"
+                            Visibility="{Binding HasRestaurantName, Converter={StaticResource LocalBooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Storefront" Width="18" Height="18" Foreground="{StaticResource Brush.Primary}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding RestaurantName}" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource Brush.Primary}"
+                                       Margin="6,0,0,0" VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
+                            <Button Click="SwitchRestaurant_Click" Style="{StaticResource MaterialDesignFlatButton}" Height="26" Padding="8,0" Margin="8,0,0,0"
+                                    FontSize="12" Content="تغيير المطعم" ToolTip="إعادة فتح المنظومة على شاشة اختيار المطعم"
+                                    Visibility="{Binding CanSwitchRestaurant, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
+                        </StackPanel>
+                    </Border>
+
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
                         <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Width="40" Height="40"/>
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">

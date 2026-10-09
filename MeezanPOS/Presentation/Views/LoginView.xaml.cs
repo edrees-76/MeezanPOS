@@ -114,6 +114,11 @@ namespace MeezanPOS.Presentation.Views
         // Window Control Actions
         // =========================================================
 
+        private void SwitchRestaurant_Click(object sender, RoutedEventArgs e)
+        {
+            MeezanPOS.App.RestartWithRestaurantPicker();
+        }
+
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.Application.Current.Shutdown();

@@ -230,7 +230,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             PreferredBackupPath = folder; // Auto-save
 
-            var fileName = $"Meezan_Backup_{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
+            var fileName = $"Meezan_Backup_{RestaurantContext.FileTag}{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
             var targetFilePath = Path.Combine(folder, fileName);
 
             bool success = await ExecuteBackupAsync(targetFilePath);
@@ -283,7 +283,7 @@ public partial class SettingsViewModel : ObservableObject
                     // 1. التحقق من أن الملف نسخة سليمة من قاعدة بيانات ميزان
                     try
                     {
-                        DatabaseBackupHelper.ValidateMeezanDatabase(selectedFile);
+                        DatabaseBackupHelper.ValidateMeezanDatabase(selectedFile, RestaurantContext.Current);
                     }
                     catch (InvalidDataException invalid)
                     {

@@ -38,7 +38,7 @@ public class GeneralExpensePdfReport
                         x.Span(" من ");
                         x.TotalPages();
                     });
-                    row.RelativeItem().AlignLeft().Text("منظومة ميزان").FontSize(12).SemiBold().FontColor(Colors.Grey.Medium);
+                    row.RelativeItem().AlignLeft().Text(MeezanPOS.Infrastructure.Data.RestaurantContext.ReportFooter).FontSize(12).SemiBold().FontColor(Colors.Grey.Medium);
                 });
             });
         }).GeneratePdf(filePath);

@@ -28,6 +28,13 @@ public partial class LoginViewModel : ObservableObject
         OnPropertyChanged(nameof(HasError));
     }
 
+    /// <summary>المطعم الذي سيُسجَّل الدخول إليه (لكل مطعم مستخدموه).</summary>
+    public string RestaurantName => MeezanPOS.Infrastructure.Data.RestaurantContext.DisplayName;
+    public bool HasRestaurantName => !string.IsNullOrEmpty(RestaurantName);
+
+    /// <summary>تغيير المطعم متاح إلا في البيانات التجريبية (مجلد محدد خارج سجل المطاعم).</summary>
+    public bool CanSwitchRestaurant => MeezanPOS.Infrastructure.Data.RestaurantContext.Current is { IsOverride: false };
+
     public LoginViewModel()
     {
         LoadSettings();

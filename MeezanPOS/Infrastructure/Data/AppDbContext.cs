@@ -65,11 +65,10 @@ public class AppDbContext : DbContext
     public static string GetDatabasePath()
     {
         // MEEZANPOS_DATA_DIR يسمح للاختبارات باستخدام مجلد مؤقت بدل قاعدة بيانات المستخدم الحقيقية
+        // وإلا فمجلد المطعم المفتوح، ثم المجلد الرئيسي (المطعم الأول)
         var appDataDir = System.Environment.GetEnvironmentVariable("MEEZANPOS_DATA_DIR");
         if (string.IsNullOrWhiteSpace(appDataDir))
-            appDataDir = System.IO.Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
-                "MeezanPOS");
+            appDataDir = RestaurantContext.Current?.DataDirectory ?? RestaurantRegistry.DefaultRoot;
         System.IO.Directory.CreateDirectory(appDataDir);
         return System.IO.Path.Combine(appDataDir, "Meezan.db");
     }

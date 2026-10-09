@@ -88,6 +88,13 @@ public partial class App : System.Windows.Application
         bool createdNew;
         _appMutex = new System.Threading.Mutex(true, mutexName, out createdNew);
 
+        // إعادة التشغيل لتبديل المطعم: النسخة السابقة ما زالت تُغلق، فننتظرها بدل رفض التشغيل
+        if (!createdNew && e.Args.Contains(SwitchArg))
+        {
+            try { createdNew = _appMutex.WaitOne(TimeSpan.FromSeconds(30)); }
+            catch (System.Threading.AbandonedMutexException) { createdNew = true; }
+        }
+
         if (!createdNew)
         {
             Dialogs.Show("المنظومة مفتوحة بالفعل وهي قيد التشغيل حالياً.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -98,6 +105,17 @@ public partial class App : System.Windows.Application
         }
 
         base.OnStartup(e);
+
+        // اختيار المطعم قبل أي وصول لقاعدة البيانات: كل ما بعده (السجلات والنسخ والترقية) في مجلد المطعم
+        if (!SelectRestaurant(e.Args))
+        {
+            System.Windows.Application.Current.Shutdown();
+            return;
+        }
+        Log.CloseAndFlush();
+        AppLogger.Initialize();
+        Log.Information("المطعم المفتوح: {Name} ({Code})", MeezanPOS.Infrastructure.Data.RestaurantContext.Current?.Name,
+            MeezanPOS.Infrastructure.Data.RestaurantContext.Current?.Code);
 
         // قبول الأرقام العربية في كل حقول الإدخال
         MeezanPOS.Presentation.Behaviors.ArabicDigitsInput.Register();
@@ -143,6 +161,19 @@ public partial class App : System.Windows.Application
                         var license = context.Settings.AsNoTracking()
                             .FirstOrDefault(s => s.Key == MeezanPOS.Infrastructure.Reports.PdfLicensing.SettingKey)?.Value;
                         MeezanPOS.Infrastructure.Reports.PdfLicensing.Apply(license);
+
+                        EnsureRestaurantStamp(context);
+                    }
+                    catch (RestaurantMismatchException mismatch)
+                    {
+                        Log.Error(mismatch, "قاعدة بيانات المطعم تخص مطعماً آخر");
+                        Dispatcher.Invoke(() =>
+                        {
+                            try { splash.Close(); } catch { }
+                            Dialogs.Show(mismatch.Message, "بيانات مطعم آخر", MessageBoxButton.OK, MessageBoxImage.Error);
+                            System.Windows.Application.Current.Shutdown();
+                        });
+                        return;
                     }
                     catch (System.Exception ex)
                     {
@@ -253,6 +284,85 @@ public partial class App : System.Windows.Application
 
         // تفعيل أزرار Enter, Tab, Esc على مستوى المنظومة بالكامل
         EventManager.RegisterClassHandler(typeof(Window), UIElement.PreviewKeyDownEvent, new System.Windows.Input.KeyEventHandler(Window_PreviewKeyDown));
+    }
+
+    private const string SwitchArg = "--switch";
+    private const string PickArg = "--pick";
+
+    /// <summary>
+    /// يحدد المطعم الذي سيُفتح. MEEZANPOS_DATA_DIR (البيانات التجريبية) يتجاوز سجل المطاعم.
+    /// مطعم واحد يُفتح مباشرة، وأكثر من مطعم (أو طلب "تغيير المطعم") يعرض شاشة الاختيار.
+    /// </summary>
+    private static bool SelectRestaurant(string[] args)
+    {
+        var overrideDir = Environment.GetEnvironmentVariable("MEEZANPOS_DATA_DIR");
+        if (!string.IsNullOrWhiteSpace(overrideDir))
+        {
+            MeezanPOS.Infrastructure.Data.RestaurantContext.Set(new MeezanPOS.Infrastructure.Data.ActiveRestaurant(
+                "override", "DEMO", "بيانات تجريبية", overrideDir, IsPrimary: true, IsOverride: true));
+            return true;
+        }
+
+        MeezanPOS.Infrastructure.Data.RestaurantRegistry registry;
+        try
+        {
+            registry = MeezanPOS.Infrastructure.Data.RestaurantRegistry.Load();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "تعذر قراءة سجل المطاعم");
+            Dialogs.Show($"تعذر قراءة سجل المطاعم:\n{ex.Message}", "خطأ بدء التشغيل", MessageBoxButton.OK, MessageBoxImage.Error);
+            return false;
+        }
+
+        var chosen = registry.Restaurants.Count == 1 && !args.Contains(PickArg) ? registry.Restaurants[0] : null;
+        if (chosen == null)
+        {
+            var vm = new MeezanPOS.Application.ViewModels.RestaurantPickerViewModel(registry);
+            var picker = new MeezanPOS.Presentation.Views.RestaurantPickerWindow(vm);
+            if (picker.ShowDialog() != true || vm.Result == null)
+                return false;
+            chosen = vm.Result;
+        }
+
+        registry.MarkOpened(chosen.Id);
+        MeezanPOS.Infrastructure.Data.RestaurantContext.Set(registry.ToActive(chosen));
+        return true;
+    }
+
+    private sealed class RestaurantMismatchException(string message) : Exception(message);
+
+    /// <summary>
+    /// يربط قاعدة البيانات بمطعمها عند أول تشغيل. إن وُجد معرّف مختلف فالملف نُسخ من مطعم آخر:
+    /// يُرفض فتحه حتى لا تُسجّل حركات مطعم في حسابات غيره.
+    /// </summary>
+    private static void EnsureRestaurantStamp(MeezanPOS.Infrastructure.Data.AppDbContext context)
+    {
+        var restaurant = MeezanPOS.Infrastructure.Data.RestaurantContext.Current;
+        if (restaurant == null || restaurant.IsOverride) return;
+
+        var key = MeezanPOS.Infrastructure.Data.RestaurantContext.SettingKey;
+        var stamp = context.Settings.FirstOrDefault(s => s.Key == key);
+        if (stamp == null)
+        {
+            context.Settings.Add(new Setting { Key = key, Value = restaurant.Id });
+            context.SaveChanges();
+        }
+        else if (stamp.Value != restaurant.Id)
+        {
+            throw new RestaurantMismatchException(
+                $"ملف البيانات في مجلد «{restaurant.Name}» يخص مطعماً آخر (نُسخ إليه يدوياً على الأرجح).\n" +
+                "لم يُفتح حتى لا تختلط الحسابات. أعد الملف الصحيح إلى مجلده، أو استعد نسخة احتياطية لهذا المطعم.");
+        }
+    }
+
+    /// <summary>"تغيير المطعم" من شاشة الدخول: إعادة تشغيل المنظومة على شاشة اختيار المطعم.</summary>
+    public static void RestartWithRestaurantPicker()
+    {
+        var exe = Environment.ProcessPath;
+        if (string.IsNullOrEmpty(exe)) return;
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe, $"{SwitchArg} {PickArg}") { UseShellExecute = false });
+        System.Windows.Application.Current.Shutdown();
     }
 
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -368,7 +478,7 @@ public partial class App : System.Windows.Application
                     if (shouldBackup)
                     {
                         Log.Information("Starting automatic backup on exit. Frequency: {Freq}, Last Backup: {Last}", freq, lastBackup);
-                        var fileName = $"Meezan_Backup_{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
+                        var fileName = $"Meezan_Backup_{MeezanPOS.Infrastructure.Data.RestaurantContext.FileTag}{DateTime.Now:yyyy-MM-dd_HHmmss}.db";
                         var targetFile = Path.Combine(preferredPath, fileName);
                         var tempFile = targetFile + ".tmp";
 

@@ -52,7 +52,7 @@ public class BankingServicesDetailsPdfReport : IDocument
                     x.Span(" من ");
                     x.TotalPages();
                 });
-                row.RelativeItem().AlignLeft().Text("منظومة ميزان").FontSize(11).SemiBold().FontColor(Colors.Grey.Medium);
+                row.RelativeItem().AlignLeft().Text(MeezanPOS.Infrastructure.Data.RestaurantContext.ReportFooter).FontSize(11).SemiBold().FontColor(Colors.Grey.Medium);
             });
         });
     }

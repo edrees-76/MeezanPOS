@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
         mc:Ignorable="d"
-        Title="{Binding Title}" AutomationProperties.AutomationId="MainWindow" Height="800" Width="1200"
+        Title="{Binding WindowTitle}" AutomationProperties.AutomationId="MainWindow" Height="800" Width="1200"
         MinWidth="1280" MinHeight="720"
         Icon="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png"
         WindowStartupLocation="CenterScreen"
@@ -106,6 +106,15 @@
                         <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                             <TextBlock Text="ميزان للمطاعم" FontFamily="{StaticResource Font.Heading}" FontWeight="Bold" FontSize="19" Foreground="White"/>
                             <TextBlock Text="إدارة المحاسبة والخزينة" FontSize="12" Foreground="{StaticResource Brush.SidebarText}" Margin="0,1,0,0"/>
+                            <Border Background="#26FFFFFF" CornerRadius="10" Padding="8,2" Margin="0,6,0,0" HorizontalAlignment="Left"
+                                    Visibility="{Binding HasRestaurantName, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                    ToolTip="المطعم المفتوح حالياً">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Storefront" Width="14" Height="14" Foreground="White" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding RestaurantName}" FontSize="12" FontWeight="SemiBold" Foreground="White" Margin="5,0,0,0"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="150"/>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </StackPanel>
                 </Border>

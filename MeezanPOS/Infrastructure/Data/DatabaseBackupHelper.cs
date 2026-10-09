@@ -49,7 +49,8 @@ public static class DatabaseBackupHelper
     /// التحقق من أن الملف قاعدة بيانات ميزان سليمة قبل استعادتها.
     /// </summary>
     /// <exception cref="InvalidDataException">برسالة عربية توضح السبب.</exception>
-    public static void ValidateMeezanDatabase(string file)
+    /// <param name="restaurant">عند تمريره: تُرفض نسخة مطعم آخر. النسخ القديمة بلا معرّف مطعم تُقبل للمطعم الأول فقط.</param>
+    public static void ValidateMeezanDatabase(string file, ActiveRestaurant? restaurant = null)
     {
         if (!File.Exists(file))
             throw new InvalidDataException("الملف المحدد غير موجود.");
@@ -78,6 +79,18 @@ public static class DatabaseBackupHelper
             var missing = RequiredTables.Where(t => !tables.Contains(t)).ToList();
             if (missing.Count > 0)
                 throw new InvalidDataException("الملف المحدد ليس نسخة احتياطية من منظومة ميزان.");
+
+            if (restaurant != null && !restaurant.IsOverride)
+            {
+                using var idCmd = connection.CreateCommand();
+                idCmd.CommandText = "SELECT Value FROM Settings WHERE Key = $key LIMIT 1;";
+                idCmd.Parameters.AddWithValue("$key", RestaurantContext.SettingKey);
+                var backupRestaurantId = idCmd.ExecuteScalar() as string;
+                if (!string.IsNullOrEmpty(backupRestaurantId) && backupRestaurantId != restaurant.Id)
+                    throw new InvalidDataException($"هذه النسخة الاحتياطية تخص مطعماً آخر، ولا يمكن استعادتها في «{restaurant.Name}».");
+                if (string.IsNullOrEmpty(backupRestaurantId) && !restaurant.IsPrimary)
+                    throw new InvalidDataException($"هذه النسخة أقدم من تعدد المطاعم وتخص المطعم الأول، ولا يمكن استعادتها في «{restaurant.Name}».");
+            }
         }
         catch (SqliteException)
         {
