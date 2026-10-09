@@ -213,11 +213,11 @@ public partial class SupplierDetailsViewModel : ObservableObject
     {
         try
         {
-            var bankService = AppServiceProvider.Resolve<IBankService>();
-            var accountsList = await bankService.GetAllAccountsAsync();
+            using var bankLease = AppServiceProvider.Lease<IBankService>();
+            var accountsList = await bankLease.Service.GetAllAccountsAsync();
 
-            var ownerDebtService = AppServiceProvider.Resolve<IOwnerDebtService>();
-            var namesList = await ownerDebtService.GetPartnerNamesAsync();
+            using var ownerDebtLease = AppServiceProvider.Lease<IOwnerDebtService>();
+            var namesList = await ownerDebtLease.Service.GetPartnerNamesAsync();
 
             UiThread.Run(() =>
             {
@@ -245,7 +245,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
+            using var ledgerLease = AppServiceProvider.Lease<ILedgerService>();
+            var ledgerService = ledgerLease.Service;
 
             var supplier = await _suppliers.GetSupplierAsync(SupplierId);
             if (supplier != null) CurrentBalance = supplier.CurrentBalance;
@@ -487,7 +488,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
 
         try
         {
-            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
+            using var ledgerLease = AppServiceProvider.Lease<ILedgerService>();
+            var ledgerService = ledgerLease.Service;
 
             if (_editingInvoiceId.HasValue)
             {
@@ -605,7 +607,8 @@ public partial class SupplierDetailsViewModel : ObservableObject
             else
                 finalNotes += " | سداد نقدي";
 
-            var ledgerService = AppServiceProvider.Resolve<ILedgerService>();
+            using var ledgerLease = AppServiceProvider.Lease<ILedgerService>();
+            var ledgerService = ledgerLease.Service;
 
             if (_editingPaymentTransactionId.HasValue)
             {

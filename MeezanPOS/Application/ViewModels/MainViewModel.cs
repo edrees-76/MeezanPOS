@@ -275,8 +275,8 @@ public partial class MainViewModel : ObservableObject
         {
             try
             {
-                MeezanPOS.Application.Services.AppServiceProvider.Resolve<MeezanPOS.Application.Interfaces.IAuthenticationService>()
-                    .RecordSessionEventAsync(user.Id, MeezanPOS.Application.Services.ActivityLabels.Logout)
+                using var authLease = MeezanPOS.Application.Services.AppServiceProvider.Lease<MeezanPOS.Application.Interfaces.IAuthenticationService>();
+                authLease.Service.RecordSessionEventAsync(user.Id, MeezanPOS.Application.Services.ActivityLabels.Logout)
                     .GetAwaiter().GetResult();
             }
             catch (Exception ex)

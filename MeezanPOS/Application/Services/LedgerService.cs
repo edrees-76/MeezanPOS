@@ -38,6 +38,7 @@ public class LedgerService : ILedgerService
 
     public async Task PostInvoiceAsync(SupplierInvoice invoice)
     {
+        _session.RequirePermission(Permissions.ManageSuppliers);
         // قفل الفترة كان مطبقاً على اليومية والمصروف العام فقط؛ الموردون والمصارف والشركاء والأجور كانت تكتب داخل فترة مسواة
         await PeriodLock.EnsureDateOpenAsync(_context, invoice.InvoiceDate);
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
@@ -91,6 +92,10 @@ public class LedgerService : ILedgerService
     /// </remarks>
     public async Task PostPaymentAsync(int supplierId, decimal amount, TransactionSourceType source, int sourceId, DateTime paymentDate, int? targetInvoiceId = null, string? receiptNumber = null, string? notes = null, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
+        // دفعة من درج الكاشير تُسجَّل ضمن حفظ يوميته، فيكفيها صلاحية تسجيل اليومية؛ غيرها من إدارة الموردين
+        _session.RequirePermission(source == TransactionSourceType.DailyJournalPayment
+            ? Permissions.CreateJournal
+            : Permissions.ManageSuppliers);
         if (amount <= 0)
             throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر.");
         await PeriodLock.EnsureDateOpenAsync(_context, paymentDate);
@@ -287,6 +292,7 @@ public class LedgerService : ILedgerService
 
     public async Task UpdateInvoiceAsync(SupplierInvoice invoice, List<SupplierInvoiceItem> newItems)
     {
+        _session.RequirePermission(Permissions.ManageSuppliers);
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -368,6 +374,7 @@ public class LedgerService : ILedgerService
 
     public async Task UpdatePaymentAsync(int transactionId, decimal amount, DateTime paymentDate, string? receiptNumber, string? notes, int? bankAccountId = null, string? partnerName = null, string? bankReferenceNumber = null)
     {
+        _session.RequirePermission(Permissions.ManageSuppliers);
         if (amount <= 0)
             throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر.");
 

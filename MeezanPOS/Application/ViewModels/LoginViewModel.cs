@@ -107,7 +107,8 @@ public partial class LoginViewModel : ObservableObject
 
         try
         {
-            var authService = AppServiceProvider.Resolve<IAuthenticationService>();
+            using var authLease = AppServiceProvider.Lease<IAuthenticationService>();
+            var authService = authLease.Service;
             var user = await authService.AuthenticateAsync(Username, Password);
 
             if (user == null)

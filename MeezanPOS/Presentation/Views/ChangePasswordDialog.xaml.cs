@@ -43,7 +43,8 @@ public partial class ChangePasswordDialog : Window
         BtnSave.IsEnabled = false;
         try
         {
-            var service = AppServiceProvider.Resolve<IUserManagementService>();
+            using var lease = AppServiceProvider.Lease<IUserManagementService>();
+            var service = lease.Service;
             await service.ChangeOwnPasswordAsync(TxtCurrent.Password, TxtNew.Password);
 
             Dialogs.Show("تم تغيير كلمة المرور بنجاح.", "تم", MessageBoxButton.OK, MessageBoxImage.Information,

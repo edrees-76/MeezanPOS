@@ -54,4 +54,31 @@ public static class AppServiceProvider
     /// </remarks>
     public static T Resolve<T>() where T : notnull
         => Provider.CreateScope().ServiceProvider.GetRequiredService<T>();
+
+    /// <summary>
+    /// خدمة لعملية واحدة: <c>using var lease = AppServiceProvider.Lease&lt;T&gt;();</c>
+    /// يُغلق نطاقها وسياق قاعدة بياناتها فور انتهاء العملية بدل انتظار جامع القمامة.
+    /// Resolve يبقى للخدمات التي تعيش بعمر الشاشة.
+    /// </summary>
+    public static ServiceLease<T> Lease<T>() where T : notnull
+    {
+        var scope = Provider.CreateScope();
+        return new ServiceLease<T>(scope, scope.ServiceProvider.GetRequiredService<T>());
+    }
+}
+
+/// <summary>خدمة مع نطاقها؛ التخلص منها يغلق النطاق وكل ما أنشأه (ومنه AppDbContext).</summary>
+public sealed class ServiceLease<T> : IDisposable
+{
+    private readonly IServiceScope _scope;
+
+    internal ServiceLease(IServiceScope scope, T service)
+    {
+        _scope = scope;
+        Service = service;
+    }
+
+    public T Service { get; }
+
+    public void Dispose() => _scope.Dispose();
 }

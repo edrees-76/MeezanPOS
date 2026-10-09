@@ -216,4 +216,28 @@ public class SupplierServiceTests
         // Assert
         statement.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task Cashier_CanPayASupplierFromTheJournal_ButCannotManageSuppliers()
+    {
+        var (context, service, session) = CreateServices();
+        // كاشير: كل صلاحية لا يملكها دوره تُرفض كما في SessionService
+        session.Setup(s => s.RequirePermission(It.Is<string>(p => !Permissions.RoleAllows(RoleType.Cashier, p))))
+            .Throws<PermissionDeniedException>();
+        var supplier = TestDataBuilder.BuildSupplier("Supplier X");
+        context.Suppliers.Add(supplier);
+        await context.SaveChangesAsync();
+
+        await service.PostPaymentAsync(supplier.Id, 100m, TransactionSourceType.DailyJournalPayment, 1, DateTime.Today);
+
+        await FluentActions.Awaiting(() => service.PostPaymentAsync(supplier.Id, 100m, TransactionSourceType.ExternalPayment, 2, DateTime.Today))
+            .Should().ThrowAsync<PermissionDeniedException>();
+        await FluentActions.Awaiting(() => service.PostInvoiceAsync(TestDataBuilder.BuildSupplierInvoice(500m, supplier.Id, DateTime.Today)))
+            .Should().ThrowAsync<PermissionDeniedException>();
+        var payment = await context.SupplierTransactions.FirstAsync(t => t.SupplierId == supplier.Id);
+        await FluentActions.Awaiting(() => service.UpdatePaymentAsync(payment.Id, 50m, DateTime.Today, null, null))
+            .Should().ThrowAsync<PermissionDeniedException>();
+
+        (await context.SupplierTransactions.CountAsync(t => t.SupplierId == supplier.Id)).Should().Be(1, "only the journal payment was recorded");
+    }
 }
