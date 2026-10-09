@@ -230,6 +230,11 @@
                                             <TextBlock Text=" | بطاقة:" FontSize="11" Foreground="{StaticResource Brush.TextMuted}" Margin="8,0,0,0"/>
                                             <TextBlock Text="{Binding Summary.IncomeStatement.CardSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}"/>
                                         </StackPanel>
+                                        <!-- صافي المبيعات: الربح يُحسب منه -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="صافي بعد المرتجعات والمجاني:" FontSize="11" Foreground="{StaticResource Brush.TextMuted}"/>
+                                            <TextBlock Text="{Binding Summary.IncomeStatement.NetSales, StringFormat='{}{0:N2}'}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource Brush.TextPrimary}" Margin="4,0,0,0"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 

@@ -179,6 +179,10 @@ public class OwnerDebtService : IOwnerDebtService
                 if (debt == null || debt.IsDeleted)
                     throw new Exception("الدين المحدد غير موجود.");
 
+                // الشريك هو صاحب الدين دائماً: كان الاسم يؤخذ من النموذج القابل للتعديل،
+                // فيُسدَّد دين شريك ويُسجَّل الدفع على كشف شريك آخر
+                partnerName = debt.PartnerName;
+
                 var alreadySettled = (await _context.OwnerDebtSettlements
                     .Where(s => s.OwnerDebtId == debt.Id && !s.IsDeleted)
                     .Select(s => s.Amount)

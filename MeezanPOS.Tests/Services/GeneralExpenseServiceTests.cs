@@ -91,4 +91,29 @@ public class GeneralExpenseServiceTests
         (await check.BankAccounts.FindAsync(bankId))!.CurrentBalance.Should().Be(800m);
         (await service.GetPaymentInfoAsync(id, false)).ReferenceNumber.Should().Be("1234");
     }
+
+    [Fact]
+    public async Task SupplierPaymentExpense_CannotBeDeletedOrEditedFromTheExpenseService()
+    {
+        using var db = new SharedSqliteDatabase();
+        using var sp = db.BuildServices();
+        int id;
+        await using (var c = db.CreateDbContext())
+        {
+            var expense = new GeneralExpense
+            {
+                ExpenseType = GeneralExpenseType.SupplierPayment, Amount = 200m, PaymentDate = Day,
+                PaymentMethod = PaymentMethodType.Cash, Description = "تسديد مورد",
+            };
+            c.GeneralExpenses.Add(expense);
+            await c.SaveChangesAsync();
+            id = expense.Id;
+        }
+        var service = new GeneralExpenseService(db, sp.GetRequiredService<IServiceScopeFactory>());
+
+        (await service.DeleteAsync(id)).Success.Should().BeFalse("the payment lives in the supplier statement");
+        (await service.SaveAsync(Cash(250m, id))).Success.Should().BeFalse();
+        await using var check = db.CreateDbContext();
+        (await check.GeneralExpenses.SingleAsync()).Amount.Should().Be(200m);
+    }
 }

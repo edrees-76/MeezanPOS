@@ -23,6 +23,9 @@ public class WorkerAttendance : BaseEntity
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal DeductionAmount { get; set; }
 
-    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    /// <summary>
+    /// جزء من أجر اليوم احتُجز سداداً للسلفة (بيان فقط). لا يُسجل حركة في حساب العامل:
+    /// استحقاق الأجر ودفع الباقي نقداً يُسقطان السلفة تلقائياً، وأي حركة إضافية تحسبها مرتين.
+    /// </summary>
     public decimal AdvanceDeducted { get; set; }
 }

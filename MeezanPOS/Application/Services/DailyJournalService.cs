@@ -151,6 +151,19 @@ public sealed class DailyJournalService : IDailyJournalService
         if (await PeriodLock.IsDateLockedAsync(context, targetDate))
             return JournalSaveResult.Fail(PeriodLock.LockedMessage);
 
+        // عند إدخال تفاصيل الدفتر تُودَع هي وحدها في المصارف؛ أي فرق عن إجمالي المبيعات المصرفية
+        // كان يختفي: اليومية تخصمه من النقد المتوقع ولا يدخل أي حساب مصرفي
+        if (r.BankingItems.Count > 0)
+        {
+            var itemsTotal = r.BankingItems.Sum(b => b.Amount);
+            if (itemsTotal != r.BankingTotal)
+                return JournalSaveResult.Fail(
+                    $"تفاصيل الخدمات المصرفية ({itemsTotal:N2}) لا تساوي إجمالي المبيعات المصرفية ({r.BankingTotal:N2}). " +
+                    $"الفرق {Math.Abs(r.BankingTotal - itemsTotal):N2} لن يُسجَّل في أي حساب مصرفي. أكمل تفاصيل الدفتر أو صحّح الإجمالي.");
+            if (r.BankingItems.Any(b => !b.BankAccountId.HasValue))
+                return JournalSaveResult.Fail("حدد الحساب المصرفي لكل بند في تفاصيل الخدمات المصرفية.");
+        }
+
         DailyJournal? journal;
         if (r.EditingJournalId.HasValue)
         {

@@ -397,6 +397,7 @@ public partial class ExpenseManagementViewModel : ObservableObject
                         Month = month,
                         MonthName = $"{GetArabicMonthName(month)} {year}",
                         TotalSales = g.Sum(j => j.TotalSales),
+                        TotalDeductions = g.Sum(j => j.ReturnsTotal + j.FreeOrdersTotal),
                         TotalCashSales = g.Sum(j => j.TotalSales - j.BankingTotal),
                         TotalBankingSales = g.Sum(j => j.BankingTotal),
                         TotalExpenses = g.Sum(j => j.TotalExpenses),

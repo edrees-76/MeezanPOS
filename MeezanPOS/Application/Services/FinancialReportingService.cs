@@ -56,6 +56,8 @@ public class FinancialReportingService : IFinancialReportingService
             TotalSales = totalSales,
             CashSales = cashSales,
             CardSales = cardSales,
+            ReturnsTotal = journals.Sum(j => j.ReturnsTotal),
+            FreeOrdersTotal = journals.Sum(j => j.FreeOrdersTotal),
             DailyExpenses = dailyExpenses,
             GeneralExpenses = generalExpensesSum
         };

@@ -209,6 +209,8 @@ public sealed class GeneralExpenseService : IGeneralExpenseService
             var existing = await db.GeneralExpenses.FindAsync(r.EditingId.Value);
             if (existing == null)
                 return OperationResult.Fail("المصروف غير موجود.");
+            if (existing.ExpenseType == GeneralExpenseType.SupplierPayment)
+                return OperationResult.Fail(SupplierPaymentManagedElsewhere, "منع التعديل");
             if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))
                 return OperationResult.Fail(PeriodLock.LockedMessage, "فترة مقفلة");
             if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
@@ -275,6 +277,9 @@ public sealed class GeneralExpenseService : IGeneralExpenseService
         return OperationResult.Ok;
     }
 
+    private const string SupplierPaymentManagedElsewhere =
+        "مصروف تسديد المورد مرتبط بدفعة في كشف حساب المورد، ويُعدَّل أو يُحذف من شاشة كشف المورد فقط.";
+
     public async Task<OperationResult> DeleteAsync(int expenseId)
     {
         using var w = OpenWriteScope();
@@ -283,6 +288,9 @@ public sealed class GeneralExpenseService : IGeneralExpenseService
 
         var existing = await db.GeneralExpenses.FindAsync(expenseId);
         if (existing == null) return OperationResult.Ok;
+        // حذفه من هنا كان يزيل المصروف وحركته النقدية ويترك دفعة المورد قائمة في كشفه
+        if (existing.ExpenseType == GeneralExpenseType.SupplierPayment)
+            return OperationResult.Fail(SupplierPaymentManagedElsewhere, "منع الحذف");
         if (existing.FinancialStatus == FinancialStatus.Posted || existing.FinancialStatus == FinancialStatus.Archived)
             return OperationResult.Fail("لا يمكن حذف مصروف مرحّل مالياً.", "منع الحذف");
         if (await PeriodLock.IsDateLockedAsync(db, existing.PaymentDate))

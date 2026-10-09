@@ -70,7 +70,7 @@ public static class ClosingAccountPdfExporter
         {
             row.Spacing(10);
             row.RelativeItem().Element(c => KpiCard(c, "إجمالي المبيعات", income.TotalSales, null,
-                $"نقدي: {income.CashSales:N2} | بطاقة: {income.CardSales:N2}"));
+                $"نقدي: {income.CashSales:N2} | بطاقة: {income.CardSales:N2} | مرتجعات ومجاني: {income.ReturnsTotal + income.FreeOrdersTotal:N2}"));
             row.RelativeItem().Element(c => KpiCard(c, "إجمالي المصروفات", income.TotalExpenses));
             row.RelativeItem().Element(c => KpiCard(c, "صافي الأرباح", income.NetProfit,
                 income.NetProfit >= 0 ? "#DCFCE7" : "#FEE2E2"));

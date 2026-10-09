@@ -345,4 +345,80 @@ public class FinancialFixesTests
         var summary = (await s.Wages.GetWorkerSummariesAsync()).Single(w => w.WorkerId == worker.Id);
         summary.TotalAccrued.Should().Be(3.0m);
     }
+
+    // ── إصلاحات المراجعة الخارجية (Codex / Gemini) ──────────────────
+
+    [Fact]
+    public void IncomeStatement_NetProfit_DeductsReturnsAndFreeOrders()
+    {
+        var report = new IncomeStatementReport
+        {
+            TotalSales = 1000m, ReturnsTotal = 100m, FreeOrdersTotal = 50m,
+            DailyExpenses = 150m, GeneralExpenses = 50m,
+        };
+
+        report.NetSales.Should().Be(850m);
+        report.NetProfit.Should().Be(650m, "profit uses the same net sales as the daily journal");
+    }
+
+    [Fact]
+    public async Task AdvanceDeductedFromWage_DoesNotIncreaseWorkerDebt()
+    {
+        var s = Create();
+        var worker = TestDataBuilder.BuildWorker("عامل", 60m);
+        s.Context.Workers.Add(worker);
+        await s.Context.SaveChangesAsync();
+        // سلفة 100
+        await s.Wages.RecordTransactionAsync(new WorkerTransaction
+        {
+            WorkerId = worker.Id, TransactionDate = DateTime.Today.AddDays(-1),
+            Type = WorkerTransactionType.Advance, DebitAmount = 100m,
+        });
+
+        // حضر واستحق 60، احتُجز منها 20 للسلفة
+        await s.Wages.SaveAttendanceBatchAsync(new() { new WorkerAttendance
+        {
+            WorkerId = worker.Id, WorkerName = worker.WorkerName, WorkDate = DateTime.Today,
+            Status = AttendanceStatus.Present, SnapshotDailyWage = 60m, AdvanceDeducted = 20m,
+        }});
+        // وقبض الباقي 40 نقداً
+        await s.Wages.RecordTransactionAsync(new WorkerTransaction
+        {
+            WorkerId = worker.Id, TransactionDate = DateTime.Today,
+            Type = WorkerTransactionType.Payment, DebitAmount = 40m,
+        });
+
+        var summary = (await s.Wages.GetWorkerSummariesAsync()).Single(w => w.WorkerId == worker.Id);
+        (summary.TotalAccrued - summary.TotalPaid).Should().Be(-80m, "100 advance - 20 kept from the wage = 80 still owed");
+
+        var reloaded = (await s.Wages.GetAttendanceForDateAsync(DateTime.Today)).Single(a => a.WorkerId == worker.Id);
+        reloaded.AdvanceDeducted.Should().Be(20m, "the deduction is kept on the attendance record");
+    }
+
+    [Fact]
+    public async Task SupplierPayment_OnAnotherSuppliersInvoice_IsRejected()
+    {
+        var s = Create();
+        var supplierA = await AddSupplierAsync(s.Context);
+        var supplierB = await AddSupplierAsync(s.Context);
+        var invoiceOfA = TestDataBuilder.BuildSupplierInvoice(100m, supplierA.Id, DateTime.Today);
+        await s.Ledger.PostInvoiceAsync(invoiceOfA);
+
+        var act = () => s.Ledger.PostPaymentAsync(supplierB.Id, 100m, TransactionSourceType.ExternalPayment, 0, DateTime.Today, invoiceOfA.Id);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await s.Context.SupplierInvoices.FindAsync(invoiceOfA.Id))!.PaidAmount.Should().Be(0m);
+        (await s.Context.Suppliers.FindAsync(supplierB.Id))!.CurrentBalance.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task Settlement_OfADebt_IsAlwaysForTheDebtOwner()
+    {
+        var s = Create();
+        var debt = await s.OwnerDebt.RecordDebtAsync("أ", 100m, null, null, DateTime.Today);
+
+        var settlement = await s.OwnerDebt.RecordSettlementAsync(debt.Id, "ب", 100m, OwnerDebtSettlementSource.PettyCash, null, null, DateTime.Today);
+
+        settlement.PartnerName.Should().Be("أ");
+    }
 }

@@ -102,4 +102,33 @@ public class DailyJournalServiceTests
         var tx = await check.WorkerTransactions.SingleAsync(t => t.Type == WorkerTransactionType.WageAccrual);
         tx.DailyExpenseItemId.Should().Be(item.Id);
     }
+
+    [Fact]
+    public async Task Save_BankingDetailsNotMatchingBankingTotal_IsRejected()
+    {
+        using var db = new SharedSqliteDatabase();
+        using var sp = db.BuildServices();
+        int bankId;
+        await using (var ctx = db.CreateDbContext())
+        {
+            var bank = new BankAccount { FriendlyName = "مصرف", OpeningBalance = 0m, IsActive = true };
+            ctx.BankAccounts.Add(bank);
+            await ctx.SaveChangesAsync();
+            bankId = bank.Id;
+        }
+        var service = new DailyJournalService(db, sp.GetRequiredService<IServiceScopeFactory>());
+        var r = Request();
+        var request = new JournalSaveRequest
+        {
+            JournalDate = r.JournalDate, Shift = r.Shift, ShiftDisplayName = r.ShiftDisplayName, EmployeeName = r.EmployeeName,
+            TotalSales = 1500m, BankingTotal = 500m, ActualCash = 1000m,
+            BankingItems = new() { new BankingItem { Amount = 100m, BankAccountId = bankId } },
+        };
+
+        var result = await service.SaveAsync(request);
+
+        result.Success.Should().BeFalse("400 of banking sales would reach no bank account");
+        await using var check = db.CreateDbContext();
+        (await check.DailyJournals.CountAsync()).Should().Be(0);
+    }
 }

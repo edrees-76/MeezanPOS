@@ -20,7 +20,8 @@ public sealed record JournalExpenseFilter(
 
 /// <summary>مجاميع يومية مرحّلة لبطاقات أشهر الأرشيف.</summary>
 public sealed record ArchivedJournalTotals(
-    DateTime JournalDate, FinancialStatus FinancialStatus, decimal TotalSales, decimal BankingTotal, decimal TotalExpenses);
+    DateTime JournalDate, FinancialStatus FinancialStatus, decimal TotalSales, decimal BankingTotal, decimal TotalExpenses,
+    decimal ReturnsTotal, decimal FreeOrdersTotal);
 
 /// <summary>استعلامات شاشة مصروفات الورديات وشاشة المجاني والمرتجعات (كانت داخل الشاشات).</summary>
 public interface IJournalExpenseQueryService
@@ -87,7 +88,8 @@ public sealed class JournalExpenseQueryService : IJournalExpenseQueryService
         // الأعمدة المطلوبة فقط، بلا تحميل بنود كل اليوميات المؤرشفة
         return await db.DailyJournals.AsNoTracking()
             .Where(j => j.FinancialStatus == FinancialStatus.Posted || j.FinancialStatus == FinancialStatus.Archived)
-            .Select(j => new ArchivedJournalTotals(j.JournalDate, j.FinancialStatus, j.TotalSales, j.BankingTotal, j.TotalExpenses))
+            .Select(j => new ArchivedJournalTotals(j.JournalDate, j.FinancialStatus, j.TotalSales, j.BankingTotal, j.TotalExpenses,
+                j.ReturnsTotal, j.FreeOrdersTotal))
             .ToListAsync();
     }
 

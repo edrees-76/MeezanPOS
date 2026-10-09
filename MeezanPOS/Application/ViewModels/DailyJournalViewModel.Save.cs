@@ -49,6 +49,7 @@ public partial class DailyJournalViewModel
             if (!result.Success)
             {
                 StatusMessage = result.Error ?? "تعذر الحفظ.";
+                Dialogs.Show(StatusMessage, "تعذر الحفظ", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
                 return;
             }
 

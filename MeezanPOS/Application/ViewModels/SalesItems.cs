@@ -57,7 +57,12 @@ public partial class MonthSummaryCard : ObservableObject
     [NotifyPropertyChangedFor(nameof(NetProfit))]
     private decimal totalExpenses;
 
-    public decimal NetProfit => TotalSales - TotalExpenses;
+    /// <summary>المرتجعات والطلبات المجانية: تُخصم من المبيعات قبل الربح.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NetProfit))]
+    private decimal totalDeductions;
+
+    public decimal NetProfit => TotalSales - TotalDeductions - TotalExpenses;
 
     [ObservableProperty]
     private int daysCount;

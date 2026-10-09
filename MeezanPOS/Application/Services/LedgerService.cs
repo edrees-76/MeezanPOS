@@ -65,7 +65,7 @@ public class LedgerService : ILedgerService
                 SupplierInvoiceId = invoice.Id,
                 TransactionDate = invoice.InvoiceDate
             };
-            
+
             _context.SupplierTransactions.Add(ledgerTx);
             await _context.SaveChangesAsync();
 
@@ -102,7 +102,12 @@ public class LedgerService : ILedgerService
             if (targetInvoiceId.HasValue)
             {
                 var invoice = await _context.SupplierInvoices.FindAsync(targetInvoiceId.Value);
-                if (invoice != null)
+                // كانت الفاتورة تُحدَّث بمعرفها وحده: دفعة لمورد على فاتورة مورد آخر تسدد فاتورة الأول
+                // وتخصم رصيد الثاني
+                if (invoice == null || invoice.IsDeleted)
+                    throw new InvalidOperationException("الفاتورة المحددة للدفعة غير موجودة.");
+                if (invoice.SupplierId != supplierId)
+                    throw new InvalidOperationException("الفاتورة المحددة لا تخص هذا المورد.");
                 {
                     var remaining = invoice.TotalAmount - invoice.PaidAmount;
                     if (amount > remaining)
@@ -285,7 +290,7 @@ public class LedgerService : ILedgerService
             var dbInvoice = await _context.SupplierInvoices
                 .Include(i => i.Items)
                 .FirstOrDefaultAsync(i => i.Id == invoice.Id);
-                
+
             if (dbInvoice == null) throw new Exception("الفاتورة غير موجودة في قاعدة البيانات.");
 
             // تحديث الحقول الأساسية للفاتورة
@@ -308,7 +313,7 @@ public class LedgerService : ILedgerService
             var payments = await _context.SupplierTransactions
                 .Where(t => t.SupplierInvoiceId == dbInvoice.Id && t.Type == SupplierTransactionType.DecreaseDebt && !t.IsDeleted)
                 .ToListAsync();
-            
+
             dbInvoice.PaidAmount = payments.Sum(p => p.Amount);
             if (dbInvoice.PaidAmount >= dbInvoice.TotalAmount)
                 dbInvoice.Status = InvoiceStatus.Paid;
@@ -450,7 +455,7 @@ public class LedgerService : ILedgerService
                     {
                         // إذا تغير الحساب البنكي، نقوم بحذف القديم وتسجيل حركة جديدة
                         await _bankService.DeleteTransactionBySourceAsync("SupplierTransaction", ledgerTx.Id);
-                        
+
                         var newBankTx = await _bankService.RecordTransactionAsync(
                             bankAccountId.Value,
                             BankTransactionType.SupplierPayment,

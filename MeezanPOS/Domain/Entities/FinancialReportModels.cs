@@ -8,10 +8,14 @@ public class IncomeStatementReport
     public decimal TotalSales { get; set; }
     public decimal CashSales { get; set; }
     public decimal CardSales { get; set; }
+    public decimal ReturnsTotal { get; set; }
+    public decimal FreeOrdersTotal { get; set; }
+    /// <summary>صافي المبيعات بنفس تعريف اليومية: الإجمالي ناقص المرتجعات والطلبات المجانية.</summary>
+    public decimal NetSales => TotalSales - ReturnsTotal - FreeOrdersTotal;
     public decimal DailyExpenses { get; set; }
     public decimal GeneralExpenses { get; set; }
     public decimal TotalExpenses => DailyExpenses + GeneralExpenses;
-    public decimal NetProfit => TotalSales - TotalExpenses;
+    public decimal NetProfit => NetSales - TotalExpenses;
 }
 
 public class ExpenseCategoryReportItem

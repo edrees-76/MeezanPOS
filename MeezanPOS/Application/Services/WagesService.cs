@@ -109,8 +109,9 @@ public class WagesService : IWagesService
                     att.DeductionAmount = deductionTx.DebitAmount;
                 }
 
+                // بيانات قديمة: كان الخصم يُحفظ حركةً مدينة في حساب العامل
                 var settlementTx = txs.FirstOrDefault(t => t.AttendanceId == att.Id && t.Type == WorkerTransactionType.Adjustment && t.Notes != null && t.Notes.Contains("تسوية سلفة"));
-                if (settlementTx != null)
+                if (settlementTx != null && att.AdvanceDeducted == 0)
                 {
                     att.AdvanceDeducted = settlementTx.DebitAmount;
                 }
@@ -260,38 +261,13 @@ public class WagesService : IWagesService
                                           t.Notes != null && t.Notes.Contains("تسوية سلفة") &&
                                           !t.IsDeleted);
 
-            if (att.AdvanceDeducted > 0)
+            // خصم السلفة بيان محفوظ في سجل الحضور فقط. كان يُسجل حركة مدينة فيزيد دين العامل بدل أن ينقصه
+            // (السلفة مدينة، والأجر المستحق دائن يسقطها؛ الحركة الإضافية تحسب الخصم مرتين).
+            // تُحذف أي حركة قديمة من هذا النوع عند إعادة حفظ اليوم.
+            if (existingAdvanceSettlement != null)
             {
-                if (existingAdvanceSettlement == null)
-                {
-                    var settlementTx = new WorkerTransaction
-                    {
-                        WorkerId = att.WorkerId.Value,
-                        WorkerName = att.WorkerName,
-                        TransactionDate = targetDate,
-                        Type = WorkerTransactionType.Adjustment,
-                        CreditAmount = 0m,
-                        DebitAmount = att.AdvanceDeducted,
-                        AttendanceId = att.Id,
-                        Notes = $"تسوية سلفة من الحضور اليومي - {GetShiftNameArabic(att.ShiftType)}"
-                    };
-                    _context.WorkerTransactions.Add(settlementTx);
-                }
-                else
-                {
-                    existingAdvanceSettlement.DebitAmount = att.AdvanceDeducted;
-                    existingAdvanceSettlement.WorkerName = att.WorkerName;
-                    existingAdvanceSettlement.UpdatedAt = DateTime.UtcNow;
-                    _context.Entry(existingAdvanceSettlement).State = EntityState.Modified;
-                }
-            }
-            else
-            {
-                if (existingAdvanceSettlement != null)
-                {
-                    existingAdvanceSettlement.IsDeleted = true;
-                    existingAdvanceSettlement.UpdatedAt = DateTime.UtcNow;
-                }
+                existingAdvanceSettlement.IsDeleted = true;
+                existingAdvanceSettlement.UpdatedAt = DateTime.UtcNow;
             }
         }
 

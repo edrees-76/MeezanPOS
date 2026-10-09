@@ -376,8 +376,9 @@ public partial class DashboardViewModel : ObservableObject
                 var expVal = expDailyVal + expGenVal;
                 var prevExpVal = prevExpDailyVal + prevExpGenVal;
 
-                var profitVal = salesVal - expVal;
-                var prevProfitVal = prevSalesVal - prevExpVal;
+                // الربح من صافي المبيعات (بعد المرتجعات والمجاني) كما في اليومية وقائمة الدخل
+                var profitVal = salesVal - currentJournals.Sum(j => j.ReturnsTotal + j.FreeOrdersTotal) - expVal;
+                var prevProfitVal = prevSalesVal - prevJournals.Sum(j => j.ReturnsTotal + j.FreeOrdersTotal) - prevExpVal;
 
                 // Cash balance trend comparison
                 // من مجموع الحركات السارية حتى نهاية الفترة السابقة: BalanceAfter لآخر حركة بالتاريخ
