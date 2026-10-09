@@ -1,0 +1,193 @@
+<UserControl x:Class="MeezanPOS.Presentation.Views.UsersActivityView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="1100"
+             FlowDirection="RightToLeft"
+             Background="{StaticResource Brush.Canvas}">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+
+        <!-- رسالة نتيجة عمليات المستخدمين: خضراء للنجاح وحمراء للخطأ -->
+        <Style x:Key="UserMessageBorder" TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,14,0,0"/>
+            <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding UserMessageIsError}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding UserMessage}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="UserMessageText" TargetType="TextBlock">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding UserMessageIsError}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="24,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- العنوان -->
+        <Border Style="{StaticResource PageHeader}" Margin="0,0,0,16">
+            <DockPanel>
+                <Border Width="44" Height="44" CornerRadius="12" Background="{StaticResource Brush.PrimarySoft}" Margin="0,0,14,0">
+                    <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24" Foreground="{StaticResource Brush.Primary}"
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="المستخدمون والنشاط" Style="{StaticResource Text.PageTitle}"/>
+                    <TextBlock Text="حسابات الموظفين وصلاحياتهم، وسجل بكل عملية: من نفّذها ومتى (السجل للقراءة فقط ولا يُحذف)" Style="{StaticResource Text.Caption}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <TabControl Grid.Row="1">
+            <!-- ═══════════ المستخدمون ═══════════ -->
+            <TabItem Header="المستخدمون">
+                <Grid Margin="0,16,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="310"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <DockPanel>
+                            <WrapPanel DockPanel.Dock="Bottom" Margin="12">
+                                <Button Content="إيقاف / تفعيل الحساب" Style="{StaticResource Button.Secondary}" Command="{Binding ToggleActiveCommand}" Margin="0,0,8,8"/>
+                                <Button Content="إعادة تعيين كلمة المرور" Style="{StaticResource Button.Secondary}" Command="{Binding ResetPasswordCommand}" Margin="0,0,8,8"/>
+                                <Button Content="فك القفل" Style="{StaticResource Button.Secondary}" Command="{Binding UnlockUserCommand}" Margin="0,0,8,8"
+                                        ToolTip="للحساب المقفل مؤقتاً بعد محاولات دخول فاشلة"/>
+                                <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding ChangeRoleTo}" Width="120" Margin="0,0,8,8"
+                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="10,4"
+                                          materialDesign:HintAssist.Hint="الدور الجديد"/>
+                                <Button Content="تغيير الدور" Style="{StaticResource Button.Secondary}" Command="{Binding ChangeRoleCommand}" Margin="0,0,0,8"/>
+                            </WrapPanel>
+                            <DataGrid ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
+                                      AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="اسم الدخول" Binding="{Binding Username}" Width="Auto" MinWidth="110"/>
+                                    <DataGridTextColumn Header="الاسم الكامل" Binding="{Binding FullName}" Width="*" MinWidth="140"/>
+                                    <DataGridTextColumn Header="الدور" Binding="{Binding RoleName}" Width="Auto" MinWidth="90"/>
+                                    <DataGridTextColumn Header="الحالة" Binding="{Binding StatusText}" Width="Auto" MinWidth="90"/>
+                                    <DataGridTextColumn Header="محاولات فاشلة" Binding="{Binding FailedLoginAttempts}" Width="Auto" MinWidth="90"/>
+                                    <DataGridTextColumn Header="آخر دخول" Binding="{Binding LastLoginText}" Width="Auto" MinWidth="130"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="إضافة مستخدم جديد" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12"/>
+
+                            <TextBlock Text="اسم الدخول" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,6" FlowDirection="LeftToRight" Margin="0,0,0,10"/>
+
+                            <TextBlock Text="الاسم الكامل" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,6" Margin="0,0,0,10"/>
+
+                            <TextBlock Text="الدور" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding NewRole}" Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                                      Padding="10,6" Margin="0,0,0,10"/>
+
+                            <TextBlock Text="كلمة مرور مؤقتة" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding TemporaryPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,6" FlowDirection="LeftToRight" Margin="0,0,0,4"/>
+                            <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,14"
+                                       Text="تُستخدم للحساب الجديد ولإعادة تعيين كلمة مرور المستخدم المحدد. سيُطلب من المستخدم تغييرها عند أول دخول."/>
+
+                            <Button Content="إضافة المستخدم" Style="{StaticResource Button.Primary}" Command="{Binding AddUserCommand}" HorizontalAlignment="Stretch"/>
+
+                            <Border Style="{StaticResource UserMessageBorder}">
+                                <TextBlock Text="{Binding UserMessage}" Style="{StaticResource UserMessageText}"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════ سجل النشاط ═══════════ -->
+            <TabItem Header="سجل النشاط">
+                <Border Style="{StaticResource Card}" Padding="0" Margin="0,16,0,0">
+                    <DockPanel>
+                        <!-- الفلاتر -->
+                        <WrapPanel DockPanel.Dock="Top" Margin="16,14,16,6">
+                            <StackPanel Margin="0,0,12,8">
+                                <TextBlock Text="من" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                <DatePicker SelectedDate="{Binding ActivityFrom}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,8">
+                                <TextBlock Text="إلى" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                <DatePicker SelectedDate="{Binding ActivityTo}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,8">
+                                <TextBlock Text="المستخدم" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding ActivityUsers}" SelectedItem="{Binding SelectedActivityUser}" DisplayMemberPath="Name"
+                                          Width="200" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,12,8">
+                                <TextBlock Text="نوع العملية" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                                          Width="190" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
+                            </StackPanel>
+                            <Button Content="عرض" Style="{StaticResource Button.Primary}" Command="{Binding SearchActivityCommand}"
+                                    VerticalAlignment="Bottom" Margin="0,0,8,8"/>
+                            <Button Style="{StaticResource Button.Secondary}" Command="{Binding ExportActivityPdfCommand}"
+                                    VerticalAlignment="Bottom" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="تصدير PDF" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <DockPanel DockPanel.Dock="Bottom" Margin="16,8">
+                            <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                         Visibility="{Binding IsActivityLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                            <TextBlock Text="{Binding ActivitySummary}" Style="{StaticResource Text.Caption}"/>
+                        </DockPanel>
+
+                        <DataGrid ItemsSource="{Binding Activity}" AutoGenerateColumns="False" IsReadOnly="True"
+                                  SelectionMode="Single" EnableRowVirtualization="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="الوقت" Binding="{Binding TimeText}" Width="Auto" MinWidth="130"/>
+                                <DataGridTextColumn Header="المستخدم" Binding="{Binding UserName}" Width="Auto" MinWidth="150"/>
+                                <DataGridTextColumn Header="العملية" Binding="{Binding ActionName}" Width="Auto" MinWidth="130"/>
+                                <DataGridTextColumn Header="السجل" Binding="{Binding RecordText}" Width="Auto" MinWidth="120"/>
+                                <DataGridTextColumn Header="التفاصيل" Binding="{Binding Details}" Width="*" MinWidth="200">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="TextWrapping" Value="Wrap"/>
+                                            <Setter Property="FlowDirection" Value="LeftToRight"/>
+                                            <Setter Property="TextAlignment" Value="Right"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+                </Border>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

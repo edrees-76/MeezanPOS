@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Data.Sqlite;
 using MeezanPOS.Domain.Entities;
 using MeezanPOS.Domain.Enums;
@@ -112,7 +113,7 @@ public class AppDbContext : DbContext
             .HasIndex(t => new { t.WorkerId, t.AttendanceId, t.Type })
             .IsUnique()
             .HasFilter("AttendanceId IS NOT NULL AND IsDeleted = 0");
-        
+
         // Value converters for Enums stored as strings
         modelBuilder.Entity<PostingSession>()
             .Property(s => s.SessionType)
@@ -159,7 +160,7 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(e => e.WorkerId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         // Disable cascade delete
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
         {
@@ -187,7 +188,7 @@ public class AppDbContext : DbContext
             cmd.ExecuteNonQuery();
         }
         catch (Exception ex) { Log.Warning(ex, "Failed to enable WAL journal mode"); }
-        
+
         // بذر مستخدم Admin افتراضي إن لم يكن موجوداً
         if (!context.Users.Any())
         {
@@ -234,7 +235,7 @@ public class AppDbContext : DbContext
     private void SyncWorkerTransactions()
     {
         var entries = ChangeTracker.Entries()
-            .Where(e => (e.Entity is GeneralExpense || e.Entity is DailyExpenseItem) 
+            .Where(e => (e.Entity is GeneralExpense || e.Entity is DailyExpenseItem)
                         && (e.State == EntityState.Added || e.State == EntityState.Modified || e.State == EntityState.Deleted))
             .ToList();
 
@@ -360,14 +361,69 @@ public class AppDbContext : DbContext
     {
         SyncWorkerTransactions();
         AddAutomaticAuditEntries();
-        return base.SaveChanges();
+        var added = CaptureCreatedForAudit();
+        var result = base.SaveChanges();
+        if (AddCreatedAuditEntries(added))
+            base.SaveChanges();
+        return result;
     }
 
-    public override Task<int> SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default)
+    public override async Task<int> SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default)
     {
         SyncWorkerTransactions();
         AddAutomaticAuditEntries();
-        return base.SaveChangesAsync(cancellationToken);
+        var added = CaptureCreatedForAudit();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        if (AddCreatedAuditEntries(added))
+            await base.SaveChangesAsync(cancellationToken);
+        return result;
+    }
+
+    /// <summary>
+    /// السجلات التي يُسجَّل إنشاؤها في سجل النشاط (من أضاف ماذا ومتى). الحركات المشتقة منها
+    /// (حركات النقدية والمصارف الناتجة عن يومية...) لا تُسجَّل حتى لا يغرق السجل.
+    /// </summary>
+    private static bool IsAuditedCreation(BaseEntity entity) => entity switch
+    {
+        DailyJournal or GeneralExpense or SupplierInvoice or Supplier or Worker or BankAccount
+            or OwnerDebt or OwnerDebtSettlement => true,
+        // دفعة مورد من شاشة المورد (دفعات اليومية تتبع اليومية)
+        SupplierTransaction t => t.Type == SupplierTransactionType.DecreaseDebt && t.SourceType != TransactionSourceType.DailyJournalPayment,
+        // إيداع أو سحب يدوي
+        BankTransaction b => b.SourceType == "Manual",
+        // سلفة أو دفعة يدوية للعامل (لا استحقاقات الحضور ولا بنود اليومية)
+        WorkerTransaction w => w.AttendanceId == null && w.DailyExpenseItemId == null && w.GeneralExpenseId == null,
+        _ => false
+    };
+
+    private List<EntityEntry<BaseEntity>> CaptureCreatedForAudit()
+    {
+        if (AuditContext.CurrentUserId is not int) return new();
+        return ChangeTracker.Entries<BaseEntity>()
+            .Where(e => e.State == EntityState.Added && IsAuditedCreation(e.Entity))
+            .ToList();
+    }
+
+    private bool AddCreatedAuditEntries(List<EntityEntry<BaseEntity>> added)
+    {
+        if (added.Count == 0 || AuditContext.CurrentUserId is not int userId) return false;
+        foreach (var entry in added)
+        {
+            var amounts = entry.Properties
+                .Where(p => p.Metadata.ClrType == typeof(decimal) && p.CurrentValue is decimal d && d != 0
+                            && !AuditIgnoredProperties.Contains(p.Metadata.Name))
+                .Select(p => $"{p.Metadata.Name}={p.CurrentValue}");
+            AuditLogs.Add(new AuditLog
+            {
+                UserId = userId,
+                Action = "AutoCreate",
+                EntityName = entry.Entity.GetType().Name,
+                EntityId = entry.Entity.Id,
+                Changes = string.Join(" | ", amounts),
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        return true;
     }
 
     /// <summary>

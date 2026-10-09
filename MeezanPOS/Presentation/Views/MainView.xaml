@@ -175,6 +175,12 @@
                             <TextBlock Text="الإعدادات" Style="{StaticResource NavText}"/>
                         </DockPanel>
                     </ListBoxItem>
+                    <ListBoxItem Visibility="{Binding NavVisible[10], Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <DockPanel>
+                            <materialDesign:PackIcon Kind="AccountGroupOutline" Style="{StaticResource NavIcon}"/>
+                            <TextBlock Text="المستخدمون والنشاط" Style="{StaticResource NavText}"/>
+                        </DockPanel>
+                    </ListBoxItem>
                 </ListBox>
 
                 <!-- بطاقة المستخدم وتسجيل الخروج -->

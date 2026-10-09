@@ -403,7 +403,9 @@ public partial class SettingsViewModel : ObservableObject
                     "Users",
                     "Roles",
                     "__EFMigrationsHistory",
-                    "Settings"
+                    "Settings",
+                    // سجل النشاط يبقى بعد إعادة الضبط، ومعه سطر يوثّق من نفّذها ومتى
+                    "AuditLogs"
                 };
 
                 using (var conn = new SqliteConnection($"Data Source={dbPath}"))
@@ -490,6 +492,18 @@ public partial class SettingsViewModel : ObservableObject
                     {
                         transaction.Rollback();
                         throw;
+                    }
+
+                    using (var auditCmd = conn.CreateCommand())
+                    {
+                        auditCmd.CommandText =
+                            "INSERT INTO AuditLogs (EntityName, EntityId, Action, Changes, UserId, CreatedAt, IsDeleted) " +
+                            "VALUES ('System', 0, $action, $changes, $user, $at, 0);";
+                        auditCmd.Parameters.AddWithValue("$action", MeezanPOS.Application.Services.ActivityLabels.SystemReset);
+                        auditCmd.Parameters.AddWithValue("$changes", $"نسخة الأمان قبل الضبط: {Path.GetFileName(safetyBackup)}");
+                        auditCmd.Parameters.AddWithValue("$user", authenticatedUser.Id);
+                        auditCmd.Parameters.AddWithValue("$at", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF"));
+                        await auditCmd.ExecuteNonQueryAsync();
                     }
 
                     // إعادة مشغّلات حماية السجلات المرحّلة (حُذفت أعلاه لتفريغ البيانات؛ الترحيل لا يُعاد تطبيقه)

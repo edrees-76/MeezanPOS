@@ -61,6 +61,7 @@ public partial class MainViewModel : ObservableObject
         ["FreeOrdersReturns"] = MeezanPOS.Application.Services.Permissions.ManageReturns,
         ["ClosingAccount"] = MeezanPOS.Application.Services.Permissions.ClosingAccount,
         ["Settings"] = MeezanPOS.Application.Services.Permissions.ViewSettings,
+        ["Users"] = MeezanPOS.Application.Services.Permissions.ManageUsers,
     };
 
     private bool IsAllowed(string viewName)
@@ -81,7 +82,7 @@ public partial class MainViewModel : ObservableObject
     private static readonly string[] NavOrder =
     {
         "Dashboard", "AddJournal", "Sales", "Suppliers", "Expenses",
-        "Wages", "Banking", "FreeOrdersReturns", "ClosingAccount", "Settings"
+        "Wages", "Banking", "FreeOrdersReturns", "ClosingAccount", "Settings", "Users"
     };
 
     private int selectedNavIndex = 0;
@@ -227,6 +228,11 @@ public partial class MainViewModel : ObservableObject
                 SelectedNavIndex = 9;
                 CurrentViewModel = new SettingsViewModel();
                 break;
+            case "Users":
+                Title = "ميزان للمالية - المستخدمون والنشاط";
+                SelectedNavIndex = 10;
+                CurrentViewModel = new UsersActivityViewModel();
+                break;
             case "AddJournal":
                 Title = "ميزان للمالية - تسجيل حركة يومية";
                 SelectedNavIndex = 1;
@@ -251,6 +257,21 @@ public partial class MainViewModel : ObservableObject
         if (result == MessageBoxResult.No)
         {
             return;
+        }
+
+        // تسجيل الخروج في سجل النشاط (لا يمنع الخروج إن فشل)
+        if (_session?.CurrentUser is { } user)
+        {
+            try
+            {
+                MeezanPOS.Application.Services.AppServiceProvider.Resolve<MeezanPOS.Application.Interfaces.IAuthenticationService>()
+                    .RecordSessionEventAsync(user.Id, MeezanPOS.Application.Services.ActivityLabels.Logout)
+                    .GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Warning(ex, "تعذر تسجيل الخروج في سجل النشاط");
+            }
         }
 
         _session?.ClearSession();

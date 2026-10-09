@@ -154,7 +154,12 @@ public sealed class WindowService : IWindowService
 
     public void ShowWorkerStatement(WorkerWageSummary summary) => OnUi(() => ShowModal(new WorkerStatementWindow(summary)));
 
-    public void ShowUserManagement() => OnUi(() => ShowModal(new UserManagementWindow()));
+    // إدارة المستخدمين صارت قسماً في القائمة الجانبية ("المستخدمون والنشاط")
+    public void ShowUserManagement() => OnUi(() =>
+    {
+        if (System.Windows.Application.Current?.MainWindow?.DataContext is MeezanPOS.Application.ViewModels.MainViewModel main)
+            main.NavigateCommand.Execute("Users");
+    });
 
     public void ShowMainShell() => OnUi(() => SwitchShell(new MainView()));
 

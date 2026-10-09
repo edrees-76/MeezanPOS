@@ -23,6 +23,8 @@ public static class PostedRecordTriggers
         "trg_PreventDeletePostedSupplierTransaction_Journal",
         "trg_PreventUpdatePostedSupplierTransaction_Expense",
         "trg_PreventDeletePostedSupplierTransaction_Expense",
+        "trg_PreventUpdateAuditLog",
+        "trg_PreventDeleteAuditLog",
     };
 
     // التحديث مسموح عند الانتقال من/إلى "مرحّل" (الترحيل وفك الترحيل)، وممنوع إذا بقي مرحّلاً
@@ -108,6 +110,19 @@ public static class PostedRecordTriggers
           )
           BEGIN
               SELECT RAISE(FAIL, 'Cannot delete a supplier transaction linked to a posted general expense.');
+          END;",
+
+        // سجل النشاط للقراءة فقط: لا تعديل ولا حذف لأي سطر فيه
+        @"CREATE TRIGGER trg_PreventUpdateAuditLog
+          BEFORE UPDATE ON AuditLogs
+          BEGIN
+              SELECT RAISE(FAIL, 'The activity log is read-only.');
+          END;",
+
+        @"CREATE TRIGGER trg_PreventDeleteAuditLog
+          BEFORE DELETE ON AuditLogs
+          BEGIN
+              SELECT RAISE(FAIL, 'The activity log is read-only.');
           END;",
     };
 

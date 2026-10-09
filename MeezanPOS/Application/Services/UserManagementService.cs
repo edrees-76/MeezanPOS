@@ -18,6 +18,8 @@ public interface IUserManagementService
     Task ResetPasswordAsync(int userId, string temporaryPassword);
     Task SetActiveAsync(int userId, bool isActive);
     Task ChangeRoleAsync(int userId, RoleType role);
+    /// <summary>فك قفل حساب أُقفل مؤقتاً بسبب محاولات دخول فاشلة.</summary>
+    Task UnlockAsync(int userId);
 }
 
 /// <summary>
@@ -159,6 +161,17 @@ public class UserManagementService : IUserManagementService
         await _context.SaveChangesAsync();
 
         await _audit.LogAsync(_session.CurrentUserId, isActive ? "EnableUser" : "DisableUser", nameof(User), user.Id, null, user.Username);
+    }
+
+    public async Task UnlockAsync(int userId)
+    {
+        _session.RequirePermission(Permissions.ManageUsers);
+        var user = await GetUserForUpdateAsync(userId);
+        user.FailedLoginAttempts = 0;
+        user.LockoutEnd = null;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await _audit.LogAsync(_session.CurrentUserId, ActivityLabels.UnlockUser, nameof(User), user.Id, null, user.Username);
     }
 
     public async Task ChangeRoleAsync(int userId, RoleType role)

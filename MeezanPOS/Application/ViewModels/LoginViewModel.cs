@@ -112,6 +112,15 @@ public partial class LoginViewModel : ObservableObject
             // تسجيل الجلسة
             var session = AppServiceProvider.Resolve<ISessionService>();
             session.SetUser(user);
+            try
+            {
+                await authService.RecordSessionEventAsync(user.Id, ActivityLabels.Login);
+            }
+            catch (Exception ex)
+            {
+                // سجل النشاط لا يمنع الدخول
+                Log.Warning(ex, "تعذر تسجيل الدخول في سجل النشاط");
+            }
 
             SaveSettings();
 

@@ -45,6 +45,11 @@ public class AuthenticationService : IAuthenticationService
                 user.LockoutEnd = DateTime.UtcNow.AddMinutes(minutes);
                 Log.Warning("تم قفل المستخدم {Username} لمدة {Minutes} دقيقة بعد {Attempts} محاولات فاشلة",
                     username, minutes, user.FailedLoginAttempts);
+                AddEvent(user.Id, ActivityLabels.LockedOut, $"محاولات فاشلة: {user.FailedLoginAttempts} | مدة القفل: {minutes:0} دقيقة");
+            }
+            else
+            {
+                AddEvent(user.Id, ActivityLabels.LoginFailed, $"محاولات فاشلة متتالية: {user.FailedLoginAttempts}");
             }
             await _context.SaveChangesAsync();
             return null;
@@ -62,4 +67,21 @@ public class AuthenticationService : IAuthenticationService
 
     public string HashPassword(string password)
         => BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+
+    public async Task RecordSessionEventAsync(int userId, string action)
+    {
+        AddEvent(userId, action, string.Empty);
+        await _context.SaveChangesAsync();
+    }
+
+    private void AddEvent(int userId, string action, string details)
+        => _context.AuditLogs.Add(new AuditLog
+        {
+            UserId = userId,
+            Action = action,
+            EntityName = nameof(User),
+            EntityId = userId,
+            Changes = details,
+            CreatedAt = DateTime.UtcNow
+        });
 }
