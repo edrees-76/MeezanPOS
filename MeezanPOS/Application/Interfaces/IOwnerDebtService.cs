@@ -14,6 +14,13 @@ public interface IOwnerDebtService
     Task<OwnerDebt> RecordDebtAsync(string partnerName, decimal amount, string? expenseCategory, string? notes, DateTime date, string? sourceType = null, int? sourceId = null, string? paymentMethod = null, string? transferReference = null, int? bankAccountId = null);
     Task DeleteDebtAsync(int debtId);
 
+    /// <summary>تمويل من شريك: الدين والمبلغ المستلم (مصرف أو خزينة) في عملية واحدة.</summary>
+    Task<OwnerDebt> RecordFundingAsync(string partnerName, decimal amount, string? notes, DateTime date,
+        OwnerFundingDestination destination, int? bankAccountId, bool viaTransfer, string? transferReference);
+
+    /// <summary>حذف تمويل شريك مع حركته المصرفية أو النقدية، بعد التحقق من إمكان الحذف.</summary>
+    Task DeleteFundingAsync(int debtId);
+
     // التسويات
     Task<List<OwnerDebtSettlement>> GetSettlementsAsync(string? partnerName = null);
     Task<OwnerDebtSettlement> RecordSettlementAsync(int? debtId, string partnerName, decimal amount, OwnerDebtSettlementSource source, int? bankAccountId, string? notes, DateTime date);
@@ -24,7 +31,7 @@ public interface IOwnerDebtService
     Task<decimal> GetTotalOwnerSettlementsAsync(string? partnerName = null);
     Task<decimal> GetNetOwnerBalanceAsync(string? partnerName = null);
     Task<List<string>> GetPartnerNamesAsync();
-    
+
     // التقرير وكشف الحساب
     Task<List<PartnerSummaryDto>> GetPartnersSummaryAsync();
     Task<List<PartnerStatementEntryDto>> GetPartnerStatementAsync(string partnerName);

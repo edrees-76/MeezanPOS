@@ -76,51 +76,16 @@ public partial class BankingServicesViewModel
         IsLoading = true;
         try
         {
-            // 1. تسجيل الدين في سجل الشركاء
-            var debt = await _ownerDebtService.RecordDebtAsync(
+            // الدين والإيداع المصرفي أو النقدي في عملية واحدة داخل الخدمة
+            await _ownerDebtService.RecordFundingAsync(
                 DebtPartnerName,
                 DebtAmount,
-                "تمويل تشغيلي",
                 DebtNotes,
                 DebtDate,
-                isBankDestination ? "Bank" : "Cash",
+                (OwnerFundingDestination)SelectedDebtDestinationIndex,
                 isBankDestination ? DebtBankAccount?.Id : null,
-                SelectedDebtPaymentMethodIndex == 1 ? "Transfer" : "Cash",
-                SelectedDebtPaymentMethodIndex == 1 ? DebtTransferReference : null);
-
-            // 2. إذا كانت الوجهة هي البنك، نسجل حركة إيداع في المصرف
-            if (isBankDestination && DebtBankAccount != null)
-            {
-                bool isBankTransfer = (SelectedDebtPaymentMethodIndex == 1);
-
-                // التحقق من إدخال أخر 4 أرقام عند التحويل المصرفي
-                if (isBankTransfer && string.IsNullOrWhiteSpace(DebtTransferReference))
-                {
-                    Dialogs.Show("يرجى إدخال أخر 4 أرقام من عملية التحويل المصرفي.", "تنبيه", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                var bankNotes = $"تمويل من الشريك: {DebtPartnerName}";
-                if (isBankTransfer && !string.IsNullOrWhiteSpace(DebtTransferReference))
-                    bankNotes += $" | رقم العملية: {DebtTransferReference}";
-                if (!string.IsNullOrEmpty(DebtNotes)) bankNotes += $" | {DebtNotes}";
-
-                // المرجع: أرقام التحويل أو "تمويل شريك" للنقدي
-                string reference = isBankTransfer ? DebtTransferReference : "تمويل شريك";
-
-                // SourceType يميّز نوع الدفع: OwnerDebt_Transfer أو OwnerDebt_Cash
-                string sourceType = isBankTransfer ? "OwnerDebt_Transfer" : "OwnerDebt_Cash";
-
-                await _bankService.RecordTransactionAsync(
-                    DebtBankAccount.Id,
-                    BankTransactionType.Deposit,
-                    DebtAmount,
-                    reference,
-                    bankNotes,
-                    sourceType,
-                    debt.Id,
-                    DebtDate);
-            }
+                viaTransfer: isBankDestination && SelectedDebtPaymentMethodIndex == 1,
+                DebtTransferReference);
 
             Dialogs.Show("تم حفظ بيانات تمويل الشريك بنجاح.", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
             IsDebtFormOpen = false;
@@ -207,16 +172,8 @@ public partial class BankingServicesViewModel
         IsLoading = true;
         try
         {
-            // حذف الحركة البنكية المرتبطة إن وجدت
-            if (debt.SourceType == "Bank")
-            {
-                // نحاول حذف جميع احتمالات SourceType لضمان التنظيف الكامل
-                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt", debt.Id);
-                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt_Transfer", debt.Id);
-                await _bankService.DeleteTransactionBySourceAsync("OwnerDebt_Cash", debt.Id);
-            }
-
-            await _ownerDebtService.DeleteDebtAsync(debt.Id);
+            // التحقق ثم حذف الدين وحركته المصرفية أو النقدية في عملية واحدة
+            await _ownerDebtService.DeleteFundingAsync(debt.Id);
             Dialogs.Show("تم حذف قيد الدين بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             await LoadDataAsync();
         }

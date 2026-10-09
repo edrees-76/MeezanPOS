@@ -15,12 +15,35 @@ public class BankService : IBankService
     private readonly AppDbContext _context;
     private readonly ISessionService _session;
     private readonly AuditService _auditService;
+    private readonly ICashLedgerService? _cashLedger;
 
-    public BankService(AppDbContext context, ISessionService session, AuditService auditService)
+    public BankService(AppDbContext context, ISessionService session, AuditService auditService, ICashLedgerService? cashLedger = null)
     {
         _context = context;
         _session = session;
         _auditService = auditService;
+        _cashLedger = cashLedger;
+    }
+
+    /// <summary>
+    /// الحساب برصيده الحالي من قاعدة البيانات. سياق الشاشة يعيش طويلاً، والكيان المتتبَّع فيه قد يحمل
+    /// رصيداً قديماً بعد حركات سجلتها شاشة أخرى؛ البناء عليه كان يُسقط تلك الحركات من الرصيد.
+    /// </summary>
+    private async Task<BankAccount?> LoadAccountFreshAsync(int bankAccountId)
+    {
+        var account = await _context.BankAccounts.FindAsync(bankAccountId);
+        if (account != null && _context.Entry(account).State == EntityState.Unchanged)
+            await _context.Entry(account).ReloadAsync();
+        return account;
+    }
+
+    /// <summary>حركة بتاريخ أقدم من آخر حركة: أرصدة ما بعدها تُعاد بالترتيب الزمني.</summary>
+    private async Task RebuildIfBackdatedAsync(int bankAccountId, DateTime date, int newTxId)
+    {
+        bool hasLater = await _context.BankTransactions
+            .AnyAsync(t => t.BankAccountId == bankAccountId && !t.IsDeleted && t.Id != newTxId && t.TransactionDate > date);
+        if (hasLater)
+            await RebuildAccountBalanceAsync(bankAccountId);
     }
 
     public async Task<List<BankAccount>> GetAllAccountsAsync()
@@ -77,7 +100,7 @@ public class BankService : IBankService
     public async Task<List<BankTransaction>> GetTransactionsAsync(int bankAccountId, DateTime fromDate, DateTime toDate)
     {
         return await _context.BankTransactions
-            .Where(t => t.BankAccountId == bankAccountId && !t.IsDeleted && 
+            .Where(t => t.BankAccountId == bankAccountId && !t.IsDeleted &&
                         t.TransactionDate.Date >= fromDate.Date && t.TransactionDate.Date <= toDate.Date)
             .OrderBy(t => t.TransactionDate)
             .ThenBy(t => t.CreatedAt)
@@ -89,7 +112,7 @@ public class BankService : IBankService
         if (amount <= 0)
             throw new ArgumentException("مبلغ الحركة البنكية يجب أن يكون أكبر من صفر.");
 
-        var account = await _context.BankAccounts.FindAsync(bankAccountId);
+        var account = await LoadAccountFreshAsync(bankAccountId);
         if (account == null || account.IsDeleted)
             throw new Exception("الحساب البنكي غير موجود.");
 
@@ -114,6 +137,7 @@ public class BankService : IBankService
 
         _context.BankTransactions.Add(tx);
         await _context.SaveChangesAsync();
+        await RebuildIfBackdatedAsync(bankAccountId, date, tx.Id);
         return tx;
     }
 
@@ -127,8 +151,9 @@ public class BankService : IBankService
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
-            var fromAccount = await _context.BankAccounts.FindAsync(fromAccountId);
-            var toAccount = await _context.BankAccounts.FindAsync(toAccountId);
+            _session.RequirePermission(Permissions.ManageBanking);
+            var fromAccount = await LoadAccountFreshAsync(fromAccountId);
+            var toAccount = await LoadAccountFreshAsync(toAccountId);
 
             if (fromAccount == null || fromAccount.IsDeleted || toAccount == null || toAccount.IsDeleted)
                 throw new Exception("أحد الحسابات البنكية غير موجودة.");
@@ -169,6 +194,8 @@ public class BankService : IBankService
             fromTx.SourceId = toTx.Id;
             toTx.SourceId = fromTx.Id;
             await _context.SaveChangesAsync();
+            await RebuildIfBackdatedAsync(fromAccountId, date, fromTx.Id);
+            await RebuildIfBackdatedAsync(toAccountId, date, toTx.Id);
 
             await _auditService.LogAsync(_session.CurrentUsername, "InternalTransfer", "BankTransaction", fromTx.Id, null, $"From Account {fromAccountId} to {toAccountId} Amount {amount}");
 
@@ -183,12 +210,33 @@ public class BankService : IBankService
 
     public async Task RecordDepositAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date)
     {
+        _session.RequirePermission(Permissions.ManageBanking);
+        await PeriodLock.EnsureDateOpenAsync(_context, date);
         await RecordTransactionAsync(bankAccountId, BankTransactionType.Deposit, amount, referenceNumber, notes, "Manual", null, date);
     }
 
-    public async Task RecordWithdrawalAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date)
+    /// <param name="toRestaurantCash">
+    /// السحب لتغذية نقدية المطعم: يُسجل المبلغ وارداً في دفتر النقدية في المعاملة نفسها.
+    /// كان السحب يُنقص المصرف فقط، فيختفي المبلغ من الدفترين.
+    /// </param>
+    public async Task RecordWithdrawalAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date, bool toRestaurantCash = false)
     {
-        await RecordTransactionAsync(bankAccountId, BankTransactionType.Withdrawal, amount, referenceNumber, notes, "Manual", null, date);
+        _session.RequirePermission(Permissions.ManageBanking);
+        await PeriodLock.EnsureDateOpenAsync(_context, date);
+
+        await using var tx = await _context.Database.BeginOrJoinTransactionAsync();
+        var bankTx = await RecordTransactionAsync(bankAccountId, BankTransactionType.Withdrawal, amount, referenceNumber, notes, "Manual", null, date);
+        if (toRestaurantCash)
+        {
+            var cashLedger = _cashLedger
+                ?? throw new InvalidOperationException("خدمة دفتر النقدية غير متاحة لتسجيل السحب في الخزينة.");
+            var account = await _context.BankAccounts.FindAsync(bankAccountId);
+            await cashLedger.RecordMovementAsync(
+                CashMovementType.CashIn, amount, SourceTypes.Bank, bankTx.Id,
+                $"سحب من المصرف {account?.FriendlyName}" + (string.IsNullOrWhiteSpace(notes) ? "" : $" | {notes}"),
+                date);
+        }
+        await tx.CommitAsync();
     }
 
     public async Task<List<CardPaymentReconciliation>> GetPendingCardPaymentsAsync()

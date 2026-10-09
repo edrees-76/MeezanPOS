@@ -151,12 +151,12 @@ public partial class DailyJournalViewModel : ObservableObject
     public bool HasTransport => TransportTotal > 0;
     public bool HasPettyCash => PettyCashTotal > 0;
 
-    /// <summary>تسويات شركاء صُرفت من درج هذه اليومية (تُسجل من شاشة الخدمات المصرفية، وتُعرض هنا فقط).</summary>
+    /// <summary>صافي حركات الشركاء في درج هذه اليومية: تسويات صُرفت (+) ناقص تمويل استُلم (−). تُسجل من شاشة الخدمات المصرفية.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ExpectedCash), nameof(Difference), nameof(DifferenceStatus), nameof(DifferenceColor), nameof(HasDrawerPayouts))]
     private decimal drawerPayouts;
 
-    public bool HasDrawerPayouts => DrawerPayouts > 0;
+    public bool HasDrawerPayouts => DrawerPayouts != 0;
 
     public decimal ExpectedCash => (CashFloat ?? 0) + (CashSalesInput ?? 0) - TotalExpenses - DrawerPayouts - ReturnsAmount - FreeOrdersAmount;
     public decimal Difference => (ActualCash ?? 0) - ExpectedCash;
@@ -588,6 +588,7 @@ public partial class DailyJournalViewModel : ObservableObject
     }
 
     private int? editingJournalId;
+    private long? editingRowVersion;
     private ShiftType? editingJournalShift;
 
     private async System.Threading.Tasks.Task UpdateAvailableShiftsAsync(DateTime date, CancellationToken cancellationToken = default)

@@ -40,9 +40,12 @@ public class CashLedgerService : ICashLedgerService
 
         await _semaphore.WaitAsync();
         var hasActiveTransaction = _context.Database.CurrentTransaction != null;
-        var transaction = !hasActiveTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        // بدء المعاملة داخل try: إن فشل، يُحرَّر القفل في finally بدل أن يبقى محجوزاً فتتعلق كل حركة نقدية بعده
+        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
         try
         {
+            if (!hasActiveTransaction)
+                transaction = await _context.Database.BeginTransactionAsync();
             var txDate = date ?? DateTime.Now;
             
             // جلب رصيد آخر حركة مسجلة — الترتيب بـ Id فقط (AUTOINCREMENT متسلسل)
@@ -113,9 +116,12 @@ public class CashLedgerService : ICashLedgerService
     {
         await _semaphore.WaitAsync();
         var hasActiveTransaction = _context.Database.CurrentTransaction != null;
-        var transaction = !hasActiveTransaction ? await _context.Database.BeginTransactionAsync() : null;
+        // بدء المعاملة داخل try: إن فشل، يُحرَّر القفل في finally بدل أن يبقى محجوزاً فتتعلق كل حركة نقدية بعده
+        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
         try
         {
+            if (!hasActiveTransaction)
+                transaction = await _context.Database.BeginTransactionAsync();
             var original = await _context.CashMovements.FindAsync(movementId);
             if (original == null || original.IsReversed)
                 throw new Exception("الحركة غير موجودة أو تم عكسها بالفعل.");

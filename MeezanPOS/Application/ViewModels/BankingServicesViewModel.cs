@@ -73,6 +73,10 @@ public partial class BankingServicesViewModel : ObservableObject
     [ObservableProperty]
     private string manualTxNotes = string.Empty;
 
+    /// <summary>السحب يدخل نقدية المطعم (الخزينة) فيُسجل وارداً في دفتر النقدية.</summary>
+    [ObservableProperty]
+    private bool withdrawToRestaurantCash = true;
+
     [ObservableProperty]
     private DateTime manualTxDate = DateTime.Now;
 

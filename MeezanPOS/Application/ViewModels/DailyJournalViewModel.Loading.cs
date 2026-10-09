@@ -31,6 +31,7 @@ public partial class DailyJournalViewModel
     {
         IsViewingMode = false;
         editingJournalId = journal.Id;
+        editingRowVersion = journal.RowVersion;
         editingJournalShift = journal.ShiftType;
         LoadJournalData(journal);
         SaveButtonText = "حفظ";

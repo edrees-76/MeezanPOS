@@ -22,7 +22,7 @@ public class DailyJournal : BaseEntity, IPostableEntity
     public decimal CashFloat { get; set; }           // مبلغ الصرف (الفكة)
     public decimal TotalSales { get; set; }           // إجمالي المبيعات من منظومة الكاشير
     public decimal BankingTotal { get; set; }          // إجمالي الخدمات المصرفية (من الدفتر)
-    
+
     // الحسابات التلقائية
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public decimal CashSales => TotalSales - BankingTotal;  // المبيعات النقدية = الإجمالي - المصرفية
@@ -35,8 +35,8 @@ public class DailyJournal : BaseEntity, IPostableEntity
     // المصروفات
     public decimal TotalExpenses { get; set; }         // إجمالي المصروفات النثرية
 
-    // مبالغ صُرفت من درج الكاشير وليست مصروفاً (تسوية مستحقات شريك): تُنقص النقد المتوقع
-    // فلا تظهر عجزاً، ولا تدخل في إجمالي المصروفات. تُحدّث من خدمة ذمم الشركاء فقط.
+    // صافي ما خرج من درج الكاشير للشركاء وليس مصروفاً: تسويات مستحقاتهم (+) ناقص ما دفعوه في الدرج تمويلاً (−).
+    // يُنقص النقد المتوقع فلا تظهر الحركة عجزاً أو زيادة، ولا يدخل في المصروفات. تحدّثه خدمة ذمم الشركاء فقط.
     public decimal DrawerPayouts { get; set; }
 
     // المطابقة النهائية
@@ -54,7 +54,7 @@ public class DailyJournal : BaseEntity, IPostableEntity
 
     // تفاصيل المصروفات
     public ICollection<DailyExpenseItem> ExpenseItems { get; set; } = new List<DailyExpenseItem>();
-    
+
     // تفاصيل الخدمات المصرفية
     public ICollection<BankingItem> BankingItems { get; set; } = new List<BankingItem>();
 
@@ -69,7 +69,7 @@ public class DailyJournal : BaseEntity, IPostableEntity
     public DateTime? PostedDate { get; set; }
     public string? PostedByUserId { get; set; }
     public int? PostingSessionId { get; set; }
-    
+
     [ConcurrencyCheck]
     public long RowVersion { get; set; }
 }
@@ -103,7 +103,7 @@ public class DailyExpenseItem : BaseEntity
     public string? Category { get; set; }
     public string? CategoryName { get; set; }  // اسم النوع بالعربي (مشتريات، غاز...)
 
-    public ExpenseType Type { get; set; } 
+    public ExpenseType Type { get; set; }
     public int? SupplierId { get; set; }
     public Supplier? Supplier { get; set; }
     public string? SupplierName { get; set; }  // اسم المورد (للموردين غير المسجلين)

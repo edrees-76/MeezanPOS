@@ -147,6 +147,130 @@ public class OwnerDebtService : IOwnerDebtService
         await _context.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// كان هذا في شاشة الخدمات المصرفية على خطوات منفصلة: يُنشأ الدين ثم يُتحقق من مرجع التحويل
+    /// ثم يُسجل الإيداع، فالفشل في المنتصف يترك ديناً بلا إيداع. والتمويل النقدي لم يُدخل الخزينة أصلاً.
+    /// </summary>
+    /// <summary>يومية اليوم المسودة التي يُحسب عليها درج الكاشير (آخر وردية فيه).</summary>
+    private Task<DailyJournal?> FindDrawerJournalAsync(DateTime date)
+    {
+        var day = date.Date;
+        var nextDay = day.AddDays(1);
+        return _context.DailyJournals
+            .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= day && j.JournalDate < nextDay)
+            .OrderByDescending(j => j.ShiftType)
+            .ThenByDescending(j => j.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<OwnerDebt> RecordFundingAsync(string partnerName, decimal amount, string? notes, DateTime date,
+        OwnerFundingDestination destination, int? bankAccountId, bool viaTransfer, string? transferReference)
+    {
+        _session.RequirePermission(Permissions.ManageBanking);
+        if (amount <= 0)
+            throw new ArgumentException("مبلغ التمويل يجب أن يكون أكبر من صفر.");
+        if (string.IsNullOrWhiteSpace(partnerName))
+            throw new ArgumentException("يجب تحديد اسم الشريك.");
+        if (destination == OwnerFundingDestination.Bank && !bankAccountId.HasValue)
+            throw new ArgumentException("يجب تحديد الحساب البنكي المستلم للتمويل.");
+        if (destination == OwnerFundingDestination.Bank && viaTransfer && string.IsNullOrWhiteSpace(transferReference))
+            throw new ArgumentException("يرجى إدخال آخر 4 أرقام من عملية التحويل المصرفي.");
+        await PeriodLock.EnsureDateOpenAsync(_context, date);
+
+        await using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
+
+        // المبلغ المستلم في درج الكاشير يُسجل على يومية ذلك اليوم (يرفع نقدها المتوقع)
+        DailyJournal? drawerJournal = null;
+        if (destination == OwnerFundingDestination.CashierDrawer)
+        {
+            drawerJournal = await FindDrawerJournalAsync(date)
+                ?? throw new InvalidOperationException(
+                    $"لا توجد يومية مسودة بتاريخ {date:yyyy/MM/dd} لتسجيل المبلغ في درج الكاشير عليها. " +
+                    "أنشئ يومية هذا اليوم أولاً، أو اختر الخزينة أو المصرف.");
+        }
+
+        bool toBank = destination == OwnerFundingDestination.Bank;
+        // الإيداع المصرفي يسجله RecordDebtAsync نفسه عند تحديد الحساب
+        var debt = await RecordDebtAsync(
+            partnerName.Trim(), amount, "تمويل تشغيلي", notes, date,
+            toBank ? SourceTypes.Bank : drawerJournal != null ? SourceTypes.DailyJournal : SourceTypes.Cash,
+            toBank ? bankAccountId : drawerJournal?.Id,
+            toBank && viaTransfer ? "Transfer" : "Cash",
+            toBank && viaTransfer ? transferReference : null,
+            toBank ? bankAccountId : null);
+
+        if (drawerJournal != null)
+        {
+            // DrawerPayouts صافي ما خرج من الدرج للشركاء؛ ما دخل منهم يُنقصه
+            drawerJournal.DrawerPayouts -= amount;
+            drawerJournal.UpdatedAt = DateTime.UtcNow;
+            drawerJournal.RowVersion++;
+            await _context.SaveChangesAsync();
+        }
+        else if (destination == OwnerFundingDestination.Treasury)
+        {
+            // التمويل النقدي للخزينة يدخل دفتر النقدية (كان يُسجل ديناً فقط)
+            await _cashLedgerService.RecordMovementAsync(
+                CashMovementType.CashIn, amount, SourceTypes.OwnerDebt, debt.Id,
+                $"تمويل نقدي من الشريك {debt.PartnerName}" + (string.IsNullOrWhiteSpace(notes) ? "" : $" - {notes}"),
+                date);
+        }
+
+        await _auditService.LogAsync(_session.CurrentUsername, "RecordFunding", "OwnerDebt", debt.Id, null,
+            $"Funding from {debt.PartnerName} Amount {amount} to {destination}");
+        await transaction.CommitAsync();
+        return debt;
+    }
+
+    public async Task DeleteFundingAsync(int debtId)
+    {
+        _session.RequirePermission(Permissions.ManageBanking);
+        await using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
+
+        var debt = await _context.OwnerDebts.FindAsync(debtId);
+        if (debt == null || debt.IsDeleted)
+            throw new InvalidOperationException("الدين غير موجود.");
+
+        // الديون الناتجة عن مصروف أو دفعة مورد دفعها الشريك تُحذف من مصدرها، وإلا يبقى المصدر بلا دين
+        if (debt.SourceType == SourceTypes.GeneralExpense || debt.SourceType == SourceTypes.SupplierTransaction)
+            throw new InvalidOperationException("هذا الدين ناتج عن مصروف أو دفعة مورد دفعها الشريك، ويُحذف من مصدره.");
+
+        // التحقق قبل أي تعديل: كانت الحركة المصرفية تُحذف ثم يُرفض حذف الدين لوجود تسوية
+        if (await _context.OwnerDebtSettlements.AnyAsync(s => s.OwnerDebtId == debtId && !s.IsDeleted))
+            throw new InvalidOperationException("لا يمكن حذف دين تم تسويته بالفعل. الرجاء حذف التسويات المرتبطة به أولاً.");
+        await PeriodLock.EnsureDateOpenAsync(_context, debt.TransactionDate);
+
+        // تمويل استُلم في درج الكاشير: يُرفع من يوميته ما دامت مفتوحة
+        if (debt.SourceType == SourceTypes.DailyJournal && debt.SourceId.HasValue)
+        {
+            var journal = await _context.DailyJournals.FindAsync(debt.SourceId.Value);
+            if (journal != null)
+            {
+                if (journal.FinancialStatus != FinancialStatus.Draft)
+                    throw new InvalidOperationException(
+                        $"لا يمكن حذف هذا التمويل: استُلم في درج يومية {journal.JournalDate:yyyy/MM/dd} وقد رُحّلت. ألغِ ترحيل اليومية أولاً.");
+                journal.DrawerPayouts += debt.Amount;
+                journal.UpdatedAt = DateTime.UtcNow;
+                journal.RowVersion++;
+            }
+        }
+
+        await _bankService.DeleteTransactionBySourceAsync(SourceTypes.OwnerDebt, debt.Id);
+        await _bankService.DeleteTransactionBySourceAsync(SourceTypes.OwnerDebtTransfer, debt.Id);
+        await _bankService.DeleteTransactionBySourceAsync(SourceTypes.OwnerDebtCash, debt.Id);
+
+        var liveCash = await _context.CashMovements.FindLiveForSourceAsync(SourceTypes.OwnerDebt, debt.Id);
+        if (liveCash != null)
+            await _cashLedgerService.ReverseMovementAsync(liveCash.Id, "حذف تمويل شريك");
+
+        debt.IsDeleted = true;
+        debt.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        await _auditService.LogAsync(_session.CurrentUsername, "DeleteFunding", "OwnerDebt", debt.Id,
+            $"Partner: {debt.PartnerName}, Amount: {debt.Amount}", "Deleted");
+        await transaction.CommitAsync();
+    }
+
     public async Task<List<OwnerDebtSettlement>> GetSettlementsAsync(string? partnerName = null)
     {
         var query = _context.OwnerDebtSettlements
@@ -168,6 +292,8 @@ public class OwnerDebtService : IOwnerDebtService
     {
         if (amount <= 0)
             throw new ArgumentException("مبلغ التسوية يجب أن يكون أكبر من صفر.");
+        _session.RequirePermission(Permissions.ManageBanking);
+        await PeriodLock.EnsureDateOpenAsync(_context, date);
 
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
@@ -198,12 +324,7 @@ public class OwnerDebtService : IOwnerDebtService
             if (source == OwnerDebtSettlementSource.CashRegister)
             {
                 var day = date.Date;
-                var nextDay = day.AddDays(1);
-                drawerJournal = await _context.DailyJournals
-                    .Where(j => j.FinancialStatus == FinancialStatus.Draft && j.JournalDate >= day && j.JournalDate < nextDay)
-                    .OrderByDescending(j => j.ShiftType)
-                    .ThenByDescending(j => j.Id)
-                    .FirstOrDefaultAsync();
+                drawerJournal = await FindDrawerJournalAsync(date);
 
                 if (drawerJournal == null)
                     throw new InvalidOperationException(
@@ -212,6 +333,7 @@ public class OwnerDebtService : IOwnerDebtService
 
                 drawerJournal.DrawerPayouts += amount;
                 drawerJournal.UpdatedAt = DateTime.UtcNow;
+                drawerJournal.RowVersion++;
             }
 
             var settlement = new OwnerDebtSettlement
@@ -285,9 +407,11 @@ public class OwnerDebtService : IOwnerDebtService
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
+            _session.RequirePermission(Permissions.ManageBanking);
             var settlement = await _context.OwnerDebtSettlements.FindAsync(settlementId);
             if (settlement == null || settlement.IsDeleted)
                 throw new Exception("التسوية غير موجودة.");
+            await PeriodLock.EnsureDateOpenAsync(_context, settlement.SettlementDate);
 
             // التسوية من درج الكاشير تُرفع من يوميتها، ما دامت اليومية مفتوحة
             if (settlement.DailyJournalId.HasValue)
@@ -298,8 +422,9 @@ public class OwnerDebtService : IOwnerDebtService
                     if (journal.FinancialStatus != FinancialStatus.Draft)
                         throw new InvalidOperationException(
                             $"لا يمكن حذف هذه التسوية: صُرفت من درج يومية {journal.JournalDate:yyyy/MM/dd} وقد رُحّلت. ألغِ ترحيل اليومية أولاً.");
-                    journal.DrawerPayouts = Math.Max(0m, journal.DrawerPayouts - settlement.Amount);
+                    journal.DrawerPayouts -= settlement.Amount; // قد يصبح سالباً إن كان في الدرج تمويل من شريك
                     journal.UpdatedAt = DateTime.UtcNow;
+                    journal.RowVersion++;
                 }
             }
 

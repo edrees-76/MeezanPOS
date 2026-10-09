@@ -39,7 +39,7 @@ public class FinancialFixesTests
 
         var audit = new AuditService(context);
         var cash = new CashLedgerService(context, session.Object);
-        var bank = new BankService(context, session.Object, audit);
+        var bank = new BankService(context, session.Object, audit, cash);
         var ownerDebt = new OwnerDebtService(context, session.Object, bank, audit, cash);
         var ledger = new LedgerService(context, session.Object, bank, ownerDebt, cash, audit);
         var wages = new WagesService(context, session.Object);
@@ -420,5 +420,97 @@ public class FinancialFixesTests
         var settlement = await s.OwnerDebt.RecordSettlementAsync(debt.Id, "ب", 100m, OwnerDebtSettlementSource.PettyCash, null, null, DateTime.Today);
 
         settlement.PartnerName.Should().Be("أ");
+    }
+
+    [Fact]
+    public async Task BackdatedBankDeposit_KeepsRunningBalancesInDateOrder()
+    {
+        var s = Create();
+        var bank = TestDataBuilder.BuildBankAccount("مصرف", 0m);
+        s.Context.BankAccounts.Add(bank);
+        await s.Context.SaveChangesAsync();
+        var day2 = new DateTime(2026, 10, 2);
+
+        await s.Bank.RecordDepositAsync(bank.Id, 100m, null, null, day2);
+        await s.Bank.RecordDepositAsync(bank.Id, 50m, null, null, day2.AddDays(-1));
+
+        var txs = await s.Context.BankTransactions.Where(t => t.BankAccountId == bank.Id).OrderBy(t => t.TransactionDate).ToListAsync();
+        txs.Select(t => t.BalanceAfter).Should().Equal(50m, 150m);
+    }
+
+    [Fact]
+    public async Task PartnerFunding_ToTreasury_EntersCash_AndDeleteReversesIt()
+    {
+        var s = Create();
+        var debt = await s.OwnerDebt.RecordFundingAsync("شريك", 1000m, null, DateTime.Today, OwnerFundingDestination.Treasury, null, false, null);
+        (await s.Cash.GetCurrentBalanceAsync()).Should().Be(1000m);
+
+        await s.OwnerDebt.DeleteFundingAsync(debt.Id);
+
+        (await s.Cash.GetCurrentBalanceAsync()).Should().Be(0m);
+        (await s.Context.OwnerDebts.FindAsync(debt.Id))!.IsDeleted.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task PartnerFunding_ByTransferWithoutReference_CreatesNothing()
+    {
+        var s = Create();
+        var bank = TestDataBuilder.BuildBankAccount("مصرف", 0m);
+        s.Context.BankAccounts.Add(bank);
+        await s.Context.SaveChangesAsync();
+
+        var act = () => s.OwnerDebt.RecordFundingAsync("شريك", 1000m, null, DateTime.Today, OwnerFundingDestination.Bank, bank.Id, true, " ");
+
+        await act.Should().ThrowAsync<ArgumentException>();
+        (await s.Context.OwnerDebts.CountAsync()).Should().Be(0, "the debt used to be saved before the reference was checked");
+    }
+
+    [Fact]
+    public async Task DeletingSettledBankFunding_IsRefused_BeforeTouchingTheBank()
+    {
+        var s = Create();
+        var bank = TestDataBuilder.BuildBankAccount("مصرف", 0m);
+        s.Context.BankAccounts.Add(bank);
+        await s.Context.SaveChangesAsync();
+        var debt = await s.OwnerDebt.RecordFundingAsync("شريك", 1000m, null, DateTime.Today, OwnerFundingDestination.Bank, bank.Id, false, null);
+        await s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 200m, OwnerDebtSettlementSource.Bank, bank.Id, null, DateTime.Today);
+        (await s.Context.BankAccounts.FindAsync(bank.Id))!.CurrentBalance.Should().Be(800m);
+
+        var act = () => s.OwnerDebt.DeleteFundingAsync(debt.Id);
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await s.Context.BankAccounts.FindAsync(bank.Id))!.CurrentBalance.Should().Be(800m, "the deposit must not be removed when the delete is refused");
+    }
+
+    [Fact]
+    public async Task PartnerFunding_IntoCashierDrawer_IsTrackedOnTheDaysJournal()
+    {
+        var s = Create();
+        var journal = await AddDraftJournalAsync(s.Context);
+        journal.ActualCash = 2100m; // الشريك وضع 100 في الدرج
+        await s.Context.SaveChangesAsync();
+
+        var debt = await s.OwnerDebt.RecordFundingAsync("شريك", 100m, null, DateTime.Today, OwnerFundingDestination.CashierDrawer, null, false, null);
+
+        var after = await s.Context.DailyJournals.FindAsync(journal.Id);
+        after!.DrawerPayouts.Should().Be(-100m);
+        after.Difference.Should().Be(0m, "the partner's cash explains the extra money in the drawer");
+
+        await s.OwnerDebt.DeleteFundingAsync(debt.Id);
+        (await s.Context.DailyJournals.FindAsync(journal.Id))!.DrawerPayouts.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task BankWithdrawal_ToRestaurantCash_RecordsBothSides()
+    {
+        var s = Create();
+        var bank = TestDataBuilder.BuildBankAccount("مصرف", 1000m);
+        s.Context.BankAccounts.Add(bank);
+        await s.Context.SaveChangesAsync();
+
+        await s.Bank.RecordWithdrawalAsync(bank.Id, 200m, null, null, DateTime.Today, toRestaurantCash: true);
+
+        (await s.Context.BankAccounts.FindAsync(bank.Id))!.CurrentBalance.Should().Be(800m);
+        (await s.Cash.GetCurrentBalanceAsync()).Should().Be(200m);
     }
 }

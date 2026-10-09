@@ -16,6 +16,8 @@ namespace MeezanPOS.Application.Services;
 public sealed class JournalSaveRequest
 {
     public int? EditingJournalId { get; init; }
+    /// <summary>رقم نسخة اليومية عند فتحها للتعديل: يُرفض الحفظ إن عُدّلت بعده من مكان آخر.</summary>
+    public long? ExpectedRowVersion { get; init; }
     public DateTime JournalDate { get; init; }
     public ShiftType Shift { get; init; }
     public string ShiftDisplayName { get; init; } = string.Empty;
@@ -183,6 +185,13 @@ public sealed class DailyJournalService : IDailyJournalService
             if (await PeriodLock.IsDateLockedAsync(context, journal.JournalDate))
                 return JournalSaveResult.Fail(PeriodLock.LockedMessage);
 
+            // صرف أجر أو تسوية شريك من الدرج يعدّل اليومية من شاشة أخرى؛ الحفظ فوقه كان يمحو أثره
+            if (r.ExpectedRowVersion.HasValue && journal.RowVersion != r.ExpectedRowVersion.Value)
+                return JournalSaveResult.Fail(
+                    "عُدّلت هذه اليومية بعد فتحها (مثل صرف أجر أو تسوية شريك من الدرج). " +
+                    "أغلق الشاشة وأعد فتح اليومية ثم أدخل تعديلاتك، حتى لا تُمحى تلك الحركة.");
+
+            journal.RowVersion++;
             ApplyHeader(journal, r);
             journal.UpdatedAt = DateTime.UtcNow;
 

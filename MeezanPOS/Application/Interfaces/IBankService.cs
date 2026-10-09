@@ -22,7 +22,7 @@ public interface IBankService
     // التحويل الداخلي والسحب والإيداع
     Task RecordInternalTransferAsync(int fromAccountId, int toAccountId, decimal amount, string? notes, DateTime date);
     Task RecordDepositAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date);
-    Task RecordWithdrawalAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date);
+    Task RecordWithdrawalAsync(int bankAccountId, decimal amount, string? referenceNumber, string? notes, DateTime date, bool toRestaurantCash = false);
 
     // مطابقة البطاقات
     Task<List<CardPaymentReconciliation>> GetPendingCardPaymentsAsync();

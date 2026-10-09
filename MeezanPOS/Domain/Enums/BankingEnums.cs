@@ -38,6 +38,14 @@ public enum OwnerDebtStatus
     Paid = 2
 }
 
+/// <summary>أين يدخل مبلغ تمويل الشريك.</summary>
+public enum OwnerFundingDestination
+{
+    CashierDrawer = 0,
+    Bank = 1,
+    Treasury = 2
+}
+
 public enum OwnerDebtSettlementSource
 {
     CashRegister = 1,

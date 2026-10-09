@@ -73,6 +73,7 @@ public partial class DailyJournalViewModel
         var request = new JournalSaveRequest
         {
             EditingJournalId = editingJournalId,
+            ExpectedRowVersion = editingJournalId.HasValue ? editingRowVersion : null,
             JournalDate = JournalDate,
             Shift = SelectedShiftType,
             ShiftDisplayName = GetShiftDisplayName(SelectedShiftType),

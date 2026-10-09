@@ -55,7 +55,7 @@ public partial class SalesViewModel
     public async Task RebuildCashLedgerAsync()
     {
         var result = Dialogs.Show(
-            "هل أنت متأكد من إعادة بناء دفتر النقدية؟\nسيقوم هذا الإجراء بإعادة حساب الأرصدة التراكمية بناءً على الترتيب التاريخي للحركات.",
+            "هل أنت متأكد من إعادة بناء دفتر النقدية؟\nسيقوم هذا الإجراء بإعادة حساب الأرصدة التراكمية بترتيب تسجيل الحركات في الدفتر، وهو نفس الترتيب الذي تُحسب به كل حركة جديدة.",
             "تأكيد إعادة البناء",
             System.Windows.MessageBoxButton.YesNo,
             System.Windows.MessageBoxImage.Warning);

@@ -336,6 +336,7 @@ public class WagesService : IWagesService
             // المصروف يُنقص النقد المتوقع لليومية، فيجب أن يدخل في إجمالي مصروفاتها
             openJournal.TotalExpenses += request.Amount;
             openJournal.UpdatedAt = DateTime.UtcNow;
+            openJournal.RowVersion++;
 
             _context.DailyExpenseItems.Add(new DailyExpenseItem
             {

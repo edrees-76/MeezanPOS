@@ -211,6 +211,7 @@ public partial class BankingServicesViewModel
         ManualTxReference = string.Empty;
         ManualTxNotes = "سحب يدوي لتغذية النقدية";
         ManualTxDate = DateTime.Now;
+        WithdrawToRestaurantCash = true;
         IsWithdrawalFormOpen = true;
     }
 
@@ -237,7 +238,8 @@ public partial class BankingServicesViewModel
                 ManualTxAmount,
                 ManualTxReference,
                 ManualTxNotes,
-                ManualTxDate);
+                ManualTxDate,
+                WithdrawToRestaurantCash);
 
             Dialogs.Show("تم تسجيل عملية السحب بنجاح.", "نجاح", MessageBoxButton.OK, MessageBoxImage.Information);
             IsWithdrawalFormOpen = false;
