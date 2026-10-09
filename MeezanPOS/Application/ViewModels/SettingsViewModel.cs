@@ -236,6 +236,8 @@ public partial class SettingsViewModel : ObservableObject
             bool success = await ExecuteBackupAsync(targetFilePath);
             if (success)
             {
+                // تاريخ آخر نسخة خارجية: تنبيه لوحة التحكم إن تأخرت
+                await SaveSettingAsync(MeezanPOS.Application.Services.Queries.DashboardQueryService.LastExternalBackupKey, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 Dialogs.Show($"تم إنشاء النسخة الاحتياطية بنجاح في المسار:\n{targetFilePath}", "نجاح العملية", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             else

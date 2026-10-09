@@ -45,8 +45,11 @@ public partial class MainViewModel : ObservableObject
         }
 
         NavVisible = NavOrder.Select(IsAllowed).ToArray();
-        CurrentViewModel = new DashboardViewModel();
+        CurrentViewModel = CreateDashboard();
     }
+
+    /// <summary>لوحة التحكم مع فتح الشاشات من بطاقاتها وتنبيهاتها.</summary>
+    private DashboardViewModel CreateDashboard() => new() { NavigateTo = target => Navigate(target) };
 
     // الصلاحية المطلوبة لكل شاشة رئيسية في القائمة الجانبية
     private static readonly System.Collections.Generic.Dictionary<string, string> NavPermissions = new()
@@ -163,7 +166,7 @@ public partial class MainViewModel : ObservableObject
             case "Dashboard":
                 Title = "ميزان للمالية - لوحة التحكم";
                 SelectedNavIndex = 0;
-                CurrentViewModel = new DashboardViewModel();
+                CurrentViewModel = CreateDashboard();
                 break;
             case "Sales":
                 Title = "ميزان للمالية - المبيعات والإيرادات";

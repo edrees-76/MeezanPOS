@@ -25,6 +25,9 @@ public class DashboardAlert
     public string Icon { get; set; } = string.Empty;         // اسم أيقونة MaterialDesign (مثل "AlertCircle")
     public string Color { get; set; } = string.Empty;        // Hex أو اسم Brush
     public bool IsDismissible { get; set; } = true;
+    /// <summary>الشاشة التي يفتحها الضغط على التنبيه (اسم من NavOrder في MainViewModel)، أو null.</summary>
+    public string? Target { get; set; }
+    public bool HasTarget => !string.IsNullOrEmpty(Target);
 }
 
 public class RecentActivity
