@@ -124,4 +124,16 @@ public class UsersActivityTests
         var userAdmin = await query.GetActivityAsync(new ActivityFilter(DateTime.Today, DateTime.Today, null, ActivityCategory.Users));
         userAdmin.Should().ContainSingle(r => r.ActionName == "إيقاف حساب" && r.EntityName == "مستخدم");
     }
+
+    [Fact]
+    public void RoleProfiles_ExplainExactlyTheEnforcedPermissions()
+    {
+        foreach (var profile in RoleProfiles.All)
+            (profile.Allowed.Count + profile.Denied.Count).Should().Be(RoleProfiles.All[0].Allowed.Count + RoleProfiles.All[0].Denied.Count);
+
+        RoleProfiles.For(RoleType.Admin).Denied.Should().BeEmpty();
+        RoleProfiles.For(RoleType.Cashier).Denied.Should().Contain("إدارة المستخدمين وسجل النشاط");
+        RoleProfiles.For(RoleType.Cashier).Allowed.Should().Contain("تسجيل اليوميات");
+        RoleProfiles.For(RoleType.Manager).Denied.Should().Contain("إعادة ضبط المنظومة");
+    }
 }

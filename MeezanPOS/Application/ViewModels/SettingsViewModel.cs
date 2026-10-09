@@ -221,12 +221,6 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private Task CheckForUpdatesAsync() => UpdateChecker.NotifyIfNewerAsync(manual: true);
 
-    [RelayCommand]
-    private void OpenUserManagement()
-    {
-        if (!CanManageUsers) return;
-        AppWindows.Current.ShowUserManagement();
-    }
 
     [RelayCommand]
     private async Task BackupNowAsync()

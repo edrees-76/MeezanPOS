@@ -42,7 +42,6 @@ public interface IWindowService
     void ShowClosingDetails(string category, LiabilitiesSummary liabilities, List<SupplierReportItem> suppliers);
     void ShowTransactionDetails(CashMovement movement);
     void ShowWorkerStatement(WorkerWageSummary summary);
-    void ShowUserManagement();
 
     /// <summary>فتح الواجهة الرئيسية بعد الدخول وإغلاق ما عداها.</summary>
     void ShowMainShell();
@@ -154,12 +153,6 @@ public sealed class WindowService : IWindowService
 
     public void ShowWorkerStatement(WorkerWageSummary summary) => OnUi(() => ShowModal(new WorkerStatementWindow(summary)));
 
-    // إدارة المستخدمين صارت قسماً في القائمة الجانبية ("المستخدمون والنشاط")
-    public void ShowUserManagement() => OnUi(() =>
-    {
-        if (System.Windows.Application.Current?.MainWindow?.DataContext is MeezanPOS.Application.ViewModels.MainViewModel main)
-            main.NavigateCommand.Execute("Users");
-    });
 
     public void ShowMainShell() => OnUi(() => SwitchShell(new MainView()));
 

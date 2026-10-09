@@ -36,7 +36,6 @@ public sealed class FakeWindowService : IWindowService
     public void ShowClosingDetails(string category, LiabilitiesSummary liabilities, List<SupplierReportItem> suppliers) => Calls.Add(nameof(ShowClosingDetails));
     public void ShowTransactionDetails(CashMovement movement) => Calls.Add(nameof(ShowTransactionDetails));
     public void ShowWorkerStatement(WorkerWageSummary summary) => Calls.Add(nameof(ShowWorkerStatement));
-    public void ShowUserManagement() => Calls.Add(nameof(ShowUserManagement));
     public void ShowMainShell() => Calls.Add(nameof(ShowMainShell));
     public void ShowLogin() => Calls.Add(nameof(ShowLogin));
 }

@@ -4,19 +4,81 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:MeezanPOS.Presentation.Converters"
+             xmlns:vm="clr-namespace:MeezanPOS.Application.ViewModels"
              mc:Ignorable="d"
-             d:DesignHeight="800" d:DesignWidth="1100"
+             d:DesignHeight="860" d:DesignWidth="1200"
              FlowDirection="RightToLeft"
              Background="{StaticResource Brush.Canvas}">
 
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVis"/>
+        <converters:StringToPackIconKindConverter x:Key="IconKind"/>
 
-        <!-- رسالة نتيجة عمليات المستخدمين: خضراء للنجاح وحمراء للخطأ -->
-        <Style x:Key="UserMessageBorder" TargetType="Border">
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="10,8"/>
-            <Setter Property="Margin" Value="0,14,0,0"/>
+        <!-- شارة الحالة: أخضر فعّال، أحمر موقوف، برتقالي مقفل -->
+        <Style x:Key="StatusChip" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Disabled}">
+                    <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Locked}">
+                    <Setter Property="Background" Value="{StaticResource Brush.PendingSoft}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="StatusChipText" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Disabled}">
+                    <Setter Property="Foreground" Value="{StaticResource Brush.ExpenseText}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Locked}">
+                    <Setter Property="Foreground" Value="{StaticResource Brush.PendingText}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- الدائرة بالحرف الأول، بلون الحالة -->
+        <Style x:Key="Avatar" TargetType="Border">
+            <Setter Property="CornerRadius" Value="100"/>
+            <Setter Property="Background" Value="{StaticResource Brush.Income}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Disabled}">
+                    <Setter Property="Background" Value="{StaticResource Brush.Expense}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="{x:Static vm:UserStatusKind.Locked}">
+                    <Setter Property="Background" Value="{StaticResource Brush.Pending}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="RoleChip" TargetType="Border">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="10,3"/>
+            <Setter Property="Background" Value="{StaticResource Brush.PrimarySoft}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+
+        <Style x:Key="StatCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+        </Style>
+
+        <Style x:Key="PanelSection" TargetType="TextBlock" BasedOn="{StaticResource Text.SectionTitle}">
+            <Setter Property="Margin" Value="0,18,0,8"/>
+        </Style>
+
+        <!-- رسالة نتيجة العمليات -->
+        <Style x:Key="MessageBanner" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="Margin" Value="0,0,0,14"/>
             <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding UserMessageIsError}" Value="True">
@@ -27,8 +89,9 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="UserMessageText" TargetType="TextBlock">
+        <Style x:Key="MessageText" TargetType="TextBlock">
             <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Foreground" Value="{StaticResource Brush.IncomeText}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding UserMessageIsError}" Value="True">
@@ -36,158 +99,497 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+
+        <!-- شرح الدور: الوصف وما يستطيعه (أخضر) وما لا يستطيعه (أحمر) -->
+        <DataTemplate x:Key="RolePermissionsTemplate">
+            <StackPanel>
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <ItemsControl ItemsSource="{Binding Allowed}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <materialDesign:PackIcon Kind="CheckCircle" Width="16" Height="16" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{Binding Denied}" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,2">
+                                <materialDesign:PackIcon Kind="CloseCircle" Width="16" Height="16" Foreground="{StaticResource Brush.Expense}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding}" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="24,20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid Margin="24,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- العنوان -->
-        <Border Style="{StaticResource PageHeader}" Margin="0,0,0,16">
-            <DockPanel>
-                <Border Width="44" Height="44" CornerRadius="12" Background="{StaticResource Brush.PrimarySoft}" Margin="0,0,14,0">
-                    <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24" Foreground="{StaticResource Brush.Primary}"
-                                             HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="المستخدمون والنشاط" Style="{StaticResource Text.PageTitle}"/>
-                    <TextBlock Text="حسابات الموظفين وصلاحياتهم، وسجل بكل عملية: من نفّذها ومتى (السجل للقراءة فقط ولا يُحذف)" Style="{StaticResource Text.Caption}"/>
-                </StackPanel>
-            </DockPanel>
-        </Border>
+            <!-- العنوان -->
+            <Border Style="{StaticResource PageHeader}" Margin="0,0,0,14">
+                <DockPanel>
+                    <Border Width="44" Height="44" CornerRadius="12" Background="{StaticResource Brush.PrimarySoft}" Margin="0,0,14,0">
+                        <materialDesign:PackIcon Kind="AccountGroup" Width="24" Height="24" Foreground="{StaticResource Brush.Primary}"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="المستخدمون والنشاط" Style="{StaticResource Text.PageTitle}"/>
+                        <TextBlock Text="حسابات الموظفين وأدوارهم، وسجل بكل عملية: من نفّذها ومتى (السجل للقراءة فقط ولا يُحذف)" Style="{StaticResource Text.Caption}"/>
+                    </StackPanel>
+                </DockPanel>
+            </Border>
 
-        <TabControl Grid.Row="1">
-            <!-- ═══════════ المستخدمون ═══════════ -->
-            <TabItem Header="المستخدمون">
-                <Grid Margin="0,16,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="16"/>
-                        <ColumnDefinition Width="310"/>
-                    </Grid.ColumnDefinitions>
+            <TabControl Grid.Row="1">
+                <!-- ═══════════════ المستخدمون ═══════════════ -->
+                <TabItem Header="المستخدمون">
+                    <Grid Margin="0,14,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
 
-                    <Border Style="{StaticResource Card}" Padding="0">
+                        <!-- ملخص + زر الإضافة -->
+                        <DockPanel Margin="0,0,0,14">
+                            <Button DockPanel.Dock="Right" Command="{Binding OpenAddUserCommand}" Style="{StaticResource Button.Primary}"
+                                    Height="52" Padding="22,0" VerticalAlignment="Stretch">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="AccountPlus" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="إضافة مستخدم" FontSize="15" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <UniformGrid Columns="4" Margin="0,0,14,0">
+                                <Border Style="{StaticResource StatCard}">
+                                    <DockPanel>
+                                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="AccountMultiple" Width="28" Height="28" Foreground="{StaticResource Brush.Primary}" VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <TextBlock Text="كل المستخدمين" Style="{StaticResource Text.Caption}"/>
+                                            <TextBlock Text="{Binding TotalUsers}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatCard}" Background="{StaticResource Brush.IncomeSoft}">
+                                    <DockPanel>
+                                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="AccountCheck" Width="28" Height="28" Foreground="{StaticResource Brush.Income}" VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <TextBlock Text="فعّال" Style="{StaticResource Text.Caption}" Foreground="{StaticResource Brush.IncomeText}"/>
+                                            <TextBlock Text="{Binding ActiveUsers}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.IncomeText}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatCard}" Background="{StaticResource Brush.ExpenseSoft}">
+                                    <DockPanel>
+                                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="AccountCancel" Width="28" Height="28" Foreground="{StaticResource Brush.Expense}" VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <TextBlock Text="موقوف" Style="{StaticResource Text.Caption}" Foreground="{StaticResource Brush.ExpenseText}"/>
+                                            <TextBlock Text="{Binding DisabledUsers}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.ExpenseText}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource StatCard}" Background="{StaticResource Brush.PendingSoft}" Margin="0">
+                                    <DockPanel>
+                                        <materialDesign:PackIcon DockPanel.Dock="Right" Kind="AccountLock" Width="28" Height="28" Foreground="{StaticResource Brush.Pending}" VerticalAlignment="Center"/>
+                                        <StackPanel>
+                                            <TextBlock Text="مقفل مؤقتاً" Style="{StaticResource Text.Caption}" Foreground="{StaticResource Brush.PendingText}"/>
+                                            <TextBlock Text="{Binding LockedUsers}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Brush.PendingText}"/>
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </UniformGrid>
+                        </DockPanel>
+
+                        <Border Grid.Row="1" Style="{StaticResource MessageBanner}">
+                            <TextBlock Text="{Binding UserMessage}" Style="{StaticResource MessageText}"/>
+                        </Border>
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="420"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- قائمة المستخدمين -->
+                            <Border Style="{StaticResource Card}" Padding="0">
+                                <DockPanel>
+                                    <TextBlock DockPanel.Dock="Top" Text="اختر مستخدماً لعرض بياناته وإدارة حسابه" Style="{StaticResource Text.Caption}" Margin="18,14,18,6"/>
+                                    <ListBox ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}" BorderThickness="0"
+                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" Padding="8,0,8,8">
+                                        <ListBox.ItemContainerStyle>
+                                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                                                <Setter Property="Padding" Value="0"/>
+                                                <Setter Property="Margin" Value="0,4"/>
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                            </Style>
+                                        </ListBox.ItemContainerStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="1" CornerRadius="12" Padding="14,10" Background="White">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                            <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Width="42" Height="42" Style="{StaticResource Avatar}" Margin="0,0,12,0">
+                                                            <TextBlock Text="{Binding Initial}" Foreground="White" FontSize="18" FontWeight="Bold"
+                                                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding DisplayName}" FontSize="15" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                                            <TextBlock FontSize="12" Foreground="{StaticResource Brush.TextMuted}">
+                                                                <Run Text="{Binding Username, Mode=OneWay}"/>
+                                                                <Run Text="  •  آخر دخول: "/>
+                                                                <Run Text="{Binding LastLoginText, Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </StackPanel>
+                                                        <Border Grid.Column="2" Style="{StaticResource RoleChip}" Margin="10,0" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding RoleName}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}"/>
+                                                        </Border>
+                                                        <Border Grid.Column="3" Style="{StaticResource StatusChip}" VerticalAlignment="Center">
+                                                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource StatusChipText}"/>
+                                                        </Border>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- لوحة المستخدم المحدد -->
+                            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="0">
+                                <Grid>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="20"
+                                                Visibility="{Binding HasSelectedUser, Converter={StaticResource InverseBoolToVis}}">
+                                        <materialDesign:PackIcon Kind="AccountSearch" Width="56" Height="56" Foreground="{StaticResource Brush.TextMuted}" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="اختر مستخدماً من القائمة" Style="{StaticResource Text.SectionTitle}" HorizontalAlignment="Center" Margin="0,10,0,4"/>
+                                        <TextBlock Text="لعرض دوره وصلاحياته وإيقاف حسابه أو تفعيله" Style="{StaticResource Text.Caption}" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding HasSelectedUser, Converter={StaticResource BoolToVis}}">
+                                        <StackPanel Margin="20,18" DataContext="{Binding}">
+                                            <!-- رأس اللوحة -->
+                                            <StackPanel Orientation="Horizontal" DataContext="{Binding SelectedUser}">
+                                                <Border Width="56" Height="56" Style="{StaticResource Avatar}" Margin="0,0,14,0">
+                                                    <TextBlock Text="{Binding Initial}" Foreground="White" FontSize="24" FontWeight="Bold"
+                                                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <StackPanel VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding DisplayName}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                                    <TextBlock Text="{Binding Username}" FontSize="12.5" Foreground="{StaticResource Brush.TextMuted}" Margin="0,0,0,6"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Style="{StaticResource StatusChip}" Margin="0,0,6,0">
+                                                            <TextBlock Text="{Binding StatusText}" Style="{StaticResource StatusChipText}"/>
+                                                        </Border>
+                                                        <Border Style="{StaticResource RoleChip}">
+                                                            <TextBlock Text="{Binding RoleName}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Brush.Primary}"/>
+                                                        </Border>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </StackPanel>
+
+                                            <!-- حالة الحساب: زر أحمر للإيقاف وأخضر للتفعيل -->
+                                            <TextBlock Text="حالة الحساب" Style="{StaticResource PanelSection}"/>
+                                            <Button Command="{Binding ToggleActiveCommand}" Height="46" HorizontalAlignment="Stretch"
+                                                    materialDesign:ButtonAssist.CornerRadius="10">
+                                                <Button.Style>
+                                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                                                        <Setter Property="Background" Value="{StaticResource Brush.Expense}"/>
+                                                        <Setter Property="BorderBrush" Value="{StaticResource Brush.Expense}"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="Content">
+                                                            <Setter.Value>
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <materialDesign:PackIcon Kind="AccountCancel" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                                    <TextBlock Text="إيقاف الحساب (يمنعه من الدخول)" FontSize="14" VerticalAlignment="Center"/>
+                                                                </StackPanel>
+                                                            </Setter.Value>
+                                                        </Setter>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding SelectedUser.IsActive}" Value="False">
+                                                                <Setter Property="Background" Value="{StaticResource Brush.Income}"/>
+                                                                <Setter Property="BorderBrush" Value="{StaticResource Brush.Income}"/>
+                                                                <Setter Property="Content">
+                                                                    <Setter.Value>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <materialDesign:PackIcon Kind="AccountCheck" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                                            <TextBlock Text="تفعيل الحساب" FontSize="14" VerticalAlignment="Center"/>
+                                                                        </StackPanel>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                            </Button>
+
+                                            <!-- تنبيه القفل والمحاولات الفاشلة -->
+                                            <Border Background="{StaticResource Brush.PendingSoft}" CornerRadius="10" Padding="12,10" Margin="0,10,0,0"
+                                                    Visibility="{Binding SelectedUser.HasFailedAttempts, Converter={StaticResource BoolToVis}, FallbackValue=Collapsed}">
+                                                <DockPanel>
+                                                    <Button DockPanel.Dock="Right" Command="{Binding UnlockUserCommand}" Style="{StaticResource Button.Secondary}" Height="34" Padding="12,0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <materialDesign:PackIcon Kind="LockOpenVariant" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <TextBlock Text="فك القفل" VerticalAlignment="Center"/>
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{StaticResource Brush.PendingText}" FontWeight="SemiBold" FontSize="12.5">
+                                                        <Run Text="محاولات دخول فاشلة: "/>
+                                                        <Run Text="{Binding SelectedUser.FailedLoginAttempts, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                </DockPanel>
+                                            </Border>
+
+                                            <!-- الدور والصلاحيات -->
+                                            <TextBlock Text="الدور والصلاحيات" Style="{StaticResource PanelSection}"/>
+                                            <DockPanel Margin="0,0,0,10">
+                                                <Button DockPanel.Dock="Right" Command="{Binding ChangeRoleCommand}" Content="تطبيق الدور" Style="{StaticResource Button.Secondary}" Margin="8,0,0,0"/>
+                                                <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding ChangeRoleTo}" DisplayMemberPath="Name"
+                                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="10,6"/>
+                                            </DockPanel>
+                                            <Border Background="{StaticResource Brush.SurfaceAlt}" CornerRadius="10" Padding="14,12">
+                                                <ContentControl Content="{Binding ChangeRoleTo}" ContentTemplate="{StaticResource RolePermissionsTemplate}"/>
+                                            </Border>
+
+                                            <!-- كلمة المرور -->
+                                            <TextBlock Text="إعادة تعيين كلمة المرور" Style="{StaticResource PanelSection}"/>
+                                            <DockPanel>
+                                                <Button DockPanel.Dock="Right" Command="{Binding ResetPasswordCommand}" Style="{StaticResource Button.Secondary}" Margin="8,0,0,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="KeyVariant" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="تعيين" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Button>
+                                                <TextBox Text="{Binding ResetPasswordValue, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                         Padding="10,6" FlowDirection="LeftToRight" materialDesign:HintAssist.Hint="كلمة مرور مؤقتة جديدة"/>
+                                            </DockPanel>
+                                            <TextBlock Text="سيُطلب من المستخدم تغييرها عند دخوله التالي." Style="{StaticResource Text.Caption}" Margin="0,6,0,0"/>
+                                        </StackPanel>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+
+                <!-- ═══════════════ سجل النشاط ═══════════════ -->
+                <TabItem Header="سجل النشاط">
+                    <Border Style="{StaticResource Card}" Padding="0" Margin="0,14,0,0">
                         <DockPanel>
-                            <WrapPanel DockPanel.Dock="Bottom" Margin="12">
-                                <Button Content="إيقاف / تفعيل الحساب" Style="{StaticResource Button.Secondary}" Command="{Binding ToggleActiveCommand}" Margin="0,0,8,8"/>
-                                <Button Content="إعادة تعيين كلمة المرور" Style="{StaticResource Button.Secondary}" Command="{Binding ResetPasswordCommand}" Margin="0,0,8,8"/>
-                                <Button Content="فك القفل" Style="{StaticResource Button.Secondary}" Command="{Binding UnlockUserCommand}" Margin="0,0,8,8"
-                                        ToolTip="للحساب المقفل مؤقتاً بعد محاولات دخول فاشلة"/>
-                                <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding ChangeRoleTo}" Width="120" Margin="0,0,8,8"
-                                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="10,4"
-                                          materialDesign:HintAssist.Hint="الدور الجديد"/>
-                                <Button Content="تغيير الدور" Style="{StaticResource Button.Secondary}" Command="{Binding ChangeRoleCommand}" Margin="0,0,0,8"/>
+                            <WrapPanel DockPanel.Dock="Top" Margin="16,14,16,6">
+                                <StackPanel Margin="0,0,12,8">
+                                    <TextBlock Text="من" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding ActivityFrom}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,8">
+                                    <TextBlock Text="إلى" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                    <DatePicker SelectedDate="{Binding ActivityTo}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,8">
+                                    <TextBlock Text="المستخدم" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding ActivityUsers}" SelectedItem="{Binding SelectedActivityUser}" DisplayMemberPath="Name"
+                                              Width="210" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
+                                </StackPanel>
+                                <StackPanel Margin="0,0,12,8">
+                                    <TextBlock Text="نوع العملية" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                                              Width="200" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
+                                </StackPanel>
+                                <Button Style="{StaticResource Button.Primary}" Command="{Binding SearchActivityCommand}" VerticalAlignment="Bottom" Margin="0,0,8,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Magnify" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="عرض" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource Button.Secondary}" Command="{Binding ExportActivityPdfCommand}" VerticalAlignment="Bottom" Margin="0,0,0,8">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="تصدير PDF" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </WrapPanel>
-                            <DataGrid ItemsSource="{Binding Users}" SelectedItem="{Binding SelectedUser}"
-                                      AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single">
+
+                            <DockPanel DockPanel.Dock="Bottom" Margin="16,8">
+                                <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
+                                             Visibility="{Binding IsActivityLoading, Converter={StaticResource BoolToVis}}"/>
+                                <TextBlock Text="{Binding ActivitySummary}" Style="{StaticResource Text.Caption}"/>
+                            </DockPanel>
+
+                            <DataGrid ItemsSource="{Binding Activity}" AutoGenerateColumns="False" IsReadOnly="True"
+                                      SelectionMode="Single" EnableRowVirtualization="True" HeadersVisibility="Column">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="اسم الدخول" Binding="{Binding Username}" Width="Auto" MinWidth="110"/>
-                                    <DataGridTextColumn Header="الاسم الكامل" Binding="{Binding FullName}" Width="*" MinWidth="140"/>
-                                    <DataGridTextColumn Header="الدور" Binding="{Binding RoleName}" Width="Auto" MinWidth="90"/>
-                                    <DataGridTextColumn Header="الحالة" Binding="{Binding StatusText}" Width="Auto" MinWidth="90"/>
-                                    <DataGridTextColumn Header="محاولات فاشلة" Binding="{Binding FailedLoginAttempts}" Width="Auto" MinWidth="90"/>
-                                    <DataGridTextColumn Header="آخر دخول" Binding="{Binding LastLoginText}" Width="Auto" MinWidth="130"/>
+                                    <DataGridTextColumn Header="الوقت" Binding="{Binding TimeText}" Width="Auto" MinWidth="140"/>
+                                    <DataGridTextColumn Header="المستخدم" Binding="{Binding UserName}" Width="Auto" MinWidth="160"/>
+                                    <DataGridTemplateColumn Header="العملية" Width="Auto" MinWidth="150">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="10" Padding="10,3" HorizontalAlignment="Left">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="{StaticResource Brush.PrimarySoft}"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Category}" Value="Sessions">
+                                                                    <Setter Property="Background" Value="{StaticResource Brush.SurfaceAlt}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Category}" Value="Changes">
+                                                                    <Setter Property="Background" Value="{StaticResource Brush.PendingSoft}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding Category}" Value="Users">
+                                                                    <Setter Property="Background" Value="{StaticResource Brush.IncomeSoft}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding ActionName}" Value="حذف">
+                                                                    <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
+                                                                </DataTrigger>
+                                                                <DataTrigger Binding="{Binding ActionName}" Value="كلمة مرور خاطئة">
+                                                                    <Setter Property="Background" Value="{StaticResource Brush.ExpenseSoft}"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding ActionName}" FontSize="12" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="السجل" Binding="{Binding RecordText}" Width="Auto" MinWidth="130"/>
+                                    <DataGridTextColumn Header="التفاصيل" Binding="{Binding Details}" Width="*" MinWidth="200">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="TextWrapping" Value="Wrap"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
                         </DockPanel>
                     </Border>
+                </TabItem>
+            </TabControl>
+        </Grid>
 
-                    <Border Grid.Column="2" Style="{StaticResource Card}">
-                        <StackPanel>
-                            <TextBlock Text="إضافة مستخدم جديد" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12"/>
-
-                            <TextBlock Text="اسم الدخول" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Padding="10,6" FlowDirection="LeftToRight" Margin="0,0,0,10"/>
-
-                            <TextBlock Text="الاسم الكامل" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding NewFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Padding="10,6" Margin="0,0,0,10"/>
-
-                            <TextBlock Text="الدور" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                            <ComboBox ItemsSource="{Binding Roles}" SelectedItem="{Binding NewRole}" Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                                      Padding="10,6" Margin="0,0,0,10"/>
-
-                            <TextBlock Text="كلمة مرور مؤقتة" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                            <TextBox Text="{Binding TemporaryPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     Padding="10,6" FlowDirection="LeftToRight" Margin="0,0,0,4"/>
-                            <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap" Margin="0,0,0,14"
-                                       Text="تُستخدم للحساب الجديد ولإعادة تعيين كلمة مرور المستخدم المحدد. سيُطلب من المستخدم تغييرها عند أول دخول."/>
-
-                            <Button Content="إضافة المستخدم" Style="{StaticResource Button.Primary}" Command="{Binding AddUserCommand}" HorizontalAlignment="Stretch"/>
-
-                            <Border Style="{StaticResource UserMessageBorder}">
-                                <TextBlock Text="{Binding UserMessage}" Style="{StaticResource UserMessageText}"/>
-                            </Border>
+        <!-- ═══════════════ نافذة إضافة مستخدم ═══════════════ -->
+        <Border Background="#99000000" Visibility="{Binding IsAddUserOpen, Converter={StaticResource BoolToVis}}">
+            <materialDesign:Card Width="980" MaxHeight="760" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                 UniformCornerRadius="16" Padding="28,24" Background="White">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,18">
+                        <Button DockPanel.Dock="Right" Command="{Binding CloseAddUserCommand}" Style="{StaticResource MaterialDesignIconButton}" Width="36" Height="36">
+                            <materialDesign:PackIcon Kind="Close" Foreground="{StaticResource Brush.TextMuted}"/>
+                        </Button>
+                        <materialDesign:PackIcon Kind="AccountPlus" Width="28" Height="28" Foreground="{StaticResource Brush.Primary}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="إضافة مستخدم جديد" Style="{StaticResource Text.PageTitle}"/>
+                            <TextBlock Text="اختر الدور المناسب: لكل دور صلاحيات محددة موضحة أدناه" Style="{StaticResource Text.Caption}"/>
                         </StackPanel>
-                    </Border>
-                </Grid>
-            </TabItem>
+                    </DockPanel>
 
-            <!-- ═══════════ سجل النشاط ═══════════ -->
-            <TabItem Header="سجل النشاط">
-                <Border Style="{StaticResource Card}" Padding="0" Margin="0,16,0,0">
-                    <DockPanel>
-                        <!-- الفلاتر -->
-                        <WrapPanel DockPanel.Dock="Top" Margin="16,14,16,6">
-                            <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="من" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                                <DatePicker SelectedDate="{Binding ActivityFrom}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
-                            </StackPanel>
-                            <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="إلى" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                                <DatePicker SelectedDate="{Binding ActivityTo}" Width="140" Style="{StaticResource MaterialDesignOutlinedDatePicker}" Padding="8,6"/>
-                            </StackPanel>
-                            <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="المستخدم" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding ActivityUsers}" SelectedItem="{Binding SelectedActivityUser}" DisplayMemberPath="Name"
-                                          Width="200" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
-                            </StackPanel>
-                            <StackPanel Margin="0,0,12,8">
-                                <TextBlock Text="نوع العملية" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
-                                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
-                                          Width="190" Style="{StaticResource MaterialDesignOutlinedComboBox}" Padding="8,6"/>
-                            </StackPanel>
-                            <Button Content="عرض" Style="{StaticResource Button.Primary}" Command="{Binding SearchActivityCommand}"
-                                    VerticalAlignment="Bottom" Margin="0,0,8,8"/>
-                            <Button Style="{StaticResource Button.Secondary}" Command="{Binding ExportActivityPdfCommand}"
-                                    VerticalAlignment="Bottom" Margin="0,0,0,8">
+                    <!-- الأزرار -->
+                    <DockPanel DockPanel.Dock="Bottom" Margin="0,18,0,0">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                            <Button Command="{Binding CloseAddUserCommand}" Content="إلغاء" Style="{StaticResource Button.Secondary}" Margin="0,0,10,0"/>
+                            <Button Command="{Binding AddUserCommand}" Style="{StaticResource Button.Primary}" Padding="22,0">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="FilePdfBox" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                    <TextBlock Text="تصدير PDF" VerticalAlignment="Center"/>
+                                    <materialDesign:PackIcon Kind="Check" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="إضافة المستخدم" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Button>
-                        </WrapPanel>
-
-                        <DockPanel DockPanel.Dock="Bottom" Margin="16,8">
-                            <ProgressBar DockPanel.Dock="Left" IsIndeterminate="True" Width="80" Height="4" Margin="0,0,10,0"
-                                         Visibility="{Binding IsActivityLoading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                            <TextBlock Text="{Binding ActivitySummary}" Style="{StaticResource Text.Caption}"/>
-                        </DockPanel>
-
-                        <DataGrid ItemsSource="{Binding Activity}" AutoGenerateColumns="False" IsReadOnly="True"
-                                  SelectionMode="Single" EnableRowVirtualization="True">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="الوقت" Binding="{Binding TimeText}" Width="Auto" MinWidth="130"/>
-                                <DataGridTextColumn Header="المستخدم" Binding="{Binding UserName}" Width="Auto" MinWidth="150"/>
-                                <DataGridTextColumn Header="العملية" Binding="{Binding ActionName}" Width="Auto" MinWidth="130"/>
-                                <DataGridTextColumn Header="السجل" Binding="{Binding RecordText}" Width="Auto" MinWidth="120"/>
-                                <DataGridTextColumn Header="التفاصيل" Binding="{Binding Details}" Width="*" MinWidth="200">
-                                    <DataGridTextColumn.ElementStyle>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-                                            <Setter Property="FlowDirection" Value="LeftToRight"/>
-                                            <Setter Property="TextAlignment" Value="Right"/>
-                                        </Style>
-                                    </DataGridTextColumn.ElementStyle>
-                                </DataGridTextColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        </StackPanel>
+                        <TextBlock Text="{Binding AddUserError}" Foreground="{StaticResource Brush.ExpenseText}" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" VerticalAlignment="Center"/>
                     </DockPanel>
-                </Border>
-            </TabItem>
-        </TabControl>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- بيانات الحساب -->
+                        <StackPanel>
+                            <TextBlock Text="بيانات الحساب" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12"/>
+                            <TextBlock Text="الاسم الكامل" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewFullName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,8" Margin="0,0,0,12" materialDesign:HintAssist.Hint="مثال: أحمد علي"/>
+                            <TextBlock Text="اسم الدخول" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewUsername, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,8" FlowDirection="LeftToRight" Margin="0,0,0,12" materialDesign:HintAssist.Hint="ahmed"/>
+                            <TextBlock Text="كلمة مرور مؤقتة" Style="{StaticResource Text.Label}" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding NewPassword, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     Padding="10,8" FlowDirection="LeftToRight" Margin="0,0,0,6"/>
+                            <TextBlock Style="{StaticResource Text.Caption}" TextWrapping="Wrap"
+                                       Text="6 أحرف على الأقل، ولا تطابق اسم الدخول. سيُطلب من المستخدم تغييرها عند أول دخول."/>
+                        </StackPanel>
+
+                        <!-- اختيار الدور مع شرح صلاحياته -->
+                        <DockPanel Grid.Column="2">
+                            <TextBlock DockPanel.Dock="Top" Text="الدور" Style="{StaticResource Text.SectionTitle}" Margin="0,0,0,12"/>
+                            <ListBox ItemsSource="{Binding Roles}" SelectedItem="{Binding NewRole}" BorderThickness="0"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="3"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Margin" Value="0,0,10,0"/>
+                                        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Cursor" Value="Hand"/>
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <Border x:Name="Card" CornerRadius="14" BorderThickness="2" BorderBrush="{StaticResource Brush.Border}"
+                                                            Background="White" Padding="14,12">
+                                                        <ContentPresenter/>
+                                                    </Border>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsSelected" Value="True">
+                                                            <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource Brush.Primary}"/>
+                                                            <Setter TargetName="Card" Property="Background" Value="{StaticResource Brush.PrimarySoft}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="Card" Property="BorderBrush" Value="{StaticResource Brush.PrimaryInteractive}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                <Border Width="36" Height="36" CornerRadius="10" Background="{StaticResource Brush.PrimarySoft}" Margin="0,0,10,0">
+                                                    <materialDesign:PackIcon Kind="{Binding Icon, Converter={StaticResource IconKind}}" Width="20" Height="20"
+                                                                             Foreground="{StaticResource Brush.Primary}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Brush.TextPrimary}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RolePermissionsTemplate}"/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </DockPanel>
+                    </Grid>
+                </DockPanel>
+            </materialDesign:Card>
+        </Border>
     </Grid>
 </UserControl>
