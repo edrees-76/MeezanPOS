@@ -178,20 +178,6 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- المطعم الذي يُسجَّل الدخول إليه، مع زر تغييره -->
-                    <Border Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Background="{StaticResource Brush.PrimarySoft}"
-                            CornerRadius="10" Padding="8,2"
-                            Visibility="{Binding HasRestaurantName, Converter={StaticResource LocalBooleanToVisibilityConverter}}">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Storefront" Width="18" Height="18" Foreground="{StaticResource Brush.Primary}" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding RestaurantName}" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource Brush.Primary}"
-                                       Margin="6,0,0,0" VerticalAlignment="Center" MaxWidth="170" TextTrimming="CharacterEllipsis"/>
-                            <Button Click="SwitchRestaurant_Click" Style="{StaticResource MaterialDesignFlatButton}" Height="26" Padding="8,0" Margin="8,0,0,0"
-                                    FontSize="12" Content="تغيير المطعم" ToolTip="إعادة فتح المنظومة على شاشة اختيار المطعم"
-                                    Visibility="{Binding CanSwitchRestaurant, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
-                        </StackPanel>
-                    </Border>
-
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
                         <Image Source="pack://application:,,,/MeezanPOS;component/Assets/Images/mizan_3d_icon_final_transparent.png" Width="40" Height="40"/>
                         <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
@@ -298,6 +284,27 @@
                                 <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
                             </Button>
                         </StackPanel>
+
+                        <!-- المطعم الذي يُسجَّل الدخول إليه، مع زر تغييره (أعلى الجهة الأخرى من أزرار النافذة) -->
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20,16,0,0" Background="#26FFFFFF"
+                                BorderBrush="#40FFFFFF" BorderThickness="1" CornerRadius="12" Padding="12,5"
+                                Visibility="{Binding HasRestaurantName, Converter={StaticResource LocalBooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="Storefront" Width="18" Height="18" Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding RestaurantName}" FontWeight="Bold" FontSize="14" Foreground="White"
+                                           Margin="7,0,0,0" VerticalAlignment="Center" MaxWidth="220" TextTrimming="CharacterEllipsis"/>
+                                <Border Width="1" Background="#40FFFFFF" Margin="10,2"
+                                        Visibility="{Binding CanSwitchRestaurant, Converter={StaticResource LocalBooleanToVisibilityConverter}}"/>
+                                <Button Click="SwitchRestaurant_Click" Style="{StaticResource MaterialDesignFlatButton}" Height="26" Padding="6,0"
+                                        Foreground="White" FontSize="12.5" ToolTip="إعادة فتح المنظومة على شاشة اختيار المطعم"
+                                        Visibility="{Binding CanSwitchRestaurant, Converter={StaticResource LocalBooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="SwapHorizontal" Width="16" Height="16" VerticalAlignment="Center"/>
+                                        <TextBlock Text="تغيير المطعم" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
 
                         <StackPanel VerticalAlignment="Center" Margin="44,0">
                             <Border Width="92" Height="92" CornerRadius="20" Background="White" HorizontalAlignment="Left" Padding="8" Margin="0,0,0,22">
