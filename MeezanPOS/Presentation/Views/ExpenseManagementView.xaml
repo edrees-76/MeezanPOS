@@ -144,7 +144,7 @@
         </Style>
     </UserControl.Resources>
 
-    <TabControl Style="{StaticResource ModernSegmentedTabControlStyle}" FontSize="14">
+    <TabControl Style="{StaticResource ModernSegmentedTabControlStyle}" FontSize="14" SelectedIndex="{Binding SelectedTabIndex}">
 
     <!-- ═══════════ تبويب المصاريف اليومية ═══════════ -->
     <TabItem Style="{StaticResource ModernSegmentedTabItemStyle}">

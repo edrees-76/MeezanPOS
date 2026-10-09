@@ -600,10 +600,14 @@ namespace MeezanPOS.Presentation.Views
                 }
                 else if (_sourceType == "GeneralExpense")
                 {
-                    var generalExpensesVM = new GeneralExpensesViewModel();
-                    mainVM.CurrentViewModel = generalExpensesVM;
-                    mainVM.Title = "ميزان للمالية - المصروفات العامة";
-                    Close();
+                    // المصاريف العامة تبويب داخل شاشة إدارة المصروفات، لا شاشة مستقلة
+                    // (تعيينها مباشرة كان يعرض اسم الصنف بدل الشاشة)
+                    mainVM.NavigateCommand.Execute("Expenses");
+                    if (mainVM.CurrentViewModel is ExpenseManagementViewModel expensesVM)
+                    {
+                        expensesVM.SelectedTabIndex = 1;
+                        Close();
+                    }
                 }
                 else if (_sourceType == "SupplierTransaction")
                 {

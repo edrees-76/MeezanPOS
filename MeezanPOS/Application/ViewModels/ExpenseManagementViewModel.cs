@@ -137,6 +137,10 @@ public partial class ExpenseManagementViewModel : ObservableObject
 
     private readonly MeezanPOS.Application.Services.Queries.IJournalExpenseQueryService _queries;
 
+    /// <summary>التبويب المعروض: 0 المصاريف اليومية، 1 المصاريف العامة.</summary>
+    [ObservableProperty]
+    private int selectedTabIndex;
+
     public ExpenseManagementViewModel(MeezanPOS.Application.Services.Queries.IJournalExpenseQueryService? queries = null)
     {
         _queries = queries ?? new MeezanPOS.Application.Services.Queries.JournalExpenseQueryService();
