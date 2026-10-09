@@ -95,6 +95,77 @@ public partial class DashboardViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ExpenseChangeText), nameof(ExpenseChangeState))]
     private decimal previousTotalExpenses;
 
+    // نسب التكلفة من صافي المبيعات
+    [ObservableProperty] private CostRatio? purchasesRatio;
+    [ObservableProperty] private CostRatio? wagesRatio;
+
+    // الهدف الشهري
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TargetMonthText), nameof(TargetStatusText), nameof(TargetState))]
+    private MonthlyTargetProgress? monthlyTarget;
+    [ObservableProperty] private bool isEditingTarget;
+    [ObservableProperty] private string targetInput = string.Empty;
+    [ObservableProperty] private string targetError = string.Empty;
+
+    public ObservableCollection<WeekdaySales> Weekdays { get; } = new();
+    public bool HasWeekdays => Weekdays.Count > 0;
+
+    public string TargetMonthText => MonthlyTarget is { } t ? $"هدف شهر {t.Month:MM/yyyy}" : "الهدف الشهري";
+    public TrendState TargetState => MonthlyTarget is not { HasTarget: true } t ? TrendState.Neutral : t.Reached || t.OnTrack ? TrendState.Good : TrendState.Bad;
+    public string TargetStatusText => MonthlyTarget switch
+    {
+        null => string.Empty,
+        { HasTarget: false } => "لم يُحدد هدف لهذا الشهر بعد.",
+        { Reached: true } => "تم بلوغ الهدف.",
+        { OnTrack: true } t => $"على المسار: المتوقع بنهاية الشهر {t.Projection:N0}.",
+        { } t when t.RequiredPerDay is { } perDay => $"المتوقع بهذه الوتيرة {t.Projection:N0}. المطلوب {perDay:N0} يومياً في الأيام الباقية ({t.RemainingDays}).",
+        { } t => $"انتهى الشهر دون بلوغ الهدف ({t.Percent:0.#}%).",
+    };
+
+    [RelayCommand]
+    private void EditTarget()
+    {
+        TargetInput = MonthlyTarget?.Target is { } t ? t.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+        TargetError = string.Empty;
+        IsEditingTarget = true;
+    }
+
+    [RelayCommand]
+    private void CancelTarget()
+    {
+        IsEditingTarget = false;
+        TargetError = string.Empty;
+    }
+
+    [RelayCommand]
+    private async Task SaveTargetAsync()
+    {
+        var text = MeezanPOS.Presentation.Behaviors.ArabicDigitsInput.Normalize(TargetInput ?? string.Empty).Replace(",", string.Empty).Trim();
+        decimal? target = null;
+        if (text.Length > 0)
+        {
+            if (!decimal.TryParse(text, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var value) || value < 0)
+            {
+                TargetError = "اكتب مبلغاً صحيحاً، أو اتركه فارغاً لإلغاء الهدف.";
+                return;
+            }
+            target = value;
+        }
+
+        try
+        {
+            await _queries.SetMonthlyTargetAsync(target);
+            IsEditingTarget = false;
+            TargetError = string.Empty;
+            await RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "Failed to save monthly sales target");
+            TargetError = "تعذر حفظ الهدف: " + ex.Message;
+        }
+    }
+
     public ObservableCollection<DailySalesPoint> SalesTrendData { get; } = new();
     /// <summary>التفصيل الكامل لتقرير PDF.</summary>
     public ObservableCollection<ExpenseCategory> ExpenseDistribution { get; } = new();
@@ -321,6 +392,11 @@ public partial class DashboardViewModel : ObservableObject
 
         Drawer = s.Drawer;
         Liquidity = s.Liquidity;
+        PurchasesRatio = s.PurchasesRatio;
+        WagesRatio = s.WagesRatio;
+        MonthlyTarget = s.MonthlyTarget;
+        Replace(Weekdays, s.Weekdays);
+        OnPropertyChanged(nameof(HasWeekdays));
 
         Replace(SalesTrendData, s.SalesPoints);
         Replace(ExpenseDistribution, s.ExpenseDetails);

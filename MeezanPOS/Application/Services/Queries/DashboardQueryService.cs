@@ -95,6 +95,40 @@ public sealed record ExpenseBar(string Name, decimal Amount, decimal PreviousAmo
     public string ChangeText => IsNew ? "جديد" : ChangePercent is { } c && c != 0 ? $"{Math.Abs(c):N0}%" : "—";
 }
 
+/// <summary>تقدير مستوى نسبة التكلفة مقابل نطاق مرجعي تقريبي.</summary>
+public enum RatioLevel { NoSales, Good, Watch, High }
+
+/// <summary>نسبة تكلفة (مشتريات أو أجور) من صافي المبيعات.</summary>
+public sealed record CostRatio(string Name, decimal Amount, decimal NetSales, decimal GoodUpTo, decimal WatchUpTo, string Basis)
+{
+    public decimal? Percent => NetSales > 0 ? Math.Round(Amount / NetSales * 100, 1) : null;
+    public RatioLevel Level => Percent is not { } p ? RatioLevel.NoSales : p <= GoodUpTo ? RatioLevel.Good : p <= WatchUpTo ? RatioLevel.Watch : RatioLevel.High;
+    /// <summary>عرض الشريط: النسبة حتى 100%.</summary>
+    public double BarRatio => Percent is { } p ? (double)Math.Min(p, 100) / 100 : 0;
+    public string PercentText => Percent is { } p ? $"{p:0.#}%" : "—";
+    public string ReferenceText => $"المرجع التقريبي حتى {GoodUpTo:0}%";
+}
+
+/// <summary>متوسط مبيعات يوم من أيام الأسبوع خلال آخر <see cref="DashboardQueryService.WeekdayWindowWeeks"/> أسابيع.</summary>
+public sealed record WeekdaySales(DayOfWeek Day, string Name, decimal Average, int Days, double BarRatio, bool IsBest, bool IsWorst);
+
+/// <summary>التقدم نحو هدف مبيعات الشهر الجاري.</summary>
+public sealed record MonthlyTargetProgress(DateTime Month, decimal? Target, decimal Sales, int ElapsedDays, int DaysInMonth)
+{
+    public bool HasTarget => Target is > 0;
+    public decimal? Percent => HasTarget ? Math.Round(Sales / Target!.Value * 100, 1) : null;
+    public double BarRatio => Percent is { } p ? (double)Math.Min(p, 100) / 100 : 0;
+    /// <summary>المتوقع بنهاية الشهر بنفس الوتيرة.</summary>
+    public decimal Projection => ElapsedDays > 0 ? Math.Round(Sales / ElapsedDays * DaysInMonth, 2) : 0;
+    public int RemainingDays => DaysInMonth - ElapsedDays;
+    /// <summary>المطلوب يومياً في الأيام الباقية لبلوغ الهدف (0 إن بُلغ).</summary>
+    public decimal? RequiredPerDay => !HasTarget ? null
+        : Sales >= Target ? 0
+        : RemainingDays > 0 ? Math.Round((Target!.Value - Sales) / RemainingDays, 2) : null;
+    public bool OnTrack => HasTarget && Projection >= Target;
+    public bool Reached => HasTarget && Sales >= Target;
+}
+
 public sealed class DashboardSnapshot
 {
     public required DashboardAudience Audience { get; init; }
@@ -128,6 +162,16 @@ public sealed class DashboardSnapshot
     public DrawerVarianceSummary? Drawer { get; init; }
     /// <summary>null للكاشير.</summary>
     public LiquiditySummary? Liquidity { get; init; }
+
+    /// <summary>نسبة المشتريات والأجور من صافي المبيعات (null للكاشير).</summary>
+    public CostRatio? PurchasesRatio { get; init; }
+    public CostRatio? WagesRatio { get; init; }
+
+    /// <summary>أداء أيام الأسبوع (آخر 8 أسابيع، مستقل عن الفترة المختارة).</summary>
+    public List<WeekdaySales> Weekdays { get; init; } = new();
+
+    /// <summary>هدف الشهر الجاري (null للكاشير).</summary>
+    public MonthlyTargetProgress? MonthlyTarget { get; init; }
 }
 
 /// <summary>
@@ -142,6 +186,12 @@ public sealed class DashboardQueryService
     public const int PendingCardWarningDays = 3;
     public const int TopExpenseBars = 5;
     public const string OtherExpensesName = "أخرى";
+    public const string MonthlyTargetKey = "MonthlySalesTarget";
+    public const int WeekdayWindowWeeks = 8;
+
+    // نطاقات مرجعية تقريبية شائعة للمطاعم (للتلوين فقط)
+    public const decimal PurchasesGoodUpTo = 35, PurchasesWatchUpTo = 42;
+    public const decimal WagesGoodUpTo = 30, WagesWatchUpTo = 38;
 
     private static readonly string[] BarColors = { "#185FA5", "#1D9E75", "#534AB7", "#BA7517", "#D85A30" };
     private const string OtherBarColor = "#888780";
@@ -166,7 +216,8 @@ public sealed class DashboardQueryService
         decimal expenses = full ? journals.Sum(j => j.TotalExpenses) + general.Sum(e => e.Amount) : 0;
         decimal prevExpenses = full ? prevJournals.Sum(j => j.TotalExpenses) + prevGeneral.Sum(e => e.Amount) : 0;
         // الربح من صافي المبيعات (بعد المرتجعات والمجاني) كما في اليومية وقائمة الدخل
-        decimal profit = sales - journals.Sum(j => j.TotalAdjustments) - expenses;
+        decimal netSales = sales - journals.Sum(j => j.TotalAdjustments);
+        decimal profit = netSales - expenses;
         decimal prevProfit = prevSales - prevJournals.Sum(j => j.TotalAdjustments) - prevExpenses;
 
         decimal cash = 0, prevCash = 0;
@@ -208,7 +259,119 @@ public sealed class DashboardQueryService
             Alerts = await AlertsAsync(context, today, full, sales, expenses, cash),
             Drawer = full ? DrawerVariance(journals) : null,
             Liquidity = full ? await LiquidityAsync(context, cash) : null,
+            PurchasesRatio = full ? await PurchasesRatioAsync(context, range, netSales) : null,
+            WagesRatio = full ? await WagesRatioAsync(context, range, netSales) : null,
+            Weekdays = await WeekdaysAsync(context, today),
+            MonthlyTarget = full ? await MonthlyTargetAsync(context, today) : null,
         };
+    }
+
+    /// <summary>يحفظ هدف مبيعات الشهر (0 أو null يلغيه).</summary>
+    public async Task SetMonthlyTargetAsync(decimal? target)
+    {
+        if (target < 0)
+            throw new ArgumentException("الهدف لا يكون سالباً.");
+        await using var context = await _factory.CreateDbContextAsync();
+        var setting = await context.Settings.FirstOrDefaultAsync(s => s.Key == MonthlyTargetKey);
+        var value = target is > 0 ? target.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
+        if (setting == null)
+            context.Settings.Add(new Setting { Key = MonthlyTargetKey, Value = value });
+        else
+            setting.Value = value;
+        await context.SaveChangesAsync();
+    }
+
+    // أنواع مصروفات الدرج التي تُعد مشتريات مواد (الغاز والفحم تشغيل لا مواد)
+    private static readonly ExpenseType[] DrawerPurchaseTypes = { ExpenseType.Purchase, ExpenseType.Bread };
+
+    /// <summary>
+    /// المشتريات = فواتير الموردين بتاريخها + مشتريات الدرج من غير مورد مسجل.
+    /// دفعات الدرج لمورد مسجل تسدد فاتورته المسجلة، فعدّها يضاعف المبلغ.
+    /// </summary>
+    private static async Task<CostRatio> PurchasesRatioAsync(AppDbContext context, DashboardRange range, decimal netSales)
+    {
+        var invoices = await context.SupplierInvoices.AsNoTracking()
+            .Where(i => i.InvoiceDate >= range.Start && i.InvoiceDate <= range.End)
+            .Select(i => i.TotalAmount).ToListAsync();
+        var drawer = await context.DailyExpenseItems.AsNoTracking()
+            .Where(e => e.SupplierId == null && DrawerPurchaseTypes.Contains(e.Type) &&
+                        e.DailyJournal!.JournalDate >= range.Start && e.DailyJournal.JournalDate <= range.End &&
+                        (e.DailyJournal.FinancialStatus == FinancialStatus.Posted || e.DailyJournal.FinancialStatus == FinancialStatus.Archived))
+            .Select(e => e.Amount).ToListAsync();
+        return new CostRatio("المشتريات", invoices.Sum() + drawer.Sum(), netSales, PurchasesGoodUpTo, PurchasesWatchUpTo,
+            "فواتير الموردين + مشتريات الدرج من بائعين غير مسجلين");
+    }
+
+    /// <summary>
+    /// الأجور = الأجور المستحقة للعمال في الفترة (من قسم الأجور) + رواتب أو يوميات مسجلة كمصروف لغير عامل مسجل.
+    /// صرف أجر لعامل مسجل يسدد استحقاقه المحسوب أصلاً، فلا يُعد مرة ثانية.
+    /// </summary>
+    private static async Task<CostRatio> WagesRatioAsync(AppDbContext context, DashboardRange range, decimal netSales)
+    {
+        var accrued = await context.WorkerTransactions.AsNoTracking()
+            .Where(t => t.Type == WorkerTransactionType.WageAccrual && t.TransactionDate >= range.Start && t.TransactionDate <= range.End)
+            .Select(t => t.CreditAmount).ToListAsync();
+        var salaries = await context.GeneralExpenses.AsNoTracking()
+            .Where(e => e.ExpenseType == GeneralExpenseType.Salaries && e.WorkerId == null &&
+                        e.PaymentDate >= range.Start && e.PaymentDate <= range.End &&
+                        (e.FinancialStatus == FinancialStatus.Posted || e.FinancialStatus == FinancialStatus.Archived))
+            .Select(e => e.Amount).ToListAsync();
+        var drawerWages = await context.DailyExpenseItems.AsNoTracking()
+            .Where(e => e.Type == ExpenseType.WorkerWage && e.WorkerId == null &&
+                        e.DailyJournal!.JournalDate >= range.Start && e.DailyJournal.JournalDate <= range.End &&
+                        (e.DailyJournal.FinancialStatus == FinancialStatus.Posted || e.DailyJournal.FinancialStatus == FinancialStatus.Archived))
+            .Select(e => e.Amount).ToListAsync();
+        return new CostRatio("الأجور", accrued.Sum() + salaries.Sum() + drawerWages.Sum(), netSales, WagesGoodUpTo, WagesWatchUpTo,
+            "أجور العمال المستحقة + رواتب ويوميات مسجلة كمصروف لغير عامل مسجل");
+    }
+
+    private static readonly DayOfWeek[] WeekOrder =
+        { DayOfWeek.Saturday, DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+
+    private static string DayName(DayOfWeek day) => day switch
+    {
+        DayOfWeek.Saturday => "السبت",
+        DayOfWeek.Sunday => "الأحد",
+        DayOfWeek.Monday => "الاثنين",
+        DayOfWeek.Tuesday => "الثلاثاء",
+        DayOfWeek.Wednesday => "الأربعاء",
+        DayOfWeek.Thursday => "الخميس",
+        _ => "الجمعة",
+    };
+
+    /// <summary>متوسط مبيعات كل يوم من أيام الأسبوع على الأيام التي عمل فيها المطعم فقط (أيام الإغلاق لا تُنزل المتوسط).</summary>
+    private static async Task<List<WeekdaySales>> WeekdaysAsync(AppDbContext context, DateTime today)
+    {
+        var from = today.Date.AddDays(-7 * WeekdayWindowWeeks + 1);
+        var to = today.Date.AddDays(1).AddTicks(-1);
+        var rows = await PostedJournals(context, from, to).Select(j => new { j.JournalDate, j.TotalSales }).ToListAsync();
+        var perDate = rows.GroupBy(r => r.JournalDate.Date).Select(g => (Date: g.Key, Sales: g.Sum(r => r.TotalSales))).ToList();
+        if (perDate.Count == 0)
+            return new();
+
+        var stats = WeekOrder.Select(day =>
+        {
+            var days = perDate.Where(d => d.Date.DayOfWeek == day).ToList();
+            return (Day: day, Avg: days.Count > 0 ? Math.Round(days.Average(d => d.Sales), 2) : 0m, Count: days.Count);
+        }).ToList();
+
+        var active = stats.Where(x => x.Count > 0).ToList();
+        decimal max = active.Max(x => x.Avg), min = active.Min(x => x.Avg);
+        bool distinct = active.Count > 1 && max != min;
+        return stats.Select(x => new WeekdaySales(x.Day, DayName(x.Day), x.Avg, x.Count,
+                max > 0 ? (double)(x.Avg / max) : 0,
+                IsBest: distinct && x.Count > 0 && x.Avg == max,
+                IsWorst: distinct && x.Count > 0 && x.Avg == min))
+            .ToList();
+    }
+
+    private static async Task<MonthlyTargetProgress> MonthlyTargetAsync(AppDbContext context, DateTime today)
+    {
+        var month = new DateTime(today.Year, today.Month, 1);
+        var raw = await context.Settings.AsNoTracking().Where(x => x.Key == MonthlyTargetKey).Select(x => x.Value).FirstOrDefaultAsync();
+        decimal? target = decimal.TryParse(raw, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var t) && t > 0 ? t : null;
+        var sales = (await PostedJournals(context, month, today.Date.AddDays(1).AddTicks(-1)).Select(j => j.TotalSales).ToListAsync()).Sum();
+        return new MonthlyTargetProgress(month, target, sales, today.Day, DateTime.DaysInMonth(today.Year, today.Month));
     }
 
     private static IQueryable<DailyJournal> PostedJournals(AppDbContext context, DateTime from, DateTime to) =>

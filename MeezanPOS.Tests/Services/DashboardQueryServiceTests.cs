@@ -230,4 +230,119 @@ public class DashboardQueryServiceTests
         }
         (await service.GetAsync(ThisMonth, DashboardAudience.Full, Today)).Alerts.Should().NotContain(a => a.Icon == "CalendarAlert");
     }
+
+    [Fact]
+    public async Task PurchasesRatio_CountsInvoicesAndUnregisteredDrawerPurchases_Once()
+    {
+        using var db = new SharedSqliteDatabase();
+        await using (var context = db.CreateDbContext())
+        {
+            var supplier = TestDataBuilder.BuildSupplier("مورد");
+            context.Suppliers.Add(supplier);
+            var journal = Journal(Today, "سالم", 10000m, 0m);
+            journal.ReturnsTotal = 1000m; // صافي المبيعات 9000
+            context.DailyJournals.Add(journal);
+            await context.SaveChangesAsync();
+
+            context.SupplierInvoices.Add(TestDataBuilder.BuildSupplierInvoice(2000m, supplier.Id, Today));
+            context.SupplierInvoices.Add(TestDataBuilder.BuildSupplierInvoice(5000m, supplier.Id, Today.AddMonths(-1))); // خارج الفترة
+            context.DailyExpenseItems.AddRange(
+                new DailyExpenseItem { DailyJournalId = journal.Id, Type = ExpenseType.Purchase, Amount = 400m, Description = "خضار من السوق" },
+                new DailyExpenseItem { DailyJournalId = journal.Id, Type = ExpenseType.Bread, Amount = 300m, Description = "خبز" },
+                // دفعة لمورد مسجل تسدد فاتورته: لا تُعد مرة ثانية
+                new DailyExpenseItem { DailyJournalId = journal.Id, Type = ExpenseType.Purchase, SupplierId = supplier.Id, Amount = 900m, Description = "سداد" },
+                // الغاز تشغيل لا مواد
+                new DailyExpenseItem { DailyJournalId = journal.Id, Type = ExpenseType.Gas, Amount = 150m, Description = "غاز" });
+            await context.SaveChangesAsync();
+        }
+
+        var ratio = (await new DashboardQueryService(db).GetAsync(ThisMonth, DashboardAudience.Full, Today)).PurchasesRatio!;
+
+        ratio.Amount.Should().Be(2700m);
+        ratio.NetSales.Should().Be(9000m);
+        ratio.Percent.Should().Be(30m);
+        ratio.Level.Should().Be(RatioLevel.Good);
+    }
+
+    [Fact]
+    public async Task WagesRatio_UsesAccruals_PlusSalariesNotLinkedToAWorker()
+    {
+        using var db = new SharedSqliteDatabase();
+        await using (var context = db.CreateDbContext())
+        {
+            context.DailyJournals.Add(Journal(Today, "سالم", 4000m, 0m));
+            var worker = TestDataBuilder.BuildWorker("عامل", 100m);
+            context.Workers.Add(worker);
+            await context.SaveChangesAsync();
+            context.WorkerTransactions.AddRange(
+                new WorkerTransaction { WorkerId = worker.Id, WorkerName = worker.WorkerName, TransactionDate = Today, Type = WorkerTransactionType.WageAccrual, CreditAmount = 1000m },
+                new WorkerTransaction { WorkerId = worker.Id, WorkerName = worker.WorkerName, TransactionDate = Today, Type = WorkerTransactionType.Payment, DebitAmount = 1000m });
+            context.GeneralExpenses.AddRange(
+                // صرف أجر العامل المسجل: محسوب في الاستحقاق
+                new GeneralExpense { ExpenseType = GeneralExpenseType.Salaries, WorkerId = worker.Id, Amount = 1000m, PaymentDate = Today, Description = "صرف", FinancialStatus = FinancialStatus.Posted },
+                // راتب موظف غير مسجل في قسم الأجور
+                new GeneralExpense { ExpenseType = GeneralExpenseType.Salaries, Amount = 600m, PaymentDate = Today, Description = "راتب محاسب", FinancialStatus = FinancialStatus.Posted });
+            await context.SaveChangesAsync();
+        }
+
+        var ratio = (await new DashboardQueryService(db).GetAsync(ThisMonth, DashboardAudience.Full, Today)).WagesRatio!;
+
+        ratio.Amount.Should().Be(1600m);
+        ratio.Percent.Should().Be(40m);
+        ratio.Level.Should().Be(RatioLevel.High);
+    }
+
+    [Fact]
+    public async Task Weekdays_AverageOnlyTheDaysTheRestaurantWorked()
+    {
+        using var db = new SharedSqliteDatabase();
+        await using (var context = db.CreateDbContext())
+        {
+            // Today = الخميس 15/10/2026
+            context.DailyJournals.AddRange(
+                Journal(new DateTime(2026, 10, 15), "سالم", 800m, 0m),
+                Journal(new DateTime(2026, 10, 8), "سالم", 600m, 0m),   // متوسط الخميس 700
+                Journal(new DateTime(2026, 10, 9), "سالم", 1500m, 0m),  // الجمعة
+                Journal(new DateTime(2026, 10, 9), "هدى", 500m, 0m),    // وردية ثانية نفس اليوم: الجمعة 2000
+                Journal(new DateTime(2026, 10, 10), "سالم", 300m, 0m),  // السبت
+                Journal(new DateTime(2026, 8, 1), "سالم", 99999m, 0m)); // خارج الأسابيع الثمانية
+            await context.SaveChangesAsync();
+        }
+
+        var days = (await new DashboardQueryService(db).GetAsync(ThisMonth, DashboardAudience.SalesOnly, Today)).Weekdays;
+
+        days.Should().HaveCount(7);
+        days.First().Name.Should().Be("السبت");
+        days.Single(d => d.Day == DayOfWeek.Thursday).Average.Should().Be(700m);
+        days.Single(d => d.Day == DayOfWeek.Friday).Should().Match<WeekdaySales>(d => d.Average == 2000m && d.IsBest && d.BarRatio == 1);
+        days.Single(d => d.Day == DayOfWeek.Saturday).IsWorst.Should().BeTrue();
+        days.Single(d => d.Day == DayOfWeek.Monday).Days.Should().Be(0, "closed days do not drag the average down");
+    }
+
+    [Fact]
+    public async Task MonthlyTarget_ShowsProgressPaceAndWhatIsNeededPerDay()
+    {
+        using var db = new SharedSqliteDatabase();
+        await using (var context = db.CreateDbContext())
+        {
+            context.DailyJournals.AddRange(Journal(new DateTime(2026, 10, 1), "سالم", 9000m, 0m), Journal(Today, "سالم", 6000m, 0m));
+            await context.SaveChangesAsync();
+        }
+        var service = new DashboardQueryService(db);
+
+        (await service.GetAsync(ThisMonth, DashboardAudience.Full, Today)).MonthlyTarget!.HasTarget.Should().BeFalse();
+
+        await service.SetMonthlyTargetAsync(62000m);
+        var target = (await service.GetAsync(ThisMonth, DashboardAudience.Full, Today)).MonthlyTarget!;
+
+        target.Sales.Should().Be(15000m);
+        target.Percent.Should().Be(24.2m);
+        target.Projection.Should().Be(31000m, "15000 over 15 of 31 days");
+        target.OnTrack.Should().BeFalse();
+        target.RequiredPerDay.Should().Be(2937.5m, "47000 left over 16 days");
+
+        await service.SetMonthlyTargetAsync(null);
+        (await service.GetAsync(ThisMonth, DashboardAudience.Full, Today)).MonthlyTarget!.HasTarget.Should().BeFalse();
+        (await service.GetAsync(ThisMonth, DashboardAudience.SalesOnly, Today)).MonthlyTarget.Should().BeNull("targets are for management");
+    }
 }
