@@ -38,6 +38,8 @@ public class LedgerService : ILedgerService
 
     public async Task PostInvoiceAsync(SupplierInvoice invoice)
     {
+        // قفل الفترة كان مطبقاً على اليومية والمصروف العام فقط؛ الموردون والمصارف والشركاء والأجور كانت تكتب داخل فترة مسواة
+        await PeriodLock.EnsureDateOpenAsync(_context, invoice.InvoiceDate);
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {
@@ -91,6 +93,7 @@ public class LedgerService : ILedgerService
     {
         if (amount <= 0)
             throw new ArgumentException("مبلغ الدفعة يجب أن يكون أكبر من صفر.");
+        await PeriodLock.EnsureDateOpenAsync(_context, paymentDate);
 
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
@@ -292,6 +295,8 @@ public class LedgerService : ILedgerService
                 .FirstOrDefaultAsync(i => i.Id == invoice.Id);
 
             if (dbInvoice == null) throw new Exception("الفاتورة غير موجودة في قاعدة البيانات.");
+            await PeriodLock.EnsureDateOpenAsync(_context, dbInvoice.InvoiceDate);
+            await PeriodLock.EnsureDateOpenAsync(_context, invoice.InvoiceDate);
 
             // تحديث الحقول الأساسية للفاتورة
             dbInvoice.InvoiceNumber = invoice.InvoiceNumber;
@@ -374,6 +379,8 @@ public class LedgerService : ILedgerService
                 .FirstOrDefaultAsync(t => t.Id == transactionId && !t.IsDeleted);
 
             if (ledgerTx == null) throw new Exception("الحركة المحاسبية غير موجودة.");
+            await PeriodLock.EnsureDateOpenAsync(_context, ledgerTx.TransactionDate);
+            await PeriodLock.EnsureDateOpenAsync(_context, paymentDate);
 
             // دفعات اليومية مصدرها بند في الوردية (SourceId = معرف البند): تعديلها من هنا كان يقطع الربط
             // ويعامل معرف البند كأنه معرف مصروف عام. تُعدَّل من اليومية نفسها فقط.

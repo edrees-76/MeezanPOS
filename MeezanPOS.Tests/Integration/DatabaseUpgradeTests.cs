@@ -132,7 +132,7 @@ public class DatabaseUpgradeTests
             using var check = new AppDbContext();
             check.SupplierTransactions.Single(t => t.Id == wrongId).TransactionDate.Date.Should().Be(journalDate.Date);
             check.SupplierTransactions.Single(t => t.Id == rightId).TransactionDate.Should().Be(journalDate.AddDays(5));
-            var act = () => check.Database.ExecuteSqlRaw($"UPDATE SupplierTransactions SET Amount = 1 WHERE Id = {wrongId}");
+            var act = () => check.Database.ExecuteSqlRaw("UPDATE SupplierTransactions SET Amount = 1 WHERE Id = {0}", wrongId);
             act.Should().Throw<Exception>("the posted-journal trigger is recreated after the fix");
         }
         finally

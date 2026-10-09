@@ -20,8 +20,12 @@ namespace MeezanPOS.Application.Services
         /// للتحقق من الصلاحيات داخل الخدمة نفسها (وليس في الواجهة فقط). يُمرَّر دائماً من حاوية الخدمات؛
         /// يكون null فقط عند إنشاء الخدمة يدوياً في الاختبارات.
         /// </param>
-        public PostingService(AppDbContext context, ICashLedgerService cashLedgerService, AuditService auditService, ISessionService? session = null)
+        private readonly IAuthenticationService? _auth;
+
+        public PostingService(AppDbContext context, ICashLedgerService cashLedgerService, AuditService auditService, ISessionService? session = null,
+            IAuthenticationService? auth = null)
         {
+            _auth = auth;
             _session = session;
             _context = context;
             _cashLedgerService = cashLedgerService;
@@ -34,7 +38,7 @@ namespace MeezanPOS.Application.Services
             try
             {
                 var entity = await _context.Set<T>().FindAsync(entityId);
-                
+
                 if (entity == null)
                     throw new Exception("الحركة غير موجودة.");
 
@@ -104,7 +108,7 @@ namespace MeezanPOS.Application.Services
             try
             {
                 var entity = await _context.Set<T>().FindAsync(entityId);
-                
+
                 if (entity == null)
                     throw new Exception("الحركة غير موجودة.");
 
@@ -121,7 +125,7 @@ namespace MeezanPOS.Application.Services
                 if (postableEntity.PostingSessionId.HasValue)
                 {
                     var parentSession = await _context.PostingSessions.FindAsync(postableEntity.PostingSessionId.Value);
-                    if (parentSession != null && 
+                    if (parentSession != null &&
                         (parentSession.Status == PostingSessionStatus.Settled || parentSession.Status == PostingSessionStatus.ReSettled))
                     {
                         throw new Exception("هذا السجل يقع ضمن فترة مقفلة ومسواة مالياً. يجب إلغاء قفل الفترة أولاً.");
@@ -161,7 +165,7 @@ namespace MeezanPOS.Application.Services
                     ActionType = PostingActionType.Unposted,
                     TransactionAmount = originalAmt
                 };
-                
+
                 _context.PostingSessionDetails.Add(auditDetail);
 
                 // إرجاع الحالة
@@ -213,7 +217,7 @@ namespace MeezanPOS.Application.Services
         [Obsolete("سيتم بناء الترحيل الجماعي (Batch) في المرحلة القادمة.")]
         public async Task<Guid> CreatePostingSessionAsync(DateTime untilDate, string postedByUserId, string notes)
         {
-            // هذه دالة مستقبلية ستتولى تجميع كافة الحركات (مبيعات، مصاريف) 
+            // هذه دالة مستقبلية ستتولى تجميع كافة الحركات (مبيعات، مصاريف)
             // التي تمت قبل التاريخ المحدد وترحيلها دفعة واحدة داخل جلسة واحدة (PostingSession).
             // سيتم تنفيذ الـ Batch Update هنا لاحقاً باستخدام ExecuteUpdateAsync للأداء العالي.
             await Task.CompletedTask;
@@ -616,7 +620,7 @@ namespace MeezanPOS.Application.Services
                 {
                     string fileName = $"إيصال_تسوية_مالك_{session.SessionId.ToString().Substring(0, 8).ToUpper()}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
                     string tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), fileName);
-                    
+
                     SettlementPdfReport.GeneratePdf(
                         tempPath,
                         payoutAmount,
@@ -665,7 +669,7 @@ namespace MeezanPOS.Application.Services
             // 2. بالنسبة للجلسات التي ليس لها مسحوبات، سنقوم بجلب آخر حركة نقدية لها بكفاءة
             var sessionsWithoutWithdrawal = sessions.Where(s => !withdrawalsDict.ContainsKey(s.Id)).ToList();
             var keepBalancesDict = new Dictionary<int, decimal>();
-            
+
             if (sessionsWithoutWithdrawal.Any())
             {
                 foreach (var session in sessionsWithoutWithdrawal)
@@ -674,7 +678,7 @@ namespace MeezanPOS.Application.Services
                         .Where(m => m.TransactionDate <= session.PeriodEndDate)
                         .OrderByDescending(m => m.Id) // الرصيد التراكمي مرتب بـ Id (Sequence غير مخزن)
                         .FirstOrDefaultAsync();
-                    
+
                     keepBalancesDict[session.Id] = lastMovementBefore?.BalanceAfter ?? 0;
                 }
             }
@@ -720,7 +724,7 @@ namespace MeezanPOS.Application.Services
         {
             var session = await _context.PostingSessions
                 .FirstOrDefaultAsync(s => s.Id == sessionId);
-            
+
             if (session == null)
                 throw new Exception("جلسة التسوية غير موجودة.");
 
@@ -736,7 +740,7 @@ namespace MeezanPOS.Application.Services
                     .Where(m => m.TransactionDate <= session.PeriodEndDate)
                     .OrderByDescending(m => m.Id) // الرصيد التراكمي مرتب بـ Id (Sequence غير مخزن)
                     .FirstOrDefaultAsync();
-                
+
                 keepAmount = lastMovementBefore?.BalanceAfter ?? 0;
             }
 
@@ -775,12 +779,21 @@ namespace MeezanPOS.Application.Services
             return tempPath;
         }
 
-        public async Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId)
+        public async Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId,
+            string approverUsername, string approverPassword)
         {
             _session?.RequirePermission(Permissions.UnlockPeriod);
 
             if (string.IsNullOrWhiteSpace(reason) || string.IsNullOrWhiteSpace(detailReason) || detailReason.Length < 20)
                 throw new Exception("يجب تحديد سبب وإدخال تفاصيل شرح لا تقل عن 20 حرفاً لإلغاء القفل.");
+
+            // الاعتماد كان يُتحقق منه في النافذة فقط، والخدمة تقبل أي استدعاء بلا معتمِد
+            var auth = _auth ?? throw new InvalidOperationException("خدمة التحقق من المستخدمين غير متاحة لاعتماد فك القفل.");
+            var approval = await new PeriodUnlockApproval(_context, auth)
+                .VerifyAsync(approverUsername, approverPassword, _session?.CurrentUser?.Id ?? 0);
+            if (!approval.IsApproved)
+                throw new InvalidOperationException(approval.Error);
+            detailReason = $"{detailReason} | اعتمده: {approval.Approver!.Username}";
 
             using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
             try
@@ -934,23 +947,23 @@ namespace MeezanPOS.Application.Services
         private async Task CheckAndAutoReSettleSessionAsync(DateTime entityDate)
         {
             var session = await _context.PostingSessions
-                .FirstOrDefaultAsync(s => s.Status == PostingSessionStatus.Unlocked && 
-                                         entityDate.Date >= s.PeriodStartDate.Date && 
+                .FirstOrDefaultAsync(s => s.Status == PostingSessionStatus.Unlocked &&
+                                         entityDate.Date >= s.PeriodStartDate.Date &&
                                          entityDate.Date <= s.PeriodEndDate.Date);
 
             if (session != null)
             {
                 // تحقق من عدم وجود أي مسودات (Draft) أخرى في هذه الفترة
                 var hasDraftJournals = await _context.DailyJournals
-                    .AnyAsync(j => j.FinancialStatus == FinancialStatus.Draft && 
-                                   j.JournalDate.Date >= session.PeriodStartDate.Date && 
-                                   j.JournalDate.Date <= session.PeriodEndDate.Date && 
+                    .AnyAsync(j => j.FinancialStatus == FinancialStatus.Draft &&
+                                   j.JournalDate.Date >= session.PeriodStartDate.Date &&
+                                   j.JournalDate.Date <= session.PeriodEndDate.Date &&
                                    !j.IsDeleted);
 
                 var hasDraftExpenses = await _context.GeneralExpenses
-                    .AnyAsync(e => e.FinancialStatus == FinancialStatus.Draft && 
-                                   e.PaymentDate.Date >= session.PeriodStartDate.Date && 
-                                   e.PaymentDate.Date <= session.PeriodEndDate.Date && 
+                    .AnyAsync(e => e.FinancialStatus == FinancialStatus.Draft &&
+                                   e.PaymentDate.Date >= session.PeriodStartDate.Date &&
+                                   e.PaymentDate.Date <= session.PeriodEndDate.Date &&
                                    !e.IsDeleted);
 
                 if (!hasDraftJournals && !hasDraftExpenses)

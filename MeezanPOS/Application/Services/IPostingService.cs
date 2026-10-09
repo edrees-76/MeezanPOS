@@ -72,7 +72,9 @@ namespace MeezanPOS.Application.Services
         /// <summary>
         /// إلغاء قفل فترة مالية مسواة للسماح بتعديلها
         /// </summary>
-        Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId);
+        /// <param name="approverUsername">المعتمِد: يُتحقق منه داخل الخدمة (مبدأ الشخصين) لا في النافذة وحدها.</param>
+        Task<bool> UnlockPeriodAsync(int sessionId, string reason, string detailReason, string unlockedByUserId,
+            string approverUsername, string approverPassword);
 
         /// <summary>
         /// فك ترحيل فترة بالكامل كحزمة واحدة وعكس حركاتها النقدية مجمعة

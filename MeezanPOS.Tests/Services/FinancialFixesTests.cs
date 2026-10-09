@@ -513,4 +513,86 @@ public class FinancialFixesTests
         (await s.Context.BankAccounts.FindAsync(bank.Id))!.CurrentBalance.Should().Be(800m);
         (await s.Cash.GetCurrentBalanceAsync()).Should().Be(200m);
     }
+
+    private static async Task<PostingSession> AddSettledPeriodAsync(AppDbContext context, DateTime from, DateTime to)
+    {
+        var session = new PostingSession
+        {
+            CreatedBy = "admin", PeriodStartDate = from, PeriodEndDate = to,
+            SessionType = PostingSessionType.Settlement, Status = PostingSessionStatus.Settled,
+        };
+        context.PostingSessions.Add(session);
+        await context.SaveChangesAsync();
+        return session;
+    }
+
+    [Fact]
+    public async Task SettledPeriod_BlocksSupplierBankPartnerAndWageWrites()
+    {
+        var s = Create();
+        var day = DateTime.Today.AddDays(-10);
+        var supplier = await AddSupplierAsync(s.Context, openingBalance: 500m);
+        var bank = TestDataBuilder.BuildBankAccount("مصرف", 1000m);
+        s.Context.BankAccounts.Add(bank);
+        var worker = TestDataBuilder.BuildWorker("عامل", 50m);
+        s.Context.Workers.Add(worker);
+        await s.Context.SaveChangesAsync();
+        var debt = await s.OwnerDebt.RecordDebtAsync("شريك", 300m, null, null, day);
+        await AddSettledPeriodAsync(s.Context, day.AddDays(-5), day.AddDays(5));
+
+        await FluentActions.Awaiting(() => s.Ledger.PostPaymentAsync(supplier.Id, 50m, TransactionSourceType.ExternalPayment, 0, day))
+            .Should().ThrowAsync<InvalidOperationException>();
+        await FluentActions.Awaiting(() => s.OwnerDebt.RecordSettlementAsync(debt.Id, "شريك", 30m, OwnerDebtSettlementSource.PettyCash, null, null, day))
+            .Should().ThrowAsync<InvalidOperationException>();
+        await FluentActions.Awaiting(() => s.Bank.RecordDepositAsync(bank.Id, 10m, null, null, day))
+            .Should().ThrowAsync<InvalidOperationException>();
+        await FluentActions.Awaiting(() => s.Wages.RecordTransactionAsync(new WorkerTransaction
+            { WorkerId = worker.Id, TransactionDate = day, Type = WorkerTransactionType.Advance, DebitAmount = 20m }))
+            .Should().ThrowAsync<InvalidOperationException>();
+
+        (await s.Cash.GetCurrentBalanceAsync()).Should().Be(0m);
+        (await s.Context.Suppliers.FindAsync(supplier.Id))!.CurrentBalance.Should().Be(500m);
+    }
+
+    [Fact]
+    public async Task UnlockingAPeriod_WithoutAValidApprover_IsRefusedByTheService()
+    {
+        var s = Create();
+        var period = await AddSettledPeriodAsync(s.Context, DateTime.Today.AddDays(-30), DateTime.Today.AddDays(-1));
+        var auth = new Mock<IAuthenticationService>();
+        auth.Setup(a => a.AuthenticateAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((User?)null);
+        var posting = new PostingService(s.Context, s.Cash, new AuditService(s.Context), null, auth.Object);
+
+        var act = () => posting.UnlockPeriodAsync(period.Id, "تصحيح", "تصحيح خطأ في إدخال مصروفات الشهر", "1", "someone", "wrong");
+
+        await act.Should().ThrowAsync<InvalidOperationException>();
+        (await s.Context.PostingSessions.FindAsync(period.Id))!.Status.Should().Be(PostingSessionStatus.Settled);
+    }
+
+    [Fact]
+    public async Task SupplierLedgerRebuild_WorksWithPostedJournalPayments_UnderTheRealTriggers()
+    {
+        var s = Create();
+        PostedRecordTriggers.Recreate(s.Context.Database.GetDbConnection());
+        var supplier = await AddSupplierAsync(s.Context, openingBalance: 100m);
+        var journal = TestDataBuilder.BuildDailyJournal(DateTime.Today, FinancialStatus.Draft, 100m, 10m);
+        var item = new DailyExpenseItem { SequenceNumber = 1, Amount = 10m, Category = "دفعة مورد", Type = ExpenseType.SupplierPayment, SupplierId = supplier.Id };
+        journal.ExpenseItems.Add(item);
+        s.Context.DailyJournals.Add(journal);
+        await s.Context.SaveChangesAsync();
+        await s.Ledger.PostPaymentAsync(supplier.Id, 10m, TransactionSourceType.DailyJournalPayment, item.Id, DateTime.Today);
+        journal.FinancialStatus = FinancialStatus.Posted;
+        await s.Context.SaveChangesAsync();
+
+        // دفعة بتاريخ أقدم تغيّر رصيد الحركة المرحّلة المشتق
+        await s.Ledger.PostPaymentAsync(supplier.Id, 20m, TransactionSourceType.ExternalPayment, 0, DateTime.Today.AddDays(-3));
+        await s.Ledger.RebuildSupplierLedgerAsync(supplier.Id);
+
+        var posted = await s.Context.SupplierTransactions.SingleAsync(t => t.SourceType == TransactionSourceType.DailyJournalPayment);
+        posted.BalanceAfter.Should().Be(70m);
+
+        // الحقول المالية للحركة المرحّلة ما زالت محمية
+        var act = () => s.Context.Database.ExecuteSqlRawAsync("UPDATE SupplierTransactions SET Amount = '1' WHERE Id = {0}", posted.Id);
+        await act.Should().ThrowAsync<Exception>();
+    }
 }

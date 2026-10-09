@@ -67,6 +67,7 @@ public class OwnerDebtService : IOwnerDebtService
             throw new ArgumentException("مبلغ الدين يجب أن يكون أكبر من صفر.");
         if (string.IsNullOrWhiteSpace(partnerName))
             throw new ArgumentException("يجب تحديد اسم الشريك.");
+        await PeriodLock.EnsureDateOpenAsync(_context, date);
 
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
@@ -136,6 +137,7 @@ public class OwnerDebtService : IOwnerDebtService
         if (debt == null || debt.IsDeleted)
             throw new Exception("الدين غير موجود.");
 
+        await PeriodLock.EnsureDateOpenAsync(_context, debt.TransactionDate);
         var hasSettlements = await _context.OwnerDebtSettlements
             .AnyAsync(s => s.OwnerDebtId == debtId && !s.IsDeleted);
 

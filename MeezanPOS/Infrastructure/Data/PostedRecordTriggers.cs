@@ -8,6 +8,8 @@ namespace MeezanPOS.Infrastructure.Data;
 /// <remarks>
 /// تُنشأ بترحيل EF (MoveManualSqlToMigrations). إعادة ضبط المنظومة تحذفها مؤقتاً لتفريغ البيانات
 /// ثم تعيد إنشاءها بـ <see cref="Recreate"/> لأن الترحيل لا يُعاد تطبيقه.
+/// مشغّلات حركات الموردين تمنع تغيير الحقول المالية فقط (المبلغ، النوع، التاريخ، الربط، الحذف)، لا الرصيد
+/// المشتق BalanceAfter: إعادة بناء دفتر المورد بعد دفعة بتاريخ أقدم يجب أن تعيد حساب أرصدة الحركات المرحّلة.
 /// </remarks>
 public static class PostedRecordTriggers
 {
@@ -61,7 +63,9 @@ public static class PostedRecordTriggers
         @"CREATE TRIGGER trg_PreventUpdatePostedSupplierTransaction_Journal
           BEFORE UPDATE ON SupplierTransactions
           FOR EACH ROW
-          WHEN OLD.SourceType = 3 AND EXISTS (
+          WHEN OLD.SourceType = 3
+          AND (NEW.Amount IS NOT OLD.Amount OR NEW.Type IS NOT OLD.Type OR NEW.SupplierId IS NOT OLD.SupplierId OR NEW.SourceType IS NOT OLD.SourceType OR NEW.SourceId IS NOT OLD.SourceId OR NEW.SupplierInvoiceId IS NOT OLD.SupplierInvoiceId OR NEW.TransactionDate IS NOT OLD.TransactionDate OR NEW.IsDeleted IS NOT OLD.IsDeleted)
+          AND EXISTS (
               SELECT 1 FROM DailyJournals j
               JOIN DailyExpenseItems e ON e.DailyJournalId = j.Id
               WHERE e.Id = OLD.SourceId AND j.FinancialStatus = 2
@@ -85,7 +89,9 @@ public static class PostedRecordTriggers
         @"CREATE TRIGGER trg_PreventUpdatePostedSupplierTransaction_Expense
           BEFORE UPDATE ON SupplierTransactions
           FOR EACH ROW
-          WHEN OLD.SourceType = 4 AND EXISTS (
+          WHEN OLD.SourceType = 4
+          AND (NEW.Amount IS NOT OLD.Amount OR NEW.Type IS NOT OLD.Type OR NEW.SupplierId IS NOT OLD.SupplierId OR NEW.SourceType IS NOT OLD.SourceType OR NEW.SourceId IS NOT OLD.SourceId OR NEW.SupplierInvoiceId IS NOT OLD.SupplierInvoiceId OR NEW.TransactionDate IS NOT OLD.TransactionDate OR NEW.IsDeleted IS NOT OLD.IsDeleted)
+          AND EXISTS (
               SELECT 1 FROM GeneralExpenses e
               WHERE e.Id = OLD.SourceId AND e.FinancialStatus = 2
           )

@@ -13,6 +13,10 @@ namespace MeezanPOS.Presentation.Services;
 /// <summary>سبب مختار من قائمة + شرح تفصيلي (نوافذ فك القفل وحذف الحركات).</summary>
 public sealed record ReasonResult(string Reason, string Detail)
 {
+    /// <summary>بيانات المعتمِد لفك قفل فترة: تتحقق منها الخدمة نفسها قبل التنفيذ.</summary>
+    public string? ApproverUsername { get; init; }
+    public string? ApproverPassword { get; init; }
+
     public override string ToString() => $"{Reason} - {Detail}";
 }
 
@@ -84,7 +88,13 @@ public sealed class WindowService : IWindowService
     public ReasonResult? AskPeriodUnlockReason() => OnUi(() =>
     {
         var dialog = new PeriodUnlockDialog();
-        return ShowModal(dialog) == true ? new ReasonResult(dialog.SelectedReason, dialog.SelectedDetailReason) : null;
+        return ShowModal(dialog) == true
+            ? new ReasonResult(dialog.SelectedReason, dialog.SelectedDetailReason)
+            {
+                ApproverUsername = dialog.ApproverUsername,
+                ApproverPassword = dialog.ApproverPassword,
+            }
+            : null;
     });
 
     public ReasonResult? AskDeleteReason() => OnUi(() =>

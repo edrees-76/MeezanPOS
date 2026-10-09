@@ -250,7 +250,8 @@ public partial class SalesViewModel
         try
         {
             var postingService = _postingService;
-            var success = await postingService.UnlockPeriodAsync(item.SessionId, reason, detailReason, CurrentUserId);
+            var success = await postingService.UnlockPeriodAsync(item.SessionId, reason, detailReason, CurrentUserId,
+                unlock.ApproverUsername ?? string.Empty, unlock.ApproverPassword ?? string.Empty);
 
             if (success)
             {

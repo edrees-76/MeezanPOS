@@ -131,6 +131,7 @@ public class WagesService : IWagesService
     public async Task SaveAttendanceBatchAsync(List<WorkerAttendance> attendances)
     {
         if (attendances == null || !attendances.Any()) return;
+        await PeriodLock.EnsureDateOpenAsync(_context, attendances.First().WorkDate);
 
         // الحضور وحركاته المالية تُحفظ معاً أو لا تُحفظ
         await using var batchTx = await _context.Database.BeginOrJoinTransactionAsync();
@@ -281,6 +282,7 @@ public class WagesService : IWagesService
         if (transaction == null) throw new ArgumentNullException(nameof(transaction));
         if (transaction.WorkerId <= 0) throw new Exception("يجب تحديد العامل.");
         if (transaction.DebitAmount < 0 || transaction.CreditAmount < 0) throw new Exception("المبالغ يجب أن تكون موجبة.");
+        await PeriodLock.EnsureDateOpenAsync(_context, transaction.TransactionDate);
 
         var worker = await _context.Workers.FindAsync(transaction.WorkerId);
         if (worker == null) throw new Exception("العامل غير موجود.");
@@ -397,6 +399,7 @@ public class WagesService : IWagesService
 
         if (tx != null)
         {
+            await PeriodLock.EnsureDateOpenAsync(_context, tx.TransactionDate);
             bool isPosted = false;
             if (tx.GeneralExpense != null && (tx.GeneralExpense.FinancialStatus == FinancialStatus.Posted || tx.GeneralExpense.FinancialStatus == FinancialStatus.Archived))
             {

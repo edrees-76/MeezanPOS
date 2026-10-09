@@ -250,6 +250,8 @@ public class BankService : IBankService
 
     public async Task ClearCardPaymentAsync(int reconciliationId, int bankAccountId, DateTime clearDate)
     {
+        _session.RequirePermission(Permissions.ManageBanking);
+        await PeriodLock.EnsureDateOpenAsync(_context, clearDate);
         using var transaction = await _context.Database.BeginOrJoinTransactionAsync();
         try
         {

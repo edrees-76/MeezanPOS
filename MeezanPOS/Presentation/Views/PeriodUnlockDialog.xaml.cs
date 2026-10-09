@@ -14,6 +14,7 @@ namespace MeezanPOS.Presentation.Views
         public string SelectedReason { get; private set; } = string.Empty;
         public string SelectedDetailReason { get; private set; } = string.Empty;
         public string ApproverUsername { get; private set; } = string.Empty;
+        public string ApproverPassword { get; private set; } = string.Empty;
 
         public PeriodUnlockDialog()
         {
@@ -76,9 +77,9 @@ namespace MeezanPOS.Presentation.Views
                     return;
                 }
 
+                // التحقق هنا للعرض فقط؛ الخدمة تعيد التحقق قبل فك القفل وتسجل المعتمِد
                 ApproverUsername = result.Approver!.Username;
-                // يُحفظ المعتمِد ضمن سبب فك القفل في سجل التدقيق
-                SelectedDetailReason = $"{SelectedDetailReason} | اعتمده: {ApproverUsername}";
+                ApproverPassword = TxtApproverPassword.Password;
             }
             catch (Exception ex)
             {
